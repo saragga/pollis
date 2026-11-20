@@ -986,38 +986,35 @@ account.
 % =====================================================================
 % FORECASTING COMPETITIONS
 % =====================================================================
-\topic{Score Models}{Compose > Prediction Competitions > Score Models}{Your own forecasting method, scored on a published competition and placed among its entries.}
+\topic{Score Models}{Compose > Prediction Competitions > Score Models}{Your own forecasting method, scored on the held-out values of forecasting datasets, beside the benchmarks.}
 
 A forecasting competition gives many forecasters the same series without their future values, then scores
-every forecast on what happened. The page runs a method of yours on the series of a competition, scores it
-with that competition's own measures, as its organisers scored the entries, and shows where it would have
-finished. It holds five of the M competitions, from the package PollisCompetitions, which Pollis installs
-from the Pollis registry (Pollis Packages, \pg{Pollis Packages}).
+every forecast on what happened. The page runs a method of yours on the series of forecasting datasets,
+scores its forecasts by sMAPE, MASE and OWA, and sets them beside eight statistical benchmarks computed on
+the same series. Its datasets come from the package PollisCompetitions, which Pollis installs from the
+Pollis registry (Pollis Packages, \pg{Pollis Packages}), and from the datasets you add.
 
 \smallskip
 {\small\renewcommand{\arraystretch}{1.25}%
-\begin{tabularx}{\linewidth}{@{}>{\bfseries}l>{\raggedright\arraybackslash}p{0.34\linewidth}>{\raggedright\arraybackslash}X@{}}
-\textcolor{navy}{\bfseries Competition} & \textcolor{navy}{\bfseries Series} & \textcolor{navy}{\bfseries Measures, and the entries} \\
-M1 (1982) & 1,001 yearly, quarterly and monthly & sMAPE, MASE and OWA, beside Naive2 \\
-M3 (2000) & 3,003 yearly, quarterly, monthly and other & sMAPE, MASE and OWA, beside Naive2 \\
-M4 (2018) & 100,000 of six frequencies & sMAPE, MASE and OWA; ranked among 61 entries \\
-M5 Accuracy (2020) & 30,490 daily sales of products in stores & WRMSSE; ranked among 74 entries \\
-M6 (2022) & 100 assets, 12 rounds of 4 weeks & RPS, IR and OR; ranked among its teams \\
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}l>{\raggedright\arraybackslash}X@{}}
+\textcolor{navy}{\bfseries A dataset is listed when} & \textcolor{navy}{\bfseries Because} \\
+It is active & It is ticked in the column Active of Manage Competition Datasets \\
+Its data are here & Built in with PollisCompetitions, downloaded into \texttt{\textasciitilde/.pollis/competitions}, or added to the Pollis Workspace \\
+Its \texttt{info.toml} gives its frequencies & The format \texttt{monash}: series and observations, the last values of each series held out \\
 \end{tabularx}}
 
-\subhead{1. Competition}
-Pick a competition. The table says whether its data are on this computer, built in with PollisCompetitions or
-downloaded into \texttt{\textasciitilde/.pollis/competitions}; one whose data are not is not run. Then choose the \ui{Frequency}, and the
-\ui{Series to Run}: \ui{All}, or \ui{A Sample of} a number of series drawn with a \ui{Seed}. The same seed draws
-the same series, so two methods can be compared on one sample. M5 and M6 always run whole.
+\subhead{1. Datasets}
+The step lists the datasets, with their series and the horizon of each frequency. Choose the \ui{Frequency},
+when one dataset has several, and the \ui{Series to Run}: \ui{All}, or \ui{A Sample of} a number of series
+drawn with a \ui{Seed}. The same seed draws the same series, so two methods can be compared on one sample.
+Several datasets are run in turn, with the same sample size and seed.
 
 \subhead{2. Your Method}
 Write a Julia function \texttt{forecast(y, h, period)}: the values the forecasters saw, the number of steps
 to forecast and the seasonal period, 1 for none; it returns \texttt{h} forecasts. The example is the
-benchmark Theta of M4. For M6 the function is \texttt{decide(prices, date)}: at each round, the prices of
-the 100 assets up to its first day; it returns, for each asset, the probabilities that its return ranks in
-each fifth, and the weight invested in it. Its example is M6 Dummy. \ui{Reset to the Example} brings the
-example back; any package installed in your Julia session can be loaded with \texttt{using}.
+benchmark Theta, written with the functions of \texttt{PollisCompetitions.Benchmarks}. \ui{Reset to the
+Example} brings the example back; any package installed in your Julia session can be loaded with
+\texttt{using}.
 
 \newpage
 \subhead{3. Run}
@@ -1027,40 +1024,33 @@ threads of the session: start Julia with \texttt{--threads=auto} for more at a t
 are done; \ui{method.jl}, \ui{run.jl} and \ui{forecasts.csv} open the run's files. \ui{Earlier runs...}
 reopens a run, and \ui{New Run} starts another.
 
-\subhead{4. Score and Rank}
-\ui{Scores} gives the method's scores beside the benchmarks, published or computed on the same series.
-\ui{Place} ranks the method among the entries' published scores, when the run is on the series they were
-scored on: all of M4 or one of its frequencies, all of M5, or the 12 rounds of M6. \ui{A Series} plots a
-series with the method's forecast and, when its forecasts are on this computer, the winner's; for M6,
-\ui{By Round} gives the scores of each round beside M6 Dummy's.
+\subhead{4. Scores}
+\ui{Scores} gives the method's sMAPE, MASE and OWA beside those of the eight benchmarks (Naive, sNaive,
+Naive2, SES, Holt, Damped, Theta and Com), computed on the same series; a benchmark that a series is too
+short for is left out. \ui{A Series} plots the first series of the run with the method's forecast.
 
 \subhead{Next Steps}
 \ui{Errors by Horizon}, the errors at each step ahead; \ui{Browse the Series}, one series at a time;
-\ui{Where It Fails}, the series where the method does worst against Naive2; \ui{Compare With an Entry}, an
-entry of M4 or M5 on the run's series; \ui{Compare Two Runs}, two runs on the same series, side by side.
-\ui{Learn More} has the wikis: the competitions, the error measures, scoring a method, and the licences and
-sizes of the downloads.
-
-\begin{caution}{The data are large}
-M4 is about 275 MB, M5 about 365 MB, and the forecasts of the entries of M5 about 18.5 GB. \ui{Compare} in
-Compare With an Entry uses the forecasts of an entry that are on this computer.
-\end{caution}
+\ui{Where It Fails}, the series where the method does worst against Naive2; \ui{Compare Two Runs}, two runs
+on the same series, side by side. \ui{Learn More} has the wikis: the error measures, scoring a method, and
+where the data come from.
 
 \begin{trouble}
-\textbf{\emph{The data of \ldots are not on this computer}} & Score Models runs a competition from its data on this computer, in \texttt{data/builtin} of PollisCompetitions or in \texttt{\textasciitilde/.pollis/competitions}. \\
-\textbf{\emph{Your method must define a function \ldots}} & Name the function \texttt{forecast}, or \texttt{decide} for M6. \\
-\textbf{The run stops on a series} & Score and Rank names the first series that failed, with its error: fix \texttt{method.jl} and run again. \\
-\textbf{No place among the entries} & A sample, and M1 and M3, are scored but not ranked. \\
+\textbf{\emph{The data of \ldots are not on this computer}} & Score Models runs a dataset from its data on this computer, in \texttt{data/builtin} of PollisCompetitions or in \texttt{\textasciitilde/.pollis/competitions}. \\
+\textbf{\emph{Your method must define a function \ldots}} & Name the function \texttt{forecast}. \\
+\textbf{The run stops on a series} & Scores names the first series that failed, with its error: fix \texttt{method.jl} and run again. \\
+\textbf{A dataset is not listed} & Tick it in Manage Competition Datasets, and check that its column Model Scoring says Ready. \\
 \end{trouble}
 
 \subhead{Agents' Forecasting Competition}
-\ui{Compose > Prediction Competitions > Agents' Forecasting Competition...} gives the same series of M1, M3 or M4 to several coding
-agents, each of which writes its own forecasting method. In \ui{Competition}, choose the competition, a frequency
-and a number of series, or 0 for all of them; \ui{Prepare the Series} writes the values the forecasters saw into the
-study, never the values held back. In \ui{Agents}, choose from 2 to 8 agents; \ui{Start the Agents} starts them
-all at once, and each writes \file{method.jl}, a function \code{forecast(y, h, period)}. \ui{Score the Methods}
-runs every method in the Julia REPL and ranks them by sMAPE, MASE and OWA, beside the mean and the median of the
-agents' forecasts and the competition's benchmarks; on all the series of a frequency of M4, also among the entries.
+\ui{Compose > Prediction Competitions > Agents' Forecasting Competition...} gives the same series of a forecasting
+dataset to several coding agents, each of which writes its own forecasting method. In \ui{Dataset}, choose a
+dataset of PollisCompetitions whose data are here, a frequency and a number of series, or 0 for all of them;
+\ui{Prepare the Series} writes the values the forecasters saw into the study, never the values held back. In
+\ui{Agents}, choose from 2 to 8 agents; \ui{Start the Agents} starts them all at once, and each writes
+\file{method.jl}, a function \code{forecast(y, h, period)}. \ui{Score the Methods} runs every method in the
+Julia REPL and ranks them by sMAPE, MASE and OWA, beside the mean and the median of the agents' forecasts and
+the eight benchmarks.
 
 \seealso{Article Methods, \pg{Article Methods}.\quad Pollis Packages, \pg{Pollis Packages}.\quad Orchestration, \pg{Orchestration}.}
 
@@ -1120,8 +1110,8 @@ EDGAR & Fetches SEC EDGAR filings and financial data &
 HARE & Heteroskedasticity and autocorrelation estimators &
   \ui{Model > Linear Models}: \ui{Linear Models with Heteroskedasticity}, \ui{with Autocorrelation} and
   \ui{with Heteroskedasticity + AR(1)} \\
-PollisCompetitions & The M forecasting competitions, M1 to M6: their series, entries and published scores,
-  their own measures, and the benchmarks of M4 &
+PollisCompetitions & The datasets of forecasting competitions and of tabular benchmarks, the models scored on them
+  and their published scores, the error measures sMAPE, MASE and OWA, and eight statistical benchmarks &
   \ui{Compose > Prediction Competitions > Score Models} (Score Models, \pg{Score Models}) \\
 EventStudies & Event studies: intraday studies of SEC filings and of FOMC releases, and panel event studies &
   \ui{Model > Event Studies} \\
@@ -2506,7 +2496,7 @@ PollisDatasets & \texttt{pollis} & The 69 datasets of PollisDatasets, a table ea
 PollisJournals & \texttt{journals} & About 250,000 journals, conferences and book series, from OpenAlex; the Norwegian register's levels; and the journal metrics you import.\\
 PollisReferences & \texttt{references} & Every work Pollis cites, and those you save from Literature Radar (\pg{Literature Radar}) or add to a panel's \ui{Explore References}, with abstracts, keywords and dated citation counts.\\
 PollisBenchmarks & \texttt{benchmarks} & The published benchmarks of Pollis: their catalogue, with their sources, revisions and licences, and the questions of those built in.\\
-PollisCompetitions & \texttt{competitions} & The forecasting competitions of PollisCompetitions.jl: their catalogue, and the series, values, entries, published scores and forecasts of each competition downloaded (Score Models, \pg{Score Models}).\\
+PollisCompetitions & \texttt{competitions} & The catalogue of PollisCompetitions.jl, its datasets, models and published scores, and the data of each dataset built in or downloaded (Score Models, \pg{Score Models}).\\
 PollisDocuments & \texttt{documents} & The passages of Pollis's documents, the panel wikis, the package vignettes and the toolbox vignettes, with their embeddings, that Ask Pollis searches (\pg{Ask Pollis}).\\
 \multicolumn{3}{@{}l}{\textbf{Pollis Activity}}\\
 PollisRSS & \texttt{rss} & Every item of the feeds you follow, kept by month; empty until feeds are read (RSS Feeds, \pg{RSS Feeds}).\\
@@ -2582,14 +2572,18 @@ in general, not on Pollis's documents, so choosing the model for Ask Pollis stay
 \begin{center}\small
 \renewcommand{\arraystretch}{1.2}
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}X@{}}
-\texttt{competitions} & One row per competition of PollisCompetitions.jl: its year, frequencies, number of entries, measures, source, revision and licence, the papers that describe it, the size of its download and of its entries' forecasts, and whether it is on this computer, when it was converted, how many entries' forecasts are downloaded and its size on disk.\\
-\texttt{m1}, \texttt{m3}, \texttt{m4}, \texttt{m5}, \texttt{m6} & A schema for each competition downloaded, with a view over each of its tables: \texttt{series} and \texttt{observations}, the values the forecasters saw (split \texttt{train}) and those they were scored on (split \texttt{test}); \texttt{entries} and \texttt{published\_scores}; \texttt{forecasts}, the forecasts of the entries downloaded; and the tables of its own, such as \texttt{calendar}, \texttt{prices}, \texttt{hierarchy} and \texttt{weights} of M5, or \texttt{prices} and \texttt{submissions} of M6. Query them as \texttt{m4.series}.\\
+\texttt{dataset\_catalog} & One row per dataset: its competition and year, its subject, the structure of its data, its response, its rows and features, its size, its licence, whether it is built in or downloaded, and its source.\\
+\texttt{dataset\_references}, \texttt{model\_references} & The works of each dataset and of each model, by their keys in PollisReferences, with what each work is to it.\\
+\texttt{model\_catalog} & One row per model: its estimator, in two levels, family and method, and the package and language that implement it.\\
+\texttt{benchmarks} & One row per run of a model on a dataset and metric, with the score its paper or the organisers published.\\
+\texttt{model\_comparisons} & Each score of \texttt{benchmarks} beside its model and its dataset.\\
+\texttt{nn5}, \texttt{heloc}, \ldots & A schema for each dataset whose data are on this computer, built in or downloaded, named by its id, with a view over each of its Parquet files: \texttt{series} and \texttt{observations} for a forecasting dataset, the values the forecasters saw (split \texttt{train}) and those they were scored on (split \texttt{test}); \texttt{data} and \texttt{splits} for a tabular one, its rows and the folds of its cross-validation. Query them as \texttt{nn5.series}.\\
 \end{tabularx}
 \end{center}
-The competitions are downloaded by the pages of Compose > Prediction Competitions, from their sources, into
-\texttt{\textasciitilde/.pollis/competitions}; the views read those files, so the database itself is small. A
-competition not downloaded yet is listed in \texttt{competitions} with the size of its download, and its schema comes in
-once it is downloaded: Pollis makes the database again after each download, and when the Julia REPL starts.
+PollisCompetitions.jl makes the catalogue and the views of the datasets built in, which read the package's own files;
+the views of a dataset downloaded read its files in \texttt{\textasciitilde/.pollis/competitions}, so the database
+itself is small. Pollis makes it again when the package is updated, after a download, and when the Julia REPL
+starts.
 
 \subhead{Comparisons}
 \begin{center}\small

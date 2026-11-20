@@ -35,16 +35,16 @@ import { ITerminalInstanceService, ITerminalService } from '../../terminal/brows
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { compareCss } from './compareShared.js';
-import { COMPETITIONS, competitionsOnComputer } from './forecastingCompetitionsPage.js';
+import { allPackageScoredDatasets, IScoredDataset } from './forecastingCompetitionsPage.js';
 import { freeStudyName, IOrchestrationCell, JULIA_TO_JSON, orchestrationCss, orchestrationPageJs, startStudyAgent, stopAgentRun, studiesFolder, studyStepText, StudyRuns, tomlString, unattendedCells, validStudyName } from './orchestration.js';
 import { pollisJlPath, skillFile } from './pollisAgents.js';
 
 // Agents' Forecasting Competition, from Compose > Prediction Competitions (compose.contribution.ts): several coding agents each write a
-// forecasting method for the same series of an M competition, on their own, from the part of the series the
-// competition's forecasters saw; Pollis runs every method, scores it on the part held back as the organisers scored
-// the entries, and scores the mean and the median of the agents' forecasts beside them and the benchmarks. A page of
-// the scaffold in the Time Arrow style, in four steps: 1, Competition (M1, M3 or M4, a frequency, all its series or
-// a sample with a seed; Prepare the Series writes the part seen into the study's data); 2, Agents; 3, Runs, each
+// forecasting method for the same series of a forecasting dataset, on their own, from the part of the series the
+// forecasters saw; Pollis runs every method, scores it on the part held back by sMAPE, MASE and OWA, and scores the
+// mean and the median of the agents' forecasts beside them and the benchmarks. A page of the scaffold in the Time Arrow
+// style, in four steps: 1, Dataset (a dataset of PollisCompetitions.jl whose data are on this computer, a frequency,
+// all its series or a sample with a seed; Prepare the Series writes the part seen into the study's data); 2, Agents; 3, Runs, each
 // agent with the skill forecast-independently; 4, Scores. A study is a folder, orchestration/forecasting-competition/
 // <study> of the Pollis Workspace: study.toml, prepared.toml and data/ (series.csv, README.md), written by
 // Prepare the Series; agent-1 to agent-N, each with its SKILL.md, TASK.md, data/, check.jl (written by Pollis),
@@ -66,8 +66,13 @@ const MAX_AGENTS = 8;
 const DEFAULT_AGENTS = 4;
 const DEFAULT_SAMPLE = 300;
 
-/** The competitions the agents can compete on: those of series forecast point by point that can be sampled, M1, M3 and M4. */
-const CHOICES = COMPETITIONS.filter(competition => competition.method === 'forecast' && competition.sampling);
+/** The datasets the agents can compete on, of those Score Models scores models on: those with a frequency that has a name. */
+function choicesOf(datasets: readonly IScoredDataset[]): IScoredDataset[] {
+	return datasets.flatMap(dataset => {
+		const frequencies = dataset.frequencies.filter(frequency => frequency.name);
+		return frequencies.length ? [{ ...dataset, frequencies }] : [];
+	});
+}
 
 /** What the user sets in step 1. */
 interface IStudyInputs {
@@ -113,13 +118,13 @@ function checkedCells(value: unknown): { agent: string; model: string }[] {
 	return Array.isArray(value) ? value.filter((cell): cell is { agent: string; model: string } => typeof cell?.agent === 'string' && typeof cell?.model === 'string').map(cell => ({ agent: cell.agent, model: cell.model })) : [];
 }
 
-/** The inputs of step 1 as the page sent them, checked: a competition and frequency the page offers, a sample and seed from 0. */
-function checkedInputs(value: unknown): IStudyInputs | undefined {
+/** The inputs of step 1 as the page sent them, checked against `choices`: a dataset and frequency the page offers, a sample and seed from 0. */
+function checkedInputs(value: unknown, choices: readonly IScoredDataset[]): IStudyInputs | undefined {
 	if (!value || typeof value !== 'object') {
 		return undefined;
 	}
 	const { name, competition, frequency, sample, seed } = value as Record<string, unknown>;
-	const known = CHOICES.find(choice => choice.id === competition);
+	const known = choices.find(choice => choice.id === competition);
 	if (typeof name !== 'string' || !known || typeof frequency !== 'string' || !known.frequencies.some(f => f.name === frequency)
 		|| typeof sample !== 'number' || !Number.isInteger(sample) || sample < 0 || typeof seed !== 'number' || !Number.isInteger(seed) || seed < 0) {
 		return undefined;
@@ -159,21 +164,16 @@ async function readStudy(fileService: IFileService, folder: URI): Promise<IStudy
 	}
 }
 
-/** The competition's name, as step 1 shows it. */
-function competitionName(id: string): string {
-	return CHOICES.find(choice => choice.id === id)?.name ?? id;
-}
-
-/** What data/README.md says of series.csv: the competition, the frequency and the columns. */
-function dataReadme(study: IStudy, series: number): string {
+/** What data/README.md says of series.csv: the dataset, named `name`, the frequency and the columns. */
+function dataReadme(study: IStudy, series: number, name: string): string {
 	return [
 		localize('agentForecasting.readme.title', "# The Series"),
 		'',
-		localize('agentForecasting.readme.what', "The {0} series of {1}, frequency {2}: for each, the values its forecasters saw. The values to forecast come after them, and are not here.", series, competitionName(study.competition), study.frequency),
+		localize('agentForecasting.readme.what', "The {0} series of {1}, frequency {2}: for each, the values its forecasters saw. The values to forecast come after them, and are not here.", series, name, study.frequency),
 		'',
 		localize('agentForecasting.readme.columns', "`series.csv` has a row for each value, the values of a series in order:"),
 		'',
-		localize('agentForecasting.readme.series', "- `series`: the series' name, as the competition names it"),
+		localize('agentForecasting.readme.series', "- `series`: the series' name, as the dataset names it"),
 		localize('agentForecasting.readme.period', "- `period`: its seasonal period, 1 for none"),
 		localize('agentForecasting.readme.horizon', "- `horizon`: how many values ahead to forecast"),
 		localize('agentForecasting.readme.t', "- `t`: the value's place in the series, from 1"),
@@ -182,16 +182,16 @@ function dataReadme(study: IStudy, series: number): string {
 	].join('\n');
 }
 
-/** An agent's task, as it reads it in TASK.md. */
-function taskText(study: IStudy, agents: number, series: number, horizon: number): string {
+/** An agent's task, as it reads it in TASK.md, the dataset named `name`. */
+function taskText(study: IStudy, agents: number, series: number, horizon: number, name: string): string {
 	return [
 		localize('agentForecasting.task.title', "# Your Task"),
 		'',
-		localize('agentForecasting.task.intro', "You are one of {0} agents who each write, on their own, a forecasting method for the same series. Pollis runs every method on the series, scores its forecasts on the values that come after the ones you have, as the organisers of {1} scored its entries, and compares the methods. Follow SKILL.md, in this folder.", agents, competitionName(study.competition)),
+		localize('agentForecasting.task.intro', "You are one of {0} agents who each write, on their own, a forecasting method for the same series of {1}. Pollis runs every method on the series, scores its forecasts on the values that come after the ones you have, by sMAPE, MASE and OWA, and compares the methods. Follow SKILL.md, in this folder.", agents, name),
 		'',
 		localize('agentForecasting.task.series', "## The Series"),
 		'',
-		localize('agentForecasting.task.seriesText', "{0} series of {1}, frequency {2}, each to be forecast {3} values ahead, in `data/series.csv`; `data/README.md` says what its columns are.", series, competitionName(study.competition), study.frequency, horizon),
+		localize('agentForecasting.task.seriesText', "{0} series of {1}, frequency {2}, each to be forecast {3} values ahead, in `data/series.csv`; `data/README.md` says what its columns are.", series, name, study.frequency, horizon),
 		'',
 		localize('agentForecasting.task.julia', "## Running Julia"),
 		'',
@@ -281,13 +281,12 @@ end
 
 /**
  * The Julia file that scores the study, written into its folder: each agent's method.jl run on the series, as
- * check.jl runs it; its forecasts scored with PollisCompetitions as the organisers scored the entries; the mean and
- * the median of the forecasts of the agents that forecast every series; the benchmarks on the same series; and, for
- * all the series of a frequency of M4, the place of each among the entries; into results.json.
+ * check.jl runs it; its forecasts scored with PollisCompetitions by sMAPE, MASE and OWA; the mean and the median of the
+ * forecasts of the agents that forecast every series; and the benchmarks on the same series; into results.json.
  */
 function scoreCode(): string {
 	return String.raw`# Agents' Forecasting Competition: written by Pollis. Runs the method.jl of each agent on the series of the study, scores
-# the forecasts on the values held back, as the organisers scored the entries, beside the mean and the median of the
+# the forecasts on the values held back by sMAPE, MASE and OWA, beside the mean and the median of the
 # agents' forecasts and the benchmarks, into results.json. Run it from this folder:
 #   julia --threads=auto -L Pollis.jl score.jl
 import PollisCompetitions as PC, Statistics, TOML
@@ -362,29 +361,17 @@ ${JULIA_TO_JSON}
 			push!(rows, Dict("name" => label, "kind" => "combination", "agents" => length(complete), "scores" => pick(PC.score(id, as_table(combined)))))
 		end
 	end
-	# The benchmarks, on the same series: those of M4 computed with PollisCompetitions.M4Benchmarks, Naive2 for M1 and M3
+	# The benchmarks, on the same series, computed with PollisCompetitions.Benchmarks: each that every series is long enough for
 	println("Computing the benchmarks on the same series")
-	if id == "m4"
-		computed = PC.benchmarks(id; series = numbers)
-		for m in PC.M4_BENCHMARKS
-			k = computed.method .== m
-			push!(rows, Dict("name" => m, "kind" => "benchmark", "scores" => pick(PC.score(id, (; series = computed.series[k], h = computed.h[k], value = computed.value[k])))))
+	for m in PC.BENCHMARK_METHODS
+		computed = try
+			PC.benchmarks(id; methods = [m], series = numbers)
+		catch
+			nothing
 		end
-	else
-		naive2 = [PC.naive2(past(k), period[numbers[k]], horizon[numbers[k]]) for k in 1:n]
-		push!(rows, Dict("name" => "Naive2", "kind" => "benchmark", "scores" => pick(PC.score(id, as_table(naive2)))))
+		computed === nothing || push!(rows, Dict("name" => m, "kind" => "benchmark", "scores" => pick(PC.score(id, computed))))
 	end
-	# For all the series of a frequency of M4: the place of each among the published OWA of the entries
-	entries = nothing
-	if id == "m4" && whole
-		published = PC.published_scores(id; measure = "OWA", breakdown = "frequency")
-		owa = [published.value[i] for i in eachindex(published.value) if published.level[i] == frequency]
-		entries = length(owa)
-		for row in rows
-			haskey(row, "scores") && (row["place"] = 1 + count(<(row["scores"]["OWA"]), owa))
-		end
-	end
-	write(joinpath(study, "${RESULTS_FILE}"), to_json(Dict("finished" => Libc.strftime("%Y-%m-%d %H:%M", time()), "series" => n, "whole" => whole, "entries" => entries, "rows" => rows)))
+	write(joinpath(study, "${RESULTS_FILE}"), to_json(Dict("finished" => Libc.strftime("%Y-%m-%d %H:%M", time()), "series" => n, "whole" => whole, "rows" => rows)))
 	println("The scores are in ", joinpath(study, "${RESULTS_FILE}"))
 end
 `;
@@ -418,13 +405,12 @@ function resultsOf(json: Record<string, unknown>) {
 			agent: finite(row.agent),
 			agents: finite(row.agents),
 			scores: scores ? { sMAPE: finite(scores.sMAPE), MASE: finite(scores.MASE), OWA: finite(scores.OWA) } : undefined,
-			place: finite(row.place),
 			failed: finite(row.failed),
 			error: typeof row.error === 'string' ? row.error : undefined,
 			seconds: finite(row.seconds),
 		});
 	}
-	return { finished: typeof json.finished === 'string' ? json.finished : '', series: finite(json.series), entries: finite(json.entries), rows };
+	return { finished: typeof json.finished === 'string' ? json.finished : '', series: finite(json.series), rows };
 }
 
 /** Opens the Agents' Forecasting Competition page, or shows it when it is open. */
@@ -524,18 +510,23 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 	};
 
 	let cells: IOrchestrationCell[] = [];
+	/** The datasets step 1 offers, as last read. */
+	let choices: IScoredDataset[] = [];
+	/** The name of the dataset `id`, as step 1 shows it. */
+	const datasetName = (id: string) => choices.find(choice => choice.id === id)?.name ?? id;
 	const sendState = async () => {
 		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		const studies = await studyNames(root);
-		const downloaded = await competitionsOnComputer(fileService, pathService, CHOICES);
+		choices = choicesOf(await allPackageScoredDatasets(fileService, pathService));
+		const first = choices[0];
 		const study = current && await readStudy(fileService, current.folder);
 		post({
 			command: 'state',
 			root: root.fsPath,
 			studies,
 			cells,
-			downloaded,
-			suggestion: freeStudyName('m4-monthly', studies),
+			choices,
+			suggestion: freeStudyName(first ? `${first.id.replace(/_/g, '-')}-${first.frequencies[0].name!.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : 'study', studies),
 			study: study && {
 				name: study.name,
 				competition: study.competition,
@@ -591,9 +582,9 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 		}
 		const withAgents: IStudy = { ...study, agents: agents.map(cell => ({ agent: cell!.agent, model: cell!.model, label: cell!.label })) };
 		await fileService.writeFile(joinPath(study.folder, STUDY_FILE), VSBuffer.fromString(studyToml(withAgents)));
-		await fileService.writeFile(joinPath(study.folder, 'data', 'README.md'), VSBuffer.fromString(dataReadme(withAgents, prepared.series)));
+		await fileService.writeFile(joinPath(study.folder, 'data', 'README.md'), VSBuffer.fromString(dataReadme(withAgents, prepared.series, datasetName(study.competition))));
 		watch(withAgents);
-		const task = taskText(withAgents, withAgents.agents.length, prepared.series, prepared.horizon);
+		const task = taskText(withAgents, withAgents.agents.length, prepared.series, prepared.horizon, datasetName(study.competition));
 		for (const [index, entry] of withAgents.agents.entries()) {
 			const key = `agent-${index + 1}`;
 			await fileService.writeFile(joinPath(study.folder, key, CHECK_FILE), VSBuffer.fromString(checkCode()));
@@ -641,7 +632,7 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 		watch(withAgents);
 		await startStudyAgent(launchServices, configurationService, notificationService, runs, {
 			study: study.folder, key, cell: withAgents.agents[index], skill, data: joinPath(study.folder, 'data'), focus: true,
-			task: taskText(withAgents, withAgents.agents.length, prepared.series, prepared.horizon),
+			task: taskText(withAgents, withAgents.agents.length, prepared.series, prepared.horizon, datasetName(study.competition)),
 			terminalName: localize('agentForecasting.terminal', "Agents' Forecasting Competition: {0}, Agent {1} ({2})", study.name, index + 1, withAgents.agents[index].label),
 		});
 		await sendState();
@@ -691,7 +682,7 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 				cells = await unattendedCells(configurationService, commandService, terminalInstanceService, fileService);
 				await sendState();
 			} else if (message.command === 'prepare' && hasKey(message, { inputs: true })) {
-				const inputs = checkedInputs(message.inputs);
+				const inputs = checkedInputs(message.inputs, choices);
 				if (inputs) {
 					await prepare(inputs);
 				}
@@ -729,16 +720,16 @@ function pageHtml(): string {
 		newStudy: shared.newStudy,
 		studyFolder: shared.studyFolder,
 		between: shared.between,
-		intro: localize('agentForecasting.intro', "Several coding agents each write a forecasting method for the same series of an M competition, on their own, from the values its forecasters saw. Pollis runs every method on the series, scores its forecasts on the values held back, as the organisers scored the entries, and scores beside them the mean and the median of the agents' forecasts, and the competition's benchmarks."),
-		competitionStep: localize('agentForecasting.competitionStep', "Competition"),
-		competition: localize('agentForecasting.competition', "Competition"),
+		intro: localize('agentForecasting.intro', "Several coding agents each write a forecasting method for the same series of a forecasting dataset, on their own, from the values its forecasters saw. Pollis runs every method on the series, scores its forecasts on the values held back by sMAPE, MASE and OWA, and scores beside them the mean and the median of the agents' forecasts, and the statistical benchmarks."),
+		competitionStep: localize('agentForecasting.datasetStep', "Dataset"),
+		competition: localize('agentForecasting.dataset', "Dataset"),
 		frequency: localize('agentForecasting.frequency', "Frequency"),
 		sample: localize('agentForecasting.sample', "Series"),
 		sampleTooltip: localize('agentForecasting.sampleTooltip', "How many series, drawn at random with the seed; 0 for all of them"),
 		seed: localize('agentForecasting.seed', "Seed"),
 		facts: localize('agentForecasting.facts', "{0} series, each forecast {1} values ahead."),
-		notDownloaded: localize('agentForecasting.notOnComputer', "The data of {0} are not on this computer: Prepare the Series reads its series from PollisCompetitions.jl, built in with the package or downloaded into ~/.pollis/competitions."),
-		sampleHint: localize('agentForecasting.sampleHint', "The agents get only the values the competition's forecasters saw; the values their forecasts are scored on stay with Pollis. A sample keeps the agents' work and the scoring short; all the series of a frequency of M4 also place each method among the published entries."),
+		notDownloaded: localize('agentForecasting.noDatasets', "No forecasting dataset of PollisCompetitions.jl is on this computer: Prepare the Series reads its series from the datasets built in with the package or downloaded into ~/.pollis/competitions."),
+		sampleHint: localize('agentForecasting.sampleHint', "The agents get only the values the forecasters saw; the values their forecasts are scored on stay with Pollis. A sample keeps the agents' work and the scoring short."),
 		prepare: localize('agentForecasting.prepare', "Prepare the Series"),
 		preparing: localize('agentForecasting.preparing', "Sent to the Julia REPL: the series are written into the study's data/series.csv."),
 		prepared: localize('agentForecasting.prepared', "{0} series ready, each forecast {1} values ahead."),
@@ -786,7 +777,6 @@ function pageHtml(): string {
 		sortHint: sortHint(),
 		combinations: localize('agentForecasting.combinations', "Combinations of the Agents"),
 		methodColumn: localize('agentForecasting.methodColumn', "Method"),
-		place: localize('agentForecasting.place', "Place Among the {0} Entries"),
 		note: localize('agentForecasting.note', "Note"),
 		mean: localize('agentForecasting.mean', "Mean of the Agents"),
 		median: localize('agentForecasting.median', "Median of the Agents"),
@@ -824,7 +814,7 @@ function pageHtml(): string {
 		</div>
 		<p class="small">${text.studyFolder}</p>
 		<div class="row">
-			<span class="small">${text.competition}</span> <select id="competition">${CHOICES.map(choice => `<option value="${choice.id}"${choice.id === 'm4' ? ' selected' : ''}>${choice.name}</option>`).join('')}</select>
+			<span class="small">${text.competition}</span> <select id="competition"></select>
 			<span class="small">${text.frequency}</span> <select id="frequency"></select>
 			<span class="small" title="${text.sampleTooltip}">${text.sample}</span> <input type="text" id="sample" value="${DEFAULT_SAMPLE}" spellcheck="false">
 			<span class="small">${text.seed}</span> <input type="text" id="seed" value="1" spellcheck="false">
@@ -871,7 +861,7 @@ function pageHtml(): string {
 		<div class="small status missing" id="scoreProblem"></div>
 		<div class="af-scores" id="scoreBox" hidden>
 		<table class="ma stickyHead" id="scoreTable">
-			<thead><tr><th class="number" title="${text.rankTooltip}">${text.rank}</th><th class="sortable" data-sort="method" data-label="${text.methodColumn}" title="${text.sortHint}">${text.methodColumn}</th><th class="sortable number" data-sort="sMAPE" data-label="sMAPE" title="${text.sortHint}">sMAPE</th><th class="sortable number" data-sort="MASE" data-label="MASE" title="${text.sortHint}">MASE</th><th class="sortable number" data-sort="OWA" data-label="OWA" title="${text.sortHint}">OWA</th><th class="sortable number" id="placeHeading" data-sort="place" data-label="" title="${text.sortHint}"></th><th>${text.note}</th></tr></thead>
+			<thead><tr><th class="number" title="${text.rankTooltip}">${text.rank}</th><th class="sortable" data-sort="method" data-label="${text.methodColumn}" title="${text.sortHint}">${text.methodColumn}</th><th class="sortable number" data-sort="sMAPE" data-label="sMAPE" title="${text.sortHint}">sMAPE</th><th class="sortable number" data-sort="MASE" data-label="MASE" title="${text.sortHint}">MASE</th><th class="sortable number" data-sort="OWA" data-label="OWA" title="${text.sortHint}">OWA</th><th>${text.note}</th></tr></thead>
 			<tbody id="scoreRows"></tbody>
 		</table>
 		</div>
@@ -882,7 +872,6 @@ function pageHtml(): string {
 		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	${sortHeadingsScript()}
-	const CHOICES = ${JSON.stringify(CHOICES.map(choice => ({ id: choice.id, name: choice.name, frequencies: choice.frequencies })))};
 	const DEFAULT_AGENTS = ${DEFAULT_AGENTS};
 	const DEFAULT_SAMPLE = ${DEFAULT_SAMPLE};
 	const nameInput = document.getElementById('name');
@@ -899,22 +888,39 @@ function pageHtml(): string {
 	let timer = undefined;
 ${orchestrationPageJs}
 	function choice() {
-		return CHOICES.find(c => c.id === competition.value) || CHOICES[0];
+		const choices = state ? state.choices : [];
+		return choices.find(c => c.id === competition.value) || choices[0];
+	}
+	// The datasets offered, the one chosen kept while it is among them
+	function drawDatasets() {
+		const choices = state ? state.choices : [];
+		const value = competition.value;
+		competition.innerHTML = choices.map(c => '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name) + '</option>').join('');
+		competition.value = choices.some(c => c.id === value) ? value : (choices[0] ? choices[0].id : '');
 	}
 	function drawFrequencies(selected) {
 		const c = choice();
+		if (!c) {
+			frequency.innerHTML = '';
+			return;
+		}
 		frequency.innerHTML = c.frequencies.map(f => '<option value="' + escapeHtml(f.name) + '">' + escapeHtml(f.name) + '</option>').join('');
 		frequency.value = selected && c.frequencies.some(f => f.name === selected) ? selected : (c.frequencies.find(f => f.name === 'Monthly') || c.frequencies[0]).name;
 	}
 	function drawFacts() {
 		const c = choice();
+		const missing = document.getElementById('notDownloaded');
+		missing.hidden = !state || !!c || !!state.study;
+		missing.textContent = TEXT.notDownloaded;
+		if (!c) {
+			document.getElementById('facts').textContent = '';
+			return;
+		}
 		const f = c.frequencies.find(x => x.name === frequency.value) || c.frequencies[0];
 		const n = Math.floor(Number(sample.value));
 		const series = n > 0 && n < f.series ? n : f.series;
-		document.getElementById('facts').textContent = TEXT.facts.replace('{0}', format(series)).replace('{1}', String(f.horizon));
-		const missing = document.getElementById('notDownloaded');
-		missing.hidden = !state || state.downloaded[c.id] !== false || !!state.study;
-		missing.textContent = TEXT.notDownloaded.replace('{0}', c.name);
+		// The horizon, or the shortest and the longest when the series differ
+		document.getElementById('facts').textContent = TEXT.facts.replace('{0}', format(series)).replace('{1}', f.longest > f.shortest ? f.shortest + '\u2013' + f.longest : String(f.shortest));
 	}
 
 	/** The agents' choices: at first the cells in turn, so that the models differ. */
@@ -988,13 +994,6 @@ ${orchestrationPageJs}
 			document.getElementById('combinationNote').hidden = true;
 			return;
 		}
-		const ranked = typeof results.entries === 'number';
-		const placeHeading = document.getElementById('placeHeading');
-		placeHeading.dataset.label = ranked ? TEXT.place.replace('{0}', format(results.entries)) : '';
-		placeHeading.hidden = !ranked;
-		if (!ranked && scoreSort.key === 'place') {
-			scoreSort = { key: 'OWA', descending: false };
-		}
 		const isScored = row => !!(row.scores && typeof row.scores.OWA === 'number');
 		const combinations = ['mean', 'median'].map(name => results.rows.find(row => row.kind === 'combination' && row.name === name)).filter(row => row);
 		const others = results.rows.filter(row => row.kind !== 'combination');
@@ -1014,8 +1013,7 @@ ${orchestrationPageJs}
 					: row.error ? TEXT.noMethod.replace('{0}', row.error) : '';
 		// The value a row is sorted by: the method's name in the order of the alphabet, else a number, none last either way
 		const sortValue = row => scoreSort.key === 'method' ? label(row)
-			: scoreSort.key === 'place' ? row.place
-				: row.scores ? row.scores[scoreSort.key] : undefined;
+			: row.scores ? row.scores[scoreSort.key] : undefined;
 		const ordered = others.filter(isScored).sort((a, b) => {
 			const x = sortValue(a);
 			const y = sortValue(b);
@@ -1027,11 +1025,10 @@ ${orchestrationPageJs}
 			const order = typeof x === 'string' ? x.localeCompare(y, undefined, { numeric: true }) : x - y;
 			return scoreSort.descending ? -order : order;
 		});
-		const columns = ranked ? 7 : 6;
+		const columns = 6;
 		const rowHtml = (row, rank) => {
 			const value = key => row.scores ? format(row.scores[key]) : '';
-			const placeCell = ranked ? '<td class="number">' + (typeof row.place === 'number' ? format(row.place) : '') + '</td>' : '';
-			return '<tr class="af-' + escapeHtml(row.kind) + '"><td class="number">' + rank + '</td><td>' + escapeHtml(label(row)) + '</td><td class="number">' + value('sMAPE') + '</td><td class="number">' + value('MASE') + '</td><td class="number">' + value('OWA') + '</td>' + placeCell + '<td class="small' + (isScored(row) ? '' : ' missing') + '">' + escapeHtml(note(row)) + '</td></tr>';
+			return '<tr class="af-' + escapeHtml(row.kind) + '"><td class="number">' + rank + '</td><td>' + escapeHtml(label(row)) + '</td><td class="number">' + value('sMAPE') + '</td><td class="number">' + value('MASE') + '</td><td class="number">' + value('OWA') + '</td><td class="small' + (isScored(row) ? '' : ' missing') + '">' + escapeHtml(note(row)) + '</td></tr>';
 		};
 		document.getElementById('scoreRows').innerHTML = ordered.map((row, i) => rowHtml(row, String(i + 1))).join('')
 			+ others.filter(row => !isScored(row)).map(row => rowHtml(row, '')).join('')
@@ -1083,6 +1080,7 @@ ${orchestrationPageJs}
 			element.disabled = !!study;
 		}
 		count.disabled = !!(study && study.agents.length);
+		drawDatasets();
 		if (study) {
 			nameInput.value = study.name;
 			competition.value = study.competition;
@@ -1095,6 +1093,7 @@ ${orchestrationPageJs}
 		} else {
 			nameInput.value = '';
 			nameInput.placeholder = state.suggestion;
+			drawFrequencies(frequency.value);
 		}
 		const prepareStatus = document.getElementById('prepareStatus');
 		if (study && study.prepared) {
@@ -1184,7 +1183,7 @@ ${orchestrationPageJs}
 				chosen = state.study.agents.map(cellKey);
 			}
 			if (wasStudy && !state.study) {
-				competition.value = 'm4';
+				competition.value = state.choices[0] ? state.choices[0].id : '';
 				drawFrequencies();
 				sample.value = String(DEFAULT_SAMPLE);
 				seed.value = '1';

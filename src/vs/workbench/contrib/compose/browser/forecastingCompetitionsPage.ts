@@ -40,21 +40,21 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { compareCss } from './compareShared.js';
 import { activeDatasets, FORECASTING_CATALOGUE_COMMAND_ID, onDidChangeActiveDatasets } from './forecastingActive.js';
+import { POLLIS_COMPETITIONS_DATASETS_PATH } from './forecastingCatalogue.js';
 import { addedDatasetFiles, forecastingFolder, readAddedDataset } from './forecastingWorkspace.js';
 import { juliaPackageFolder } from './juliaPackages.js';
 
 // Score Models, from Compose > Prediction Competitions > Score Models (compose.contribution.ts): a forecasting method of the user's
-// own, run on the series of a competition of PollisCompetitions.jl, scored as the competition's organisers scored the
-// entries, and ranked among them. A page of the scaffold in the Time Arrow style, in four steps: 1, Competition (M1,
-// M3, M4 or M5, a frequency, a sample, and whether its data are on this computer); 2, Your Method, a Julia function
-// forecast(y, h, period); 3, Run, in the Julia REPL; 4, Score and Rank. A run is a folder of
-// ~/.pollis/competitions/runs: run.toml (the choices of step 1), method.jl, run.jl (which the page writes and the REPL
-// runs), progress.json while it runs, then forecasts.csv and results.json, which step 4 draws. Step 1 also lists the
-// datasets the user added to the Pollis Workspace in Manage Competition Datasets, scored as M1 and M3 are from their
-// folders. Step 1 lists the datasets active in Manage Competition Datasets (forecastingActive.ts) that the page scores,
-// and a run scores them all: several make a folder whose run.toml names them, with a run of each in the subfolder
-// named by its id, run in turn, and step 4 shows their scores side by side. M6, whose method decides rather than
-// forecasts, is a run of its own, after the others.
+// own, run on the series of forecasting datasets, scored by sMAPE, MASE and OWA beside the eight statistical benchmarks
+// computed on the same series. A page of the scaffold in the Time Arrow style, in four steps: 1, Datasets (a frequency
+// and a sample); 2, Your Method, a Julia function forecast(y, h, period); 3, Run, in the Julia REPL; 4, Scores. A run is
+// a folder of ~/.pollis/competitions/runs: run.toml (the choices of step 1), method.jl, run.jl (which the page writes
+// and the REPL runs), progress.json while it runs, then forecasts.csv and results.json, which step 4 draws. Step 1 lists
+// the datasets active in Manage Competition Datasets (forecastingActive.ts) that the page scores: those of
+// PollisCompetitions.jl whose data are on this computer, with an info.toml of format "monash" that gives their
+// frequencies, and those the user added to the Pollis Workspace. A run scores them all: several make a folder whose
+// run.toml names them, with a run of each in the subfolder named by its id, run in turn, and step 4 shows their scores
+// side by side.
 
 export const FORECASTING_COMPETITIONS_COMMAND_ID = 'pollis.competitions.forecastingCompetitions';
 
@@ -65,77 +65,78 @@ const PROGRESS_FILE = 'progress.json';
 const RESULTS_FILE = 'results.json';
 const FORECASTS_FILE = 'forecasts.csv';
 
-/** A frequency of a competition: its name in PollisCompetitions, its number of series and its horizon. */
+/**
+ * A frequency of a dataset that Score Models scores models on, as the [[frequencies]] of its info.toml give it: its
+ * name, none for the series that have none, its number of series, and the shortest and the longest of their horizons.
+ */
 export interface IFrequency {
-	readonly name: string;
+	readonly name?: string;
 	readonly series: number;
-	readonly horizon: number;
+	readonly shortest: number;
+	readonly longest: number;
 }
 
-/** A competition the page holds, with the facts step 1 shows. */
-export interface ICompetition {
+/** A dataset that Score Models scores models on, with the facts step 1 shows. */
+export interface IScoredDataset {
 	readonly id: string;
-	/** Its dataset_id in the Dataset Catalog of PollisCompetitions.jl, when it is not its id. */
-	readonly dataset?: string;
 	readonly name: string;
 	readonly frequencies: readonly IFrequency[];
-	readonly measures: string;
-	/** Whether a run can be a sample of the series: not for M5, whose WRMSSE adds up all of them. */
-	readonly sampling: boolean;
-	/** Whether the published scores of the entries rank a run of the whole competition or of a whole frequency. */
-	readonly ranked: boolean;
-	readonly entries: string;
-	/** The function the method defines: forecast(y, h, period) for a competition of series, decide(prices, date) for M6. */
-	readonly method: 'forecast' | 'decide';
-	/** What step 1 says of the competition's series, when not their frequencies and horizons. */
-	readonly summary?: string;
-	/** Why a competition that cannot be sampled is run whole. */
-	readonly wholeNote?: string;
 	/** For a dataset of the user's own, its folder in the Pollis Workspace, which PollisCompetitions.jl reads in place of an id. */
 	readonly folder?: string;
 }
 
-export const COMPETITIONS: readonly ICompetition[] = [
-	{
-		id: 'm1', name: 'M1 (1982)', sampling: true, ranked: false, method: 'forecast',
-		frequencies: [{ name: 'Yearly', series: 181, horizon: 6 }, { name: 'Quarterly', series: 203, horizon: 8 }, { name: 'Monthly', series: 617, horizon: 18 }],
-		measures: 'sMAPE, MASE, OWA',
-		entries: localize('competitions.m1.entries', "No entries here: scored beside Naive2"),
-	},
-	{
-		id: 'm3', name: 'M3 (2000)', sampling: true, ranked: false, method: 'forecast',
-		frequencies: [{ name: 'Yearly', series: 645, horizon: 6 }, { name: 'Quarterly', series: 756, horizon: 8 }, { name: 'Monthly', series: 1428, horizon: 18 }, { name: 'Other', series: 174, horizon: 8 }],
-		measures: 'sMAPE, MASE, OWA',
-		entries: localize('competitions.m3.entries', "No entries here: scored beside Naive2"),
-	},
-	{
-		id: 'm4', name: 'M4 (2018)', sampling: true, ranked: true, method: 'forecast',
-		frequencies: [{ name: 'Yearly', series: 23000, horizon: 6 }, { name: 'Quarterly', series: 24000, horizon: 8 }, { name: 'Monthly', series: 48000, horizon: 18 }, { name: 'Weekly', series: 359, horizon: 13 }, { name: 'Daily', series: 4227, horizon: 14 }, { name: 'Hourly', series: 414, horizon: 48 }],
-		measures: 'sMAPE, MASE, OWA',
-		entries: localize('competitions.m4.entries', "61 entries"),
-	},
-	{
-		id: 'm5', dataset: 'm5_accuracy', name: 'M5 Accuracy (2020)', sampling: false, ranked: true,
-		frequencies: [{ name: 'Daily', series: 30490, horizon: 28 }],
-		measures: 'WRMSSE',
-		entries: localize('competitions.m5.entries', "74 entries: 24 benchmarks and the top 50"),
-		method: 'forecast',
-		wholeNote: localize('competitions.m5.whole', "M5 is run on all its series: the WRMSSE adds them up into the 42,840 series of its 12 levels."),
-	},
-	{
-		id: 'm6', name: 'M6 (2022)', sampling: false, ranked: true,
-		frequencies: [{ name: 'Daily', series: 100, horizon: 20 }],
-		measures: 'RPS, IR, OR',
-		entries: localize('competitions.m6.entries', "251 teams, M6 Dummy the benchmark"),
-		method: 'decide',
-		summary: localize('competitions.m6.summary', "100 assets, 12 rounds of 4 weeks"),
-		wholeNote: localize('competitions.m6.whole', "M6 is run on its 12 rounds, each with all its 100 assets, as its teams submitted."),
-	},
-];
+/**
+ * The dataset of the data folder `folder`, under the id `id`, when Score Models scores models on it: its info.toml
+ * gives the format "monash" (series and observations, the last values of each series held out from the forecasters)
+ * and its frequencies; undefined otherwise. Its name is that of info.toml, else `id`.
+ */
+export async function readScoredDataset(fileService: IFileService, folder: URI, id: string): Promise<IScoredDataset | undefined> {
+	try {
+		const { name, format, frequencies } = parseToml((await fileService.readFile(joinPath(folder, 'info.toml'))).value.toString());
+		const read = (Array.isArray(frequencies) ? frequencies : []).flatMap(frequency => {
+			const { name: frequencyName, series, shortest_horizon: shortest, longest_horizon: longest } = typeof frequency === 'object' && frequency !== null && !Array.isArray(frequency) ? frequency : {};
+			return typeof series === 'number' && typeof shortest === 'number' && typeof longest === 'number'
+				? [{ ...(typeof frequencyName === 'string' ? { name: frequencyName } : {}), series, shortest, longest }]
+				: [];
+		});
+		return format === 'monash' && read.length ? { id, name: typeof name === 'string' ? name : id, frequencies: read } : undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+/**
+ * The datasets of PollisCompetitions.jl among `ids` that Score Models scores models on, in the order of `ids`: those
+ * whose data folder is on this computer (competitionDataFolder) and is one readScoredDataset reads.
+ */
+export async function packageScoredDatasets(fileService: IFileService, pathService: IPathService, ids: readonly string[]): Promise<IScoredDataset[]> {
+	const home = await pathService.userHome({ preferLocal: true });
+	const packageFolder = await juliaPackageFolder(fileService, pathService, 'PollisCompetitions');
+	const found = await Promise.all(ids.map(async id => {
+		const folder = await competitionDataFolder(fileService, home, packageFolder, id);
+		return folder && await readScoredDataset(fileService, folder, id);
+	}));
+	return found.filter((dataset): dataset is IScoredDataset => !!dataset);
+}
+
+/** Every dataset of PollisCompetitions.jl that Score Models scores models on, in the order of its Dataset Catalog. */
+export async function allPackageScoredDatasets(fileService: IFileService, pathService: IPathService): Promise<IScoredDataset[]> {
+	const packageFolder = await juliaPackageFolder(fileService, pathService, 'PollisCompetitions');
+	if (!packageFolder) {
+		return [];
+	}
+	try {
+		const { datasets } = parseToml((await fileService.readFile(joinPath(packageFolder, POLLIS_COMPETITIONS_DATASETS_PATH))).value.toString());
+		const ids = (Array.isArray(datasets) ? datasets : []).flatMap(dataset => typeof dataset === 'object' && dataset !== null && !Array.isArray(dataset) && typeof dataset.dataset_id === 'string' ? [dataset.dataset_id] : []);
+		return await packageScoredDatasets(fileService, pathService, ids);
+	} catch {
+		return [];
+	}
+}
 
 /** The choices of step 1 and the method of step 2, as the page sends them. */
 interface IRunInputs {
-	/** The datasets listed, by their ids: competitions of COMPETITIONS or datasets of the user's own. */
+	/** The datasets listed, by their ids: datasets of PollisCompetitions.jl or of the user's own. */
 	readonly datasets: readonly string[];
 	/** A frequency of the only dataset listed, or '' for all of them. */
 	readonly frequency: string;
@@ -151,20 +152,20 @@ type CompetitionsMessage =
 	| { readonly command: 'load'; readonly name: string }
 	| { readonly command: 'newRun' }
 	| { readonly command: 'open'; readonly what: 'method' | 'forecasts' | 'script' }
-	| { readonly command: 'nextStep'; readonly step: string; readonly series?: unknown; readonly position?: unknown; readonly entry?: unknown }
+	| { readonly command: 'nextStep'; readonly step: string; readonly series?: unknown; readonly position?: unknown }
 	| { readonly command: 'compareWith'; readonly name: string }
 	| { readonly command: 'diffMethods' }
 	| { readonly command: 'codeDraft'; readonly text: string }
 	| { readonly command: 'member'; readonly id: string }
 	| { readonly command: 'manage' };
 
-/** The choices of a run of one dataset, as its run.toml records them. */
+/** The choices of a run of one dataset, as its run.toml records them: `competition` is the id of the dataset. */
 interface IRunChoices {
 	readonly competition: string;
 	readonly frequency: string;
 	readonly sample: number;
 	readonly seed: number;
-	/** The folder of a dataset of the user's own, which the run reads in place of the id of a competition. */
+	/** The folder of a dataset of the user's own, which the run reads in place of the id. */
 	readonly folder?: string;
 }
 
@@ -179,11 +180,11 @@ interface IBatchChoices {
 /** The open page, so a second request shows the same page. */
 let openPage: WebviewInput | undefined;
 
-/** The example of step 2: the benchmark Theta of M4, written out from the functions of PollisCompetitions.M4Benchmarks. */
+/** The example of step 2: the benchmark Theta, written out from the functions of PollisCompetitions.Benchmarks. */
 const EXAMPLE_METHOD = `# Your method: a function forecast(y, h, period) that returns h forecasts of the series y (its values in order),
-# whose seasonal period is period (1 for none). Here, the benchmark Theta of M4, written out from the functions
+# whose seasonal period is period (1 for none). Here, the benchmark Theta, written out from the functions
 # of PollisCompetitions.jl: change it, or write a method of your own, with any package you have installed.
-using PollisCompetitions.M4Benchmarks: is_seasonal, seasonal_index, theta
+using PollisCompetitions.Benchmarks: is_seasonal, seasonal_index, theta
 
 function forecast(y, h, period)
 	if is_seasonal(y, period)
@@ -197,23 +198,8 @@ function forecast(y, h, period)
 end
 `;
 
-/** The example of step 2 for M6: equal probabilities and equal weights, as M6 Dummy, the benchmark of M6. */
-const EXAMPLE_DECIDE = `# Your method for M6: a function decide(prices, date) that, at each of the 12 rounds, gets the prices of the 100
-# assets up to date, the first day of the round (prices.symbol, prices.date and prices.price, a column each), and
-# returns a table with a row for each asset: symbol; rank1 to rank5, the probabilities that its return over the
-# next four weeks ranks in each fifth of the 100 assets, from the lowest (rank1) to the highest (rank5), adding up
-# to 1; and decision, the weight invested in it, negative to sell short, the absolute weights adding up to 0.25 to 1.
-# Here, equal probabilities and equal weights, as M6 Dummy, the benchmark of M6: change it, or write a method of your own.
-function decide(prices, date)
-	symbols = sort(unique(prices.symbol))
-	n = length(symbols)
-	(; symbol = symbols, rank1 = fill(0.2, n), rank2 = fill(0.2, n), rank3 = fill(0.2, n), rank4 = fill(0.2, n),
-		rank5 = fill(0.2, n), decision = fill(1 / n, n))
-end
-`;
-
 /** The inputs of a run as the page sent them, checked against the datasets `known`; undefined when they are not well formed. */
-function checkedInputs(value: unknown, known: readonly ICompetition[]): (Omit<IRunInputs, 'datasets'> & { readonly datasets: readonly ICompetition[] }) | undefined {
+function checkedInputs(value: unknown, known: readonly IScoredDataset[]): (Omit<IRunInputs, 'datasets'> & { readonly datasets: readonly IScoredDataset[] }) | undefined {
 	if (typeof value !== 'object' || value === null) {
 		return undefined;
 	}
@@ -283,15 +269,13 @@ async function readBatch(fileService: IFileService, folder: URI): Promise<IBatch
 	}
 }
 
-/** What the table of a run of several datasets shows of a dataset's results.json: its scores and its place, or why it stopped. */
+/** What the table of a run of several datasets shows of a dataset's results.json: its scores, or why it stopped. */
 function briefResults(results: unknown): object | undefined {
 	if (typeof results !== 'object' || results === null) {
 		return undefined;
 	}
-	type Fields = { readonly [key: string]: unknown };
-	const { error, series, measures, method, ranking, finished } = results as Fields;
-	const rank = typeof ranking === 'object' && ranking !== null ? ranking as Fields : undefined;
-	return { error, series, measures, method, ranking: rank && { place: rank.place, of: rank.of, measure: rank.measure }, finished };
+	const { error, series, measures, method, finished } = results as { readonly [key: string]: unknown };
+	return { error, series, measures, method, finished };
 }
 
 /** run.jl of a run of several datasets: the run.jl of each, in turn. */
@@ -314,21 +298,14 @@ async function readJson(fileService: IFileService, file: URI): Promise<unknown> 
 }
 
 /**
- * The folder of the data of the competition or dataset `id` of PollisCompetitions.jl on this computer, as the package
- * finds it: built in, in data/builtin/<id> of the package in `packageFolder`, else downloaded, in
- * ~/.pollis/competitions/<id> of `home`; undefined when its info.toml is not there.
+ * The folder of the data of the dataset `id` of PollisCompetitions.jl on this computer, as the package finds it: built
+ * in, in data/builtin/<id> of the package in `packageFolder`, else downloaded, in ~/.pollis/competitions/<id> of
+ * `home`; undefined when its info.toml is not there.
  */
 export async function competitionDataFolder(fileService: IFileService, home: URI, packageFolder: URI | undefined, id: string): Promise<URI | undefined> {
 	const builtin = packageFolder && joinPath(packageFolder, 'data', 'builtin', id);
 	const folder = builtin && await fileService.exists(builtin) ? builtin : joinPath(home, '.pollis', 'competitions', id);
 	return await fileService.exists(joinPath(folder, 'info.toml')) ? folder : undefined;
-}
-
-/** Whether the data of each competition of `competitions` are on this computer, by its id. */
-export async function competitionsOnComputer(fileService: IFileService, pathService: IPathService, competitions: readonly ICompetition[]): Promise<Record<string, boolean>> {
-	const home = await pathService.userHome({ preferLocal: true });
-	const packageFolder = await juliaPackageFolder(fileService, pathService, 'PollisCompetitions');
-	return Object.fromEntries(await Promise.all(competitions.map(async competition => [competition.id, !!await competitionDataFolder(fileService, home, packageFolder, competition.id)])));
 }
 
 /** The Julia of every script of a run, inside its `let run = ...`: to_json, and write_json, which writes a JSON file of the run's folder. */
@@ -345,40 +322,25 @@ const JULIA_JSON = String.raw`	escaped(s) = join(c == '"' ? "\\\"" : c == '\\' ?
 	end
 	write_json(name, x) = write(joinpath(run, name), to_json(x))`;
 
-/** The Julia of every script of a run, inside its `let run = ...` and once `id` is set: the winner's forecast of a series. */
-const JULIA_WINNER = String.raw`	# The forecasts of series s by the winner of competition id (M4 or M5), when they are on this computer: its name and values
-	function winner_forecast(s)
-		id in ("m4", "m5") || return nothing
-		listed = PC.entries(id)
-		w = findfirst(k -> listed.kind[k] == "submission" && listed.forecasts[k] == "point" && coalesce(listed.rank[k], 0) == 1, eachindex(listed.entry))
-		(w === nothing || !isfile(joinpath(PC.folder(id), "forecasts", string(listed.entry[w], ".parquet")))) && return nothing
-		Dict("name" => listed.name[w], "values" => PC.forecasts(id; entry = Int(listed.entry[w]), series = s).value)
-	end`;
-
 /**
  * The Next Steps of a finished run. Each is a Julia script of the run's folder, `<step>.jl`, which the page writes
  * and the Julia REPL runs, and which writes `<step>.json`, from which the page draws the step's panel.
  */
-const NEXT_STEPS = ['horizon', 'series', 'fails', 'entry'] as const;
+const NEXT_STEPS = ['horizon', 'series', 'fails'] as const;
 type NextStep = typeof NEXT_STEPS[number];
 
-/**
- * What a Next Step is asked for: for Browse the Series, the series named as its source names it, or the one at a place
- * among the run's series, from 1; for Compare With an Entry, the number of the entry, or none to list the entries.
- */
+/** What Browse the Series is asked for: the series named as its source names it, or the one at a place among the run's series, from 1. */
 interface INextStepRequest {
 	readonly name?: string;
 	readonly position?: number;
-	readonly entry?: number;
 }
 
-/** What a message asks of a Next Step, checked: a name of letters, digits and . _ : -, a place from 1, an entry's number. */
-function checkedRequest(message: { readonly series?: unknown; readonly position?: unknown; readonly entry?: unknown }): INextStepRequest {
-	const entry = typeof message.entry === 'number' && Number.isInteger(message.entry) && message.entry >= 0 && message.entry < 32768 ? message.entry : undefined;
+/** What a message asks of a Next Step, checked: a name of letters, digits and . _ : -, or a place from 1. */
+function checkedRequest(message: { readonly series?: unknown; readonly position?: unknown }): INextStepRequest {
 	if (typeof message.series === 'string' && /^[\w .:-]{1,100}$/.test(message.series)) {
-		return { name: message.series, entry };
+		return { name: message.series };
 	}
-	return { position: typeof message.position === 'number' && Number.isInteger(message.position) && message.position >= 1 ? message.position : 1, entry };
+	return { position: typeof message.position === 'number' && Number.isInteger(message.position) && message.position >= 1 ? message.position : 1 };
 }
 
 /** The Julia of every Next Steps script, inside its `let run = ...`, after JULIA_JSON. */
@@ -390,14 +352,9 @@ const JULIA_NEXT = String.raw`	settings = TOML.parsefile(joinpath(run, "${RUN_FI
 		fields = [split(line, ',') for line in Iterators.drop(eachline(joinpath(run, "${FORECASTS_FILE}")), 1)]
 		(; series = [parse(Int, f[1]) for f in fields], h = [parse(Int, f[2]) for f in fields], value = [parse(Float64, f[3]) for f in fields])
 	end
-	# The forecasts of Naive2 of the series numbers: those published for M4, those computed on this computer for M1 and M3
+	# The forecasts of Naive2 of the series numbers, computed on this computer
 	function naive2_forecasts(numbers)
 		chosen = Set(numbers)
-		if id == "m4"
-			published = PC.forecasts(id; entry = "Naive2")
-			keep = [s in chosen for s in published.series]
-			return (; series = published.series[keep], h = published.h[keep], value = published.value[keep])
-		end
 		known = PC.series(id)
 		period, horizon = Dict(zip(known.series, known.period)), Dict(zip(known.series, known.horizon))
 		seen = PC.observations(id; series = collect(numbers), split = "train")
@@ -430,9 +387,8 @@ import PollisCompetitions as PC, TOML
 let run = raw"${folder.fsPath}"
 ${JULIA_JSON}
 ${JULIA_NEXT}
-${JULIA_WINNER}
 	try
-		isdefined(PC, :step_errors) || error("This step needs a newer PollisCompetitions.jl: update it with Pkg.update(\"PollisCompetitions\").")`;
+		isdefined(PC, :BENCHMARK_METHODS) || error("This step needs a newer PollisCompetitions.jl: update it with Pkg.update(\"PollisCompetitions\").")`;
 }
 
 /** The end of a Next Steps script: an error is written to `<step>.json`, for the step's panel to show. */
@@ -452,7 +408,6 @@ end`;
  */
 function horizonScript(folder: URI): string {
 	return nextStepStart('horizon', folder, 'Errors by Horizon, the sMAPE and the MASE of the method and of Naive2 at each step ahead') + String.raw`
-		id == "m5" && error("Errors by Horizon is for M1, M3 and M4: M5 is scored by the WRMSSE of its 12 levels.")
 		mine = read_forecasts()
 		numbers = unique(mine.series)
 		known = PC.series(id)
@@ -482,15 +437,14 @@ function horizonScript(folder: URI): string {
 
 /**
  * series.jl: one series of the run, the one named or at the place of `request`: the values the forecasters saw, those
- * it was scored on, the method's forecast, the eight benchmarks of M4 computed on it (M1, M3 and M4), and the winner's
- * forecast when it is on this computer.
+ * it was scored on, the method's forecast, and the eight statistical benchmarks computed on it.
  */
 function seriesScript(folder: URI, request: INextStepRequest): string {
 	const find = request.name !== undefined
 		? String.raw`
 		wanted = raw"${request.name}"
 		k = findfirst(==(wanted), known.name)
-		k === nothing && error(string(wanted, " is not a series of this competition."))
+		k === nothing && error(string(wanted, " is not a series of this dataset."))
 		position = findfirst(==(known.series[k]), numbers)
 		position === nothing && error(string(wanted, " is not among the series of this run."))`
 		: String.raw`
@@ -506,21 +460,17 @@ function seriesScript(folder: URI, request: INextStepRequest): string {
 		past = Float64.(PC.observations(id; series = s, split = "train").value)
 		rows = findall(==(s), mine.series)
 		forecast = mine.value[rows][sortperm(mine.h[rows])]
-		# The benchmarks of M4 on this series, as PollisCompetitions.M4Benchmarks computes them; Naive2 alone when the series is too short for the others
+		# The benchmarks on this series, as PollisCompetitions.Benchmarks computes them, each that the series is long enough for
 		benchmarks = Dict{String, Any}()
-		if id != "m5"
+		for m in PC.BENCHMARK_METHODS
 			try
-				computed = PC.M4Benchmarks.benchmarks(past; period, horizon = h)
-				for m in PC.M4_BENCHMARKS
-					benchmarks[m] = getproperty(computed, Symbol(m))
-				end
+				benchmarks[m] = getproperty(PC.Benchmarks.benchmarks(past; period, horizon = h, methods = (Symbol(m),)), Symbol(m))
 			catch
-				benchmarks["Naive2"] = PC.naive2(past, period, h)
 			end
 		end
 		write_json("series.json", Dict("position" => position, "count" => length(numbers), "name" => known.name[k], "frequency" => known.frequency[k],
 			"horizon" => h, "past" => past[max(1, end - 4999):end], "actual" => PC.observations(id; series = s, split = "test").value,
-			"forecast" => forecast, "benchmarks" => benchmarks, "winner" => winner_forecast(s)))` + nextStepEnd('series');
+			"forecast" => forecast, "benchmarks" => benchmarks))` + nextStepEnd('series');
 }
 
 /**
@@ -530,7 +480,6 @@ function seriesScript(folder: URI, request: INextStepRequest): string {
  */
 function failsScript(folder: URI): string {
 	return nextStepStart('fails', folder, 'Where It Fails, the series where the method does worst against Naive2') + String.raw`
-		id == "m5" && error("Where It Fails is for M1, M3 and M4: M5 is scored by the WRMSSE of its 12 levels.")
 		mine = read_forecasts()
 		numbers = unique(mine.series)
 		known = PC.series(id)
@@ -555,183 +504,23 @@ function failsScript(folder: URI): string {
 		write_json("fails.json", Dict("series" => length(rows), "frequencies" => frequencies, "rows" => rows[sort(collect(worst))]))` + nextStepEnd('fails');
 }
 
-/**
- * entry.jl: the entries of M4 or M5 with point forecasts, and whether their forecasts are on this computer; and, when
- * `request` names an entry whose forecasts are on this computer, its forecasts of the run's series, scored beside the
- * method's on the same series. For M4, the two are also compared series by series; for M5, level by level.
- */
-function entryScript(folder: URI, request: INextStepRequest): string {
-	return nextStepStart('entry', folder, 'Compare With an Entry, the method beside an entry of the competition on the same series') + String.raw`
-		id in ("m4", "m5") || error("Compare With an Entry is for M4 and M5: PollisCompetitions.jl has no entries of M1 and M3.")
-		listed = PC.entries(id)
-		on_disk(number) = isfile(joinpath(PC.folder(id), "forecasts", string(number, ".parquet")))
-		point = [k for k in eachindex(listed.entry) if listed.forecasts[k] == "point"]
-		entries = [Dict("entry" => Int(listed.entry[k]), "name" => listed.name[k], "kind" => listed.kind[k], "rank" => listed.rank[k],
-			"downloaded" => on_disk(listed.entry[k])) for k in point]
-		chosen = ${request.entry ?? 'nothing'}
-		compared = nothing
-		if chosen !== nothing
-			k = findfirst(i -> Int(listed.entry[i]) == chosen, point)
-			k === nothing && error(string("Entry ", chosen, " has no point forecasts."))
-			k = point[k]
-			on_disk(chosen) || error(string("The forecasts of ", listed.name[k], " are not on this computer: there is no ", joinpath(PC.folder(id), "forecasts", string(chosen, ".parquet")), "."))
-			mine = read_forecasts()
-			numbers = Set(mine.series)
-			published = PC.forecasts(id; entry = chosen)
-			keep = [s in numbers for s in published.series]
-			theirs = (; series = published.series[keep], h = published.h[keep], value = published.value[keep])
-			frequency = settings["frequency"]
-			measures = id == "m5" ? ["WRMSSE"] : ["sMAPE", "MASE", "OWA"]
-			breakdown, level = id == "m5" ? ("level", "Total") : ("frequency", isempty(frequency) ? "Total" : frequency)
-			println("Scoring the method and ", listed.name[k], " on the same series")
-			a, b = PC.score(id, mine), PC.score(id, theirs)
-			pick(scores, at) = Dict(m => only(scores.value[(scores.measure .== m) .& (scores.breakdown .== breakdown) .& (scores.level .== at)]) for m in measures)
-			compared = Dict{String, Any}("entry" => chosen, "name" => listed.name[k], "kind" => listed.kind[k], "rank" => listed.rank[k], "series" => length(numbers),
-				"level" => level, "measures" => measures, "method" => pick(a, level), "other" => pick(b, level))
-			if id == "m5"
-				compared["levels"] = [Dict("level" => at, "method" => pick(a, at)["WRMSSE"], "other" => pick(b, at)["WRMSSE"]) for at in vcat(string.(1:12), "Total")]
-			else
-				# Series by series: how often each is the better, and where the difference is largest
-				known = PC.series(id)
-				row_of = Dict(s => r for (r, s) in enumerate(known.series))
-				ours, others = series_means(PC.step_errors(id, mine)), series_means(PC.step_errors(id, theirs))
-				both = [s for s in keys(ours) if haskey(others, s)]
-				rows = [Dict{String, Any}("name" => known.name[row_of[s]], "frequency" => known.frequency[row_of[s]], "mase" => ours[s].mase,
-					"other_mase" => others[s].mase, "relative_mase" => relative(ours[s].mase, others[s].mase)) for s in both]
-				compared["counts"] = Dict(m => Dict("better" => count(s -> getfield(ours[s], m) < getfield(others[s], m), both),
-					"worse" => count(s -> getfield(ours[s], m) > getfield(others[s], m), both)) for m in (:smape, :mase))
-				order = sortperm([r["relative_mase"] for r in rows]; rev = true)
-				compared["entry_better"] = rows[order[1:min(50, end)]]
-				compared["method_better"] = rows[reverse(order)[1:min(50, end)]]
-			end
-		end
-		write_json("entry.json", Dict("entries" => entries, "compared" => compared))` + nextStepEnd('entry');
-}
-
-/** The Julia script of a Next Step of the run in `folder`; `request` says what Browse the Series and Compare With an Entry show. */
+/** The Julia script of a Next Step of the run in `folder`; `request` says what Browse the Series shows. */
 function nextStepScript(step: NextStep, folder: URI, request: INextStepRequest): string {
 	switch (step) {
 		case 'horizon': return horizonScript(folder);
 		case 'series': return seriesScript(folder, request);
 		case 'fails': return failsScript(folder);
-		case 'entry': return entryScript(folder, request);
 	}
 }
 
 /**
- * run.jl of a run of M6: calls decide of method.jl at each of the 12 rounds with the prices up to its first day,
- * checks its answer against the rules of M6, writes the submissions to forecasts.csv and scores them with
- * PollisCompetitions.jl; places the method among the teams ranked over the year by the overall rank (OR), the mean of
- * a team's ranks by RPS and by IR, recomputed with the method among them; then writes results.json.
- */
-function m6RunScript(folder: URI): string {
-	return String.raw`# Score Models: the method of method.jl on the 12 rounds of M6, scored as its organisers scored the
-# teams; progress.json while it runs, then forecasts.csv and results.json
-import Pkg
-Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
-import PollisCompetitions as PC
-let run = raw"${folder.fsPath}"
-${JULIA_JSON}
-	id = "m6"
-	try
-		isdefined(PC, :m6_prices) || error("M6 needs a newer PollisCompetitions.jl: update it with Pkg.update(\"PollisCompetitions\").")
-		method = Module(:Method)
-		Base.include(method, joinpath(run, "${METHOD_FILE}"))
-		isdefined(method, :decide) || error("method.jl defines no function decide(prices, date).")
-		decide = getfield(method, :decide)
-		known = PC.table(id, "prices")
-		rounds = PC.m6_prices(id)
-		assets = first(rounds).symbols
-		columns = (:rank1, :rank2, :rank3, :rank4, :rank5)
-		submitted = (; evaluation = Int[], symbol = String[], decision = Float64[], rank1 = Float64[], rank2 = Float64[], rank3 = Float64[],
-			rank4 = Float64[], rank5 = Float64[])
-		started = time()
-		for k in eachindex(rounds)
-			day = first(rounds[k].days)
-			seen = findall(<=(day), known.date)
-			prices = (; symbol = known.symbol[seen], date = known.date[seen], price = known.price[seen])
-			answer = PC.Tables.columntable(Base.invokelatest(decide, prices, day))
-			for name in (:symbol, columns..., :decision)
-				haskey(answer, name) || error(string("Round ", k, ": decide gave no column ", name, "; it must give symbol, rank1 to rank5 and decision."))
-			end
-			row_of = Dict(String(s) => i for (i, s) in enumerate(answer.symbol))
-			absent = [a for a in assets if !haskey(row_of, a)]
-			isempty(absent) || error(string("Round ", k, ": decide gave no row for ", join(absent[1:min(5, end)], ", "), length(absent) > 5 ? " and others." : "."))
-			for a in assets
-				i = row_of[a]
-				p = Float64[getproperty(answer, c)[i] for c in columns]
-				all(x -> 0 <= x <= 1, p) && abs(sum(p) - 1) <= 1e-6 ||
-					error(string("Round ", k, ", ", a, ": the five probabilities must each be from 0 to 1 and add up to 1."))
-				push!(submitted.evaluation, k); push!(submitted.symbol, a); push!(submitted.decision, Float64(answer.decision[i]))
-				for (c, v) in zip(columns, p)
-					push!(getproperty(submitted, c), v)
-				end
-			end
-			invested = sum(abs, submitted.decision[submitted.evaluation .== k])
-			0.25 - 1e-9 <= invested <= 1 + 1e-9 || error(string("Round ", k, ": the absolute weights add up to ", round(invested; digits = 4), "; M6 asks for 0.25 to 1."))
-			write_json("${PROGRESS_FILE}", Dict("done" => k, "total" => length(rounds), "seconds" => time() - started, "failed" => 0))
-			println("Round ", k, " of ", length(rounds), " decided")
-		end
-		open(joinpath(run, "${FORECASTS_FILE}"), "w") do io
-			println(io, "evaluation,symbol,decision,rank1,rank2,rank3,rank4,rank5")
-			for i in eachindex(submitted.symbol)
-				println(io, join([submitted.evaluation[i], submitted.symbol[i], repr(submitted.decision[i]), [repr(getproperty(submitted, c)[i]) for c in columns]...], ","))
-			end
-		end
-		println("Scoring the submissions")
-		scores = PC.score(id, submitted)
-		pick(measure, breakdown, level) = (found = findfirst(i -> scores.measure[i] == measure && scores.breakdown[i] == breakdown && scores.level[i] == level, eachindex(scores.value)); found === nothing ? nothing : scores.value[found])
-		published = PC.published_scores(id)
-		lookup = Dict((published.entry[i], published.measure[i], published.breakdown[i], published.level[i]) => published.value[i] for i in eachindex(published.entry))
-		at(entry, measure, breakdown, level) = get(lookup, (entry, measure, breakdown, level), nothing)
-		entries = PC.entries(id)
-		# The teams the organisers ranked over the year, and the method among them. As in the organisers' leaderboard, OR is
-		# the mean of the ranks by RPS (lowest first) and by IR (highest first), of the scores to six decimals, teams with the
-		# same score sharing the mean of their places; the teams' scores are computed from their submissions, as the leaderboard
-		# gives them to five decimals only
-		println("Scoring the teams")
-		teams = PC.scores(id)
-		full = Dict((teams.entry[i], teams.measure[i], teams.breakdown[i], teams.level[i]) => teams.value[i] for i in eachindex(teams.entry))
-		ranked = [k for k in eachindex(entries.entry) if at(entries.entry[k], "OR", "global", "Total") !== nothing && haskey(full, (entries.entry[k], "RPS", "global", "Total"))]
-		rps = round.([[full[(entries.entry[k], "RPS", "global", "Total")] for k in ranked]; pick("RPS", "global", "Total")]; digits = 6)
-		ir = round.([[full[(entries.entry[k], "IR", "global", "Total")] for k in ranked]; pick("IR", "global", "Total")]; digits = 6)
-		places(values, better) = [count(v -> better(v, x), values) + (count(==(x), values) + 1) / 2 for x in values]
-		overall = (places(rps, <) .+ places(ir, >)) ./ 2
-		mine = Dict("RPS" => rps[end], "IR" => ir[end], "OR" => overall[end])
-		name_of(k) = coalesce(entries.team[k], entries.name[k])
-		rows = [Dict("name" => name_of(k), "kind" => entries.kind[k], "value" => overall[i], "method" => false) for (i, k) in enumerate(ranked)]
-		push!(rows, Dict("name" => "Your Method", "kind" => "method", "value" => overall[end], "method" => true))
-		sort!(rows; by = r -> (r["value"], !r["method"]))
-		ranking = Dict("measure" => "OR", "place" => findfirst(r -> r["method"], rows), "of" => length(rows), "rows" => rows)
-		dummy = findfirst(==("benchmark"), entries.kind)
-		benchmarks = Dict{String, Any}[]
-		if dummy !== nothing
-			d = findfirst(==(dummy), ranked)
-			push!(benchmarks, Dict("name" => name_of(dummy), "source" => "published", "scores" => Dict("RPS" => at(entries.entry[dummy], "RPS", "global", "Total"),
-				"IR" => at(entries.entry[dummy], "IR", "global", "Total"), "OR" => d === nothing ? nothing : overall[d])))
-		end
-		by_round = [Dict("round" => k, "method" => Dict("RPS" => pick("RPS", "month", string(k)), "IR" => pick("IR", "month", string(k))),
-			"benchmark" => dummy === nothing ? nothing : Dict("RPS" => at(entries.entry[dummy], "RPS", "month", string(k)), "IR" => at(entries.entry[dummy], "IR", "month", string(k))))
-			for k in eachindex(rounds)]
-		write_json("${RESULTS_FILE}", Dict("finished" => Libc.strftime("%Y-%m-%d %H:%M", time()), "series" => length(assets), "whole" => true, "level" => "Total",
-			"measures" => ["RPS", "IR", "OR"], "method" => mine, "benchmarks" => benchmarks, "ranking" => ranking, "plot" => nothing, "rounds" => by_round,
-			"benchmarkName" => dummy === nothing ? nothing : name_of(dummy), "seconds" => time() - started))
-		println("Results in ", joinpath(run, "${RESULTS_FILE}"))
-	catch err
-		write_json("${RESULTS_FILE}", Dict("error" => sprint(showerror, err)))
-		println("The run stopped: ", sprint(showerror, err))
-	end
-end`;
-}
-
-/**
  * run.jl of a run: runs forecast of method.jl on each series chosen, over Julia's threads, writes the forecasts and
- * scores them with PollisCompetitions.jl beside the benchmarks, and ranks them among the entries when the run is of the
- * whole competition or of a whole frequency of M4, or of M5; then writes results.json, which step 4 draws.
+ * scores them with PollisCompetitions.jl by sMAPE, MASE and OWA, beside the eight statistical benchmarks computed on
+ * the same series; then writes results.json, which step 4 draws.
  */
 function runScript(folder: URI): string {
-	return String.raw`# Score Models: the method of method.jl on the series of run.toml, scored as the competition's
-# organisers scored the entries; progress.json while it runs, then forecasts.csv and results.json
+	return String.raw`# Score Models: the method of method.jl on the series of run.toml, scored by sMAPE, MASE and OWA beside
+# the benchmarks; progress.json while it runs, then forecasts.csv and results.json
 import Pkg
 Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
 import PollisCompetitions as PC, Random, TOML
@@ -740,11 +529,10 @@ ${JULIA_JSON}
 	settings = TOML.parsefile(joinpath(run, "${RUN_FILE}"))
 	# A dataset of the user's own is read from its folder, which PollisCompetitions.jl takes in place of an id
 	id, frequency, sample, seed = get(settings, "folder", settings["competition"]), settings["frequency"], settings["sample"], settings["seed"]
-	measures = id == "m5" ? ["WRMSSE"] : ["sMAPE", "MASE", "OWA"]
-	breakdown, level = id == "m5" ? ("level", "Total") : ("frequency", isempty(frequency) ? "Total" : frequency)
-${JULIA_WINNER}
+	measures = ["sMAPE", "MASE", "OWA"]
+	level = isempty(frequency) ? "Total" : frequency
 	try
-		haskey(settings, "folder") && !isdefined(PC, :is_dataset) && error("A dataset of your own needs a newer PollisCompetitions.jl: update it with Pkg.update(\"PollisCompetitions\").")
+		isdefined(PC, :BENCHMARK_METHODS) || error("Score Models needs a newer PollisCompetitions.jl: update it with Pkg.update(\"PollisCompetitions\").")
 		method = Module(:Method)
 		Base.include(method, joinpath(run, "${METHOD_FILE}"))
 		isdefined(method, :forecast) || error("method.jl defines no function forecast(y, h, period).")
@@ -790,46 +578,26 @@ ${JULIA_WINNER}
 			end
 		end
 		println("Scoring the forecasts")
-		pick(scores) = Dict(m => only(scores.value[(scores.measure .== m) .& (scores.breakdown .== breakdown) .& (scores.level .== level)]) for m in measures)
+		pick(scores) = Dict(m => only(scores.value[(scores.measure .== m) .& (scores.breakdown .== "frequency") .& (scores.level .== level)]) for m in measures)
 		mine = pick(PC.score(id, table))
-		entries = id in ("m4", "m5") ? PC.entries(id) : nothing
-		ranked = entries !== nothing && whole
+		# The benchmarks computed on the same series, with PollisCompetitions.Benchmarks: each that every series of the run is long enough for
+		println("Computing the benchmarks on the same series")
 		benchmarks = Dict{String, Any}[]
-		ranking = nothing
-		if ranked
-			# The published scores of the entries, on the same series
-			published = PC.published_scores(id)
-			at(entry, m) = (k = findfirst(i -> published.entry[i] == entry && published.measure[i] == m && published.breakdown[i] == breakdown && published.level[i] == level, eachindex(published.entry)); k === nothing ? nothing : published.value[k])
-			scored = [(entry = e, name = nm, kind = kd) for (e, nm, kd, f) in zip(entries.entry, entries.name, entries.kind, entries.forecasts) if f == "point"]
-			for e in scored
-				e.kind == "benchmark" && push!(benchmarks, Dict("name" => e.name, "source" => "published", "scores" => Dict(m => at(e.entry, m) for m in measures)))
+		for m in PC.BENCHMARK_METHODS
+			computed = try
+				PC.benchmarks(id; methods = [m], series = numbers)
+			catch
+				nothing
 			end
-			measure = id == "m5" ? "WRMSSE" : "OWA"
-			rows = [Dict("name" => e.name, "kind" => e.kind, "value" => at(e.entry, measure), "method" => false) for e in scored if at(e.entry, measure) !== nothing]
-			push!(rows, Dict("name" => "Your Method", "kind" => "method", "value" => mine[measure], "method" => true))
-			sort!(rows; by = r -> (r["value"], !r["method"]))
-			ranking = Dict("measure" => measure, "place" => findfirst(r -> r["method"], rows), "of" => length(rows), "rows" => rows)
-		elseif id == "m4"
-			# The benchmarks computed on the same series, with PollisCompetitions.M4Benchmarks
-			println("Computing the benchmarks on the same series")
-			computed = PC.benchmarks(id; series = numbers)
-			for m in PC.M4_BENCHMARKS
-				k = computed.method .== m
-				push!(benchmarks, Dict("name" => m, "source" => "computed", "scores" => pick(PC.score(id, (; series = computed.series[k], h = computed.h[k], value = computed.value[k])))))
-			end
-		elseif id != "m5"
-			# Naive2, against which OWA weighs the method
-			reference = [PC.naive2(Float64.(seen.value[starts[k]:stops[k]]), period[numbers[k]], horizon[numbers[k]]) for k in 1:n]
-			naive2 = (; series = table.series, h = reduce(vcat, [collect(eachindex(f)) for f in reference]), value = reduce(vcat, reference))
-			push!(benchmarks, Dict("name" => "Naive2", "source" => "computed", "scores" => pick(PC.score(id, naive2))))
+			computed === nothing || push!(benchmarks, Dict("name" => m, "scores" => pick(PC.score(id, computed))))
 		end
-		# A series to plot: the first chosen, with the winner's forecast when it is on this computer
+		# A series to plot: the first chosen
 		s = numbers[1]
 		past = Float64.(seen.value[starts[1]:stops[1]])
 		past = past[max(1, end - 3 * horizon[s] + 1):end]
-		plot = Dict("series" => name[s], "past" => past, "actual" => PC.observations(id; series = s, split = "test").value, "forecast" => forecasts[1], "winner" => winner_forecast(s))
+		plot = Dict("series" => name[s], "past" => past, "actual" => PC.observations(id; series = s, split = "test").value, "forecast" => forecasts[1])
 		write_json("${RESULTS_FILE}", Dict("finished" => Libc.strftime("%Y-%m-%d %H:%M", time()), "series" => n, "whole" => whole, "level" => level,
-			"measures" => measures, "method" => mine, "benchmarks" => benchmarks, "ranking" => ranking, "plot" => plot, "seconds" => time() - started))
+			"measures" => measures, "method" => mine, "benchmarks" => benchmarks, "plot" => plot, "seconds" => time() - started))
 		println("Results in ", joinpath(run, "${RESULTS_FILE}"))
 	catch err
 		write_json("${RESULTS_FILE}", Dict("error" => sprint(showerror, err)))
@@ -910,8 +678,8 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 	let batch: URI | undefined;
 	/** The run Compare Two Runs sets beside the current one, if any. */
 	let other: URI | undefined;
-	/** The datasets step 1 lists: the competitions, then the datasets of the user's own, as last read. */
-	let known: readonly ICompetition[] = COMPETITIONS;
+	/** The datasets step 1 can list: those of PollisCompetitions.jl, then the datasets of the user's own, as last read. */
+	let known: readonly IScoredDataset[] = [];
 	const refresh = disposables.add(new RunOnceScheduler(() => sendState(), 300));
 	// The folder of the competitions, for the data that come into it, and the folders of the run shown, for the files they write
 	const competitionsWatcher = disposables.add(fileService.createWatcher(competitionsFolder, { recursive: false, excludes: [] }));
@@ -933,26 +701,24 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 		runWatcher.value = store;
 	};
 
-	/** The datasets the user added to the Pollis Workspace that are converted, as step 1 lists them, scored as M1 and M3 are. */
-	const userDatasets = async (): Promise<ICompetition[]> => {
+	/** The datasets the user added to the Pollis Workspace that are converted, as step 1 lists them, but those whose ids are in `taken`. */
+	const userDatasets = async (taken: ReadonlySet<string>): Promise<IScoredDataset[]> => {
 		const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 		if (!workspace) {
 			return [];
 		}
 		const folder = await forecastingFolder(fileService, workspace);
-		const found: ICompetition[] = [];
+		const found: IScoredDataset[] = [];
 		for (const { id } of await addedDatasetFiles(fileService, folder)) {
 			const dataset = await readAddedDataset(fileService, folder, id);
 			const files = joinPath(folder, id);
-			if (!dataset || COMPETITIONS.some(c => c.id === id) || !await fileService.exists(joinPath(files, 'series.parquet'))) {
+			if (!dataset || taken.has(id) || !await fileService.exists(joinPath(files, 'series.parquet'))) {
 				continue;
 			}
 			const { conversion } = dataset;
 			found.push({
-				id, name: typeof dataset.dataset.dataset_name === 'string' ? dataset.dataset.dataset_name : id, sampling: true, ranked: false, method: 'forecast',
-				frequencies: [{ name: conversion.frequency, series: conversion.series, horizon: conversion.horizon }],
-				measures: 'sMAPE, MASE, OWA',
-				entries: localize('competitions.user.entries', "Your dataset: scored beside Naive2"),
+				id, name: typeof dataset.dataset.dataset_name === 'string' ? dataset.dataset.dataset_name : id,
+				frequencies: [{ name: conversion.frequency, series: conversion.series, shortest: conversion.horizon, longest: conversion.horizon }],
 				folder: files.fsPath,
 			});
 		}
@@ -971,11 +737,12 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 	};
 
 	const sendState = async () => {
-		const users = await userDatasets();
-		known = [...COMPETITIONS, ...users];
-		const downloaded = await competitionsOnComputer(fileService, pathService, COMPETITIONS);
 		const run = current && await readRun(fileService, current);
 		const batchChoices = batch && await readBatch(fileService, batch);
+		// The datasets of PollisCompetitions.jl that are active or of the run shown, then those of the user's own
+		const stored = activeDatasets(storageService).scored;
+		const packaged = await packageScoredDatasets(fileService, pathService, [...new Set([...stored, ...(batchChoices ? batchChoices.datasets : run ? [run.competition] : [])])]);
+		known = [...packaged, ...await userDatasets(new Set(packaged.map(dataset => dataset.id)))];
 		const names = await runNames();
 		const batches = (await Promise.all(names.map(async name => await readBatch(fileService, joinPath(runsFolder, name)) ? [name] : []))).flat();
 		let code: string | undefined;
@@ -989,10 +756,9 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 		post({
 			command: 'state',
 			root: runsFolder.fsPath,
-			userDatasets: users,
+			datasets: known,
 			// The active datasets that the page scores, as Manage Competition Datasets keeps them
-			active: activeDatasets(storageService).scored.filter(id => known.some(c => c.id === id)),
-			downloaded: { ...downloaded, ...Object.fromEntries(users.map(d => [d.id, true])) },
+			active: stored.filter(id => known.some(dataset => dataset.id === id)),
 			runs: names,
 			batches,
 			batch: batch && batchChoices && {
@@ -1024,39 +790,31 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 	};
 
 	/**
-	 * Writes the run's folder and sends run.jl to the Julia REPL: for one dataset, a run as it has always been; for
-	 * several, a folder with a run of each in the subfolder named by its id, and a run.jl that runs them in turn. M6,
-	 * whose method decides rather than forecasts, is a run of its own, sent after that of the others; the page shows the first.
+	 * Writes the run's folder and sends run.jl to the Julia REPL: for one dataset, a run of it; for several, a folder
+	 * with a run of each in the subfolder named by its id, and a run.jl that runs them in turn.
 	 */
-	const startRun = async (inputs: Omit<IRunInputs, 'datasets'> & { readonly datasets: readonly ICompetition[] }) => {
-		const onComputer = await competitionsOnComputer(fileService, pathService, inputs.datasets.filter(dataset => !dataset.folder));
-		const missing = inputs.datasets.filter(dataset => !dataset.folder && !onComputer[dataset.id]).map(dataset => dataset.name);
+	const startRun = async (inputs: Omit<IRunInputs, 'datasets'> & { readonly datasets: readonly IScoredDataset[] }) => {
+		const packageIds = inputs.datasets.filter(dataset => !dataset.folder).map(dataset => dataset.id);
+		const present = new Set((await packageScoredDatasets(fileService, pathService, packageIds)).map(dataset => dataset.id));
+		const missing = inputs.datasets.filter(dataset => !dataset.folder && !present.has(dataset.id)).map(dataset => dataset.name);
 		if (missing.length) {
 			post({ command: 'runProblem', text: localize('competitions.notOnComputer', "The data of {0} are not on this computer.", missing.join(', ')) });
 			return;
 		}
-		const groups = [inputs.datasets.filter(dataset => dataset.method === 'forecast'), inputs.datasets.filter(dataset => dataset.method === 'decide')].filter(group => group.length);
-		for (const method of groups.map(group => group[0].method)) {
-			const defines = new RegExp(`\\bfunction\\s+${method}\\s*\\(|\\b${method}\\s*\\([^)]*\\)\\s*=`);
-			if (!defines.test(inputs.code)) {
-				post({
-					command: 'runProblem', text: method === 'decide'
-						? localize('competitions.noDecide', "Your method for M6 must define a function decide(prices, date).")
-						: localize('competitions.noFunction', "Your method must define a function forecast(y, h, period).")
-				});
-				return;
-			}
+		if (!/\bfunction\s+forecast\s*\(|\bforecast\s*\([^)]*\)\s*=/.test(inputs.code)) {
+			post({ command: 'runProblem', text: localize('competitions.noFunction', "Your method must define a function forecast(y, h, period).") });
+			return;
 		}
 		const now = new Date();
 		const stamp = now.toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '-');
 		const started = now.toISOString().slice(0, 16).replace('T', ' ');
-		const writeRun = async (folder: URI, dataset: ICompetition, frequency: string) => {
-			const choices: IRunChoices = { competition: dataset.id, frequency, sample: dataset.sampling ? inputs.sample : 0, seed: inputs.seed, ...(dataset.folder ? { folder: dataset.folder } : {}) };
+		const writeRun = async (folder: URI, dataset: IScoredDataset, frequency: string) => {
+			const choices: IRunChoices = { competition: dataset.id, frequency, sample: inputs.sample, seed: inputs.seed, ...(dataset.folder ? { folder: dataset.folder } : {}) };
 			await fileService.writeFile(joinPath(folder, RUN_FILE), VSBuffer.fromString(runToml(choices, started)));
 			await fileService.writeFile(joinPath(folder, METHOD_FILE), VSBuffer.fromString(inputs.code));
-			await fileService.writeFile(joinPath(folder, SCRIPT_FILE), VSBuffer.fromString(dataset.method === 'decide' ? m6RunScript(folder) : runScript(folder)));
+			await fileService.writeFile(joinPath(folder, SCRIPT_FILE), VSBuffer.fromString(runScript(folder)));
 		};
-		const writeGroup = async (group: readonly ICompetition[], frequency: string): Promise<URI> => {
+		const writeGroup = async (group: readonly IScoredDataset[], frequency: string): Promise<URI> => {
 			if (group.length === 1) {
 				const dataset = group[0];
 				const folder = joinPath(runsFolder, `${dataset.id.replace(/_/g, '-')}${frequency ? '-' + frequency.toLowerCase() : ''}-${stamp}`);
@@ -1073,16 +831,11 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 			await fileService.writeFile(joinPath(folder, SCRIPT_FILE), VSBuffer.fromString(batchScript(folder, ids)));
 			return folder;
 		};
-		const folders: URI[] = [];
-		for (const group of groups) {
-			folders.push(await writeGroup(group, inputs.datasets.length === 1 ? inputs.frequency : ''));
-		}
-		await show(folders[0]);
+		const folder = await writeGroup(inputs.datasets, inputs.datasets.length === 1 ? inputs.frequency : '');
+		await show(folder);
 		await sendState();
-		for (const folder of folders) {
-			await sendToJuliaRepl(`include(raw"${joinPath(folder, SCRIPT_FILE).fsPath}")`, commandService);
-		}
-		post({ command: 'running', after: folders.slice(1).map(folder => basename(folder)) });
+		await sendToJuliaRepl(`include(raw"${joinPath(folder, SCRIPT_FILE).fsPath}")`, commandService);
+		post({ command: 'running' });
 	};
 
 	disposables.add(webviewInput.webview.onDidDispose(() => {
@@ -1138,46 +891,32 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 
 function pageHtml(): string {
 	const text = {
-		intro: localize('competitions.intro', "Score Models runs a forecasting method of your own on the series of a competition, M1, M3, M4, M5 Accuracy or M6, scores its forecasts with the competition's own measures, as its organisers scored the entries, and shows where it would have finished among them. The series come with the split the forecasters had: the values they saw, and the values their forecasts were scored on; in M6, the prices of its 100 assets up to each round. Your method is scored the same way on the datasets you add in Manage Competition Datasets, beside Naive2, and on several datasets in one run, each in turn, its scores on them side by side."),
+		intro: localize('competitions.intro', "Score Models runs a forecasting method of your own on the series of forecasting datasets and scores its forecasts by sMAPE, MASE and OWA, beside the eight statistical benchmarks computed on the same series. The series come with the split the forecasters had: the values they saw, and the values their forecasts are scored on. Score Models lists the datasets active in Manage Competition Datasets on which it scores models, those of PollisCompetitions.jl and those you add there, and scores your method on several datasets in one run, each in turn, its scores on them side by side."),
 		datasetsStep: localize('competitions.datasetsStep', "Datasets"),
 		dataset: localize('competitions.dataset', "Dataset"),
 		severalHint: localize('competitions.severalHint', "The datasets active in Manage Competition Datasets on which Score Models can score models. A run scores your method on each in turn, with the same sample size and seed; a frequency is chosen only when there is one dataset. To use other datasets, tick them in the column Active of Manage Competition Datasets."),
-		noneActive: localize('competitions.noneActive', "None of the active datasets is one on which Score Models can score models. Tick the datasets to use in the column Active of Manage Competition Datasets, where the column Model Scoring says which are Ready: the competitions M1, M3, M4, M5 Accuracy and M6, and the datasets you add there."),
+		noneActive: localize('competitions.noneActive', "None of the active datasets is one on which Score Models can score models. Tick the datasets to use in the column Active of Manage Competition Datasets, where the column Model Scoring says which are Ready."),
 		manage: localize('competitions.manage', "Open Manage Competition Datasets"),
-		m6Apart: localize('competitions.m6Apart', "A run of its own, after the others: the method of M6 is decide(prices, date), which your method defines beside forecast(y, h, period)."),
-		runningAfter: localize('competitions.runningAfter', "Sent to the Julia REPL. M6 runs after it, as a run of its own: {0}, in Earlier runs."),
-		methodHintBoth: localize('competitions.methodHintBoth', "Your method defines two functions: forecast(y, h, period) for the series of the datasets, and decide(prices, date) for M6, which is run on its own after them. The example is the benchmark Theta of M4 and M6 Dummy, the benchmark of M6."),
 		batchTitle: localize('competitions.batchTitle', "Datasets of This Run"),
-		batchHint: localize('competitions.batchHint', "A row for each dataset, your method scored on each in turn. Select a row to see its scores on that dataset, its place and a series below, and its Next Steps."),
+		batchHint: localize('competitions.batchHint', "A row for each dataset, your method scored on each in turn. Select a row to see its scores on that dataset and a series below, and its Next Steps."),
 		status: localize('competitions.status', "Status"),
 		waiting: localize('competitions.waiting', "Waiting"),
 		done: localize('competitions.done', "Done"),
 		stoppedShort: localize('competitions.stoppedShort', "Stopped"),
 		batchProgress: localize('competitions.batchProgress', "Dataset {0} of {1}, {2}: "),
 		batchDone: localize('competitions.batchDone', "All {0} datasets run."),
-		competition: localize('competitions.competition', "Competition"),
 		series: localize('competitions.series', "Series"),
 		frequencies: localize('competitions.frequencies', "Frequencies and Horizons"),
-		measures: localize('competitions.measures', "Measures"),
-		entries: localize('competitions.entries', "Entries"),
-		onComputer: localize('competitions.onComputer', "On This Computer"),
-		yes: localize('competitions.yes', "Yes"),
-		no: localize('competitions.no', "No"),
-		onComputerHint: localize('competitions.onComputerHint', "A competition is scored from its data on this computer, built in with PollisCompetitions.jl or downloaded into {0}.", '<span class="yellow">~/.pollis/competitions</span>'),
+		datasetsHint: localize('competitions.datasetsHint', "Each dataset is scored from its data on this computer, built in with PollisCompetitions.jl, downloaded into {0}, or added to your Pollis Workspace. The horizon of a series is the number of its last values held out from the forecasters.", '<span class="yellow">~/.pollis/competitions</span>'),
 		frequency: localize('competitions.frequency', "Frequency"),
 		allFrequencies: localize('competitions.allFrequencies', "All"),
 		seriesToRun: localize('competitions.seriesToRun', "Series to Run"),
 		allSeries: localize('competitions.allSeries', "All"),
 		sampleOf: localize('competitions.sampleOf', "A Sample of"),
 		seed: localize('competitions.seed', "Seed"),
-		sampleHint: localize('competitions.sampleHint', "A sample is drawn with the seed, so that the same seed gives the same series. A run of all the series of the competition, or of one frequency of M4, is ranked among the entries; a sample is scored beside the benchmarks, computed on the same series."),
+		sampleHint: localize('competitions.sampleHint', "A sample is drawn with the seed, so that the same seed gives the same series. The benchmarks are computed on the same series as your method."),
 		yourMethod: localize('competitions.yourMethod', "Your Method"),
-		methodHintDecide: localize('competitions.methodHintDecide', "A Julia function decide(prices, date) that, at each of the 12 rounds of M6, gets the prices of the 100 assets up to the first day of the round and returns, for each asset, the probabilities that its return over the next four weeks ranks in each fifth of the 100, and the weight invested in it. The run checks every answer against the rules of M6. The example is M6 Dummy, the benchmark: equal probabilities and equal weights."),
-		progressRounds: localize('competitions.progressRounds', "{0} of {1} rounds decided, {2} s"),
-		finishedRounds: localize('competitions.finishedRounds', "{0} assets over 12 rounds, finished {1}."),
-		byRound: localize('competitions.byRound', "By Round"),
-		round: localize('competitions.round', "Round"),
-		methodHint: localize('competitions.methodHint', "A Julia function forecast(y, h, period) that returns h forecasts of the series y, whose seasonal period is period. It runs on each series on its own, over Julia's threads when the REPL has several. The example is the benchmark Theta of M4."),
+		methodHint: localize('competitions.methodHint', "A Julia function forecast(y, h, period) that returns h forecasts of the series y, whose seasonal period is period. It runs on each series on its own, over Julia's threads when the REPL has several. The example is the benchmark Theta."),
 		reset: localize('competitions.reset', "Reset to the Example"),
 		run: localize('competitions.run', "Run"),
 		runHint: localize('competitions.runHint', "Run writes the run's folder in {0} and runs it in the Julia REPL: the method on every series chosen, then the scores. The progress shows here as it runs.", '<span class="yellow" id="root"></span>'),
@@ -1187,36 +926,21 @@ function pageHtml(): string {
 		running: localize('competitions.running', "Sent to the Julia REPL."),
 		progress: localize('competitions.progress', "{0} of {1} series forecast, {2} s"),
 		failedSeries: localize('competitions.failedSeries', "{0} series not forecast"),
-		noRun: localize('competitions.noRun', "No run yet: choose the competition and the method, then run it."),
+		noRun: localize('competitions.noRun', "No run yet: choose the datasets and the method, then run it."),
 		openMethod: localize('competitions.openMethod', "method.jl"),
 		openScript: localize('competitions.openScript', "run.jl"),
 		openForecasts: localize('competitions.openForecasts', "forecasts.csv"),
-		scoreAndRank: localize('competitions.scoreAndRank', "Score and Rank"),
+		scoresStep: localize('competitions.scoresStep', "Scores"),
 		resultsHint: localize('competitions.resultsHint', "The scores show here once the run ends."),
 		finished: localize('competitions.finished', "{0} series, finished {1}."),
 		stopped: localize('competitions.stopped', "The run stopped: {0}"),
 		scores: localize('competitions.scores', "Scores"),
+		scoresHint: localize('competitions.scoresHint', "Your method and the benchmarks on the same series, at {0}; OWA weighs the sMAPE and the MASE of each against those of Naive2. A benchmark is left out when a series of the run is too short for it."),
 		method: localize('competitions.method', "Your Method"),
 		benchmark: localize('competitions.benchmark', "Benchmark"),
-		published: localize('competitions.published', "Published"),
-		computed: localize('competitions.computed', "Computed on the same series"),
-		source: localize('competitions.source', "Source"),
-		place: localize('competitions.place', "Place"),
-		placeText: localize('competitions.placeText', "Place {0} of {1} by {2} ({3}), among the entries' published scores."),
-		notRanked: localize('competitions.notRanked', "Not ranked: the entries' published scores are of the whole competition and of each frequency of M4. Run all the series, or a whole frequency of M4, to be ranked."),
-		noEntries: localize('competitions.noEntries', "Not ranked: PollisCompetitions.jl has no entries of {0} yet, so the method is scored beside Naive2."),
-		entry: localize('competitions.entry', "Entry"),
-		kind: localize('competitions.kind', "Kind"),
-		kinds: {
-			submission: localize('competitions.submission', "Submission"),
-			benchmark: localize('competitions.benchmarkKind', "Benchmark"),
-			standard: localize('competitions.standard', "Standard"),
-			method: localize('competitions.methodKind', "Yours"),
-		},
 		aSeries: localize('competitions.aSeries', "A Series"),
-		plotHint: localize('competitions.plotHint', "The first series of the run: its last values, the values it was scored on, your method's forecast and, when its forecasts are on this computer, the winner's."),
+		plotHint: localize('competitions.plotHint', "The first series of the run: its last values, the values it was scored on, and your method's forecast."),
 		actual: localize('competitions.actual', "Actual"),
-		winner: localize('competitions.winner', "Winner: {0}"),
 		nextNeedsRun: localize('competitions.nextNeedsRun', "Run a method first: the Next Steps work on the forecasts of a finished run, the one shown in steps 3 and 4."),
 		compute: localize('competitions.compute', "Compute in the Julia REPL"),
 		stepStopped: localize('competitions.stepStopped', "The step stopped: {0}"),
@@ -1243,56 +967,29 @@ function pageHtml(): string {
 		relativeOf: localize('competitions.relativeOf', "{0} Relative to Naive2"),
 		relativeHint: localize('competitions.relativeHint', "Your method's {0} on the series over Naive2's: above 1, your method forecasts the series worse than Naive2. Sort by this column; click again to reverse."),
 		worstRows: localize('competitions.worstRows', "The series where your method does worst: the 100 worst by each of the four measures, {0} series in all. A series' name opens it in Browse the Series."),
-		entryStep: localize('competitions.entryStep', "Compare With an Entry"),
-		listEntries: localize('competitions.listEntries', "List the Entries"),
-		compare: localize('competitions.compare', "Compare"),
-		entryLabel: localize('competitions.entryLabel', "Entry"),
-		rankText: localize('competitions.rankText', "rank {0}"),
-		downloadedText: localize('competitions.downloadedText', "on this computer"),
-		entryDownloadHint: localize('competitions.entryOnComputerHint', "Compare needs the entry's forecasts on this computer: the entries marked so."),
-		comparedText: localize('competitions.comparedText', "Your method beside {0} on the {1} series of the run, at {2}."),
-		entryColumn: localize('competitions.entryColumn', "The Entry"),
-		level: localize('competitions.level', "Level"),
-		betterCount: localize('competitions.betterCount', "Your Method Better"),
-		worseCount: localize('competitions.worseCount', "The Entry Better"),
-		entryBetter: localize('competitions.entryBetter', "Where the Entry Does Better"),
-		methodBetter: localize('competitions.methodBetter', "Where Your Method Does Better"),
-		relativeToEntry: localize('competitions.relativeToEntry', "MASE Relative to the Entry"),
-		pairHint: localize('competitions.pairHint', "The 50 series with the largest and the smallest MASE of your method relative to the entry's. A series' name opens it in Browse the Series."),
 		runsStep: localize('competitions.runsStep', "Compare Two Runs"),
 		otherRun: localize('competitions.otherRun', "The Other Run"),
 		chooseRun: localize('competitions.chooseRun', "Choose a run..."),
 		thisRun: localize('competitions.thisRun', "This Run"),
 		noOtherRuns: localize('competitions.noOtherRuns', "There is no other finished run yet: run another method, or the same one again, on the same series."),
-		notSameSeries: localize('competitions.notSameSeries', "The two runs are not on the same series: a run is compared with another of the same competition, frequency, sample and seed. {0} is {1}, the other is {2}."),
+		notSameSeries: localize('competitions.notSameSeries', "The two runs are not on the same series: a run is compared with another of the same dataset, frequency, sample and seed. {0} is {1}, the other is {2}."),
 		otherNotDone: localize('competitions.otherNotDone', "The other run has no scores yet: it is still running, or it stopped."),
 		runSettings: localize('competitions.runSettings', "{0}, {1}, {2}"),
 		allSeriesText: localize('competitions.allSeriesText', "all series"),
 		sampleText: localize('competitions.sampleText', "a sample of {0} with seed {1}"),
-		placeRow: localize('competitions.placeRow', "Place"),
-		placeOf: localize('competitions.placeOf', "{0} of {1}"),
 		secondsRow: localize('competitions.secondsRow', "Seconds"),
 		diffMethods: localize('competitions.diffMethods', "Compare method.jl"),
 		nextIntro: {
-			runs: localize('competitions.runsIntro', "This run beside another of your runs on the same series, such as two methods, or two versions of one, run with the same competition, frequency, sample and seed: their scores, their places among the entries when ranked, the time each took, and the differences between their method.jl."),
-			entry: localize('competitions.entryIntro', "Your method beside one entry of the competition, a submission or a benchmark, on the same series: their scores, and for M4 how often each forecasts a series better and where they differ most, or for M5 their WRMSSE at each of the 12 levels."),
+			runs: localize('competitions.runsIntro', "This run beside another of your runs on the same series, such as two methods, or two versions of one, run with the same dataset, frequency, sample and seed: their scores, the time each took, and the differences between their method.jl."),
 			fails: localize('competitions.failsIntro', "The sMAPE and the MASE of each series of the run, of your method and of Naive2, and each relative to Naive2's: how many series your method forecasts better than Naive2, and the series where it does worst."),
-			series: localize('competitions.browseIntro', "One series of the run at a time: the values the forecasters saw, the values it was scored on, your method's forecast, a benchmark of M4 computed on the series, and the winner's forecast when it is on this computer. Show finds a series by its name; Previous and Next go through the series of the run in order."),
+			series: localize('competitions.browseIntro', "One series of the run at a time: the values the forecasters saw, the values it was scored on, your method's forecast, and a benchmark computed on the series. Show finds a series by its name; Previous and Next go through the series of the run in order."),
 			horizon: localize('competitions.horizonIntro', "The sMAPE and the MASE of your method and of Naive2 at each step ahead, means over the series of each frequency: how fast the errors grow with the horizon, beside those of the benchmark against which OWA weighs the method."),
 		},
 		nextCard: {
 			horizon: localize('competitions.horizonCard', "The sMAPE and the MASE of your method and of Naive2 at each step ahead"),
-			series: localize('competitions.browseCard', "One series of the run at a time, with your method's forecast, a benchmark and the winner's"),
+			series: localize('competitions.browseCard', "One series of the run at a time, with your method's forecast and a benchmark"),
 			fails: localize('competitions.failsCard', "The series where your method does worst against Naive2"),
-			entry: localize('competitions.entryCard', "Your method beside an entry of the competition on the same series"),
 			runs: localize('competitions.runsCard', "This run beside another of your runs on the same series"),
-		},
-		nextOnly: {
-			series: '',
-			runs: '',
-			entry: localize('competitions.entryOnly', "Compare With an Entry is for M4 and M5: PollisCompetitions.jl has no entries of M1 and M3."),
-			fails: localize('competitions.failsOnly', "Where It Fails is for M1, M3 and M4: M5 is scored by the WRMSSE of its 12 levels."),
-			horizon: localize('competitions.horizonOnly', "Errors by Horizon is for M1, M3 and M4: M5 is scored by the WRMSSE of its 12 levels."),
 		},
 	};
 	return buildWebviewHtml({
@@ -1306,18 +1003,16 @@ function pageHtml(): string {
 		${codeEditorCss}
 		table.fc { width: auto; max-width: 100%; }
 		table.fc tr.mine td { font-weight: 600; }
-		table.fc tr.apart td { padding-top: 10px; color: var(--vscode-descriptionForeground); font-size: 0.95em; }
 		table.fc-batch tbody tr { cursor: pointer; }
 		table.fc-batch tbody tr:hover td { background: var(--vscode-list-hoverBackground); }
 		table.fc-batch tbody tr.chosen td { background: var(--vscode-list-inactiveSelectionBackground); font-weight: 600; }
-		.fc-ranking { max-height: 360px; overflow-y: auto; display: inline-block; }
 		.fc-plot { max-width: 900px; margin: 8px 0 16px 0; }
 		.fc-plot text { fill: var(--vscode-foreground); font-size: 11px; font-family: var(--vscode-font-family); }
 		.fc-plot .axis { stroke: var(--vscode-widget-border); }
 		.fc-plot .past, .fc-plot .actual { fill: none; stroke: var(--vscode-foreground); stroke-width: 1.5; }
 		.fc-plot .actual { stroke-dasharray: 2 2; }
 		.fc-plot .forecast { fill: none; stroke: var(--vscode-textLink-foreground); stroke-width: 2; }
-		.fc-plot .winner { fill: none; stroke: var(--vscode-descriptionForeground); stroke-width: 1.5; stroke-dasharray: 5 3; }
+		.fc-plot .reference { fill: none; stroke: var(--vscode-descriptionForeground); stroke-width: 1.5; stroke-dasharray: 5 3; }
 		${sortHeadingsCss}
 		.fc-worst { max-height: 420px; overflow-y: auto; }
 		.fc-plot .benchmark { fill: none; stroke: var(--vscode-charts-orange); stroke-width: 1.5; }
@@ -1335,10 +1030,10 @@ function pageHtml(): string {
 		<p class="hint" id="severalHint">${text.severalHint}</p>
 		<div id="noneActive" hidden><p class="hint">${text.noneActive}</p><div class="bar"><button class="action current" id="manage">${text.manage}</button></div></div>
 		<table class="fc" id="datasetsTable">
-			<thead><tr><th>${text.dataset}</th><th class="number">${text.series}</th><th>${text.frequencies}</th><th>${text.measures}</th><th>${text.entries}</th><th>${text.onComputer}</th></tr></thead>
+			<thead><tr><th>${text.dataset}</th><th class="number">${text.series}</th><th>${text.frequencies}</th></tr></thead>
 			<tbody id="competitions"></tbody>
 		</table>
-		<p class="hint">${text.onComputerHint}</p>
+		<p class="hint">${text.datasetsHint}</p>
 		<div class="row" id="frequencyRow"><span class="small">${text.frequency}</span> <select id="frequency"></select></div>
 		<div class="row" id="sampleRow"><span class="small">${text.seriesToRun}</span>
 			<label><input type="radio" name="scope" value="all" checked> ${text.allSeries}</label>
@@ -1346,16 +1041,13 @@ function pageHtml(): string {
 			<span class="small">${text.seed}</span> <input type="number" id="seed" value="1">
 		</div>
 		<p class="hint" id="sampleHint">${text.sampleHint}</p>
-		<p class="hint" id="wholeOnly" hidden></p>
 `,
 			},
 			{
 				id: 'step-method',
 				title: text.yourMethod,
 				bodyHtml: `
-		<p class="hint" id="methodHint">${text.methodHint}</p>
-		<p class="hint" id="methodHintDecide" hidden>${text.methodHintDecide}</p>
-		<p class="hint" id="methodHintBoth" hidden>${text.methodHintBoth}</p>
+		<p class="hint">${text.methodHint}</p>
 		${codeEditorHtml('code', 18)}
 		<div class="row"><button class="link" id="reset">${text.reset}</button></div>
 `,
@@ -1374,7 +1066,7 @@ function pageHtml(): string {
 			},
 			{
 				id: 'step-results',
-				title: text.scoreAndRank,
+				title: text.scoresStep,
 				bodyHtml: `
 		<div id="batchPart" hidden>
 			<h3 class="part">${text.batchTitle}</h3>
@@ -1386,20 +1078,12 @@ function pageHtml(): string {
 		<div id="results" hidden>
 			<p class="small" id="finished"></p>
 			<h3 class="part">${text.scores}</h3>
+			<p class="hint" id="scoresHint"></p>
 			<table class="fc"><thead id="scoreHead"></thead><tbody id="scoreRows"></tbody></table>
-			<h3 class="part">${text.place}</h3>
-			<p id="placeText"></p>
-			<div class="fc-ranking" id="ranking"></div>
-			<div id="roundsPart" hidden>
-				<h3 class="part">${text.byRound}</h3>
-				<div id="byRound"></div>
-			</div>
-			<div id="seriesPart">
-				<h3 class="part">${text.aSeries}</h3>
-				<p class="hint">${text.plotHint}</p>
-				<div class="fc-legend small" id="legend"></div>
-				<div class="fc-plot" id="plot"></div>
-			</div>
+			<h3 class="part">${text.aSeries}</h3>
+			<p class="hint">${text.plotHint}</p>
+			<div class="fc-legend small" id="legend"></div>
+			<div class="fc-plot" id="plot"></div>
 		</div>
 `,
 			},
@@ -1414,7 +1098,6 @@ function pageHtml(): string {
 				{ id: 'failsStep', label: text.fails, desc: text.nextCard.fails, event: 'pollis-fails-step' },
 			],
 			compare: [
-				{ id: 'entryStep', label: text.entryStep, desc: text.nextCard.entry, event: 'pollis-entry-step' },
 				{ id: 'runsStep', label: text.runsStep, desc: text.nextCard.runs, event: 'pollis-runs-step' },
 			],
 		}),
@@ -1422,9 +1105,7 @@ function pageHtml(): string {
 	${colorizeBracketsJs}
 	${codeEditorJs}
 	const TEXT = ${JSON.stringify(text)};
-	const COMPETITIONS = ${JSON.stringify(COMPETITIONS)};
 	const EXAMPLE = ${JSON.stringify(EXAMPLE_METHOD)};
-	const EXAMPLES = { forecast: EXAMPLE, decide: ${JSON.stringify(EXAMPLE_DECIDE)}, both: EXAMPLE + '\\n' + ${JSON.stringify(EXAMPLE_DECIDE)} };
 	const code = document.getElementById('code');
 	const frequency = document.getElementById('frequency');
 	const sample = document.getElementById('sample');
@@ -1435,40 +1116,24 @@ function pageHtml(): string {
 	function escapeHtml(value) {
 		return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 	}
-	function format(x, measure) {
-		if (typeof x !== 'number' || !isFinite(x)) {
-			return '';
-		}
-		// M6 published its RPS and IR to five decimals, and its OR, a mean of two ranks that teams may share, in quarters
-		return measure === 'RPS' || measure === 'IR' ? x.toFixed(5) : measure === 'OR' ? String(Math.round(x * 4) / 4) : x.toFixed(3);
+	function format(x) {
+		return typeof x === 'number' && isFinite(x) ? x.toFixed(3) : '';
 	}
-	// The competitions, then the datasets of the user's own
+	// The datasets the page can list: those of PollisCompetitions.jl, then those of the user's own
 	function datasets() {
-		return COMPETITIONS.concat(state && state.userDatasets ? state.userDatasets : []);
+		return state && state.datasets ? state.datasets : [];
 	}
 	function datasetOf(id) {
 		return datasets().find(c => c.id === id);
 	}
-	// The datasets step 1 lists: those of the run shown, else the active datasets that the page scores, in the
-	// order of the table, those that forecast before M6
+	// The datasets step 1 lists: those of the run shown, else the active datasets that the page scores
 	function listedDatasets() {
 		const ids = !state ? [] : state.batch ? state.batch.datasets : state.run ? [state.run.competition] : state.active || [];
-		const listed = datasets().filter(c => ids.includes(c.id));
-		return listed.filter(c => c.method === 'forecast').concat(listed.filter(c => c.method !== 'forecast'));
+		return datasets().filter(c => ids.includes(c.id));
 	}
-	// The first dataset listed, whose frequencies step 1 offers when it is the only one
-	function competition() {
-		return listedDatasets()[0] || COMPETITIONS[0];
-	}
-	// The functions the method defines: forecast, decide for M6, or both
-	function methodKind() {
-		const kinds = new Set(listedDatasets().map(c => c.method));
-		return kinds.size > 1 ? 'both' : kinds.has('decide') ? 'decide' : 'forecast';
-	}
-	// The Next Steps of a dataset of the user's own are those of M1 and M3, which are scored the same way
-	function nextKind(id) {
-		const c = datasetOf(id);
-		return c && c.folder ? 'm3' : id;
+	// The frequencies of a dataset that have a name, which step 1 offers when it is the only dataset listed
+	function namedFrequencies(c) {
+		return c ? c.frequencies.filter(f => f.name) : [];
 	}
 	function scope() {
 		const radio = document.querySelector('input[name=scope]:checked');
@@ -1483,33 +1148,20 @@ function pageHtml(): string {
 		document.getElementById('noneActive').hidden = !!listed.length;
 		document.getElementById('severalHint').hidden = !listed.length || locked();
 		document.getElementById('datasetsTable').hidden = !listed.length;
-		const apart = listed.length > 1 && listed.some(c => c.method !== 'forecast');
 		document.getElementById('competitions').innerHTML = listed.map(c => {
 			const total = c.frequencies.reduce((sum, f) => sum + f.series, 0);
-			const frequencies = c.summary ? escapeHtml(c.summary) : c.frequencies.map(f => escapeHtml(f.name) + ' (' + f.horizon + ')').join(', ');
-			const onComputer = escapeHtml(state && state.downloaded[c.id] ? TEXT.yes : TEXT.no);
-			// M6 among other datasets: a run of its own, said above its row
-			return (apart && c.method !== 'forecast' ? '<tr class="apart"><td colspan="6">' + escapeHtml(TEXT.m6Apart) + '</td></tr>' : '') + '<tr><td>' + escapeHtml(c.name) + '</td><td class="number">' + total.toLocaleString() + '</td><td class="small">' + frequencies + '</td><td>' + escapeHtml(c.measures) + '</td><td class="small">' + escapeHtml(c.entries) + '</td><td>' + onComputer + '</td></tr>';
+			// Each frequency with its horizon, or the shortest and the longest when its series differ
+			const frequencies = c.frequencies.map(f => (f.name ? escapeHtml(f.name) + ' ' : '') + '(' + f.shortest + (f.longest > f.shortest ? '&ndash;' + f.longest : '') + ')').join(', ');
+			return '<tr><td>' + escapeHtml(c.name) + '</td><td class="number">' + total.toLocaleString() + '</td><td class="small">' + frequencies + '</td></tr>';
 		}).join('');
 	}
 	function drawChoices() {
-		const c = competition();
 		const chosen = listedDatasets();
-		const several = chosen.length > 1;
-		const sampling = chosen.some(x => x.sampling);
+		const offered = chosen.length === 1 ? namedFrequencies(chosen[0]) : [];
 		const value = frequency.value;
-		frequency.innerHTML = (c.frequencies.length > 1 ? '<option value="">' + escapeHtml(TEXT.allFrequencies) + '</option>' : '') + c.frequencies.map(f => '<option value="' + escapeHtml(f.name) + '">' + escapeHtml(f.name) + '</option>').join('');
-		frequency.value = c.frequencies.some(f => f.name === value) ? value : (c.frequencies.length > 1 ? '' : c.frequencies[0].name);
-		document.getElementById('frequencyRow').hidden = several || c.frequencies.length < 2;
-		document.getElementById('sampleRow').hidden = !sampling;
-		document.getElementById('sampleHint').hidden = !sampling;
-		// The notes of the datasets listed that are run whole, such as M5
-		const wholeNotes = chosen.filter(x => !x.sampling && x.wholeNote).map(x => x.wholeNote);
-		document.getElementById('wholeOnly').hidden = !wholeNotes.length;
-		document.getElementById('wholeOnly').textContent = wholeNotes.join(' ');
-		document.getElementById('methodHint').hidden = methodKind() !== 'forecast';
-		document.getElementById('methodHintDecide').hidden = methodKind() !== 'decide';
-		document.getElementById('methodHintBoth').hidden = methodKind() !== 'both';
+		frequency.innerHTML = '<option value="">' + escapeHtml(TEXT.allFrequencies) + '</option>' + offered.map(f => '<option value="' + escapeHtml(f.name) + '">' + escapeHtml(f.name) + '</option>').join('');
+		frequency.value = offered.some(f => f.name === value) ? value : '';
+		document.getElementById('frequencyRow').hidden = offered.length < 2;
 		for (const field of [frequency, sample, seed, code, ...document.querySelectorAll('input[name=scope]')]) {
 			field.disabled = locked();
 		}
@@ -1518,9 +1170,8 @@ function pageHtml(): string {
 	}
 
 	function inputs() {
-		const c = competition();
 		const chosen = listedDatasets();
-		return { datasets: chosen.map(x => x.id), frequency: chosen.length === 1 && c.frequencies.length > 1 ? frequency.value : '', sample: chosen.some(x => x.sampling) && scope() === 'sample' ? Math.max(1, Math.round(Number(sample.value) || 1)) : 0, seed: Math.round(Number(seed.value) || 0), code: code.value };
+		return { datasets: chosen.map(x => x.id), frequency: chosen.length === 1 && namedFrequencies(chosen[0]).length > 1 ? frequency.value : '', sample: scope() === 'sample' ? Math.max(1, Math.round(Number(sample.value) || 1)) : 0, seed: Math.round(Number(seed.value) || 0), code: code.value };
 	}
 
 	function drawRun() {
@@ -1540,7 +1191,7 @@ function pageHtml(): string {
 		}
 		const p = run.progress;
 		let line = state.batch ? batchLine() : '';
-		line += p ? (run.competition === 'm6' ? TEXT.progressRounds : TEXT.progress).replace('{0}', p.done.toLocaleString()).replace('{1}', p.total.toLocaleString()).replace('{2}', Math.round(p.seconds)) : TEXT.running;
+		line += p ? TEXT.progress.replace('{0}', p.done.toLocaleString()).replace('{1}', p.total.toLocaleString()).replace('{2}', Math.round(p.seconds)) : TEXT.running;
 		if (p && p.failed) {
 			line += ' · ' + TEXT.failedSeries.replace('{0}', p.failed);
 		}
@@ -1550,8 +1201,8 @@ function pageHtml(): string {
 
 	/** The last values of the series, the values it was scored on, and the forecasts, on one time axis. */
 	function plot(p) {
-		const past = p.past || [], actual = p.actual || [], forecast = p.forecast || [], winner = p.winner ? p.winner.values : [], benchmark = p.benchmark || [];
-		const all = past.concat(actual, forecast, winner, benchmark).filter(v => typeof v === 'number' && isFinite(v));
+		const past = p.past || [], actual = p.actual || [], forecast = p.forecast || [], benchmark = p.benchmark || [];
+		const all = past.concat(actual, forecast, benchmark).filter(v => typeof v === 'number' && isFinite(v));
 		if (!all.length) {
 			return '';
 		}
@@ -1576,15 +1227,14 @@ function pageHtml(): string {
 		}
 		const joined = past.length ? [past[past.length - 1]] : [];
 		svg += path(past, 0, 'past') + path(joined.concat(actual), past.length - joined.length, 'actual');
-		svg += path(winner, past.length, 'winner') + path(benchmark, past.length, 'benchmark') + path(forecast, past.length, 'forecast');
+		svg += path(benchmark, past.length, 'benchmark') + path(forecast, past.length, 'forecast');
 		return svg + '</svg>';
 	}
 
 	/** The legend of a plot of a series: its name, and the lines drawn. */
-	function legendHtml(name, winner, benchmarkName) {
+	function legendHtml(name, benchmarkName) {
 		return '<span>' + escapeHtml(name) + '</span><span>' + escapeHtml(TEXT.actual) + ' &middot;&middot;&middot;</span><span style="color: var(--vscode-textLink-foreground)">' + escapeHtml(TEXT.method) + '</span>'
-			+ (benchmarkName ? '<span style="color: var(--vscode-charts-orange)">' + escapeHtml(benchmarkName) + '</span>' : '')
-			+ (winner ? '<span>' + escapeHtml(TEXT.winner.replace('{0}', winner.name)) + ' - - -</span>' : '');
+			+ (benchmarkName ? '<span style="color: var(--vscode-charts-orange)">' + escapeHtml(benchmarkName) + '</span>' : '');
 	}
 
 	// Where a run of several datasets is: the dataset being run, or that all have run
@@ -1613,7 +1263,7 @@ function pageHtml(): string {
 			}
 		}
 		document.getElementById('batchHead').innerHTML = '<tr><th>' + escapeHtml(TEXT.dataset) + '</th><th class="number">' + escapeHtml(TEXT.series) + '</th>'
-			+ measures.map(m => '<th class="number">' + escapeHtml(m) + '</th>').join('') + '<th class="number">' + escapeHtml(TEXT.place) + '</th><th>' + escapeHtml(TEXT.status) + '</th></tr>';
+			+ measures.map(m => '<th class="number">' + escapeHtml(m) + '</th>').join('') + '<th>' + escapeHtml(TEXT.status) + '</th></tr>';
 		document.getElementById('batchRows').innerHTML = b.members.map(m => {
 			const c = datasetOf(m.id);
 			const r = m.results;
@@ -1621,8 +1271,7 @@ function pageHtml(): string {
 			const status = r ? (r.error ? TEXT.stoppedShort : TEXT.done) : m.progress ? TEXT.progress.replace('{0}', m.progress.done.toLocaleString()).replace('{1}', m.progress.total.toLocaleString()).replace('{2}', Math.round(m.progress.seconds)) : TEXT.waiting;
 			return '<tr data-member="' + escapeHtml(m.id) + '"' + (state.run && state.run.competition === m.id ? ' class="chosen"' : '') + '><td>' + escapeHtml(c ? c.name : m.id) + '</td>'
 				+ '<td class="number">' + (done ? Number(r.series).toLocaleString() : '') + '</td>'
-				+ measures.map(measure => '<td class="number">' + (done ? format(r.method[measure], measure) : '') + '</td>').join('')
-				+ '<td class="number">' + (done && r.ranking ? escapeHtml(TEXT.placeOf.replace('{0}', r.ranking.place).replace('{1}', r.ranking.of)) : '') + '</td>'
+				+ measures.map(measure => '<td class="number">' + (done ? format(r.method[measure]) : '') + '</td>').join('')
 				+ '<td class="small"' + (r && r.error ? ' title="' + escapeHtml(r.error) + '"' : '') + '>' + escapeHtml(status) + '</td></tr>';
 		}).join('');
 		const shown = state.run && datasetOf(state.run.competition);
@@ -1645,33 +1294,14 @@ function pageHtml(): string {
 		if (!results) {
 			return;
 		}
-		document.getElementById('finished').textContent = (results.rounds ? TEXT.finishedRounds : TEXT.finished).replace('{0}', results.series.toLocaleString()).replace('{1}', results.finished);
+		document.getElementById('finished').textContent = TEXT.finished.replace('{0}', results.series.toLocaleString()).replace('{1}', results.finished);
+		document.getElementById('scoresHint').textContent = TEXT.scoresHint.replace('{0}', results.level);
 		const measures = results.measures;
-		document.getElementById('scoreHead').innerHTML = '<tr><th></th>' + measures.map(m => '<th class="number">' + escapeHtml(m) + '</th>').join('') + '<th>' + TEXT.source + '</th></tr>';
-		const row = (name, scores, source, mine) => '<tr' + (mine ? ' class="mine"' : '') + '><td>' + escapeHtml(name) + '</td>' + measures.map(m => '<td class="number">' + format(scores[m], m) + '</td>').join('') + '<td class="small">' + escapeHtml(source) + '</td></tr>';
-		document.getElementById('scoreRows').innerHTML = row(TEXT.method, results.method, '', true) + results.benchmarks.map(b => row(b.name, b.scores, b.source === 'published' ? TEXT.published : TEXT.computed, false)).join('');
-		const c = datasetOf(run.competition);
-		const ranking = results.ranking;
-		document.getElementById('placeText').textContent = ranking
-			? TEXT.placeText.replace('{0}', ranking.place).replace('{1}', ranking.of).replace('{2}', ranking.measure).replace('{3}', results.level)
-			: (c && c.ranked ? TEXT.notRanked : TEXT.noEntries.replace('{0}', c ? c.name : run.competition));
-		document.getElementById('ranking').innerHTML = ranking
-			? '<table class="fc"><thead><tr><th class="number">' + TEXT.place + '</th><th>' + TEXT.entry + '</th><th>' + TEXT.kind + '</th><th class="number">' + escapeHtml(ranking.measure) + '</th></tr></thead><tbody>'
-				+ ranking.rows.map((r, i) => '<tr' + (r.method ? ' class="mine"' : '') + '><td class="number">' + (i + 1) + '</td><td>' + escapeHtml(r.method ? TEXT.method : r.name) + '</td><td class="small">' + escapeHtml(TEXT.kinds[r.kind] || r.kind) + '</td><td class="number">' + format(r.value, ranking.measure) + '</td></tr>').join('')
-				+ '</tbody></table>'
-			: '';
-		const rounds = results.rounds;
-		document.getElementById('roundsPart').hidden = !rounds;
-		document.getElementById('byRound').innerHTML = rounds
-			? '<table class="fc"><thead><tr><th class="number">' + TEXT.round + '</th><th class="number">RPS</th><th class="number">IR</th>'
-				+ (results.benchmarkName ? '<th class="number">' + escapeHtml(results.benchmarkName) + ' RPS</th><th class="number">' + escapeHtml(results.benchmarkName) + ' IR</th>' : '') + '</tr></thead><tbody>'
-				+ rounds.map(r => '<tr><td class="number">' + r.round + '</td><td class="number">' + format(r.method.RPS, 'RPS') + '</td><td class="number">' + format(r.method.IR, 'IR') + '</td>'
-					+ (results.benchmarkName ? '<td class="number">' + format(r.benchmark && r.benchmark.RPS, 'RPS') + '</td><td class="number">' + format(r.benchmark && r.benchmark.IR, 'IR') + '</td>' : '') + '</tr>').join('')
-				+ '</tbody></table>'
-			: '';
+		document.getElementById('scoreHead').innerHTML = '<tr><th></th>' + measures.map(m => '<th class="number">' + escapeHtml(m) + '</th>').join('') + '</tr>';
+		const row = (name, scores, mine) => '<tr' + (mine ? ' class="mine"' : '') + '><td>' + escapeHtml(name) + '</td>' + measures.map(m => '<td class="number">' + format(scores[m]) + '</td>').join('') + '</tr>';
+		document.getElementById('scoreRows').innerHTML = row(TEXT.method, results.method, true) + results.benchmarks.map(b => row(b.name, b.scores, false)).join('');
 		const p = results.plot;
-		document.getElementById('seriesPart').hidden = !p;
-		document.getElementById('legend').innerHTML = p ? legendHtml(p.series, p.winner, '') : '';
+		document.getElementById('legend').innerHTML = p ? legendHtml(p.series, '') : '';
 		document.getElementById('plot').innerHTML = p ? plot(p) : '';
 	}
 
@@ -1693,9 +1323,6 @@ function pageHtml(): string {
 			if (typeof run.code === 'string') {
 				setCode(run.code);
 			}
-		} else if (Object.values(EXAMPLES).includes(code.value)) {
-			// The example of the functions the datasets listed need, unless the code is the user's own
-			setCode(EXAMPLES[methodKind()]);
 		}
 		drawCompetitions();
 		drawChoices();
@@ -1717,7 +1344,7 @@ function pageHtml(): string {
 	for (const radio of document.querySelectorAll('input[name=scope]')) {
 		radio.addEventListener('change', drawChoices);
 	}
-	document.getElementById('reset').addEventListener('click', () => setCode(EXAMPLES[methodKind()]));
+	document.getElementById('reset').addEventListener('click', () => setCode(EXAMPLE));
 	document.getElementById('start').addEventListener('click', () => {
 		document.getElementById('runProblem').textContent = '';
 		vscode.postMessage({ command: 'run', inputs: inputs() });
@@ -1753,7 +1380,7 @@ function pageHtml(): string {
 			const wasLocked = locked();
 			state = message;
 			if (wasLocked && !state.run) {
-				setCode(EXAMPLES[methodKind()]);
+				setCode(EXAMPLE);
 			}
 			draw();
 		} else if (message.command === 'colorizedCode') {
@@ -1761,17 +1388,16 @@ function pageHtml(): string {
 		} else if (message.command === 'runProblem') {
 			document.getElementById('runProblem').textContent = message.text;
 		} else if (message.command === 'running') {
-			document.getElementById('runStatus').textContent = message.after && message.after.length ? TEXT.runningAfter.replace('{0}', message.after.join(', ')) : TEXT.running;
+			document.getElementById('runStatus').textContent = TEXT.running;
 		}
 	});
 
 	// The Next Steps: each panel is drawn from the JSON file of the run that the step's Julia script writes
-	const NEXT_ONLY = { horizon: ['m1', 'm3', 'm4'], series: ['m1', 'm3', 'm4', 'm5'], fails: ['m1', 'm3', 'm4'], entry: ['m4', 'm5'], runs: ['m1', 'm3', 'm4', 'm5', 'm6'] };
-	const NEXT_DRAW = { horizon: drawHorizon, series: drawSeries, fails: drawFails, entry: drawEntry, runs: drawRuns };
+	const NEXT_DRAW = { horizon: drawHorizon, series: drawSeries, fails: drawFails, runs: drawRuns };
 	// What a step does once its panel is drawn
 	const NEXT_AFTER = { fails: sortArrowsOfFails };
 	// Steps whose panel has controls of its own before anything is computed
-	const NEXT_CONTROLS = { series: true, entry: true, runs: true };
+	const NEXT_CONTROLS = { series: true, runs: true };
 	let horizonFrequency = '';
 	function drawNext(step) {
 		const box = document.getElementById(step + 'Step');
@@ -1784,10 +1410,6 @@ function pageHtml(): string {
 		let html = '<p class="hint">' + escapeHtml(TEXT.nextIntro[step]) + '</p>';
 		if (!results || results.error) {
 			box.innerHTML = html + '<p class="hint">' + escapeHtml(TEXT.nextNeedsRun) + '</p>';
-			return;
-		}
-		if (!NEXT_ONLY[step].includes(nextKind(run.competition))) {
-			box.innerHTML = html + '<p class="hint">' + escapeHtml(TEXT.nextOnly[step]) + '</p>';
 			return;
 		}
 		const data = run.next && run.next[step];
@@ -1864,7 +1486,7 @@ function pageHtml(): string {
 		html += '<div class="fc-legend small"><span style="color: var(--vscode-textLink-foreground)">' + escapeHtml(TEXT.method) + '</span><span>' + escapeHtml(TEXT.naive2) + ' - - -</span></div>';
 		const measures = ['sMAPE', 'MASE'];
 		for (const measure of measures) {
-			html += '<h3 class="part">' + measure + '</h3><div class="fc-plot">' + stepChart(chosen.h, [{ cls: 'winner', values: chosen.naive2[measure] }, { cls: 'forecast', values: chosen.method[measure] }]) + '</div>';
+			html += '<h3 class="part">' + measure + '</h3><div class="fc-plot">' + stepChart(chosen.h, [{ cls: 'reference', values: chosen.naive2[measure] }, { cls: 'forecast', values: chosen.method[measure] }]) + '</div>';
 		}
 		const heads = measures.flatMap(m => [TEXT.measureOf.replace('{0}', m).replace('{1}', TEXT.method), TEXT.measureOf.replace('{0}', m).replace('{1}', TEXT.naive2)]);
 		html += '<table class="fc"><thead><tr><th class="number">h</th>' + heads.map(head => '<th class="number">' + escapeHtml(head) + '</th>').join('') + '</tr></thead><tbody>'
@@ -1888,7 +1510,7 @@ function pageHtml(): string {
 		if (!ok) {
 			return html;
 		}
-		html += '<p class="small">' + escapeHtml(TEXT.seriesOf.replace('{0}', data.position.toLocaleString()).replace('{1}', data.count.toLocaleString()).replace('{2}', data.frequency).replace('{3}', data.horizon)) + '</p>';
+		html += '<p class="small">' + escapeHtml(TEXT.seriesOf.replace('{0}', data.position.toLocaleString()).replace('{1}', data.count.toLocaleString()).replace('{2}', data.frequency || '').replace('{3}', data.horizon)) + '</p>';
 		const names = Object.keys(data.benchmarks || {});
 		const benchmark = names.includes(seriesBenchmark) ? seriesBenchmark : '';
 		html += '<div class="row">';
@@ -1899,13 +1521,12 @@ function pageHtml(): string {
 		html += '<label><input type="checkbox" id="seriesAllPast"' + (seriesAllPast ? ' checked' : '') + '> ' + escapeHtml(TEXT.allPast) + '</label></div>';
 		const past = seriesAllPast ? data.past : data.past.slice(-3 * data.horizon);
 		const benchmarkValues = benchmark ? data.benchmarks[benchmark] : [];
-		html += '<div class="fc-legend small">' + legendHtml(data.name, data.winner, benchmark) + '</div>';
-		html += '<div class="fc-plot">' + plot({ past, actual: data.actual, forecast: data.forecast, winner: data.winner, benchmark: benchmarkValues }) + '</div>';
-		const heads = [TEXT.actual, TEXT.method].concat(benchmark ? [benchmark] : [], data.winner ? [TEXT.winner.replace('{0}', data.winner.name)] : []);
+		html += '<div class="fc-legend small">' + legendHtml(data.name, benchmark) + '</div>';
+		html += '<div class="fc-plot">' + plot({ past, actual: data.actual, forecast: data.forecast, benchmark: benchmarkValues }) + '</div>';
+		const heads = [TEXT.actual, TEXT.method].concat(benchmark ? [benchmark] : []);
 		html += '<table class="fc"><thead><tr><th class="number">h</th>' + heads.map(head => '<th class="number">' + escapeHtml(head) + '</th>').join('') + '</tr></thead><tbody>'
 			+ data.forecast.map((f, i) => '<tr><td class="number">' + (i + 1) + '</td><td class="number">' + format(data.actual[i]) + '</td><td class="number">' + format(f) + '</td>'
-				+ (benchmark ? '<td class="number">' + format(benchmarkValues[i]) + '</td>' : '')
-				+ (data.winner ? '<td class="number">' + format(data.winner.values[i]) + '</td>' : '') + '</tr>').join('')
+				+ (benchmark ? '<td class="number">' + format(benchmarkValues[i]) + '</td>' : '') + '</tr>').join('')
 			+ '</tbody></table>';
 		return html;
 	}
@@ -1980,59 +1601,6 @@ function pageHtml(): string {
 		vscode.postMessage({ command: 'nextStep', step: 'series', series: name });
 	}
 
-	// Compare With an Entry: the entry chosen in the list
-	let entryChoice = undefined;
-	function entryName(e) {
-		return e.name + ' (' + (TEXT.kinds[e.kind] || e.kind) + (e.rank !== null && e.rank !== undefined ? ', ' + TEXT.rankText.replace('{0}', e.rank) : '') + ')';
-	}
-	function drawEntry(data) {
-		const ok = !!data && !data.error;
-		let html = '';
-		if (data && data.error) {
-			html += '<p class="small missing">' + escapeHtml(TEXT.stepStopped.replace('{0}', data.error)) + '</p>';
-		}
-		const entries = ok ? data.entries.slice() : [];
-		if (!entries.length) {
-			return html + '<div class="row"><button class="action" data-entry="list">' + escapeHtml(TEXT.listEntries) + '</button></div>';
-		}
-		// Submissions by rank, then the benchmarks and the others by name
-		entries.sort((a, b) => (a.rank === null) - (b.rank === null) || (a.rank || 0) - (b.rank || 0) || a.name.localeCompare(b.name, undefined, { numeric: true }));
-		const compared = data.compared;
-		if (entryChoice === undefined) {
-			entryChoice = compared ? compared.entry : entries[0].entry;
-		}
-		html += '<div class="row"><span class="small">' + escapeHtml(TEXT.entryLabel) + '</span> <select id="entryChoice">'
-			+ entries.map(e => '<option value="' + e.entry + '"' + (e.entry === entryChoice ? ' selected' : '') + '>' + escapeHtml(entryName(e) + (e.downloaded ? ', ' + TEXT.downloadedText : '')) + '</option>').join('')
-			+ '</select> <button class="action" data-entry="compare">' + escapeHtml(TEXT.compare) + '</button></div>';
-		html += '<p class="hint">' + escapeHtml(TEXT.entryDownloadHint) + '</p>';
-		if (!compared) {
-			return html;
-		}
-		html += '<p class="small">' + escapeHtml(TEXT.comparedText.replace('{0}', entryName(compared)).replace('{1}', compared.series.toLocaleString()).replace('{2}', compared.level)) + '</p>';
-		html += '<table class="fc"><thead><tr><th></th><th class="number">' + escapeHtml(TEXT.method) + '</th><th class="number">' + escapeHtml(TEXT.entryColumn) + '</th></tr></thead><tbody>'
-			+ compared.measures.map(m => '<tr><td>' + escapeHtml(m) + '</td><td class="number">' + format(compared.method[m]) + '</td><td class="number">' + format(compared.other[m]) + '</td></tr>').join('')
-			+ '</tbody></table>';
-		if (compared.levels) {
-			html += '<table class="fc"><thead><tr><th>' + escapeHtml(TEXT.level) + '</th><th class="number">' + escapeHtml(TEXT.measureOf.replace('{0}', 'WRMSSE').replace('{1}', TEXT.method)) + '</th><th class="number">' + escapeHtml(TEXT.measureOf.replace('{0}', 'WRMSSE').replace('{1}', TEXT.entryColumn)) + '</th></tr></thead><tbody>'
-				+ compared.levels.map(l => '<tr><td>' + escapeHtml(l.level) + '</td><td class="number">' + format(l.method) + '</td><td class="number">' + format(l.other) + '</td></tr>').join('')
-				+ '</tbody></table>';
-		}
-		if (compared.counts) {
-			html += '<table class="fc"><thead><tr><th></th><th class="number">' + escapeHtml(TEXT.betterCount) + '</th><th class="number">' + escapeHtml(TEXT.worseCount) + '</th></tr></thead><tbody>'
-				+ [['sMAPE', 'smape'], ['MASE', 'mase']].map(([label, key]) => '<tr><td>' + label + '</td><td class="number">' + compared.counts[key].better.toLocaleString() + '</td><td class="number">' + compared.counts[key].worse.toLocaleString() + '</td></tr>').join('')
-				+ '</tbody></table>';
-			html += '<p class="hint">' + escapeHtml(TEXT.pairHint) + '</p>';
-			const list = rows => '<div class="fc-worst"><table class="fc"><thead><tr><th>' + escapeHtml(TEXT.seriesName) + '</th><th>' + escapeHtml(TEXT.frequencyColumn) + '</th><th class="number">MASE</th><th class="number">'
-				+ escapeHtml(TEXT.measureOf.replace('{0}', 'MASE').replace('{1}', TEXT.entryColumn)) + '</th><th class="number">' + escapeHtml(TEXT.relativeToEntry) + '</th></tr></thead><tbody>'
-				+ rows.map(r => '<tr><td><button class="link" data-show-series="' + escapeHtml(r.name) + '">' + escapeHtml(r.name) + '</button></td><td>' + escapeHtml(r.frequency) + '</td><td class="number">' + format(r.mase) + '</td><td class="number">'
-					+ format(r.other_mase) + '</td><td class="number">' + (r.relative_mase === null ? '&#x221e;' : format(r.relative_mase)) + '</td></tr>').join('')
-				+ '</tbody></table></div>';
-			html += '<h3 class="part">' + escapeHtml(TEXT.entryBetter) + '</h3>' + list(compared.entry_better);
-			html += '<h3 class="part">' + escapeHtml(TEXT.methodBetter) + '</h3>' + list(compared.method_better);
-		}
-		return html;
-	}
-
 	// Compare Two Runs: drawn from the page's state, with no Julia; the other run is read by the page when chosen
 	function runSettings(run) {
 		const c = datasetOf(run.competition);
@@ -2063,11 +1631,7 @@ function pageHtml(): string {
 		html += '<p class="small">' + escapeHtml(runSettings(run)) + '</p>';
 		html += '<table class="fc"><thead><tr><th></th><th class="number">' + escapeHtml(TEXT.thisRun) + '<br><span class="small">' + escapeHtml(run.name) + '</span></th><th class="number">'
 			+ escapeHtml(TEXT.otherRun) + '<br><span class="small">' + escapeHtml(o.name) + '</span></th></tr></thead><tbody>'
-			+ a.measures.map(m => '<tr><td>' + escapeHtml(m) + '</td><td class="number">' + format(a.method[m], m) + '</td><td class="number">' + format(b.method[m], m) + '</td></tr>').join('');
-		const place = r => r.ranking ? TEXT.placeOf.replace('{0}', r.ranking.place).replace('{1}', r.ranking.of) : '';
-		if (a.ranking || b.ranking) {
-			html += '<tr><td>' + escapeHtml(TEXT.placeRow) + '</td><td class="number">' + escapeHtml(place(a)) + '</td><td class="number">' + escapeHtml(place(b)) + '</td></tr>';
-		}
+			+ a.measures.map(m => '<tr><td>' + escapeHtml(m) + '</td><td class="number">' + format(a.method[m]) + '</td><td class="number">' + format(b.method[m]) + '</td></tr>').join('');
 		html += '<tr><td>' + escapeHtml(TEXT.secondsRow) + '</td><td class="number">' + Math.round(a.seconds).toLocaleString() + '</td><td class="number">' + Math.round(b.seconds).toLocaleString() + '</td></tr>';
 		html += '</tbody></table>';
 		html += '<div class="row"><button class="link" id="diffMethods">' + escapeHtml(TEXT.diffMethods) + '</button></div>';
@@ -2076,7 +1640,6 @@ function pageHtml(): string {
 
 	window.addEventListener('pollis-horizon-step', () => drawNext('horizon'));
 	window.addEventListener('pollis-runs-step', () => drawNext('runs'));
-	window.addEventListener('pollis-entry-step', () => drawNext('entry'));
 	window.addEventListener('pollis-fails-step', () => drawNext('fails'));
 	window.addEventListener('pollis-series-step', () => drawNext('series'));
 	document.addEventListener('click', event => {
@@ -2094,14 +1657,6 @@ function pageHtml(): string {
 		}
 		if (event.target.id === 'diffMethods') {
 			vscode.postMessage({ command: 'diffMethods' });
-			return;
-		}
-		const entryButton = event.target.closest && event.target.closest('button[data-entry]');
-		if (entryButton && state && state.run) {
-			const choice = document.getElementById('entryChoice');
-			entryButton.disabled = true;
-			entryButton.insertAdjacentHTML('afterend', ' <span class="small">' + escapeHtml(TEXT.running) + '</span>');
-			vscode.postMessage(entryButton.dataset.entry === 'compare' && choice ? { command: 'nextStep', step: 'entry', entry: Number(choice.value) } : { command: 'nextStep', step: 'entry' });
 			return;
 		}
 		const move = event.target.closest && event.target.closest('button[data-series]');
@@ -2122,8 +1677,6 @@ function pageHtml(): string {
 			drawNext('horizon');
 		} else if (event.target.id === 'otherRun') {
 			vscode.postMessage({ command: 'compareWith', name: event.target.value });
-		} else if (event.target.id === 'entryChoice') {
-			entryChoice = Number(event.target.value);
 		} else if (event.target.id === 'seriesBenchmark') {
 			seriesBenchmark = event.target.value;
 			drawNext('series');

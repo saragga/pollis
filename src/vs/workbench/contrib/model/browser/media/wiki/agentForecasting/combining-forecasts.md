@@ -4,7 +4,7 @@ What **Mean of the Agents** and **Median of the Agents** are, which agents enter
 
 ## Why Does Agents' Forecasting Competition Combine the Agents' Forecasts?
 
-Combining forecasts from several methods is one of the oldest ideas of forecasting: [Bates and Granger (1969)](#ref-BG1969a) wrote on the combination of forecasts, and the M competitions kept testing it. Among the major findings of the M4 competition, [Makridakis, Spiliotis and Assimakopoulos (2018)](#ref-MSA2018a) report that out of the 17 most accurate methods, 12 were combinations of mostly statistical approaches. Agents that work on their own, on different models, tend to write different methods, so their forecasts are natural candidates to combine. The page scores two simple combinations beside the agents, to show whether the agents together forecast better than each alone.
+Combining forecasts from several methods is one of the oldest ideas of forecasting: [Bates and Granger (1969)](#ref-BG1969a) wrote on the combination of forecasts, and forecasting competitions kept testing it: [Makridakis, Spiliotis and Assimakopoulos (2018)](#ref-MSA2018a) report that out of the 17 most accurate methods of one, 12 were combinations of mostly statistical approaches. Agents that work on their own, on different models, tend to write different methods, so their forecasts are natural candidates to combine. The page scores two simple combinations beside the agents, to show whether the agents together forecast better than each alone.
 
 ## How Are the Mean and the Median of the Agents Computed?
 
@@ -12,7 +12,7 @@ For each series and each step ahead, **Mean of the Agents** is the average of th
 
 ## How to Read the Combinations in the Agents' Forecasting Competition Scores
 
-The table ranks every row by OWA, lower better, where OWA weighs sMAPE and MASE relative to Naive2 on the same series. A combination above every agent forecasts better than any single method of the study. The median gives less weight than the mean to one method that is far off on a series, so the two differ most when one agent's method misbehaves. The benchmarks, the eight of M4 or Naive2 for M1 and M3, show where the agents stand against simple methods: an agent below Naive2 does worse than repeating the last value, adjusted for the season. With a sample of series, the scores are those of the sample, and a different seed can change the order of methods that are close.
+The table ranks every row by OWA, lower better, where OWA weighs sMAPE and MASE relative to Naive2 on the same series. A combination above every agent forecasts better than any single method of the study. The median gives less weight than the mean to one method that is far off on a series, so the two differ most when one agent's method misbehaves. The eight statistical benchmarks show where the agents stand against simple methods: an agent below Naive2 does worse than repeating the last value, adjusted for the season. With a sample of series, the scores are those of the sample, and a different seed can change the order of methods that are close.
 
 ## References
 

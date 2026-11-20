@@ -333,26 +333,25 @@ the test: both cost nothing but time.
 
 \subsection{Agents' Forecasting Competition}
 Each agent builds a forecasting model for the same series. Pollis keeps the last part of the series from all of
-them, scores every model on it, and then combines the forecasts. This follows the M competitions of forecasting
-methods, and \dcite{BG1969a}{Bates and Granger (1969)} on combining forecasts: a combination often forecasts better
-than each of the models in it. In the M4 competition, \dcite{MSA2018a}{Makridakis, Spiliotis and Assimakopoulos
-(2018)} found that 12 of the 17 most accurate methods were combinations of mostly statistical methods, and that none
-of the six pure machine learning methods beat the combination benchmark. In finance and economics, where a forecast is judged by the data that come after it, the page shows
+them, scores every model on it, and then combines the forecasts. This follows forecasting competitions, and
+\dcite{BG1969a}{Bates and Granger (1969)} on combining forecasts: a combination often forecasts better than each of
+the models in it. \dcite{MSA2018a}{Makridakis, Spiliotis and Assimakopoulos (2018)} found that 12 of the 17 most
+accurate methods of one competition were combinations of mostly statistical methods, and that none of the six pure
+machine learning methods beat the combination benchmark. In finance and economics, where a forecast is judged by the data that come after it, the page shows
 which approach wins on the series at hand, and by how much.
 
 The page has four steps:
 \begin{enumerate}
-  \item \textbf{Competition.} M1, M3 or M4 of PollisCompetitions.jl, one frequency, and all its series or a sample
-    drawn with a seed. \ui{Prepare the Series} writes into the study's \file{data/series.csv} only the values the
-    competition's forecasters saw; the values held back stay with PollisCompetitions.jl.
+  \item \textbf{Dataset.} A forecasting dataset of PollisCompetitions.jl whose data are on this computer, one
+    frequency, and all its series or a sample drawn with a seed. \ui{Prepare the Series} writes into the study's
+    \file{data/series.csv} only the values the forecasters saw; the values held back stay with PollisCompetitions.jl.
   \item \textbf{Agents.} From 2 to 8, each an agent on a model, as in Many Analysts.
   \item \textbf{Runs.} Each agent, with the skill forecast-independently and a copy of the series, writes
     \file{method.jl}, a function \code{forecast(y, h, period)} that returns \code{h} forecasts of a series, checks
     it on every series with \file{check.jl}, which Pollis writes, and gives its reasons in \file{REPORT.md}.
   \item \textbf{Scores.} \file{score.jl} runs every method in a new Julia process, on every thread, and scores the
-    forecasts by sMAPE, MASE and OWA, as the organisers did; then the mean and the median of the forecasts of the
-    agents whose methods forecast every series, and the benchmarks on the same series, the eight of M4 or Naive2.
-    On all the series of a frequency of M4, each is also placed among the published entries.
+    forecasts by sMAPE, MASE and OWA; then the mean and the median of the forecasts of the agents whose methods
+    forecast every series, and the eight statistical benchmarks on the same series.
 \end{enumerate}
 The rules of the skill keep each agent in its folder and away from the held-out values; they are instructions, so
 reading each \file{method.jl} is the check. A study is a folder of \file{orchestration/forecasting-competition} in
