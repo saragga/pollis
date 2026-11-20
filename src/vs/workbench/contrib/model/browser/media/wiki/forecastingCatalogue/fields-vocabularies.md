@@ -33,7 +33,7 @@ The data fields say how the data are shaped, what spatial information they carry
 | `response_type` | Response Type | string | `Binary`, `Multiclass`, `Ordered`, `Count`, `Survival`, `Regression` | The kind of the response the models predict |
 | `rows` | Rows | integer | A whole number | The rows of the data as stored; for a panel, one for each unit and time |
 | `features` | Features | integer | A whole number | The columns other than the response and the identifiers |
-| `size_mb` | Size (MB) | number | A number | The size of its Parquet files, in MB |
+| `size_mb` | Size (MB) | number | A number | The size of its Parquet files for a `Built-in` dataset, or of the compressed files the user downloads for a `Download` dataset, in MB |
 
 A Response Type of `Binary` or `Multiclass` is a classification task, `Ordered` one whose classes are ranked, `Count` one whose response counts events, `Survival` one whose response is the time to an event, and `Regression` one whose response is a number, as the values of a forecast series are.
 
