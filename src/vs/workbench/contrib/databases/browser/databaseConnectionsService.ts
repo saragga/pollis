@@ -63,8 +63,9 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		// user added, which Pollis adds to.
 		// And PollisBenchmarks: the catalogue of the benchmarks and the questions of those built in, which
 		// PollisDB.build_benchmarks copies from PollisBenchmarks.jl.
-		// And PollisCompetitions: the catalogue of PollisCompetitions.jl and views over the competitions downloaded to
-		// ~/.pollis/competitions, a schema each, which PollisDB.build_competitions makes again when one is downloaded.
+		// And PollisCompetitions: the catalogue of PollisCompetitions.jl (datasets, models and benchmarks) and views over
+		// its built-in datasets and those downloaded to ~/.pollis/competitions, a schema each, which
+		// PollisDB.build_competitions makes again when the package is updated or a dataset is downloaded.
 		// And PollisDocuments: the passages of Pollis' documents, which ask_index.jl of the Julia extension makes in
 		// ~/.pollis/documents when the REPL starts, and Ask Pollis searches.
 		// Of the activity of Pollis, what it records as you work: PollisRSS, and Comparisons, the runs of the Evaluate and
