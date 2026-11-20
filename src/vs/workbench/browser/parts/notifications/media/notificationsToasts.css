@@ -82,3 +82,8 @@
 .monaco-workbench > .notifications-toasts .codicon.codicon-info {
 	color: var(--vscode-notificationsInfoIcon-foreground) !important;
 }
+
+/* A notification shown as a toast keeps its gear and close buttons visible, not only while the pointer is over it */
+.monaco-workbench > .notifications-toasts .notifications-list-container .notification-list-item .notification-list-item-toolbar-container {
+	display: block;
+}
