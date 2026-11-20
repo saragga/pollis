@@ -1,0 +1,583 @@
+% Pollis drill-down: Prediction Competitions, the package PollisCompetitions.jl, its TOML files, its DuckDB database and
+% the folders that Manage Competition Datasets, Score Models and Agents' Forecasting Competition write (20 November 2026).
+% For users who want the detail, and for whoever maintains Pollis.
+% Compile with: latexmk -pdf workflow_prediction_competitions.tex
+\input{workflow_style}
+
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{listings}
+
+\fancyhf{}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: Prediction Competitions}
+\fancyfoot[R]{\footnotesize\color{soft}\thepage}
+
+\titleformat{\section}{\color{navy}\large\bfseries}{\color{deepamber}\thesection}{0.6em}{}
+\titleformat{\subsection}{\color{navy}\normalsize\bfseries}{\color{deepamber}\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+\setlength{\parskip}{4pt}
+
+\lstset{basicstyle=\ttfamily\footnotesize, columns=fullflexible, keepspaces=true, breaklines=true,
+  backgroundcolor=\color{pale}, frame=leftline, rulecolor=\color{amber}, framerule=2pt, xleftmargin=6pt,
+  framexleftmargin=6pt, aboveskip=4pt, belowskip=4pt, upquote=true, tabsize=2}
+
+\usepackage{xurl}
+\newcommand{\file}[1]{{\small\nolinkurl{#1}}}
+\newcommand{\sig}[1]{{\small\ttfamily\detokenize{#1}}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\begin{document}
+
+\workflowhead[Drill-Down]{Prediction Competitions}
+  {The Test Set Decides}
+  {A forecast or a prediction is judged on values its maker never saw. This is how Pollis keeps them apart: the
+   package PollisCompetitions.jl and its parts, the TOML files that describe datasets, models and scores, the DuckDB
+   database built from them, and the folders written on your computer and in your Pollis Workspace.}
+
+\begin{nbox}
+{\color{amber}\bfseries Drill-down.}\enspace
+A look under the surface of the menu \textbf{Compose\gt Prediction Competitions}: Manage Competition Datasets, Score
+Models and Agents' Forecasting Competition. It is for anyone who wants to know where each file is and what it holds,
+and for whoever maintains Pollis. It describes the state of 20 November 2026.
+\end{nbox}
+
+\tableofcontents
+
+\section{Prediction Competitions in one table}
+
+Three pages share one package and one rule. Every dataset is found, read and scored the same way, whoever contributes
+it: the package, a toolbox or you.
+
+\begin{center}\footnotesize
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.13\linewidth}LLL@{}}
+\toprule
+& \textbf{Manage Competition Datasets} & \textbf{Score Models} & \textbf{Agents' Forecasting Competition}\\
+\midrule
+Does & Lists the Dataset Catalog; you tick the datasets that are Active, save one to the workspace, or add one of your own
+  & Runs a Julia function \sig{forecast(y, h, period)} of yours on the series of the active datasets and scores it
+  & Several coding agents each write a forecasting method for the same series; Pollis scores them, and their mean and median\\
+Reads & \file{metadata/datasets.toml}, the toolboxes' datasets, each \file{dataset.toml} of the workspace, the schema \file{forecastingCatalogue.toml}
+  & The \file{info.toml} and Parquet files of each dataset; \file{run.toml}, \file{progress.json}, \file{results.json}
+  & The same data; \file{study.toml}, \file{prepared.toml}, each agent's \file{method.jl} and \file{REPORT.md}\\
+Writes & \file{data/forecasting/} of the Pollis Workspace
+  & \file{~/.pollis/competitions/runs/<run>/}
+  & \file{orchestration/forecasting-competition/<study>/} of the Pollis Workspace\\
+Scores with & \textendash & \file{PC.score}, \file{PC.benchmarks}, \file{PC.step_errors} & \file{PC.score}, \file{PC.benchmarks}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Pollis keeps one setting of its own: the datasets ticked Active, in the profile's storage
+(\file{pollis.manageCompetitionDatasets.active}), which Score Models lists in its step 1.
+
+\section{The package PollisCompetitions.jl}
+\label{sec:package}
+
+PollisCompetitions.jl is a Julia package of PollisRegistry, installed with \file{Pkg.add("PollisCompetitions")} the
+first time a page needs it. It holds three catalogues as TOML, the data of the built-in datasets as Parquet, the
+functions that read and score them, and a module of eight statistical benchmarks. DuckDB
+\dcite{RM2019a}{(Raasveldt and Mühleisen, 2019)} does the reading and the arithmetic: the Parquet files are read where
+they lie, never copied into a database file.
+
+\subsection{Its folders}
+
+\begin{lstlisting}
+PollisCompetitions.jl/
+  Project.toml
+  README.md
+  src/
+    PollisCompetitions.jl      the module: includes the files below, in this order
+    benchmarks/
+      Benchmarks.jl            the module Benchmarks
+      ets.jl                   simple exponential smoothing and Holt's method, fitted by Nelder-Mead
+      methods.jl               the seasonality test, the seasonal index, Theta and the eight benchmarks
+    monash.jl                  read_tsf: the .tsf format of the Monash archive
+    database.jl                the schema, connect_db, describe_db, load_table, load_dataset
+    parquet.jl                 writing tables to Parquet through DuckDB
+    data.jl                    where a dataset is: folder, info, competition
+    tables.jl                  reading a dataset: series, observations, tables, table
+    measures.jl                sMAPE, MASE and OWA: score, step_errors
+    dataset_benchmarks.jl      the benchmarks on the series of a dataset
+  metadata/
+    datasets.toml              the Dataset Catalog: 132 datasets
+    models.toml                the Model Catalog: 268 models
+    benchmarks.toml            the Benchmarks: 5,828 runs
+  data/builtin/<dataset_id>/   the 60 built-in datasets: 10 of series, 50 tabular
+  test/runtests.jl
+\end{lstlisting}
+
+\subsection{Its functions}
+
+The package is used as \sig{import PollisCompetitions as PC}. The functions below are those the pages and your code
+call; the others are the parts they are built from.
+
+\begin{center}\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.36\linewidth}L@{}}
+\toprule
+\textbf{Function} & \textbf{What it gives}\\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Where a dataset is (data.jl)}}\\
+\file{folder(id)} & \file{data/builtin/<id>} of the package if it exists, else \file{~/.pollis/competitions/<id>}; for the folder of a dataset of your own, that folder\\
+\file{info(id)} & Its \file{info.toml}, or \file{nothing} when its data are not on this computer\\
+\file{competition(id)} & Its id, name and format, the name of the Dataset Catalog when \file{info.toml} gives none\\
+\file{is_dataset(path)} & Whether \file{path} is a folder holding a dataset of your own (\file{series.parquet} and \file{observations.parquet})\\
+\multicolumn{2}{@{}l}{\textit{Reading a dataset (tables.jl)}}\\
+\sig{series(id; frequency, domain)} & The series: number, name, frequency, period, horizon, domain, start\\
+\sig{observations(id; series, frequency, split)} & The values: series, t, value and split, \file{train} or \file{test}\\
+\file{tables(id)}, \sig{table(id, name; filters...)} & The Parquet files of a dataset, and one of them filtered by its columns, such as \sig{table("heloc", "splits"; repeat = 1, fold = 2)}\\
+\sig{query(sql, parameters)} & Any SQL, run by DuckDB in memory\\
+\multicolumn{2}{@{}l}{\textit{Scoring (measures.jl, dataset\_benchmarks.jl)}}\\
+\sig{score(id, forecasts)} & sMAPE, MASE and OWA of a table of series, h and value, by frequency, by domain when the dataset gives domains, and in total\\
+\sig{step_errors(id, forecasts)} & The sMAPE and the MASE of each series at each step ahead\\
+\sig{benchmarks(id; methods, series)} & The forecasts of the benchmarks named, from \file{BENCHMARK_METHODS}, on the series given or all\\
+\multicolumn{2}{@{}l}{\textit{The database (database.jl)}}\\
+\file{connect_db(path)} & The database of \S\ref{sec:database}, in memory or in the file \file{path}\\
+\file{load_table(name)} & One of the five tables, or the view \file{model_comparisons}\\
+\file{load_dataset(id)} & The \file{data.parquet} of a built-in tabular dataset\\
+\file{read_tsf(path)} & A \file{.tsf} file of the Monash archive, read into series and values\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{The module Benchmarks}
+
+\file{PollisCompetitions.Benchmarks} forecasts a single series from its values alone, and never reads a dataset. That
+is why the agents of Agents' Forecasting Competition may use it and must not use the rest of the package. It exports
+\file{BENCHMARKS}, \file{benchmarks}, \file{holt}, \file{is_seasonal}, \file{seasonal_index}, \file{ses} and
+\file{theta}.
+
+\begin{itemize}
+  \item \textbf{Naive} repeats the last value; \textbf{sNaive} the last period of values.
+  \item A series that passes \file{is_seasonal} is divided by its classical multiplicative seasonal index
+    (\file{seasonal_index}); \textbf{Naive2}, \textbf{SES}, \textbf{Holt}, \textbf{Damped} and \textbf{Theta}
+    \dcite{AN2000a}{(Assimakopoulos and Nikolopoulos, 2000)} forecast the adjusted values, which are multiplied back by
+    the last period of the index.
+  \item \textbf{Com} is the mean of SES, Holt and Damped.
+\end{itemize}
+
+\sig{benchmarks(y; period, horizon, methods)} gives the forecasts of each method named. A method that cannot be fitted
+to a series raises an error, and the pages then leave that benchmark out of the table rather than score it on fewer
+series.
+
+\subsection{How a forecast is scored}
+
+\file{score} works in a DuckDB database in memory, in four steps.
+\begin{enumerate}
+  \item \file{prepare!} makes three tables: \file{known_series}; \file{test_values}, the held-out values with \file{h}
+    from 1; and \file{scales}, the mean absolute difference between each training value and the one a seasonal period
+    before, the denominator of MASE \dcite{HK2006a}{(Hyndman and Koehler, 2006)}.
+  \item \file{given!} reads your forecasts and refuses series the dataset does not have.
+  \item \file{errors!} gives the sMAPE and the MASE of each series, the means over its horizon, and refuses a series
+    not forecast once at each step.
+  \item \file{reference!} computes Naive2 on the same series. \file{summary} averages the errors by frequency, by
+    domain and in total, and weighs them against Naive2 into OWA
+    \dcite{MSA2020a}{(Makridakis, Spiliotis and Assimakopoulos, 2020)}.
+\end{enumerate}
+
+The result is a table of \file{measure}, \file{breakdown}, \file{level} and \file{value}, where \file{level} is a
+frequency, a domain or \file{Total}.
+
+\section{The TOML files}
+\label{sec:toml}
+
+Every file is plain TOML and edited by hand. A field left out is unknown, and loads as NULL (\file{missing} in Julia).
+
+\subsection{The Dataset Catalog: metadata/datasets.toml}
+
+There is one \file{[[datasets]]} table for each dataset, with its works as \file{[[datasets.references]]}.
+
+\begin{lstlisting}
+[[datasets]]
+dataset_id = "tourism_2011"                 # the key, and the name of its folder
+dataset_name = "Tourism Forecasting Competition"
+competition_name = "Tourism Forecasting Competition"   # given with competition_year, or neither
+competition_year = 2011
+topic = "Tourism"
+data_structure = "Time-Series"              # Cross-section | Time-Series | Panel
+geometry = "None"                           # None | Spatial Weights Matrix | Coordinates | Polygons
+response_type = "Regression"                # Binary | Multiclass | Ordered | Count | Survival | Regression
+rows = 164581
+features = 0
+size_mb = 0.45                              # Parquet files if built in; compressed download if not
+licence = "CC BY 4.0 (via the Monash archive on Zenodo)"
+delivery = "Built-in"                       # Built-in | Download
+source_url = "https://..."
+
+  [[datasets.references]]
+  bibtex_key = "AHSW2011a"                  # a key of PollisReferences
+  role = "Competition"                      # Primary | Competition | Benchmark | Other
+\end{lstlisting}
+
+The same \file{[[datasets]]} tables come from two other contributors. An installed toolbox names a file of them in
+\file{forecastingDatasets} of its \file{pollisToolboxes} contribution, and a dataset you add has them in its
+\file{dataset.toml} (\S\ref{sec:workspace}). Manage Competition Datasets reads all three and checks each against the
+schema that Pollis ships, \file{compose/browser/media/forecastingCatalogue.toml}. That schema has 17
+\file{[[field]]} tables (name, label, group, type, \file{controlled} and \file{values}, description) and four
+\file{[[view]]} tables, the column presets of the page (id, label, \file{pinned}, \file{columns}). The page's own TOML
+adds the curated collections as \file{[[collections]]} (id, name, year, url, description, \file{datasets} and
+\file{papers}).
+
+\subsection{The Model Catalog: metadata/models.toml}
+
+\begin{lstlisting}
+[[models]]
+model_id = "tabarena_limix_2_1016_default"
+model_name = "LimiX-2-1016 (default)"
+estimator_family = "Foundation Model"       # one of nine families
+estimator_method = "Pretrained in-context learner"   # one of the methods of its family
+package = "LimiX"
+language = "Python"                         # Julia | Python | R | C/C++ | Fortran
+
+  [[models.references]]
+  bibtex_key = "ZRYZT...2026a"
+  role = "Methodology"                      # Methodology | Software | Other
+\end{lstlisting}
+
+There are nine families: Foundation Model, Tree-based, Neural Network, Baseline, Statistical, Kernel Methods, Fuzzy
+System, Hybrid and Other. Each has a closed list of methods, which the header of \file{models.toml} gives and
+\file{ESTIMATOR_METHODS} checks. A Hybrid model's method names the methods it combines.
+
+\subsection{The Benchmarks: metadata/benchmarks.toml}
+
+Each run of a model on a dataset is a \file{[[runs]]} table, with its scores under \file{[runs.scores]}, one
+\sig{metric = score} line each.
+
+\begin{lstlisting}
+[[runs]]
+run_id = "tabarena_catboost_default.airfoil_noise"   # <model_id>.<dataset_id>[.<subset>]
+model_id = "tabarena_catboost_default"
+dataset_id = "airfoil_noise"
+split_protocol = "TabArena: 10 repeats of 3-fold cross-validation"
+
+  [runs.scores]
+  rmse = 1.5782966827503813
+  time_train_s = 49.54921263853709
+  time_infer_s = 0.04112234115600586
+\end{lstlisting}
+
+Comment blocks in the file say where each group of runs comes from: which publication, which splits and which metric.
+
+\subsection{The facts of a dataset: info.toml}
+
+Each dataset's folder has an \file{info.toml}, written by the script that converted it. Its \file{format} tells the
+package how to read the folder.
+
+\textbf{A dataset of series}, \sig{format = "monash"}, the format of the Monash Time Series Forecasting Archive
+\dcite{GBWHM2021a}{(Godahewa, Bergmeir, Webb, Hyndman and Montero-Manso, 2021)}:
+
+\begin{lstlisting}
+competition = "tourism_2011"
+name = "Tourism Forecasting Competition"
+format = "monash"
+converted = "2026-11-19T23:54:20.244"
+fingerprint = "1be847ba..."                 # SHA-256 of the source files
+
+[tables]                                     # the rows of each Parquet file
+observations = 164581
+series = 1311
+
+[[frequencies]]                              # one for each frequency, in the order of the series
+name = "Yearly"                              # left out for series that have no frequency
+series = 518
+shortest_horizon = 4
+longest_horizon = 4
+\end{lstlisting}
+
+\textbf{A tabular dataset}, \sig{format = "tabular"}, with its response and the cross-validation it is scored by:
+
+\begin{lstlisting}
+competition = "heloc"
+name = "heloc"
+format = "tabular"
+target = "RiskPerformance"                   # the response column of data.parquet
+openml_task = 363676
+openml_dataset = 46932
+repeats = 10
+folds = 3
+tabarena_repeats = 3
+converted = "2026-11-19T20:06:18.846"
+fingerprint = "4cadc94a..."
+
+[tables]
+data = 10459
+splits = 104590
+\end{lstlisting}
+
+Score Models lists a dataset, and Manage Competition Datasets shows it as Ready in its column Model Scoring, when its
+\file{info.toml} has \sig{format = "monash"} and at least one \file{[[frequencies]]} table. The step Datasets shows
+the horizon of a frequency as one number, or as a range when \file{shortest_horizon} and \file{longest_horizon} differ.
+
+\section{The database}
+\label{sec:database}
+
+\file{PC.connect_db()} builds the database in memory, or in a file when given a path. PollisDB opens it as
+\file{PollisCompetitions} in the Databases view. It has the five metadata tables, loaded from the three TOML files;
+the view \file{model_comparisons}; and a schema for each dataset whose data are on this computer, with a view for each
+of its Parquet files. Every table, view and column carries a comment (\file{describe_db}), which the Databases view
+shows.
+
+\subsection{The five tables and the view}
+
+\begin{lstlisting}[language=SQL]
+CREATE TABLE dataset_catalog (
+  dataset_id TEXT PRIMARY KEY, dataset_name TEXT NOT NULL,
+  competition_name TEXT, competition_year INTEGER,
+  topic TEXT NOT NULL,
+  data_structure TEXT CHECK (data_structure IN ('Cross-section', 'Time-Series', 'Panel')),
+  geometry TEXT CHECK (geometry IN ('None', 'Spatial Weights Matrix', 'Coordinates', 'Polygons')),
+  response_type TEXT CHECK (response_type IN ('Binary', 'Multiclass', 'Ordered', 'Count', 'Survival', 'Regression')),
+  rows BIGINT CHECK (rows > 0), features INTEGER CHECK (features >= 0), size_mb DOUBLE CHECK (size_mb >= 0),
+  licence TEXT, delivery TEXT CHECK (delivery IN ('Built-in', 'Download')), source_url TEXT,
+  CHECK ((competition_name IS NULL) = (competition_year IS NULL)));
+
+CREATE TABLE dataset_references (
+  dataset_id TEXT REFERENCES dataset_catalog, bibtex_key TEXT,
+  role TEXT CHECK (role IN ('Primary', 'Competition', 'Benchmark', 'Other')),
+  PRIMARY KEY (dataset_id, bibtex_key));
+
+CREATE TABLE model_catalog (
+  model_id TEXT PRIMARY KEY, model_name TEXT NOT NULL,
+  estimator_family TEXT NOT NULL, estimator_method TEXT NOT NULL,   -- a method of its family
+  package TEXT, language TEXT CHECK (language IN ('Julia', 'Python', 'R', 'C/C++', 'Fortran')));
+
+CREATE TABLE model_references (
+  model_id TEXT REFERENCES model_catalog, bibtex_key TEXT,
+  role TEXT CHECK (role IN ('Methodology', 'Software', 'Other')),
+  PRIMARY KEY (model_id, bibtex_key));
+
+CREATE TABLE benchmarks (
+  run_id TEXT, model_id TEXT REFERENCES model_catalog, dataset_id TEXT REFERENCES dataset_catalog,
+  split_protocol TEXT, metric TEXT, score DOUBLE,
+  PRIMARY KEY (run_id, metric));                 -- one row per run and metric
+
+CREATE VIEW model_comparisons AS
+SELECT b.run_id, b.model_id, m.model_name, m.estimator_family, m.estimator_method, m.package, m.language,
+  b.dataset_id, d.dataset_name, d.data_structure, d.geometry, d.response_type,
+  b.split_protocol, b.metric, b.score
+FROM benchmarks b JOIN model_catalog m USING (model_id) JOIN dataset_catalog d USING (dataset_id);
+\end{lstlisting}
+
+\subsection{A schema for each dataset}
+
+For each dataset of the catalogue, \file{connect_db} looks for its folder by the rule of \S\ref{sec:folders}. When the
+folder has Parquet files, it creates a schema named after the dataset id, with a view named after each file:
+
+\begin{lstlisting}[language=SQL]
+CREATE SCHEMA "tourism_2011";
+CREATE VIEW "tourism_2011"."series"       AS SELECT * FROM read_parquet('.../tourism_2011/series.parquet');
+CREATE VIEW "tourism_2011"."observations" AS SELECT * FROM read_parquet('.../tourism_2011/observations.parquet');
+\end{lstlisting}
+
+An id that is already the name of a schema of DuckDB stops the build with an error, rather than shadowing the schema.
+
+\begin{center}\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.2\linewidth}L@{}}
+\toprule
+\textbf{View} & \textbf{Columns}\\
+\midrule
+\file{series} & \file{series} (its number), \file{competition} (the dataset id), \file{name} (as the source names it), \file{frequency}, \file{period} (1 for none), \file{horizon}, \file{domain}, \file{start}\\
+\file{observations} & \file{series}, \file{t} (from 1), \file{value}, \file{split}: \file{train}, a value the forecasters saw, or \file{test}, one their forecasts are scored on\\
+\file{data} & A row per case of a tabular dataset: the response, named by \file{target} in \file{info.toml}, and its features\\
+\file{splits} & \file{row} (of \file{data}, from 1), \file{repeat}, \file{fold}: the fold whose test set the row is in\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+For example, the best tabular models on one dataset:
+
+\begin{lstlisting}[language=SQL]
+SELECT model_name, estimator_family, score
+FROM model_comparisons
+WHERE dataset_id = 'heloc' AND metric = 'roc_auc'
+ORDER BY score DESC LIMIT 10;
+\end{lstlisting}
+
+\section{The folders on your computer}
+\label{sec:folders}
+
+\subsection{Where the data of a dataset are}
+
+There is one rule for every dataset. Its folder is \file{data/builtin/<id>} of the package if that exists, else
+\file{~/.pollis/competitions/<id>} when an \file{info.toml} is there. The data of a dataset whose delivery is Download go
+into the second folder. The three pages only read these folders.
+
+\begin{lstlisting}
+<package>/data/builtin/<id>/       or    ~/.pollis/competitions/<id>/
+  info.toml
+  series.parquet                          a dataset of series (format monash)
+  observations.parquet
+  data.parquet                            a tabular dataset (format tabular)
+  splits.parquet
+\end{lstlisting}
+
+\subsection{The runs of Score Models}
+
+Each run is a folder of \file{~/.pollis/competitions/runs}, named after the dataset, the frequency and the time; a run of several datasets is named
+\file{datasets-} and the time, such as \file{datasets-20261120-101500}.
+
+\begin{lstlisting}
+~/.pollis/competitions/runs/<run>/
+  run.toml          the choices of step 1
+  method.jl         your forecast(y, h, period), as step 2 held it
+  run.jl            the script the page writes and the Julia REPL runs
+  progress.json     {"done", "total", "seconds", "failed"}, every hundredth of the series
+  forecasts.csv     series,h,value
+  results.json      what step 4 draws, or {"error": ...} when the run stopped
+  <step>.jl, <step>.json   the code and the result of each Next Step run on it
+  <id>/             in a run of several datasets: a run of one dataset, as above, for each
+\end{lstlisting}
+
+\begin{lstlisting}
+# run.toml of a run of one dataset
+competition = "tourism_2011"        # the dataset id
+folder = "..."                      # only for a dataset of your own: read in place of the id
+frequency = "Monthly"               # "" for all its frequencies
+sample = 0                          # 0 for all the series; else the number drawn
+seed = 1
+started = "2026-11-20 10:15"
+
+# run.toml of a run of several datasets
+datasets = ["tourism_2011", "nn5"]
+sample = 0
+seed = 1
+started = "2026-11-20 10:15"
+\end{lstlisting}
+
+\file{results.json} holds \file{finished}, \file{series}, \file{whole}, \file{level} (the frequency, or
+\file{Total}), \file{measures} (sMAPE, MASE, OWA), \file{method} (a score per measure) and \file{benchmarks} (a
+\file{name} and \file{scores} each). It also holds \file{plot}, with the series, its last \file{past} values,
+\file{actual} and \file{forecast}, and the run's \file{seconds}.
+
+\subsection{Your datasets: data/forecasting of the Pollis Workspace}
+\label{sec:workspace}
+
+Manage Competition Datasets writes into the data folder of your Pollis Workspace and nowhere else:
+
+\begin{lstlisting}
+<Pollis Workspace>/data/forecasting/
+  forecastingCatalogue.toml     the whole catalogue as the page last read it, for Julia; rewritten, never edited
+  <id>/                         a dataset saved from the catalogue
+    the files, copied
+    saved.toml                  the size, time and SHA-256 of each file when saved, so a change is seen
+  <id>/                         a dataset you added from a file of your own
+    series.parquet
+    observations.parquet
+    dataset.toml                how it was converted, and its entry in the catalogue
+    saved.toml
+\end{lstlisting}
+
+\begin{lstlisting}
+# dataset.toml of a dataset you added
+[conversion]                # change it with Edit Facts on the page, which converts the file again
+file = "sales.csv"
+series_column = "store"
+time_column = "week"
+value_column = "units"
+frequency = "Weekly"
+period = 52
+horizon = 13                # the last 13 values of each series are held out
+series = 45
+
+[[datasets]]                # its entry in the catalogue, under the same schema as every other
+dataset_id = "store_sales"
+dataset_name = "Store Sales"
+topic = "Retail"
+
+  [[datasets.references]]
+  bibtex_key = "..."
+  role = "Primary"
+\end{lstlisting}
+
+\begin{lstlisting}
+# saved.toml
+saved = "2026-11-20T10:15:00.000Z"
+
+[[files]]
+path = "series.parquet"
+bytes = 4096
+mtime = 1763633700000
+sha256 = "..."
+\end{lstlisting}
+
+Score Models lists a dataset you added after those of the package, and scores it the same way. The run's
+\file{run.toml} gives its \file{folder}, and \file{PC.folder} returns that folder as it is.
+
+\subsection{The studies of Agents' Forecasting Competition}
+
+\begin{lstlisting}
+<Pollis Workspace>/orchestration/forecasting-competition/<study>/
+  study.toml        the dataset, frequency, sample and seed, and the agents
+  prepared.toml     what Prepare the Series wrote
+  data/
+    series.csv      series,period,horizon,t,value: only the values the forecasters saw
+    README.md       what the columns are
+  agent-1/ ... agent-N/   2 to 8 agents, each with
+    SKILL.md        the skill forecast-independently
+    TASK.md         the series, the horizon, the rules, how to run Julia
+    data/           a copy of the study's data/
+    check.jl        written by Pollis: runs forecast on every series as the scoring will
+    method.jl       the agent's forecast(y, h, period)
+    REPORT.md       what the method does and why
+  score.jl          written by Score the Methods
+  results.json      {"finished", "series", "whole", "rows"}
+\end{lstlisting}
+
+\begin{lstlisting}
+# study.toml
+competition = "tourism_2011"
+frequency = "Quarterly"
+sample = 300                # 0 for all the series of the frequency
+seed = 1
+created = "2026-11-20 10:15"
+
+[[agents]]
+agent = "claude"
+model = "..."
+label = "..."
+
+# prepared.toml
+series = 300
+horizon = 8
+numbers = [3, 17, 21, ...]  # the series drawn, by their numbers in the dataset
+\end{lstlisting}
+
+The held-out values are never written into the study. Score the Methods reads them from the package after every agent
+has ended. Each row of \file{results.json} is an agent, a combination (the mean or the median of the agents'
+forecasts) or a benchmark, with \file{kind}, \file{name} and \file{scores}.
+
+\section{Where to change what}
+
+\begin{center}\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.44\linewidth}L@{}}
+\toprule
+\textbf{File} & \textbf{What}\\
+\midrule
+\file{PollisCompetitions.jl/metadata/*.toml} & The catalogues and the published scores\\
+\file{PollisCompetitions.jl/src/} & Reading, scoring, the benchmarks and the database\\
+\file{.../compose/browser/media/forecastingCatalogue.toml} & The schema of the catalogue: its fields and views\\
+\file{.../compose/browser/forecastingCatalogue.ts} & Reading and checking the catalogue's contributions\\
+\file{.../compose/browser/forecastingCataloguePage.ts} & Manage Competition Datasets\\
+\file{.../compose/browser/forecastingWorkspace.ts} & \file{data/forecasting/}: saved and added datasets\\
+\file{.../compose/browser/forecastingActive.ts} & The datasets ticked Active\\
+\file{.../compose/browser/forecastingCompetitionsPage.ts} & Score Models: the runs and their scripts\\
+\file{.../compose/browser/agentForecastingPage.ts} & Agents' Forecasting Competition: the studies and their scripts\\
+\file{.../model/browser/webviews/forecasting*.toml}, \file{agentForecasting.toml} & The panel texts, wikis and references of the three pages\\
+\file{pollis-agents/skills/forecast-independently/SKILL.md} & The rules the agents follow\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\references
+\dref{AN2000a}{Assimakopoulos, V. and Nikolopoulos, K. (2000). The Theta Model: A Decomposition Approach to Forecasting. \emph{International Journal of Forecasting} 16(4), 521--530. \ddoi{10.1016/s0169-2070(00)00066-2}}
+\dref{GBWHM2021a}{Godahewa, R., Bergmeir, C., Webb, G. I., Hyndman, R. J. and Montero-Manso, P. (2021). Monash Time Series Forecasting Archive. arXiv. \ddoi{10.48550/arXiv.2105.06643}}
+\dref{HK2006a}{Hyndman, R. J. and Koehler, A. B. (2006). Another Look at Measures of Forecast Accuracy. \emph{International Journal of Forecasting} 22(4), 679--688. \ddoi{10.1016/j.ijforecast.2006.03.001}}
+\dref{MSA2020a}{Makridakis, S., Spiliotis, E. and Assimakopoulos, V. (2020). The M4 Competition: 100,000 Time Series and 61 Forecasting Methods. \emph{International Journal of Forecasting} 36(1), 54--74. \ddoi{10.1016/j.ijforecast.2019.04.014}}
+\dref{RM2019a}{Raasveldt, M. and Mühleisen, H. (2019). DuckDB: an Embeddable Analytical Database. In \emph{Proceedings of the 2019 International Conference on Management of Data (SIGMOD)}, 1981--1984. \ddoi{10.1145/3299869.3320212}}
+
+\end{document}
