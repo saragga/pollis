@@ -24,7 +24,8 @@ import { ExtensionsRegistry, IExtensionPointUser } from '../../../services/exten
 import { IModelNotebook, IModelPaper, IModelWiki } from '../../model/browser/common/model.types.js';
 import { IScaffoldPanel, openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { registerExternalFolder } from '../../model/browser/common/customCopyFileSystem.js';
-import { panelFaqItems, panelKeyPoints, parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
+import { panelFaqItems, panelKeyPoints, parseToml, TomlValue, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
+import { IApiKeyField, IApiKeyProvider } from '../../model/browser/handlers/model.handler.js';
 import { buildScaffoldHtml } from '../../model/browser/webviews/scaffoldParts.js';
 import { IAskPollisEvalItem } from '../common/askPollis.js';
 import { isTimeArrowPanel, onTimeArrowMessage, timeArrowPanelHtml } from './toolboxTimeArrow.js';
@@ -523,6 +524,10 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 							}
 							return known;
 						});
+						const apiKey = panelApiKey(parsed, toolbox.id);
+						for (const problem of apiKey.problems) {
+							extension.collector.error(localize('pollisToolboxes.apiKey', "The [apiKey] of panel {0}: {1}", contribution.id, problem));
+						}
 						panels.push({
 							contribution,
 							tabs,
@@ -532,6 +537,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 								viewType: `pollis.${contribution.id}`,
 								title: contribution.title,
 								data,
+								apiKey: apiKey.provider,
 								html: timeArrow
 									? () => timeArrowPanelHtml(contribution.title, parsed, data.packages.length > 0)
 									: () => buildScaffoldHtml(contribution.id, data, { title: contribution.title, defaultModel: contribution.defaultModel ?? '', decisionFirstColumn: contribution.decisionFirstColumn }),
@@ -733,6 +739,47 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 		}
 		this.registrations.value = store;
 	}
+}
+
+/**
+ * The credentials a toolbox panel's code needs, from the `[apiKey]` table of its TOML (`label`, optional `noun`)
+ * and its `[[apiKey.fields]]` (`name`, `envVar`, `prompt`, optional `password`). Each field is kept in Secret
+ * Storage under `pollis.toolbox.<toolbox id>.<name>`, so the panels of one toolbox share it and a toolbox
+ * cannot name the secrets of Pollis or of another toolbox.
+ */
+function panelApiKey(parsed: TomlValue, toolboxId: string): { readonly provider?: IApiKeyProvider; readonly problems: string[] } {
+	const table = parsed.apiKey;
+	if (table === undefined) {
+		return { problems: [] };
+	}
+	const problems: string[] = [];
+	const apiKey = (typeof table === 'object' && table !== null && !Array.isArray(table) ? table : {}) as TomlValue;
+	const label = typeof apiKey.label === 'string' && apiKey.label.trim() ? apiKey.label.trim() : undefined;
+	if (!label) {
+		problems.push(localize('pollisToolboxes.apiKey.label', "label is missing."));
+	}
+	const fields: IApiKeyField[] = [];
+	const names = new Set<string>();
+	for (const field of (Array.isArray(apiKey.fields) ? apiKey.fields : []) as TomlValue[]) {
+		const name = typeof field.name === 'string' ? field.name : '';
+		const envVar = typeof field.envVar === 'string' ? field.envVar : '';
+		const prompt = typeof field.prompt === 'string' ? field.prompt.trim() : '';
+		if (!/^[a-z][A-Za-z0-9]*$/.test(name) || names.has(name)) {
+			problems.push(localize('pollisToolboxes.apiKey.name', "the field name \"{0}\" must be letters and digits, starting with a lower-case letter, and different from the other fields' names.", name));
+		} else if (!/^[A-Z][A-Z0-9_]*$/.test(envVar)) {
+			problems.push(localize('pollisToolboxes.apiKey.envVar', "the envVar \"{0}\" of the field {1} must be upper-case letters, digits and underscores.", envVar, name));
+		} else if (!prompt) {
+			problems.push(localize('pollisToolboxes.apiKey.prompt', "the field {0} has no prompt.", name));
+		} else {
+			names.add(name);
+			fields.push({ secretKey: `pollis.toolbox.${toolboxId}.${name}`, envVar, prompt, password: field.password !== false });
+		}
+	}
+	if (!fields.length) {
+		problems.push(localize('pollisToolboxes.apiKey.fields', "it has no [[apiKey.fields]] with a name, envVar and prompt."));
+	}
+	const noun = typeof apiKey.noun === 'string' && apiKey.noun.trim() ? apiKey.noun.trim() : undefined;
+	return { provider: label && fields.length && !problems.length ? { label, noun, fields } : undefined, problems };
 }
 
 function publishedKey(loaded: ILoadedToolbox): string {
