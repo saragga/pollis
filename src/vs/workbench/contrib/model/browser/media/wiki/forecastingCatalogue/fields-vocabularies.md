@@ -30,12 +30,12 @@ The data fields say how the data are shaped, what spatial information they carry
 |---|---|---|---|---|
 | `data_structure` | Data Structure | string | `Cross-section`, `Time-Series`, `Panel` | Cross-section, time series, or panel, spatial panels and multi-level longitudinal data included |
 | `geometry` | Geometry | string | `None`, `Spatial Weights Matrix`, `Coordinates`, `Polygons` | The spatial information the dataset has, from the poorest to the richest |
-| `response_type` | Response Type | string | `Binary`, `Multiclass`, `Ordered`, `Count`, `Survival`, `Regression` | The kind of the response the models predict |
+| `response_type` | Response Type | string | `Binary`, `Multiclass`, `Ordered`, `Count`, `Survival`, `Continuous` | The kind of the response the models predict |
 | `rows` | Rows | integer | A whole number | The rows of the data as stored; for a panel, one for each unit and time |
 | `features` | Features | integer | A whole number | The columns other than the response and the identifiers |
 | `size_mb` | Size (MB) | number | A number | The size of its Parquet files for a `Built-in` dataset, or of the compressed files the user downloads for a `Download` dataset, in MB |
 
-A Response Type of `Binary` or `Multiclass` is a classification task, `Ordered` one whose classes are ranked, `Count` one whose response counts events, `Survival` one whose response is the time to an event, and `Regression` one whose response is a number, as the values of a forecast series are.
+A Response Type of `Binary` or `Multiclass` is a classification task, `Ordered` one whose classes are ranked, `Count` one whose response counts events, `Survival` one whose response is the time to an event, and `Continuous` one whose response is a real number, as the values of a forecast series are.
 
 ## What Are the Access and Licence Fields of a Dataset?
 

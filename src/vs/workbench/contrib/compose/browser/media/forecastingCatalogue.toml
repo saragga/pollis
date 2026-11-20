@@ -98,7 +98,7 @@ name = "response_type"
 label = "Response Type"
 group = "data"
 type = "string"
-vocabulary = "Binary | Multiclass | Ordered | Count | Survival | Regression"
+vocabulary = "Binary | Multiclass | Ordered | Count | Survival | Continuous"
 controlled = true
 description = "The kind of the response the models predict"
 

@@ -199,7 +199,7 @@ competition_year = 2011
 topic = "Tourism"
 data_structure = "Time-Series"              # Cross-section | Time-Series | Panel
 geometry = "None"                           # None | Spatial Weights Matrix | Coordinates | Polygons
-response_type = "Regression"                # Binary | Multiclass | Ordered | Count | Survival | Regression
+response_type = "Continuous"                # Binary | Multiclass | Ordered | Count | Survival | Continuous
 rows = 164581
 features = 0
 size_mb = 0.45                              # Parquet files if built in; compressed download if not
@@ -329,7 +329,7 @@ CREATE TABLE dataset_catalog (
   topic TEXT NOT NULL,
   data_structure TEXT CHECK (data_structure IN ('Cross-section', 'Time-Series', 'Panel')),
   geometry TEXT CHECK (geometry IN ('None', 'Spatial Weights Matrix', 'Coordinates', 'Polygons')),
-  response_type TEXT CHECK (response_type IN ('Binary', 'Multiclass', 'Ordered', 'Count', 'Survival', 'Regression')),
+  response_type TEXT CHECK (response_type IN ('Binary', 'Multiclass', 'Ordered', 'Count', 'Survival', 'Continuous')),
   rows BIGINT CHECK (rows > 0), features INTEGER CHECK (features >= 0), size_mb DOUBLE CHECK (size_mb >= 0),
   licence TEXT, delivery TEXT CHECK (delivery IN ('Built-in', 'Download')), source_url TEXT,
   CHECK ((competition_name IS NULL) = (competition_year IS NULL)));
