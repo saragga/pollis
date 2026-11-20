@@ -6,10 +6,10 @@ Two fields of a dataset of Manage Competition Datasets say how its data may reac
 
 | Delivery | How the data reach the user | When it fits |
 |---|---|---|
-| `Built-in` | They come with PollisCompetitions.jl, as Parquet files in `data/builtin/<id>` of the package, ready to load | Data whose licence allows passing them on, and whose files take under 10 MB |
-| `Download` | The user fetches them from their source, on their own computer, into `~/.pollis/competitions/<id>` | Data whose licence does not allow passing them on, or whose files are larger |
+| `Built-in` | They come with PollisCompetitions.jl, as Parquet files in `data/builtin/<id>` of the package, ready to load | Data whose licence allows passing them on, whose files take under 10 MB, and that can be scored as they stand |
+| `Download` | The user fetches them from their source, on their own computer, into `~/.pollis/competitions/<id>` | Data whose licence does not allow passing them on, whose files are larger, or that cannot be scored as they stand |
 
-Either way, the folder of a dataset holds `info.toml` once its data are on this computer, and that is how Manage Competition Datasets knows that Save to Workspace can copy them. The Parquet files of a built-in dataset are not kept in the package's git repository.
+Either way, the folder of a dataset holds `info.toml` once its data are on this computer, and that is how Manage Competition Datasets knows that Save to Workspace can copy them.
 
 ## When Are Kaggle Data Built In?
 
