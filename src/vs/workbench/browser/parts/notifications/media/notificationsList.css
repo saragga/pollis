@@ -146,10 +146,19 @@
 	outline-offset: 2px !important;
 }
 
-/* Pollis: a secondary button turns blue on hover, as the primary one is (its colours are inline styles, hence !important) */
-.monaco-workbench .notifications-list-container .notification-list-item .notification-list-item-buttons-container .monaco-button.secondary:hover {
+/* Pollis: one blue button, the first at first, then the last one hovered (pollis-current); the others secondary (the colours are inline styles, hence !important) */
+.monaco-workbench .notifications-list-container .notification-list-item .notification-list-item-buttons-container .monaco-text-button:not(.pollis-current) {
+	background-color: var(--vscode-button-secondaryBackground) !important;
+	color: var(--vscode-button-secondaryForeground) !important;
+}
+
+.monaco-workbench .notifications-list-container .notification-list-item .notification-list-item-buttons-container .monaco-text-button.pollis-current {
 	background-color: var(--vscode-button-background) !important;
 	color: var(--vscode-button-foreground) !important;
+}
+
+.monaco-workbench .notifications-list-container .notification-list-item .notification-list-item-buttons-container .monaco-text-button.pollis-current:hover {
+	background-color: var(--vscode-button-hoverBackground) !important;
 }
 
 .monaco-workbench .notifications-list-container .notification-list-item .notification-list-item-buttons-container .monaco-text-button {

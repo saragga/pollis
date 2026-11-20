@@ -8,7 +8,7 @@ import { clearNode, addDisposableListener, EventType, EventHelper, $, isEventLik
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
-import { ButtonBar, IButtonOptions } from '../../../../base/browser/ui/button/button.js';
+import { ButtonBar, ButtonWithDropdown, IButton, IButtonOptions } from '../../../../base/browser/ui/button/button.js';
 import { ActionBar } from '../../../../base/browser/ui/actionbar/actionbar.js';
 import { ActionRunner, IAction, IActionRunner, Separator, toAction } from '../../../../base/common/actions.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
@@ -516,6 +516,7 @@ export class NotificationTemplateRenderer extends Disposable {
 			}());
 
 			const buttonToolbar = this.inputDisposables.add(new ButtonBar(this.template.buttonsContainer));
+			const pollisButtons: { readonly button: IButton; readonly marked: HTMLElement }[] = [];
 			for (let i = 0; i < primaryActions.length; i++) {
 				const action = primaryActions[i];
 
@@ -537,6 +538,7 @@ export class NotificationTemplateRenderer extends Disposable {
 				);
 
 				button.label = action.label;
+				pollisButtons.push({ button, marked: button instanceof ButtonWithDropdown ? button.primaryButton.element : button.element });
 
 				this.inputDisposables.add(button.onDidClick(e => {
 					if (e) {
@@ -544,6 +546,19 @@ export class NotificationTemplateRenderer extends Disposable {
 					}
 
 					actionRunner.run(action);
+				}));
+			}
+
+			// Pollis: one blue button, the first at first, then the last one the pointer went onto, which keeps it
+			let current = pollisButtons.at(0);
+			current?.marked.classList.add('pollis-current');
+			for (const entry of pollisButtons) {
+				this.inputDisposables.add(addDisposableListener(entry.button.element, EventType.MOUSE_ENTER, () => {
+					if (entry !== current && entry.button.enabled) {
+						current?.marked.classList.remove('pollis-current');
+						entry.marked.classList.add('pollis-current');
+						current = entry;
+					}
 				}));
 			}
 		}
