@@ -209,16 +209,20 @@ export interface IScaffoldSqlStep {
 }
 
 /**
- * One blue button in each row of buttons, a `.bar` of `button.action`: the leftmost at first (`current` in its HTML), then
- * the last enabled one the pointer went onto, which keeps the blue when the pointer leaves. A page with such rows puts
- * this CSS in its `extraCss` and `ONE_BLUE_BUTTON_JS` in its `pageScriptJs`.
+ * One blue button in each row of buttons, a `.bar` of `button.action`: the leftmost enabled one at first, then the last
+ * enabled one the pointer went onto, which keeps the blue when the pointer leaves. A row whose blue button is disabled,
+ * or that has none, gives the blue to its first enabled button. A page with such rows puts this CSS in its `extraCss`
+ * and `ONE_BLUE_BUTTON_JS` in its `pageScriptJs`.
  */
 export const ONE_BLUE_BUTTON_CSS = `
 		.bar > button.action.current:not(:disabled), .bar > button.action:not(:disabled):hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); opacity: 1; }
 		.bar > button.action.current:not(:disabled):hover { background: var(--vscode-button-hoverBackground); }
 `;
 
-/** The script of `ONE_BLUE_BUTTON_CSS`: the blue moves to the enabled button the pointer goes onto, in rows added later too. */
+/**
+ * The script of `ONE_BLUE_BUTTON_CSS`: the blue moves to the enabled button the pointer goes onto, and a row whose blue
+ * button is disabled, or that has none, gives it to its first enabled button, in rows added or changed later too.
+ */
 export const ONE_BLUE_BUTTON_JS = `
 	document.addEventListener('mouseover', event => {
 		const button = event.target.closest ? event.target.closest('.bar > button.action') : null;
@@ -227,6 +231,20 @@ export const ONE_BLUE_BUTTON_JS = `
 			button.classList.add('current');
 		}
 	});
+	{
+		const settleBlueButtons = () => {
+			for (const bar of document.querySelectorAll('.bar')) {
+				const buttons = [...bar.querySelectorAll(':scope > button.action')];
+				const first = buttons.find(button => !button.disabled);
+				if (first && !buttons.some(button => !button.disabled && button.classList.contains('current'))) {
+					buttons.forEach(button => button.classList.remove('current'));
+					first.classList.add('current');
+				}
+			}
+		};
+		settleBlueButtons();
+		new MutationObserver(settleBlueButtons).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['disabled'] });
+	}
 `;
 
 /**

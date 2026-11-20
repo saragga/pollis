@@ -32,7 +32,7 @@ import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaff
 import { parseToml } from '../../model/browser/common/tomlPanelData.js';
 import { FORECASTINGCOMPETITIONS_METADATA } from '../../model/browser/webviews/forecastingCompetitions.data.js';
 import { sortHeadingsCss, sortHeadingsScript, sortHint } from '../../model/browser/webviews/webviewPager.js';
-import { buildWebviewHtml, codeEditorCss, codeEditorHtml, codeEditorJs, colorizeBracketsJs, pageNextSteps } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, codeEditorCss, codeEditorHtml, codeEditorJs, colorizeBracketsJs, ONE_BLUE_BUTTON_JS, pageNextSteps } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { findPollisWorkspace } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
@@ -1102,6 +1102,7 @@ function pageHtml(): string {
 			],
 		}),
 		pageScriptJs: `
+	${ONE_BLUE_BUTTON_JS.trim()}
 	${colorizeBracketsJs}
 	${codeEditorJs}
 	const TEXT = ${JSON.stringify(text)};
@@ -1427,7 +1428,7 @@ function pageHtml(): string {
 		if (data && data.error) {
 			html += '<p class="small missing">' + escapeHtml(TEXT.stepStopped.replace('{0}', data.error)) + '</p>';
 		}
-		box.innerHTML = html + '<div class="row"><button class="action" data-next="' + step + '">' + escapeHtml(TEXT.compute) + '</button></div>';
+		box.innerHTML = html + '<div class="row bar"><button class="action" data-next="' + step + '">' + escapeHtml(TEXT.compute) + '</button></div>';
 	}
 
 	/** A line for each of lines ({ cls, values }, a value for each step of steps, null where there is none), on axes from 0. */
@@ -1500,7 +1501,7 @@ function pageHtml(): string {
 	let seriesAllPast = false;
 	function drawSeries(data) {
 		const ok = !!data && !data.error;
-		let html = '<div class="row"><span class="small">' + escapeHtml(TEXT.seriesName) + '</span> <input type="text" id="seriesName" spellcheck="false" value="' + escapeHtml(ok ? data.name : '') + '" placeholder="' + escapeHtml(TEXT.seriesPlaceholder) + '">'
+		let html = '<div class="row bar"><span class="small">' + escapeHtml(TEXT.seriesName) + '</span> <input type="text" id="seriesName" spellcheck="false" value="' + escapeHtml(ok ? data.name : '') + '" placeholder="' + escapeHtml(TEXT.seriesPlaceholder) + '">'
 			+ ' <button class="action" data-series="name">' + escapeHtml(TEXT.show) + '</button>'
 			+ ' <button class="action" data-series="previous"' + (ok && data.position > 1 ? '' : ' disabled') + '>' + escapeHtml(TEXT.previous) + '</button>'
 			+ ' <button class="action" data-series="next"' + (ok && data.position >= data.count ? ' disabled' : '') + '>' + escapeHtml(TEXT.next) + '</button></div>';

@@ -15,6 +15,7 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
+import { ONE_BLUE_BUTTON_JS } from '../../model/browser/webviews/webviewScaffold.js';
 import { ITerminalInstance, ITerminalInstanceService } from '../../terminal/browser/terminal.js';
 import { findPollisWorkspace, pollisWorkspaceFolderPath } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 import { cellAvailable, CLOUD_PREFIX, cloudModels, IAgentCommand, ICellRun, cellRun, LOCAL_PREFIX, modelName } from './modelRouting.js';
@@ -314,7 +315,7 @@ export function studyStepHtml(text: ReturnType<typeof studyStepText>): string {
 		</div>
 		<p class="hint" id="exampleHint">${text.exampleHint}</p>
 		<div id="fileFields" hidden>
-			<div class="row"><span class="small">${text.file}</span> <input type="text" id="file" spellcheck="false"> <button class="action" id="chooseFile">${text.choose}</button></div>
+			<div class="row bar"><span class="small">${text.file}</span> <input type="text" id="file" spellcheck="false"> <button class="action" id="chooseFile">${text.choose}</button></div>
 			<label class="small field-label" for="description">${text.description}</label>
 			<textarea id="description" class="ma-text" rows="4" placeholder="${text.descriptionPlaceholder}"></textarea>
 			<p class="hint">${text.fileHint}</p>
@@ -354,6 +355,7 @@ export const orchestrationCss = `
  * for the time of a run.
  */
 export const orchestrationPageJs = `
+	${ONE_BLUE_BUTTON_JS.trim()}
 	function escapeHtml(value) {
 		return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 	}

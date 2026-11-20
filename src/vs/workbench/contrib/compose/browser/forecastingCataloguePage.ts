@@ -774,7 +774,7 @@ ${sortHeadingsCss}
 		.catalogue .addForm .formGrid { display: grid; grid-template-columns: max-content minmax(160px, 320px); gap: 6px 12px; align-items: center; }
 		.catalogue .addForm .formGrid label { font-size: 12px; }
 		.catalogue .addForm .formProblems { margin: 8px 0 0 0; padding-left: 18px; color: var(--vscode-errorForeground); font-size: 12px; }
-		.catalogue .addForm .bar { margin-top: 10px; }
+		.catalogue .addForm .bar:not(.fileRow) { margin-top: 10px; }
 `,
 		bodyHtml: `
 <div class="catalogue">
@@ -1388,7 +1388,7 @@ ${sortHeadingsCss}
 		// A dataset being added starts with no file: Choose File... asks for it, and its columns and first rows come back
 		if (form.mode === 'add') {
 			box.appendChild(element('div', 'hint', TEXT.formNeeds));
-			const fileRow = box.appendChild(element('div', 'fileRow'));
+			const fileRow = box.appendChild(element('div', 'fileRow bar'));
 			fileRow.appendChild(element('button', 'action', TEXT.formChoose)).id = 'formChoose';
 			fileRow.appendChild(element('span', form.file ? '' : 'none', form.file ? form.fileName : TEXT.formNoFile));
 		}
