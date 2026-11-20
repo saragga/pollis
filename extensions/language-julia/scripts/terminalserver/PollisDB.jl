@@ -170,7 +170,7 @@ const KNOWLEDGE_COMMIT = joinpath(ENVIRONMENT, "PollisKnowledge.commit")
 const BENCHMARKS_DB = joinpath(homedir(), ".pollis", "databases", "PollisBenchmarks.duckdb")
 """The PollisBenchmarks.jl folder, its artifact and the SQL that `BENCHMARKS_DB` was made with."""
 const BENCHMARKS_STAMP = BENCHMARKS_DB * ".stamp"
-"""PollisCompetitions.jl: the datasets, models and benchmarks of Compose > Prediction Competitions, which its pages install in the user's own environment."""
+"""PollisCompetitions.jl: the datasets, models and benchmarks of Compose > Prediction Challenges, which its pages install in the user's own environment."""
 const COMPETITIONS = Base.PkgId(UUID("81a31729-0f0a-40c0-bbf3-614b6aa3b649"), "PollisCompetitions")
 """Where PollisCompetitions.jl keeps the datasets downloaded, a folder each, named by its id, with its Parquet files."""
 const COMPETITIONS_HOME = joinpath(homedir(), ".pollis", "competitions")

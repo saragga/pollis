@@ -6,7 +6,7 @@
 // A panel of a toolbox in the Time Arrow style, drawn from its TOML alone, as a toolbox has no code. Its [meta] says
 // style = "timeArrow" and gives the introduction (intro); [matrix] is a table shown between the introduction and the
 // steps (columns, and [[matrix.rows]] with their cells); each [[steps]] is a numbered pane with a title, an optional
-// text (intro), an optional dataset of Manage Competition Datasets (dataset, its id there, and datasetText, how the
+// text (intro), an optional dataset of Manage Challenge Datasets (dataset, its id there, and datasetText, how the
 // step names it), and [[steps.sections]], each a heading with a text or a list of items. Powered by, Learn More and
 // the references come from [[packages]], [[wikis]] and [[references]], as for any panel.
 
@@ -64,7 +64,7 @@ function stepBodyHtml(step: TomlValue): string {
 	if (dataset || text(step.datasetText)) {
 		const name = escape(text(step.datasetText) || dataset);
 		const link = dataset
-			? `<button class="link" data-dataset="${escape(dataset)}" title="${escape(localize('toolboxTimeArrow.openDataset', "Open in Manage Competition Datasets"))}">${name}</button>`
+			? `<button class="link" data-dataset="${escape(dataset)}" title="${escape(localize('toolboxTimeArrow.openDataset', "Open in Manage Challenge Datasets"))}">${name}</button>`
 			: name;
 		parts.push(`<p class="dataset"><span class="label">${escape(localize('toolboxTimeArrow.dataset', "Dataset:"))}</span> ${link}</p>`);
 	}
@@ -113,7 +113,7 @@ export function timeArrowPanelHtml(title: string, parsed: TomlValue, hasPackages
 	});
 }
 
-/** The messages of a Time Arrow page of a toolbox: a dataset opened in Manage Competition Datasets. */
+/** The messages of a Time Arrow page of a toolbox: a dataset opened in Manage Challenge Datasets. */
 export function onTimeArrowMessage(message: unknown, commandService: ICommandService): void {
 	const { command, id } = table(message);
 	if (command === 'openDataset' && typeof id === 'string') {

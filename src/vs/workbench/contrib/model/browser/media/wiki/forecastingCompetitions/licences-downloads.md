@@ -4,7 +4,7 @@ Score Models scores a method on the data of a dataset that is on this computer: 
 
 ## Where Do the Data of a Dataset Come From?
 
-The Dataset Catalog of PollisCompetitions.jl records, for each dataset, where its data come from (`source_url`), their licence (`licence`) and how they reach this computer (`delivery`): Built-in, when the package ships them, or Download, when the user fetches them from their source. Manage Competition Datasets shows these fields in the details of each dataset. Many of the built-in forecasting datasets come from the Monash Time Series Forecasting Archive, on Zenodo [(Godahewa, Bergmeir, Webb, Hyndman and Montero-Manso, 2021)](#ref-GBWHM2021a), which gives each series with the values the forecasters saw and the values the forecasts are scored on.
+The Dataset Catalog of PollisCompetitions.jl records, for each dataset, where its data come from (`source_url`), their licence (`licence`) and how they reach this computer (`delivery`): Built-in, when the package ships them, or Download, when the user fetches them from their source. Manage Challenge Datasets shows these fields in the details of each dataset. Many of the built-in forecasting datasets come from the Monash Time Series Forecasting Archive, on Zenodo [(Godahewa, Bergmeir, Webb, Hyndman and Montero-Manso, 2021)](#ref-GBWHM2021a), which gives each series with the values the forecasters saw and the values the forecasts are scored on.
 
 ## Where Are the Data of a Dataset Kept?
 
@@ -12,7 +12,7 @@ PollisCompetitions.jl keeps the data of a dataset as Parquet tables, in one fold
 
 ## How Large Are the Data?
 
-The field `size_mb` of the Dataset Catalog gives the size of a dataset: of its Parquet files for a built-in dataset, and of the compressed files the user downloads for a Download dataset. Manage Competition Datasets shows it in the column Size (MB).
+The field `size_mb` of the Dataset Catalog gives the size of a dataset: of its Parquet files for a built-in dataset, and of the files the user downloads, compressed or not, for a Download dataset. Manage Challenge Datasets shows it in the column Size (MB).
 
 ## References
 

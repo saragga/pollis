@@ -1,10 +1,10 @@
 # Score Models: Overview
 
-Score Models runs a forecasting method of your own on the series of forecasting datasets and scores its forecasts by sMAPE, MASE and OWA, beside eight statistical benchmarks computed on the same series. The page is in Compose > Prediction Competitions > Score Models, and its Julia code comes from the package PollisCompetitions.jl.
+Score Models runs a forecasting method of your own on the series of forecasting datasets and scores its forecasts by sMAPE, MASE and OWA, beside eight statistical benchmarks computed on the same series. The page is in Compose > Prediction Challenges > Score Models, and its Julia code comes from the package PollisCompetitions.jl.
 
 ## What Are the Four Steps of Score Models?
 
-**Datasets** lists the datasets ticked in the column Active of Manage Competition Datasets on which Score Models can score models, those whose column Model Scoring says Ready, with their number of series and the horizon of each frequency. With none of them active, the step says so, and **Open Manage Competition Datasets** opens that page to tick them. The step also sets the **Frequency** to run, when one dataset is listed and it has several, and the **Series to Run**: **All**, or **A Sample of** a number of series drawn with a **Seed**. **Your Method** holds the Julia function that forecasts a series. **Run** starts the method on every series chosen with **Run the Method**, shows its progress, and reopens an earlier run from **Earlier runs...**. **Scores** shows the method's scores beside the benchmarks, and a plot of one series with its forecast.
+**Datasets** lists the datasets ticked in the column Active of Manage Challenge Datasets on which Score Models can score models, those whose column Model Scoring says Ready, with their number of series and the horizon of each frequency. With none of them active, the step says so, and **Open Manage Challenge Datasets** opens that page to tick them. The step also sets the **Frequency** to run, when one dataset is listed and it has several, and the **Series to Run**: **All**, or **A Sample of** a number of series drawn with a **Seed**. **Your Method** holds the Julia function that forecasts a series. **Run** starts the method on every series chosen with **Run the Method**, shows its progress, and reopens an earlier run from **Earlier runs...**. **Scores** shows the method's scores beside the benchmarks, and a plot of one series with its forecast.
 
 ## Which Datasets Can Score Models Score Models On?
 
@@ -12,7 +12,7 @@ A dataset of PollisCompetitions.jl is Ready when its data are on this computer, 
 
 ## How Are the Datasets You Added Scored?
 
-A dataset added with Add a Dataset in Manage Competition Datasets is listed in the step Datasets after those of PollisCompetitions.jl, and is always on this computer, in `data/forecasting/` of the Pollis Workspace. It is scored as every other dataset is: sMAPE, MASE and OWA, beside the benchmarks computed on the same series. PollisCompetitions.jl reads it from its folder, which the run's `run.toml` records as `folder`, in place of an id.
+A dataset added with Add a Dataset in Manage Challenge Datasets is listed in the step Datasets after those of PollisCompetitions.jl, and is always on this computer, in `data/forecasting/` of the Pollis Workspace. It is scored as every other dataset is: sMAPE, MASE and OWA, beside the benchmarks computed on the same series. PollisCompetitions.jl reads it from its folder, which the run's `run.toml` records as `folder`, in place of an id.
 
 ## How Does Score Models Run a Method?
 

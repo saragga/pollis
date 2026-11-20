@@ -1,7 +1,7 @@
-% Pollis drill-down: Prediction Competitions, the package PollisCompetitions.jl, its TOML files, its DuckDB database and
-% the folders that Manage Competition Datasets, Score Models and Agents' Forecasting Competition write (20 November 2026).
+% Pollis drill-down: Prediction Challenges, the package PollisCompetitions.jl, its TOML files, its DuckDB database and
+% the folders that Manage Challenge Datasets, Score Models and Agents' Forecasting Competition write (20 November 2026).
 % For users who want the detail, and for whoever maintains Pollis.
-% Compile with: latexmk -pdf workflow_prediction_competitions.tex
+% Compile with: latexmk -pdf workflow_prediction_challenges.tex
 \input{workflow_style}
 
 \usepackage{titlesec}
@@ -10,7 +10,7 @@
 \usepackage{listings}
 
 \fancyhf{}
-\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: Prediction Competitions}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: Prediction Challenges}
 \fancyfoot[R]{\footnotesize\color{soft}\thepage}
 
 \titleformat{\section}{\color{navy}\large\bfseries}{\color{deepamber}\thesection}{0.6em}{}
@@ -30,7 +30,7 @@
 
 \begin{document}
 
-\workflowhead[Drill-Down]{Prediction Competitions}
+\workflowhead[Drill-Down]{Prediction Challenges}
   {The Test Set Decides}
   {A forecast or a prediction is judged on values its maker never saw. This is how Pollis keeps them apart: the
    package PollisCompetitions.jl and its parts, the TOML files that describe datasets, models and scores, the DuckDB
@@ -38,14 +38,14 @@
 
 \begin{nbox}
 {\color{amber}\bfseries Drill-down.}\enspace
-A look under the surface of the menu \textbf{Compose\gt Prediction Competitions}: Manage Competition Datasets, Score
+A look under the surface of the menu \textbf{Compose\gt Prediction Challenges}: Manage Challenge Datasets, Score
 Models and Agents' Forecasting Competition. It is for anyone who wants to know where each file is and what it holds,
 and for whoever maintains Pollis. It describes the state of 20 November 2026.
 \end{nbox}
 
 \tableofcontents
 
-\section{Prediction Competitions in one table}
+\section{Prediction Challenges in one table}
 
 Three pages share one package and one rule. Every dataset is found, read and scored the same way, whoever contributes
 it: the package, a toolbox or you.
@@ -54,7 +54,7 @@ it: the package, a toolbox or you.
 \renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\linewidth}{@{}p{0.13\linewidth}LLL@{}}
 \toprule
-& \textbf{Manage Competition Datasets} & \textbf{Score Models} & \textbf{Agents' Forecasting Competition}\\
+& \textbf{Manage Challenge Datasets} & \textbf{Score Models} & \textbf{Agents' Forecasting Competition}\\
 \midrule
 Does & Lists the Dataset Catalog; you tick the datasets that are Active, save one to the workspace, or add one of your own
   & Runs a Julia function \sig{forecast(y, h, period)} of yours on the series of the active datasets and scores it
@@ -202,7 +202,7 @@ geometry = "None"                           # None | Spatial Weights Matrix | Co
 response_type = "Continuous"                # Binary | Multiclass | Ordered | Count | Survival | Continuous
 rows = 164581
 features = 0
-size_mb = 0.45                              # Parquet files if built in; compressed download if not
+size_mb = 0.45                              # Parquet files if built in; files downloaded if not
 licence = "CC BY 4.0 (via the Monash archive on Zenodo)"
 delivery = "Built-in"                       # Built-in | Download
 source_url = "https://..."
@@ -214,7 +214,7 @@ source_url = "https://..."
 
 The same \file{[[datasets]]} tables come from two other contributors. An installed toolbox names a file of them in
 \file{forecastingDatasets} of its \file{pollisToolboxes} contribution, and a dataset you add has them in its
-\file{dataset.toml} (\S\ref{sec:workspace}). Manage Competition Datasets reads all three and checks each against the
+\file{dataset.toml} (\S\ref{sec:workspace}). Manage Challenge Datasets reads all three and checks each against the
 schema that Pollis ships, \file{compose/browser/media/forecastingCatalogue.toml}. That schema has 17
 \file{[[field]]} tables (name, label, group, type, \file{controlled} and \file{values}, description) and four
 \file{[[view]]} tables, the column presets of the page (id, label, \file{pinned}, \file{columns}). The page's own TOML
@@ -294,6 +294,7 @@ competition = "heloc"
 name = "heloc"
 format = "tabular"
 target = "RiskPerformance"                   # the response column of data.parquet
+                                             # (a survival dataset adds event = "status": 1 event, 0 censored)
 openml_task = 363676
 openml_dataset = 46932
 repeats = 10
@@ -307,7 +308,7 @@ data = 10459
 splits = 104590
 \end{lstlisting}
 
-Score Models lists a dataset, and Manage Competition Datasets shows it as Ready in its column Model Scoring, when its
+Score Models lists a dataset, and Manage Challenge Datasets shows it as Ready in its column Model Scoring, when its
 \file{info.toml} has \sig{format = "monash"} and at least one \file{[[frequencies]]} table. The step Datasets shows
 the horizon of a frequency as one number, or as a range when \file{shortest_horizon} and \file{longest_horizon} differ.
 
@@ -382,7 +383,7 @@ An id that is already the name of a schema of DuckDB stops the build with an err
 \midrule
 \file{series} & \file{series} (its number), \file{competition} (the dataset id), \file{name} (as the source names it), \file{frequency}, \file{period} (1 for none), \file{horizon}, \file{domain}, \file{start}\\
 \file{observations} & \file{series}, \file{t} (from 1), \file{value}, \file{split}: \file{train}, a value the forecasters saw, or \file{test}, one their forecasts are scored on\\
-\file{data} & A row per case of a tabular dataset: the response, named by \file{target} in \file{info.toml}, and its features\\
+\file{data} & A row per case of a tabular dataset: the response, named by \file{target} in \file{info.toml} (for a survival dataset, the time, with the event indicator named by \file{event}), and its features\\
 \file{splits} & \file{row} (of \file{data}, from 1), \file{repeat}, \file{fold}: the fold whose test set the row is in\\
 \bottomrule
 \end{tabularx}
@@ -456,7 +457,7 @@ started = "2026-11-20 10:15"
 \subsection{Your datasets: data/forecasting of the Pollis Workspace}
 \label{sec:workspace}
 
-Manage Competition Datasets writes into the data folder of your Pollis Workspace and nowhere else:
+Manage Challenge Datasets writes into the data folder of your Pollis Workspace and nowhere else:
 
 \begin{lstlisting}
 <Pollis Workspace>/data/forecasting/
@@ -562,7 +563,7 @@ forecasts) or a benchmark, with \file{kind}, \file{name} and \file{scores}.
 \file{PollisCompetitions.jl/src/} & Reading, scoring, the benchmarks and the database\\
 \file{.../compose/browser/media/forecastingCatalogue.toml} & The schema of the catalogue: its fields and views\\
 \file{.../compose/browser/forecastingCatalogue.ts} & Reading and checking the catalogue's contributions\\
-\file{.../compose/browser/forecastingCataloguePage.ts} & Manage Competition Datasets\\
+\file{.../compose/browser/forecastingCataloguePage.ts} & Manage Challenge Datasets\\
 \file{.../compose/browser/forecastingWorkspace.ts} & \file{data/forecasting/}: saved and added datasets\\
 \file{.../compose/browser/forecastingActive.ts} & The datasets ticked Active\\
 \file{.../compose/browser/forecastingCompetitionsPage.ts} & Score Models: the runs and their scripts\\

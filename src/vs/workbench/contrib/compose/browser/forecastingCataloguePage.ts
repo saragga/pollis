@@ -45,7 +45,7 @@ import { activeDatasets, FORECASTING_CATALOGUE_COMMAND_ID, IActiveDatasets, setA
 import { addedDatasetFiles, forecastingFolder, IAddedDataset, readAddedDataset, recordSaved, savedStatuses, saveDataset, WORKSPACE_SOURCE, writeAddedDataset, writeCatalogueSnapshot } from './forecastingWorkspace.js';
 import { IForecastingDatasetsService, IForecastingProblem } from '../common/forecastingDatasets.js';
 
-// Manage Competition Datasets, from Compose > Prediction Competitions (compose.contribution.ts): the Dataset Catalog
+// Manage Challenge Datasets, from Compose > Prediction Challenges (compose.contribution.ts): the Dataset Catalog
 // (forecastingCatalogue.ts) in two tabs, Datasets and Curated Collections, in the Minimal style of the scaffold. A view
 // of the schema chooses the columns, those of one group of fields; the rows are filtered by the values of the
 // controlled fields, one field at a time in Filter by, and by a tag clicked in a cell, and sorted by any column; the
@@ -197,7 +197,7 @@ async function readCatalogue(fileService: IFileService, toolboxPanelsService: IT
 	return { catalogue: read.catalogue, problems: [...unread, ...read.problems] };
 }
 
-/** Opens the Manage Competition Datasets page, or shows it when it is open, on the entry `entryId` when one is given. */
+/** Opens the Manage Challenge Datasets page, or shows it when it is open, on the entry `entryId` when one is given. */
 async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?: string): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const fileService = accessor.get(IFileService);
@@ -223,7 +223,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 		}
 		return;
 	}
-	const title = localize('forecastingCatalogue.title', "Manage Competition Datasets");
+	const title = localize('forecastingCatalogue.title', "Manage Challenge Datasets");
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title,
@@ -567,7 +567,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 					await commandService.executeCommand(FORECASTING_COMPETITIONS_COMMAND_ID);
 				}
 			} else if ((message.command === 'active' || message.command === 'score') && hasKey(message, { ids: true }) && Array.isArray(message.ids)) {
-				// Any dataset of the catalogue can be active; Score Models lists those it scores, and Score Competition Models opens it
+				// Any dataset of the catalogue can be active; Score Models lists those it scores, and Score Challenge Models opens it
 				const entries = message.ids.map(id => read?.catalogue.entries.find(candidate => candidate.id === id)).filter((entry): entry is ICatalogueEntry => !!entry);
 				const ids = scoredIds();
 				setActiveDatasets(storageService, activeOf(entries, ids));
@@ -609,14 +609,14 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 /** The page, showing `rows` rows at a time at first: its texts come from here, the catalogue from the `state` message. */
 function pageHtml(rows: number): string {
 	const text = {
-		intro: localize('forecastingCatalogue.intro', "Manage Competition Datasets lists the datasets on which models are scored and ranked, those of PollisCompetitions.jl, of the installed toolboxes and your own, and the curated collections that gather them. View shows one group of fields as columns; Filter by shows the values of a field, to tick those to keep, a value in a cell filters by it when clicked, and a column heading sorts the rows. Expand, under the tick of a row, shows everything recorded of its dataset, with its papers, and Restore Size closes it again. Tick the datasets you are working with in the column Active: Score Competition Models opens Score Models, which lists those it can score models on, and Save Active Datasets to Workspace saves those whose data are on this computer. The column Model Scoring says whether models can be scored on a dataset, and its hover how: the values held out from the forecasters and the measures. Save to Workspace copies a dataset into data/forecasting of your Pollis Workspace, and the column Workspace says whether it is saved there and changed since. Add a Dataset adds a dataset of your own, from a table with a row for each observation."),
+		intro: localize('forecastingCatalogue.intro', "Manage Challenge Datasets lists the datasets on which models are scored and ranked, those of PollisCompetitions.jl, of the installed toolboxes and your own, and the curated collections that gather them. View shows one group of fields as columns; Filter by shows the values of a field, to tick those to keep, a value in a cell filters by it when clicked, and a column heading sorts the rows. Expand, under the tick of a row, shows everything recorded of its dataset, with its papers, and Restore Size closes it again. Tick the datasets you are working with in the column Active: Score Challenge Models opens Score Models, which lists those it can score models on, and Save Active Datasets to Workspace saves those whose data are on this computer. The column Model Scoring says whether models can be scored on a dataset, and its hover how: the values held out from the forecasters and the measures. Save to Workspace copies a dataset into data/forecasting of your Pollis Workspace, and the column Workspace says whether it is saved there and changed since. Add a Dataset adds a dataset of your own, from a table with a row for each observation."),
 		datasets: localize('forecastingCatalogue.datasets', "Datasets"),
 		collections: localize('forecastingCatalogue.collections', "Curated Collections"),
 		filterBy: localize('forecastingCatalogue.filterBy', "Filter by:"),
 		active: localize('forecastingCatalogue.active', "Active"),
 		activeHint: localize('forecastingCatalogue.activeHint', "The datasets you are working with: Score Models lists those it can score models on, and Save Active Datasets to Workspace saves those whose data are on this computer"),
-		notScored: localize('forecastingCatalogue.notScored', "Active or not: Score Models cannot score models on this dataset yet, so Score Competition Models leaves it out"),
-		scoreActive: localize('forecastingCatalogue.scoreActive', "Score Competition Models"),
+		notScored: localize('forecastingCatalogue.notScored', "Active or not: Score Models cannot score models on this dataset yet, so Score Challenge Models leaves it out"),
+		scoreActive: localize('forecastingCatalogue.scoreActive', "Score Challenge Models"),
 		activeCount: localize('forecastingCatalogue.activeCount', "{0} active, models can be scored on {1} of them"),
 		noneActive: localize('forecastingCatalogue.noneActive', "None active: tick the datasets you are working with in the column Active"),
 		tickFirst: localize('forecastingCatalogue.tickFirst', "Tick the datasets you are working with in the column Active first."),
@@ -704,7 +704,7 @@ function pageHtml(rows: number): string {
 		sortHint: sortHint(),
 	};
 	return buildWebviewHtml({
-		title: localize('forecastingCatalogue.title', "Manage Competition Datasets"),
+		title: localize('forecastingCatalogue.title', "Manage Challenge Datasets"),
 		omitPoweredBy: !FORECASTINGCATALOGUE_METADATA.forecastingCatalogue.packages.length,
 		omitNextSteps: true,
 		introHtml: text.intro,
@@ -1005,7 +1005,7 @@ ${sortHeadingsCss}
 
 	function columns() {
 		const current = view();
-		return [ACTIVE, SCORING, WORKSPACE, current.pinned[0] || 'dataset_name', ...current.columns.filter(name => !current.pinned.includes(name)), ...(current.id === CURATION ? [MISSING] : [])];
+		return [ACTIVE, current.pinned[0] || 'dataset_name', SCORING, WORKSPACE, ...current.columns.filter(name => !current.pinned.includes(name)), ...(current.id === CURATION ? [MISSING] : [])];
 	}
 	function drawHead() {
 		const head = document.getElementById('head');
@@ -1543,7 +1543,7 @@ ${sortHeadingsCss}
 			drawActive();
 		}
 	});
-	// What Score Competition Models or a save did, under the buttons until the next of them; the folders it names in yellow
+	// What Score Challenge Models or a save did, under the buttons until the next of them; the folders it names in yellow
 	function showNotice(text, paths) {
 		const box = document.getElementById('notice');
 		box.textContent = '';
@@ -1568,7 +1568,7 @@ ${sortHeadingsCss}
 			rest = rest.slice(at + found.length);
 		}
 	}
-	// Pressed with no dataset active, Score Competition Models and Save Active Datasets to Workspace say why, and a
+	// Pressed with no dataset active, Score Challenge Models and Save Active Datasets to Workspace say why, and a
 	// second press takes it away
 	function toggleTickFirst() {
 		showNotice(document.getElementById('notice').textContent === TEXT.tickFirst ? '' : TEXT.tickFirst);
@@ -1758,7 +1758,7 @@ ${sortHeadingsCss}
 
 registerAction2(class extends Action2 {
 	constructor() {
-		super({ id: FORECASTING_CATALOGUE_COMMAND_ID, title: localize2('forecastingCatalogue.action', "Manage Competition Datasets..."), category: localize2('forecastingCatalogue.category', "Competitions"), f1: true });
+		super({ id: FORECASTING_CATALOGUE_COMMAND_ID, title: localize2('forecastingCatalogue.action', "Manage Challenge Datasets..."), category: localize2('forecastingCatalogue.category', "Challenges"), f1: true });
 	}
 	run(accessor: ServicesAccessor, entryId?: unknown): Promise<void> {
 		return openForecastingCataloguePage(accessor, typeof entryId === 'string' ? entryId : undefined);

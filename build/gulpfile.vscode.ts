@@ -121,7 +121,7 @@ const vscodeResourceIncludes = [
 	// Compose workflows (with their LaTeX templates), new methods and published benchmarks (notebook + step functions), the reports script and instructions, and the Practice exercises and their script
 	'out-build/vs/workbench/contrib/compose/browser/media/workflows/**/*.{ipynb,jl,tex,bib}',
 	'out-build/vs/workbench/contrib/compose/browser/media/content.toml',
-	// The schema of the Dataset Catalog of Manage Competition Datasets
+	// The schema of the Dataset Catalog of Manage Challenge Datasets
 	'out-build/vs/workbench/contrib/compose/browser/media/forecastingCatalogue.toml',
 	'out-build/vs/workbench/contrib/compose/browser/media/methods/**/*.{ipynb,jl,toml,csv,md,tex,bib,png,jpg}',
 	'out-build/vs/workbench/contrib/compose/browser/media/correctness/**/*.{ipynb,jl,dat}',

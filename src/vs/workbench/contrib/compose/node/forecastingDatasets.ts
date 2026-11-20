@@ -3,7 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// The conversion of the datasets the user adds in Manage Competition Datasets, on the engine of the duckdb> terminal
+// The conversion of the datasets the user adds in Manage Challenge Datasets, on the engine of the duckdb> terminal
 // (@duckdb/node-api): the user's long table, a CSV, TSV or Parquet file, is checked, then written as the series.parquet
 // and observations.parquet of PollisCompetitions.jl, with their columns and types (src/download.jl of the package).
 // forecastingDatasetsMain.ts runs it in a utility process of its own.

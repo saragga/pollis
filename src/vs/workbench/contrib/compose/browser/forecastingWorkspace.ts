@@ -13,7 +13,7 @@ import { CatalogueValue, IForecastingCatalogue } from './forecastingCatalogue.js
 import { sha256Of } from './sha256.js';
 
 // The forecasting datasets of the user's Pollis Workspace, in data/forecasting/: a folder for each dataset saved from
-// Manage Competition Datasets (forecastingCataloguePage.ts), named by its id in the catalogue, with the files copied
+// Manage Challenge Datasets (forecastingCataloguePage.ts), named by its id in the catalogue, with the files copied
 // and saved.toml, which records each file's size, time and SHA-256 when it was saved, so that a change to the copy is
 // seen; and forecastingCatalogue.toml, the whole catalogue as the page last read it, for Julia, which the page
 // rewrites and no one edits. A dataset the user adds from a file of their own has, beside its converted files,
@@ -150,7 +150,7 @@ export async function recordSaved(fileService: IFileService, target: URI, what: 
 		saved.push({ path: file.name, bytes: file.size, mtime: file.mtime, sha256: await sha256Of((await fileService.readFile(file.resource)).value) });
 	}
 	const lines = [
-		`# Saved by Manage Competition Datasets: ${what}, so that a change to them is seen.`,
+		`# Saved by Manage Challenge Datasets: ${what}, so that a change to them is seen.`,
 		`saved = ${JSON.stringify(new Date().toISOString())}`,
 		...saved.flatMap(file => ['', '[[files]]', `path = ${JSON.stringify(file.path)}`, `bytes = ${file.bytes}`, `mtime = ${file.mtime}`, `sha256 = ${JSON.stringify(file.sha256)}`]),
 	];
@@ -185,7 +185,7 @@ function datasetToml(fields: { readonly [field: string]: CatalogueValue | undefi
  */
 function catalogueToml(catalogue: IForecastingCatalogue): string {
 	const lines = [
-		'# The catalogue of competition datasets as Compose > Prediction Competitions > Manage Competition Datasets last read',
+		'# The catalogue of challenge datasets as Compose > Prediction Challenges > Manage Challenge Datasets last read',
 		'# it: its fields, its views, the datasets of every contributor, each named in source, and the curated collections.',
 		'# The page rewrites this file each time it opens: do not edit it. Read it in Julia with TOML.parsefile.',
 	];
@@ -264,7 +264,7 @@ export async function readAddedDataset(fileService: IFileService, folder: URI, i
 export async function writeAddedDataset(fileService: IFileService, folder: URI, id: string, added: IAddedDataset): Promise<void> {
 	const { conversion, dataset, references } = added;
 	const lines = [
-		'# A dataset added in Manage Competition Datasets from a file of your own. [conversion] says how series.parquet and',
+		'# A dataset added in Manage Challenge Datasets from a file of your own. [conversion] says how series.parquet and',
 		'# observations.parquet were made from it: change it with Edit Facts on the page, which converts the file again.',
 		'# [[datasets]] is the dataset in the catalogue: its fields, and its references as [[datasets.references]] tables',
 		'# with the bibtex_key of a work of PollisReferences, may also be edited here, as the schema of the catalogue allows.',

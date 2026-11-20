@@ -3,13 +3,13 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// The active datasets: those the user ticks in the column Active of Manage Competition Datasets
+// The active datasets: those the user ticks in the column Active of Manage Challenge Datasets
 // (forecastingCataloguePage.ts), which Score Models (forecastingCompetitionsPage.ts) lists in its step 1.
 
 import { DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 
-/** The command that opens Manage Competition Datasets, where the active datasets are ticked. */
+/** The command that opens Manage Challenge Datasets, where the active datasets are ticked. */
 export const FORECASTING_CATALOGUE_COMMAND_ID = 'pollis.competitions.forecastingCatalogue';
 
 const ACTIVE_KEY = 'pollis.manageCompetitionDatasets.active';

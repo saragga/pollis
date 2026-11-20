@@ -1,6 +1,6 @@
 # Agents' Forecasting Competition: Overview
 
-Agents' Forecasting Competition gives the same series of a forecasting dataset to several coding agents, and each writes, on its own, the forecasting method it believes will forecast them best. Pollis runs every method, scores its forecasts on the values held back by sMAPE, MASE and OWA, and scores beside them the mean and the median of the agents' forecasts and the statistical benchmarks. The page is in Compose > Prediction Competitions, beside Score Models.
+Agents' Forecasting Competition gives the same series of a forecasting dataset to several coding agents, and each writes, on its own, the forecasting method it believes will forecast them best. Pollis runs every method, scores its forecasts on the values held back by sMAPE, MASE and OWA, and scores beside them the mean and the median of the agents' forecasts and the statistical benchmarks. The page is in Compose > Prediction Challenges, beside Score Models.
 
 ## What Is a Forecasting Competition?
 

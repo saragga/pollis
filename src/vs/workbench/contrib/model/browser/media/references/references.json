@@ -64861,7 +64861,7 @@
 		},
 		{
 			"id": "forecastingCatalogue",
-			"title": "Manage Competition Datasets",
+			"title": "Manage Challenge Datasets",
 			"commands": [
 				"pollis.competitions.forecastingCatalogue"
 			],

@@ -1,5 +1,5 @@
 # ============================================================================
-# The Dataset Catalog of Compose > Prediction Competitions > Manage Competition Datasets (forecastingCataloguePage.ts):
+# The Dataset Catalog of Compose > Prediction Challenges > Manage Challenge Datasets (forecastingCataloguePage.ts):
 # the fields of a dataset as the page shows them, their labels, groups, types and vocabularies, and the column presets
 # of the page. The datasets are not here: they are the [[datasets]] tables of metadata/datasets.toml of
 # PollisCompetitions.jl, of the file an installed toolbox names in "forecastingDatasets" of its pollisToolboxes
@@ -121,7 +121,7 @@ name = "size_mb"
 label = "Size (MB)"
 group = "data"
 type = "number"
-description = "The size of its Parquet files, in MB"
+description = "The size of its Parquet files for a Built-in dataset, or of the files the user downloads, compressed or not, for a Download dataset, in MB"
 
 [[field]]
 name = "licence"

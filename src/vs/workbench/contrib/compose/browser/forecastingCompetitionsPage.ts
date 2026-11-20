@@ -44,13 +44,13 @@ import { POLLIS_COMPETITIONS_DATASETS_PATH } from './forecastingCatalogue.js';
 import { addedDatasetFiles, forecastingFolder, readAddedDataset } from './forecastingWorkspace.js';
 import { juliaPackageFolder } from './juliaPackages.js';
 
-// Score Models, from Compose > Prediction Competitions > Score Models (compose.contribution.ts): a forecasting method of the user's
+// Score Models, from Compose > Prediction Challenges > Score Models (compose.contribution.ts): a forecasting method of the user's
 // own, run on the series of forecasting datasets, scored by sMAPE, MASE and OWA beside the eight statistical benchmarks
 // computed on the same series. A page of the scaffold in the Time Arrow style, in four steps: 1, Datasets (a frequency
 // and a sample); 2, Your Method, a Julia function forecast(y, h, period); 3, Run, in the Julia REPL; 4, Scores. A run is
 // a folder of ~/.pollis/competitions/runs: run.toml (the choices of step 1), method.jl, run.jl (which the page writes
 // and the REPL runs), progress.json while it runs, then forecasts.csv and results.json, which step 4 draws. Step 1 lists
-// the datasets active in Manage Competition Datasets (forecastingActive.ts) that the page scores: those of
+// the datasets active in Manage Challenge Datasets (forecastingActive.ts) that the page scores: those of
 // PollisCompetitions.jl whose data are on this computer, with an info.toml of format "monash" that gives their
 // frequencies, and those the user added to the Pollis Workspace. A run scores them all: several make a folder whose
 // run.toml names them, with a run of each in the subfolder named by its id, run in turn, and step 4 shows their scores
@@ -218,7 +218,7 @@ function checkedInputs(value: unknown, known: readonly IScoredDataset[]): (Omit<
 /** run.toml of a run of one dataset: the choices of step 1. */
 function runToml(choices: IRunChoices, started: string): string {
 	return [
-		'# A run of Compose > Prediction Competitions > Score Models: the method of method.jl on these series',
+		'# A run of Compose > Prediction Challenges > Score Models: the method of method.jl on these series',
 		`competition = "${choices.competition}"`,
 		...(choices.folder ? [`folder = ${JSON.stringify(choices.folder)}`] : []),
 		`frequency = "${choices.frequency}"`,
@@ -232,7 +232,7 @@ function runToml(choices: IRunChoices, started: string): string {
 /** run.toml of a run of several datasets: the datasets, each run in the subfolder named by its id, with one sample size and seed. */
 function batchToml(choices: IBatchChoices): string {
 	return [
-		'# A run of Compose > Prediction Competitions > Score Models on several datasets in turn: the method of',
+		'# A run of Compose > Prediction Challenges > Score Models on several datasets in turn: the method of',
 		'# method.jl on each, in the subfolder named by its id, a run of its own',
 		`datasets = [${choices.datasets.map(id => JSON.stringify(id)).join(', ')}]`,
 		`sample = ${choices.sample}`,
@@ -684,7 +684,7 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 	// The folder of the competitions, for the data that come into it, and the folders of the run shown, for the files they write
 	const competitionsWatcher = disposables.add(fileService.createWatcher(competitionsFolder, { recursive: false, excludes: [] }));
 	disposables.add(competitionsWatcher.onDidChange(() => refresh.schedule()));
-	// The datasets ticked in Manage Competition Datasets, which step 1 lists
+	// The datasets ticked in Manage Challenge Datasets, which step 1 lists
 	disposables.add(onDidChangeActiveDatasets(storageService, () => refresh.schedule()));
 	const runWatcher = disposables.add(new MutableDisposable<DisposableStore>());
 	/** Shows the run in `folder`, or none; of a run of several datasets, that of `member`, else the first. */
@@ -757,7 +757,7 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 			command: 'state',
 			root: runsFolder.fsPath,
 			datasets: known,
-			// The active datasets that the page scores, as Manage Competition Datasets keeps them
+			// The active datasets that the page scores, as Manage Challenge Datasets keeps them
 			active: stored.filter(id => known.some(dataset => dataset.id === id)),
 			runs: names,
 			batches,
@@ -891,12 +891,12 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 
 function pageHtml(): string {
 	const text = {
-		intro: localize('competitions.intro', "Score Models runs a forecasting method of your own on the series of forecasting datasets and scores its forecasts by sMAPE, MASE and OWA, beside the eight statistical benchmarks computed on the same series. The series come with the split the forecasters had: the values they saw, and the values their forecasts are scored on. Score Models lists the datasets active in Manage Competition Datasets on which it scores models, those of PollisCompetitions.jl and those you add there, and scores your method on several datasets in one run, each in turn, its scores on them side by side."),
+		intro: localize('competitions.intro', "Score Models runs a forecasting method of your own on the series of forecasting datasets and scores its forecasts by sMAPE, MASE and OWA, beside the eight statistical benchmarks computed on the same series. The series come with the split the forecasters had: the values they saw, and the values their forecasts are scored on. Score Models lists the datasets active in Manage Challenge Datasets on which it scores models, those of PollisCompetitions.jl and those you add there, and scores your method on several datasets in one run, each in turn, its scores on them side by side."),
 		datasetsStep: localize('competitions.datasetsStep', "Datasets"),
 		dataset: localize('competitions.dataset', "Dataset"),
-		severalHint: localize('competitions.severalHint', "The datasets active in Manage Competition Datasets on which Score Models can score models. A run scores your method on each in turn, with the same sample size and seed; a frequency is chosen only when there is one dataset. To use other datasets, tick them in the column Active of Manage Competition Datasets."),
-		noneActive: localize('competitions.noneActive', "None of the active datasets is one on which Score Models can score models. Tick the datasets to use in the column Active of Manage Competition Datasets, where the column Model Scoring says which are Ready."),
-		manage: localize('competitions.manage', "Open Manage Competition Datasets"),
+		severalHint: localize('competitions.severalHint', "The datasets active in Manage Challenge Datasets on which Score Models can score models. A run scores your method on each in turn, with the same sample size and seed; a frequency is chosen only when there is one dataset. To use other datasets, tick them in the column Active of Manage Challenge Datasets."),
+		noneActive: localize('competitions.noneActive', "None of the active datasets is one on which Score Models can score models. Tick the datasets to use in the column Active of Manage Challenge Datasets, where the column Model Scoring says which are Ready."),
+		manage: localize('competitions.manage', "Open Manage Challenge Datasets"),
 		batchTitle: localize('competitions.batchTitle', "Datasets of This Run"),
 		batchHint: localize('competitions.batchHint', "A row for each dataset, your method scored on each in turn. Select a row to see its scores on that dataset and a series below, and its Next Steps."),
 		status: localize('competitions.status', "Status"),
@@ -924,7 +924,7 @@ function pageHtml(): string {
 		earlier: localize('competitions.earlier', "Earlier runs..."),
 		newRun: localize('competitions.newRun', "New Run"),
 		runShown: localize('competitions.runShown', "A run is shown: New Run starts another."),
-		noneListed: localize('competitions.noneListed', "Step 1 lists no dataset: tick the datasets to use in the column Active of Manage Competition Datasets."),
+		noneListed: localize('competitions.noneListed', "Step 1 lists no dataset: tick the datasets to use in the column Active of Manage Challenge Datasets."),
 		running: localize('competitions.running', "Sent to the Julia REPL."),
 		progress: localize('competitions.progress', "{0} of {1} series forecast, {2} s"),
 		failedSeries: localize('competitions.failedSeries', "{0} series not forecast"),
@@ -1705,7 +1705,7 @@ function pageHtml(): string {
 
 registerAction2(class extends Action2 {
 	constructor() {
-		super({ id: FORECASTING_COMPETITIONS_COMMAND_ID, title: localize2('competitions.action', "Score Models..."), category: localize2('competitions.category', "Competitions"), f1: true });
+		super({ id: FORECASTING_COMPETITIONS_COMMAND_ID, title: localize2('competitions.action', "Score Models..."), category: localize2('competitions.category', "Challenges"), f1: true });
 	}
 	run(accessor: ServicesAccessor): Promise<void> {
 		return openForecastingCompetitionsPage(accessor);

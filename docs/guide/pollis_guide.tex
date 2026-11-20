@@ -986,7 +986,7 @@ account.
 % =====================================================================
 % FORECASTING COMPETITIONS
 % =====================================================================
-\topic{Score Models}{Compose > Prediction Competitions > Score Models}{Your own forecasting method, scored on the held-out values of forecasting datasets, beside the benchmarks.}
+\topic{Score Models}{Compose > Prediction Challenges > Score Models}{Your own forecasting method, scored on the held-out values of forecasting datasets, beside the benchmarks.}
 
 A forecasting competition gives many forecasters the same series without their future values, then scores
 every forecast on what happened. The page runs a method of yours on the series of forecasting datasets,
@@ -998,7 +998,7 @@ Pollis registry (Pollis Packages, \pg{Pollis Packages}), and from the datasets y
 {\small\renewcommand{\arraystretch}{1.25}%
 \begin{tabularx}{\linewidth}{@{}>{\bfseries}l>{\raggedright\arraybackslash}X@{}}
 \textcolor{navy}{\bfseries A dataset is listed when} & \textcolor{navy}{\bfseries Because} \\
-It is active & It is ticked in the column Active of Manage Competition Datasets \\
+It is active & It is ticked in the column Active of Manage Challenge Datasets \\
 Its data are here & Built in with PollisCompetitions, downloaded into \texttt{\textasciitilde/.pollis/competitions}, or added to the Pollis Workspace \\
 Its \texttt{info.toml} gives its frequencies & The format \texttt{monash}: series and observations, the last values of each series held out \\
 \end{tabularx}}
@@ -1039,11 +1039,11 @@ where the data come from.
 \textbf{\emph{The data of \ldots are not on this computer}} & Score Models runs a dataset from its data on this computer, in \texttt{data/builtin} of PollisCompetitions or in \texttt{\textasciitilde/.pollis/competitions}. \\
 \textbf{\emph{Your method must define a function \ldots}} & Name the function \texttt{forecast}. \\
 \textbf{The run stops on a series} & Scores names the first series that failed, with its error: fix \texttt{method.jl} and run again. \\
-\textbf{A dataset is not listed} & Tick it in Manage Competition Datasets, and check that its column Model Scoring says Ready. \\
+\textbf{A dataset is not listed} & Tick it in Manage Challenge Datasets, and check that its column Model Scoring says Ready. \\
 \end{trouble}
 
 \subhead{Agents' Forecasting Competition}
-\ui{Compose > Prediction Competitions > Agents' Forecasting Competition...} gives the same series of a forecasting
+\ui{Compose > Prediction Challenges > Agents' Forecasting Competition...} gives the same series of a forecasting
 dataset to several coding agents, each of which writes its own forecasting method. In \ui{Dataset}, choose a
 dataset of PollisCompetitions whose data are here, a frequency and a number of series, or 0 for all of them;
 \ui{Prepare the Series} writes the values the forecasters saw into the study, never the values held back. In
@@ -1112,7 +1112,7 @@ HARE & Heteroskedasticity and autocorrelation estimators &
   \ui{with Heteroskedasticity + AR(1)} \\
 PollisCompetitions & The datasets of forecasting competitions and of tabular benchmarks, the models scored on them
   and their published scores, the error measures sMAPE, MASE and OWA, and eight statistical benchmarks &
-  \ui{Compose > Prediction Competitions > Score Models} (Score Models, \pg{Score Models}) \\
+  \ui{Compose > Prediction Challenges > Score Models} (Score Models, \pg{Score Models}) \\
 EventStudies & Event studies: intraday studies of SEC filings and of FOMC releases, and panel event studies &
   \ui{Model > Event Studies} \\
 \end{tabularx}}

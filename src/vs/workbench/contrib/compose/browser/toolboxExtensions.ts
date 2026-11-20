@@ -109,7 +109,7 @@ interface IToolboxContribution {
 	readonly courses?: IToolboxCourseContribution[];
 	/** Its Simulation Games cases, which Host a Game... offers. */
 	readonly games?: IToolboxGameContribution[];
-	/** Its forecasting datasets file, relative to the extension folder, which Manage Competition Datasets lists. */
+	/** Its forecasting datasets file, relative to the extension folder, which Manage Challenge Datasets lists. */
 	readonly forecastingDatasets?: string;
 	/**
 	 * The extensions of DuckDB its panels use, for example spatial, which the Julia extension of Pollis downloads from
@@ -284,7 +284,7 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 				},
 				forecastingDatasets: {
 					type: 'string',
-					description: localize('pollisToolboxes.forecastingDatasets', "The toolbox's datasets file, relative to the extension folder, for example metadata/datasets.toml: [[datasets]] tables of the Dataset Catalog, with the fields of its schema and their [[datasets.references]], which Compose > Prediction Competitions > Manage Competition Datasets lists with those of PollisCompetitions.jl and the other toolboxes."),
+					description: localize('pollisToolboxes.forecastingDatasets', "The toolbox's datasets file, relative to the extension folder, for example metadata/datasets.toml: [[datasets]] tables of the Dataset Catalog, with the fields of its schema and their [[datasets.references]], which Compose > Prediction Challenges > Manage Challenge Datasets lists with those of PollisCompetitions.jl and the other toolboxes."),
 				},
 				texts: {
 					type: 'array',

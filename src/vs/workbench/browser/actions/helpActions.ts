@@ -555,7 +555,7 @@ export const POLLIS_DOCUMENTS: Readonly<Record<string, string>> = {
 	'pollis-drilldown-orchestration.pdf': localize('openDrillDownOrchestration', "Drill-down: Orchestration"),
 	'pollis-drilldown-compilation-lab.pdf': localize('openDrillDownCompilationLab', "Drill-down: Compilation Lab"),
 	'pollis-drilldown-simulation-games.pdf': localize('openDrillDownSimulationGames', "Drill-down: Simulation Games"),
-	'pollis-drilldown-prediction-competitions.pdf': localize('openDrillDownPredictionCompetitions', "Drill-down: Prediction Competitions"),
+	'pollis-drilldown-prediction-challenges.pdf': localize('openDrillDownPredictionCompetitions', "Drill-down: Prediction Challenges"),
 };
 
 /**
@@ -788,8 +788,8 @@ registerAction2(class extends Action2 {
 		super({
 			id: 'pollis.action.openDrillDownPredictionCompetitions',
 			title: {
-				...localize2('openDrillDownPredictionCompetitions', "Drill-down: Prediction Competitions"),
-				mnemonicTitle: localize({ key: 'miDrillDownPredictionCompetitions', comment: ['&& denotes a mnemonic'] }, "&&Prediction Competitions"),
+				...localize2('openDrillDownPredictionCompetitions', "Drill-down: Prediction Challenges"),
+				mnemonicTitle: localize({ key: 'miDrillDownPredictionCompetitions', comment: ['&& denotes a mnemonic'] }, "&&Prediction Challenges"),
 			},
 			category: Categories.Help,
 			f1: true,
@@ -798,7 +798,7 @@ registerAction2(class extends Action2 {
 	}
 
 	run(accessor: ServicesAccessor): Promise<void> {
-		return openDocument(accessor, 'pollis-drilldown-prediction-competitions.pdf');
+		return openDocument(accessor, 'pollis-drilldown-prediction-challenges.pdf');
 	}
 });
 

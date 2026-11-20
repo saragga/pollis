@@ -108,7 +108,7 @@ const desktopEntryPoints = [
 	'vs/workbench/contrib/databases/node/duckdbNotebookMain', // Pollis: the DuckDB of the notebooks' SQL cells
 	'vs/workbench/contrib/compose/node/snowballDatabaseMain', // Pollis: the database of the Snowball Search Map
 	'vs/workbench/contrib/compose/node/askPollisMain', // Pollis: the search of Ask Pollis
-	'vs/workbench/contrib/compose/node/forecastingDatasetsMain', // Pollis: the datasets added in Manage Competition Datasets
+	'vs/workbench/contrib/compose/node/forecastingDatasetsMain', // Pollis: the datasets added in Manage Challenge Datasets
 ];
 
 const codeEntryPoints = [

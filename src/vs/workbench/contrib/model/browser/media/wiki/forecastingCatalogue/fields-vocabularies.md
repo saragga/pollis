@@ -1,8 +1,8 @@
-# Manage Competition Datasets: Fields and Vocabularies
+# Manage Challenge Datasets: Fields and Vocabularies
 
-Every dataset of Manage Competition Datasets is a `[[datasets]]` table of fields, each declared in the schema of the catalogue with its label on the page, its group, its type and its vocabulary. The groups are those of the views: Identity, Data, and Access and Licence. The tables below give, for each field, its name in the file, its label on the page, its type and the values it may take.
+Every dataset of Manage Challenge Datasets is a `[[datasets]]` table of fields, each declared in the schema of the catalogue with its label on the page, its group, its type and its vocabulary. The groups are those of the views: Identity, Data, and Access and Licence. The tables below give, for each field, its name in the file, its label on the page, its type and the values it may take.
 
-## Which Fields Are Controlled in Manage Competition Datasets?
+## Which Fields Are Controlled in Manage Challenge Datasets?
 
 A controlled field takes only the values of its vocabulary, so that the datasets can be filtered and compared by them: Topic, Data Structure, Geometry, Response Type and Delivery. A free field holds any text, such as the Licence, or a number. A field a dataset does not have is unknown, and loads as missing in the database of PollisCompetitions.jl; nothing is filled in by guesswork, and the Curation view counts the fields each dataset lacks. Every dataset has `dataset_id`, `dataset_name` and `topic`.
 
@@ -33,7 +33,7 @@ The data fields say how the data are shaped, what spatial information they carry
 | `response_type` | Response Type | string | `Binary`, `Multiclass`, `Ordered`, `Count`, `Survival`, `Continuous` | The kind of the response the models predict |
 | `rows` | Rows | integer | A whole number | The rows of the data as stored; for a panel, one for each unit and time |
 | `features` | Features | integer | A whole number | The columns other than the response and the identifiers |
-| `size_mb` | Size (MB) | number | A number | The size of its Parquet files for a `Built-in` dataset, or of the compressed files the user downloads for a `Download` dataset, in MB |
+| `size_mb` | Size (MB) | number | A number | The size of its Parquet files for a `Built-in` dataset, or of the files the user downloads, compressed or not, for a `Download` dataset, in MB |
 
 A Response Type of `Binary` or `Multiclass` is a classification task, `Ordered` one whose classes are ranked, `Count` one whose response counts events, `Survival` one whose response is the time to an event, and `Continuous` one whose response is a real number, as the values of a forecast series are.
 

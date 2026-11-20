@@ -3,7 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// The conversion of the datasets the user adds in Manage Competition Datasets (forecastingDatasets.ts), in a utility
+// The conversion of the datasets the user adds in Manage Challenge Datasets (forecastingDatasets.ts), in a utility
 // process of its own (see ../electron-browser/forecastingDatasetsService.ts).
 
 import { DisposableStore } from '../../../../base/common/lifecycle.js';

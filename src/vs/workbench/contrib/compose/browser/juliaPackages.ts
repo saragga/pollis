@@ -10,7 +10,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 
 // The Julia packages on this computer, read without Julia: those developed, in ~/.julia/dev/NAME, and those installed
 // in the Julia depot, ~/.julia/packages/NAME/SLUG, one folder for each version. The Package Vignettes page reads their
-// vignettes, Manage Competition Datasets the forecasting datasets of PollisCompetitions.jl.
+// vignettes, Manage Challenge Datasets the forecasting datasets of PollisCompetitions.jl.
 
 /** Compares versions such as 0.10.1 and 0.9.0 by their numbers. */
 export function compareVersions(a: string, b: string): number {

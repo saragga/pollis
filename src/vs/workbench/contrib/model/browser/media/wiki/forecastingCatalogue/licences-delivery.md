@@ -1,6 +1,6 @@
-# Manage Competition Datasets: Licences and Delivery
+# Manage Challenge Datasets: Licences and Delivery
 
-Two fields of a dataset of Manage Competition Datasets say how its data may reach a Pollis user: Licence, the terms under which the data may be used, and Delivery, the way they reach the user. Source gives the page the data come from.
+Two fields of a dataset of Manage Challenge Datasets say how its data may reach a Pollis user: Licence, the terms under which the data may be used, and Delivery, the way they reach the user. Source gives the page the data come from.
 
 ## What Is the Difference Between Built-in and Download?
 
@@ -9,7 +9,7 @@ Two fields of a dataset of Manage Competition Datasets say how its data may reac
 | `Built-in` | They come with PollisCompetitions.jl, as Parquet files in `data/builtin/<id>` of the package, ready to load | Data whose licence allows passing them on, whose files take under 10 MB, and that can be scored as they stand |
 | `Download` | The user fetches them from their source, on their own computer, into `~/.pollis/competitions/<id>` | Data whose licence does not allow passing them on, whose files are larger, or that cannot be scored as they stand |
 
-Either way, the folder of a dataset holds `info.toml` once its data are on this computer, and that is how Manage Competition Datasets knows that Save to Workspace can copy them.
+Either way, the folder of a dataset holds `info.toml` once its data are on this computer, and that is how Manage Challenge Datasets knows that Save to Workspace can copy them.
 
 ## When Are Kaggle Data Built In?
 

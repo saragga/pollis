@@ -5,7 +5,7 @@
 
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
 
-// The datasets the user adds in Compose > Prediction Competitions > Manage Competition Datasets, from a file of their
+// The datasets the user adds in Compose > Prediction Challenges > Manage Challenge Datasets, from a file of their
 // own: a long table, a row per observation, with a column naming the series, one giving the time and one the value. A
 // DuckDB process (../node/forecastingDatasetsMain.ts) reads its columns, then converts it into the files of
 // PollisCompetitions.jl, series.parquet and observations.parquet, the last `horizon` values of each series held back

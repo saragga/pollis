@@ -1,4 +1,4 @@
-# Manage Competition Datasets Webview Configuration
+# Manage Challenge Datasets Webview Configuration
 # A page of Compose in the Minimal style of the scaffold, not a panel: only its Powered by, Learn More and References.
 # The schema of the catalogue it shows is compose/browser/media/forecastingCatalogue.toml, and its datasets are those of
 # metadata/datasets.toml of PollisCompetitions.jl, of the toolboxes and of the Pollis Workspace; the papers of a dataset
@@ -7,7 +7,7 @@
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Manage Competition Datasets"
+title = "Manage Challenge Datasets"
 viewType = "pollis.forecastingCatalogue"
 pageCommand = "pollis.competitions.forecastingCatalogue"
 
@@ -124,6 +124,15 @@ year = 2024
 url = "https://github.com/LAMDA-Tabular/TALENT"
 description = "About 300 tabular datasets for classification and regression, with a toolbox of methods"
 papers = ["LCZY2024a"]
+
+[[collections]]
+id = "survival_benchmark"
+name = "Low-Dimensional Survival Benchmark"
+year = 2024
+url = "https://github.com/slds-lmu/paper_2023_survival_benchmark"
+description = "34 low-dimensional datasets of right-censored survival times, on which 21 models, from the Cox model to tree ensembles, boosting and survival support vector machines, are tuned on Harrell's C or the integrated survival Brier score and compared on discrimination, calibration and scoring rules"
+datasets = ["aids_id", "aids2", "bladder0", "carpenter_fda_data", "cat_adoption", "channing", "check_times", "child", "colrec", "cost", "data_ftr", "data_str", "e1684", "flchain", "gbsg", "grace", "hdfail", "kidtran", "liver", "lung", "metabric", "mgus", "nafld1", "nwtco", "ova", "rdata", "std", "support", "tumor", "uis", "veteran", "wa_churn", "wbc1", "whas"]
+papers = ["BZBBW...2026a"]
 
 [[references]]
 separator = true

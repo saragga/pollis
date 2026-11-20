@@ -7,7 +7,7 @@ import { AppResourcePath } from '../../../../base/common/network.js';
 import { IModelCollection } from '../../model/browser/common/model.types.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
 
-// The Dataset Catalog of Compose > Prediction Competitions > Manage Competition Datasets (forecastingCataloguePage.ts):
+// The Dataset Catalog of Compose > Prediction Challenges > Manage Challenge Datasets (forecastingCataloguePage.ts):
 // the datasets on which models are scored and ranked. Its schema is media/forecastingCatalogue.toml, whose [[field]]
 // tables are the fields of a dataset and its [[view]] tables the column presets of the page; the datasets come from
 // their contributors, PollisCompetitions.jl, the installed toolboxes and the Pollis Workspace, each a file of [[datasets]]
