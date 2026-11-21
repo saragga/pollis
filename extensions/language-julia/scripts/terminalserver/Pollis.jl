@@ -186,6 +186,36 @@ function webmap(layers::Union{AbstractString, NamedTuple}...; style::AbstractStr
 		",\"zoom\":", json_text(zoom), ",\"title\":", json_text(title), ",\"layers\":[", json_layers, "]}"))
 end
 
+"""
+    Pollis.streetview(image, layers...; token = ENV["MAPILLARY_ACCESS_TOKEN"], map = false, style = "positron",
+        center = nothing, zoom = 17, title = "")
+
+A street-level viewer of Mapillary's images, which the plot pane of the REPL, or a notebook output, draws with
+MapillaryJS: it opens on the image whose id is `image`; dragging looks around, the arrows walk along the
+sequence, and a panorama turns all the way round. `token` is a Mapillary access token (the Mapillary key of
+Settings > Credentials sets `MAPILLARY_ACCESS_TOKEN`). The token goes into the output, so a notebook saved with
+it keeps the token.
+
+With `map = true`, a map of Mapillary's coverage stands beside the viewer, drawn as [`Pollis.webmap`](@ref) draws
+one, with `layers`, `style`, `center` and `zoom`: its lines are the sequences and its dots the images, and a click
+on one opens it in the viewer, while a marker on the map follows the viewer as it walks and turns. `title` is shown
+over the map, or over the viewer when it stands alone.
+
+```julia
+Pollis.streetview("<image id>"; map = true)
+```
+"""
+function streetview(image::Union{AbstractString, Integer}, layers::Union{AbstractString, NamedTuple}...;
+		token::AbstractString = get(ENV, "MAPILLARY_ACCESS_TOKEN", ""), map::Bool = false, style::AbstractString = "positron",
+		center::Union{Tuple{Real, Real}, AbstractVector{<:Real}, Nothing} = nothing, zoom::Union{Real, Nothing} = 17,
+		title::AbstractString = "")
+	id = strip(string(image))
+	occursin(r"^\d+$", id) || error("Pollis.streetview: $(first(id, 80)) is not the id of a Mapillary image, which is a number.")
+	base = webmap(layers...; style, center, zoom, title).json
+	return WebMap(string(chop(base), ",\"streetview\":{\"image\":", json_text(id), ",\"token\":", json_text(token),
+		",\"map\":", json_text(map), "}}"))
+end
+
 """A GeoJSON text as it is, or the text of the GeoJSON file at that path."""
 function geojson_text(geojson::AbstractString)
 	text = startswith(lstrip(geojson), "{") ? String(geojson) : isfile(geojson) ? read(geojson, String) :
@@ -193,8 +223,9 @@ function geojson_text(geojson::AbstractString)
 	return text
 end
 
-"""A value as JSON: `nothing` as null, numbers, text and vectors of numbers."""
+"""A value as JSON: `nothing` as null, true and false, numbers, text and vectors of numbers."""
 json_text(::Nothing) = "null"
+json_text(value::Bool) = value ? "true" : "false"
 json_text(value::Real) = isfinite(value) ? string(Float64(value)) : "null"
 json_text(values::AbstractVector{<:Real}) = string("[", join(json_text.(values), ","), "]")
 function json_text(text::AbstractString)

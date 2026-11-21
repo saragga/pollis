@@ -495,17 +495,22 @@ function withSharedECharts(html: string) {
 }
 
 // Pollis: a map of Pollis.webmap (application/vnd.pollis.map+json), drawn with MapLibre GL JS by drawPollisMap, whose
-// source goes into the page, as in a notebook output.
+// source goes into the page, as in a notebook output. A map of Pollis.streetview loads MapillaryJS too.
 function mapHtml(webview: vscode.Webview, payload: string) {
-    const lib = (file: string) =>
-        webview.asWebviewUri(vscode.Uri.file(path.join(g_context.extensionPath, 'libs', 'maplibre', file)))
+    const lib = (file: string, folder = 'maplibre') =>
+        webview.asWebviewUri(vscode.Uri.file(path.join(g_context.extensionPath, 'libs', folder, file)))
     // the map's JSON goes into a script: a </script> in a value must not end it
     const spec = payload.replace(/<\//g, '<\\/')
+    const street = payload.includes('"streetview":{')
+        ? `<link rel="stylesheet" href="${lib('mapillary.css', 'mapillary')}">
+            <script src="${lib('mapillary.js', 'mapillary')}"></script>`
+        : ''
     return `<html lang="en">
         <head>
             <meta charset="UTF-8">
             <link rel="stylesheet" href="${lib('maplibre-gl.css')}">
             <script src="${lib('maplibre-gl.js')}"></script>
+            ${street}
             <style>
                 html, body { margin: 0; padding: 0; height: 100%; }
                 #plot-element { position: absolute; inset: 0; }
@@ -515,7 +520,8 @@ function mapHtml(webview: vscode.Webview, payload: string) {
         <body>
             <div id="plot-element" class="pollis-map"></div>
             <script>
-                (${drawPollisMap.toString()})(maplibregl, document.getElementById('plot-element'), ${spec}, ${JSON.stringify(MAP_STYLES)})
+                (${drawPollisMap.toString()})(maplibregl, document.getElementById('plot-element'), ${spec}, ${JSON.stringify(MAP_STYLES)},
+                    typeof mapillary === 'undefined' ? undefined : mapillary)
             </script>
         </body>
         </html>`

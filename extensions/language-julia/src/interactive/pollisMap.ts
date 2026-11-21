@@ -1,6 +1,7 @@
 // Pollis: maps of Pollis.webmap (application/vnd.pollis.map+json), drawn with MapLibre GL JS in the plot pane and in
 // notebook outputs: a base map, and on it GeoJSON layers, each in one colour or coloured by a column, and layers of
-// raster tiles (Pollis.tiles), with a legend and the attributes of a feature on a click.
+// raster tiles (Pollis.tiles), with a legend and the attributes of a feature on a click. A map of Pollis.streetview
+// is a viewer of Mapillary's street-level images, drawn with MapillaryJS, alone or beside a map of Mapillary's coverage.
 
 /** The base maps: OpenStreetMap data as vector tiles of OpenFreeMap, which asks for no key. */
 export const MAP_STYLES: Record<string, string> = {
@@ -30,21 +31,29 @@ export const MAP_CSS = `
 .pollis-map .maplibregl-popup-content table { border-collapse: collapse; font-size: 12px; }
 .pollis-map .maplibregl-popup-content td { padding: 1px 6px 1px 0; vertical-align: top; }
 .pollis-map .maplibregl-popup-content td:first-child { color: #666; }
+.pollis-map .pollis-streetview { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; }
+.pollis-map .pollis-streetview-half { width: 55%; }
+.pollis-map .pollis-streetview-map { position: absolute; top: 0; bottom: 0; right: 0; width: 45%; overflow: hidden;
+    border-left: 2px solid #ffffff; }
+.pollis-map .pollis-streetview-message { top: 10px; left: 10px; max-width: 80%; }
+.pollis-map .pollis-streetview-marker { width: 0; height: 0; border-left: 8px solid transparent;
+    border-right: 8px solid transparent; border-bottom: 20px solid #e15759; filter: drop-shadow(0 0 2px #ffffff); }
 `
 
 /** The element that holds a map, of class pollis-map: only what the drawing uses of it. */
 interface MapHolder {
     insertAdjacentHTML(position: 'beforeend', html: string): void
-    readonly lastElementChild: unknown
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    readonly lastElementChild: any
 }
 
 /**
  * Draws a map of Pollis.webmap in `holder`, with the MapLibre GL JS of the page (`maplibregl`, which has no types
- * here), and returns the MapLibre map. The function refers to nothing outside itself, as the plot pane puts its
- * source in the page it shows.
+ * here), and returns what removes it. A map of Pollis.streetview is drawn with the MapillaryJS of the page
+ * (`mapillary`). The function refers to nothing outside itself, as the plot pane puts its source in the page it shows.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function drawPollisMap(maplibregl: any, holder: MapHolder, spec: any, styles: Record<string, string>): { remove(): void } {
+export function drawPollisMap(maplibregl: any, holder: MapHolder, spec: any, styles: Record<string, string>, mapillary?: any): { remove(): void } {
     const palette = ['#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f', '#edc948', '#b07aa1', '#ff9da7', '#9c755f', '#bab0ac']
     const ramp = ['#440154', '#3b528b', '#21918c', '#5ec962', '#fde725']
     const escape = (text: unknown) => String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
@@ -83,9 +92,39 @@ export function drawPollisMap(maplibregl: any, holder: MapHolder, spec: any, sty
             + (categories.length > shown.length ? '<div><span class="pollis-map-swatch" style="background:#999999"></span>' + (categories.length - shown.length) + ' more</div>' : '')
         return { ...layer, name, colour, legend: '<div class="pollis-map-legend-layer">' + escape(heading) + '</div>' + items }
     })
-    holder.insertAdjacentHTML('beforeend', '<div class="pollis-map-canvas"></div>')
+    // a street-level viewer: on its own, or on the left of a map of Mapillary's coverage
+    const street = spec.streetview
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let viewer: any = null
+    const say = (where: MapHolder, text: string) =>
+        where.insertAdjacentHTML('beforeend', '<div class="pollis-map-box pollis-streetview-message">' + escape(text) + '</div>')
+    // a move cancelled by the next one, as when the map is clicked again before the image opens, is no failure
+    const failed = (where: MapHolder, id: string) => (error: { name?: string, message?: string }) =>
+        error && error.name === 'CancelMapillaryError' || say(where, 'Mapillary cannot open the image ' + id + ': ' + (error && error.message || error))
+    let area = holder
+    if (street) {
+        holder.insertAdjacentHTML('beforeend', '<div class="pollis-streetview' + (street.map ? ' pollis-streetview-half' : '') + '"></div>')
+        const element = holder.lastElementChild
+        if (!mapillary) {
+            say(holder, 'MapillaryJS is not loaded in this page, so the street-level images cannot be shown.')
+        } else if (!street.token) {
+            say(holder, 'There is no Mapillary access token: set the Mapillary key, or give Pollis.streetview a token.')
+        } else {
+            viewer = new mapillary.Viewer({ accessToken: street.token, container: element, component: { cover: false } })
+            viewer.moveTo(street.image).catch(failed(holder, street.image))
+        }
+        if (!street.map) {
+            if (spec.title) {
+                holder.insertAdjacentHTML('beforeend', '<div class="pollis-map-box pollis-map-title">' + escape(spec.title) + '</div>')
+            }
+            return { remove() { viewer && viewer.remove() } }
+        }
+        holder.insertAdjacentHTML('beforeend', '<div class="pollis-streetview-map"></div>')
+        area = holder.lastElementChild
+    }
+    area.insertAdjacentHTML('beforeend', '<div class="pollis-map-canvas"></div>')
     const map = new maplibregl.Map({
-        container: holder.lastElementChild,
+        container: area.lastElementChild,
         style: styles[spec.style] || spec.style || styles.positron,
         center: spec.center || [0, 20],
         zoom: spec.zoom ?? 1,
@@ -94,10 +133,10 @@ export function drawPollisMap(maplibregl: any, holder: MapHolder, spec: any, sty
     map.addControl(new maplibregl.NavigationControl(), 'top-right')
     map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left')
     if (spec.title) {
-        holder.insertAdjacentHTML('beforeend', '<div class="pollis-map-box pollis-map-title">' + escape(spec.title) + '</div>')
+        area.insertAdjacentHTML('beforeend', '<div class="pollis-map-box pollis-map-title">' + escape(spec.title) + '</div>')
     }
     if (layers.length) {
-        holder.insertAdjacentHTML('beforeend', '<div class="pollis-map-box pollis-map-legend">' + layers.map(l => '<div>' + l.legend + '</div>').join('') + '</div>')
+        area.insertAdjacentHTML('beforeend', '<div class="pollis-map-box pollis-map-legend">' + layers.map(l => '<div>' + l.legend + '</div>').join('') + '</div>')
     }
     // the box around every coordinate of the layers, which the map fits when it is given no centre
     let bounds = null
@@ -139,9 +178,51 @@ export function drawPollisMap(maplibregl: any, holder: MapHolder, spec: any, sty
             map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer' })
             map.on('mouseleave', id, () => { map.getCanvas().style.cursor = '' })
         })
-        if (!spec.center && bounds) {
+        if (!spec.center && bounds && !viewer) {
             map.fitBounds(bounds, { padding: 40, maxZoom: 15, duration: 0 })
         }
+        if (viewer) {
+            // Mapillary's vector tiles: its sequences as lines, and its images as dots from zoom 14
+            map.addSource('mapillary', { type: 'vector', tiles: ['https://tiles.mapillary.com/maps/vtp/mly1_computed_public/2/{z}/{x}/{y}?access_token=' + encodeURIComponent(street.token)],
+                minzoom: 6, maxzoom: 14, attribution: '© Mapillary' })
+            map.addLayer({ id: 'mapillary-sequences', type: 'line', source: 'mapillary', 'source-layer': 'sequence',
+                layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#05cb63', 'line-width': 2, 'line-opacity': 0.7 } })
+            map.addLayer({ id: 'mapillary-images', type: 'circle', source: 'mapillary', 'source-layer': 'image', minzoom: 14,
+                paint: { 'circle-color': '#05cb63', 'circle-radius': 3.5, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1 } })
+            // a click opens the image clicked, or the first image of the sequence clicked
+            map.on('click', e => {
+                const near = [[e.point.x - 5, e.point.y - 5], [e.point.x + 5, e.point.y + 5]]
+                const image = map.queryRenderedFeatures(near, { layers: ['mapillary-images'] })[0]
+                const sequence = image ? null : map.queryRenderedFeatures(near, { layers: ['mapillary-sequences'] })[0]
+                const id = image ? image.properties.id : sequence ? sequence.properties.image_id : null
+                if (id !== null && id !== undefined) {
+                    viewer.moveTo(String(id)).catch(failed(area, String(id)))
+                }
+            })
+            map.on('mouseenter', 'mapillary-images', () => { map.getCanvas().style.cursor = 'pointer' })
+            map.on('mouseleave', 'mapillary-images', () => { map.getCanvas().style.cursor = '' })
+            map.on('mouseenter', 'mapillary-sequences', () => { map.getCanvas().style.cursor = 'pointer' })
+            map.on('mouseleave', 'mapillary-sequences', () => { map.getCanvas().style.cursor = '' })
+        }
     })
-    return map
+    if (viewer) {
+        // a marker on the map follows the viewer as it walks, pointing where it looks
+        const arrow = document.createElement('div')
+        arrow.className = 'pollis-streetview-marker'
+        const marker = new maplibregl.Marker({ element: arrow, rotationAlignment: 'map' })
+        let placed = false
+        viewer.on('image', e => {
+            const at = [e.image.lngLat.lng, e.image.lngLat.lat]
+            marker.setLngLat(at)
+            if (!placed) {
+                marker.addTo(map)
+                map.jumpTo({ center: at, zoom: spec.zoom ?? 17 })
+                placed = true
+            } else {
+                map.easeTo({ center: at, duration: 400 })
+            }
+        })
+        viewer.on('bearing', e => marker.setRotation(e.bearing))
+    }
+    return { remove() { viewer && viewer.remove(); map.remove() } }
 }
