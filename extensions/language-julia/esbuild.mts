@@ -56,7 +56,20 @@ async function main() {
         logLevel: 'warning',
         plugins: [esbuildProblemMatcherPlugin],
     })
-    for (const context of [ctx, rendererCtx]) {
+    // Pollis: the script of the page Pollis.jl writes for a map in Pollis' browser, which runs as a plain script
+    const pageCtx = await esbuild.context({
+        entryPoints: [{ in: 'src/interactive/pollisMapPage.ts', out: 'pollisMapPage' }],
+        bundle: true,
+        format: 'iife',
+        minify: production,
+        sourcemap: true,
+        sourcesContent: false,
+        platform: 'browser',
+        outdir: './dist',
+        logLevel: 'warning',
+        plugins: [esbuildProblemMatcherPlugin],
+    })
+    for (const context of [ctx, rendererCtx, pageCtx]) {
         if (watch) {
             await context.watch()
         } else {

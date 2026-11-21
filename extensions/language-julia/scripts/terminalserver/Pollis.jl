@@ -111,14 +111,87 @@ function browse(page::AbstractString)
 	return nothing
 end
 
-"""A map of [`Pollis.webmap`](@ref): its JSON, which the plot pane and notebook outputs draw with MapLibre GL JS."""
+"""A map of [`Pollis.webmap`](@ref) or [`Pollis.streetview`](@ref): its JSON, which a page in Pollis' browser and notebook outputs draw."""
 struct WebMap
 	json::String
 end
 
 const MAP_MIME = "application/vnd.pollis.map+json"
 Base.show(io::IO, ::MIME{Symbol(MAP_MIME)}, map::WebMap) = print(io, map.json)
-Base.show(io::IO, ::MIME"text/plain", ::WebMap) = print(io, "Pollis.webmap: a map, drawn in the plot pane of the REPL or in a notebook output")
+Base.show(io::IO, ::MIME"text/plain", ::WebMap) = print(io, "Pollis.webmap: a map, drawn on a page in Pollis' browser from the REPL, or in a notebook output")
+
+"""The folder of the Julia extension, whose `libs` and `dist` hold the scripts the page of a map loads."""
+const EXTENSION_DIR = normpath(joinpath(@__DIR__, "..", ".."))
+
+"""The folder of this session's map pages, made when the first map is shown and removed when Julia exits."""
+const MAP_PAGES = Ref("")
+
+"""The `file://` address of a local file, with the characters an address cannot hold percent-encoded."""
+function file_url(path::AbstractString)
+	unreserved(c) = isascii(c) && (isletter(c) || isdigit(c) || c in "/:-_.~")
+	encoded = join(unreserved(c) ? string(c) : join("%" * uppercase(string(b; base = 16, pad = 2)) for b in codeunits(string(c)))
+		for c in replace(abspath(path), '\\' => '/'))
+	return startswith(encoded, "/") ? "file://" * encoded : "file:///" * encoded
+end
+
+"""
+    Pollis.mappage(map; open = true)
+
+Writes the page of a map of [`Pollis.webmap`](@ref) or [`Pollis.streetview`](@ref), which draws it with MapLibre GL JS
+and MapillaryJS and says in text what it shows, and opens it in Pollis' browser with [`Pollis.browse`](@ref). The
+REPL shows every map this way; a notebook draws it in the cell's output instead. The page is named after the map's
+title, so a map shown again with the same title replaces it in its tab, while maps of other titles open beside it.
+The pages are kept in a temporary folder, removed when Julia exits. Returns the path of the page.
+"""
+function mappage(map::WebMap; open::Bool = true)
+	script = joinpath(EXTENSION_DIR, "dist", "pollisMapPage.js")
+	isfile(script) || error("Pollis.mappage: $(script) is missing: the Julia extension has not been built")
+	isempty(MAP_PAGES[]) && (MAP_PAGES[] = mktempdir(; prefix = "pollis-maps-"))
+	title = match(r"\"title\":\"((?:[^\"\\]|\\.)*)\"", map.json)
+	slug = lowercase(join(eachmatch(r"[A-Za-z0-9]+", title === nothing ? "" : title[1]) .|> (m -> m.match), "-"))
+	street = occursin("\"streetview\":{", map.json)
+	beside = street && occursin(r"\"streetview\":\{.*\"map\":true"s, map.json)
+	name = first(isempty(slug) ? (street ? "viewer" : "map") : slug, 80) * (street ? (beside ? "-viewer-and-map" : "-viewer") : "")
+	lib(parts...) = file_url(joinpath(EXTENSION_DIR, parts...))
+	mapillary = street ? """
+<link rel="stylesheet" href="$(lib("libs", "mapillary", "mapillary.css"))">
+<script src="$(lib("libs", "mapillary", "mapillary.js"))"></script>""" : ""
+	page = joinpath(MAP_PAGES[], name * ".html")
+	# the map's JSON goes into a script: a </script> in a value must not end it
+	write(page, """
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map</title>
+<link rel="stylesheet" href="$(lib("libs", "maplibre", "maplibre-gl.css"))">
+<script src="$(lib("libs", "maplibre", "maplibre-gl.js"))"></script>$(mapillary)
+<script src="$(file_url(script))"></script>
+<style>
+html, body { margin: 0; height: 100%; background: #ffffff; }
+#pollis-map { position: absolute; inset: 0; }
+.pollis-map-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+</style>
+</head>
+<body>
+<main id="pollis-map" class="pollis-map"></main>
+<section id="pollis-map-text" class="pollis-map-text" aria-label="What the map shows"></section>
+<script>
+PollisMap.draw(document.getElementById("pollis-map"), document.getElementById("pollis-map-text"), $(replace(map.json, "</" => "<\\/")))
+</script>
+</body>
+</html>
+""")
+	open && browse(page)
+	return page
+end
+
+# The REPL's display shows a map on its page in Pollis' browser; a notebook kernel has a display of its own, which
+# draws the map in the cell's output.
+if isdefined(Main, :VSCodeServer) && isdefined(Main.VSCodeServer, :InlineDisplay)
+	@eval Base.display(::Main.VSCodeServer.InlineDisplay, map::WebMap) = (mappage(map); nothing)
+end
 
 """
     Pollis.layer(geojson; name = "", color = nothing, column = nothing, opacity = 0.6)
@@ -159,7 +232,8 @@ end
 """
     Pollis.webmap(layers...; style = "positron", center = nothing, zoom = nothing, title = "")
 
-A web map that the plot pane of the REPL, or a notebook output, draws with MapLibre GL JS: an OpenStreetMap base map, from
+A web map drawn with MapLibre GL JS, on a page in Pollis' browser from the REPL (see [`Pollis.mappage`](@ref)) or in a
+notebook output: an OpenStreetMap base map, from
 OpenFreeMap's vector tiles, with layers on it, drawn in the order given. Each layer is a [`Pollis.layer`](@ref) of
 GeoJSON features, a [`Pollis.tiles`](@ref) of raster tiles, or a GeoJSON text or file drawn with the defaults.
 `style` is `"positron"` (light grey), `"bright"`, `"liberty"`, `"dark"` or `"fiord"`, or the address of a MapLibre
@@ -190,8 +264,8 @@ end
     Pollis.streetview(image, layers...; token = ENV["MAPILLARY_ACCESS_TOKEN"], map = false, style = "positron",
         center = nothing, zoom = 17, title = "")
 
-A street-level viewer of Mapillary's images, which the plot pane of the REPL, or a notebook output, draws with
-MapillaryJS: it opens on the image whose id is `image`; dragging looks around, the arrows walk along the
+A street-level viewer of Mapillary's images, drawn with MapillaryJS on a page in Pollis' browser from the REPL (see
+[`Pollis.mappage`](@ref)) or in a notebook output: it opens on the image whose id is `image`; dragging looks around, the arrows walk along the
 sequence, and a panorama turns all the way round. `token` is a Mapillary access token (the Mapillary key of
 Settings > Credentials sets `MAPILLARY_ACCESS_TOKEN`). The token goes into the output, so a notebook saved with
 it keeps the token.
