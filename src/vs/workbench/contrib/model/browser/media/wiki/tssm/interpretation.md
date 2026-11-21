@@ -8,11 +8,11 @@ All outputs of this panel describe what a model produces when its parameters are
 
 ## What the Noise-Free Signal Means in a State Space Simulation
 
-**Plot State Path** draws the signal, computed as Z times the state, or in **Nonlinear SSM** as the first output of h without noise. The signal is known here only because the state was generated. It is not a filtered or smoothed estimate, and despite the label, the line is not the state itself when Z or h transforms it. A real analysis has only the observations, so the closeness of the two lines shows how hard recovery would be, not how well any method did.
+**Plot State Path** draws the signal, computed as Z times the state, or in **Nonlinear SSM** as the first output of h without noise. The signal is known here only because the state was generated. It is not a filtered or smoothed estimate, and when Z or h transforms the state, the line shows that transform and not the state itself. A real analysis has only the observations, so the closeness of the two lines shows how hard recovery would be, not how well any method did.
 
 ## How to Read the Latent States in Decompose Components
 
-**Decompose Components** has two parts: the columns of the state path, and the observation noise y minus the signal. In **Local Level** there is one state, the level. In **Local Linear Trend** the states are level and slope, on different scales. In **Nonlinear SSM** and **Custom SSM** they are numbered, and their meaning is whatever the functions or matrices give them. The panel does not extract these components from a series, so this is not a decomposition in the sense of a fitted structural model.
+**Decompose Components** has two parts: the columns of the state path, and the observation noise y minus the signal. In **Local Level** there is one state, the level. In **Local Linear Trend** the states are level and slope, on different scales. In **Nonlinear SSM** and **Custom SSM** they are numbered, and their meaning is whatever the functions or matrices give them. The components come from the simulation, whereas a fitted structural model extracts them from an observed series with a smoother.
 
 ## How to Read the Signal-to-Noise Ratio of a State Space Model
 

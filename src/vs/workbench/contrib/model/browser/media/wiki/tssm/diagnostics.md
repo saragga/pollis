@@ -22,9 +22,9 @@ Every series in this panel comes from known parameters, so these checks do not t
 
 **Multiple Scenarios** overlays 10 independent paths, and **Extend Forward** continues one path for 50 steps. Paths that fan out gradually are normal for random-walk states. Paths that race away, or that reach `Inf` or `NaN`, point to an unstable system. In **Custom SSM**, compute `eigvals(T_mat)`, since an eigenvalue above 1 in size gives exponential growth. In **Nonlinear SSM**, inspect **Dynamics f(x,u,p,t)**, as a term that grows faster than the state can blow up in a few steps.
 
-## How to Check the Filter When No Next Step Shows It
+## How to Check the Filter of the Nonlinear SSM Tab
 
-No Next Step reads the filter result in **Nonlinear SSM**, so the check has to be made in the session. After `using Plots`, `plot(sol_filt)` draws the solution. For **Unscented Kalman Filter**, compare `sol_filt.xt` with the true states in `alpha`, and check that the innovations in `sol_filt.e` look like white noise. For **Particle Filter**, compute the effective number of particles at step t as 1 / sum(w[t]^2), with weights from `sol_filt.we` normalised to sum to one. Values that stay near 1 mean the particle set has collapsed, so raise **Particles (N)**.
+The filter result `sol_filt` of **Nonlinear SSM** is checked in the session. After `using Plots`, `plot(sol_filt)` draws the solution. For **Unscented Kalman Filter**, compare `sol_filt.xt` with the true states in `alpha`, and check that the innovations in `sol_filt.e` look like white noise. For **Particle Filter**, compute the effective number of particles at step t as 1 / sum(w[t]^2), with weights from `sol_filt.we` normalised to sum to one. Values that stay near 1 mean the particle set has collapsed, so raise **Particles (N)**.
 
 ## See Also
 

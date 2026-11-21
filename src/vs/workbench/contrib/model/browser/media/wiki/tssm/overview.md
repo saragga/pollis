@@ -21,15 +21,15 @@ The **Linear Gaussian** tab builds a `LocalLevel` or `LocalLinearTrend` model on
 
 ## How the Nonlinear SSM Tab Simulates and Filters
 
-The **Nonlinear SSM** tab takes two functions, **Dynamics f(x,u,p,t)** and **Measurement h(x,u,p,t)**, and draws a path with additive Gaussian noise. The panel then builds a filter that is given the true functions, the true noise levels and the true starting distribution. `forward_trajectory` runs that filter over the simulated observations and stores the outcome as `sol_filt`. None of the Next Steps reads `sol_filt`, so the filter's estimates appear only if the user asks for them in the session.
+The **Nonlinear SSM** tab takes two functions, **Dynamics f(x,u,p,t)** and **Measurement h(x,u,p,t)**, and draws a path with additive Gaussian noise. The panel then builds a filter that is given the true functions, the true noise levels and the true starting distribution. `forward_trajectory` runs that filter over the simulated observations and stores the outcome as `sol_filt`. `sol_filt` holds the filter's estimates, which the [Nonlinear SSM](nonlinear-ssm.md) page describes.
 
 ## How the Custom SSM Tab Turns Matrices into a Model
 
 The **Custom SSM** tab passes **T Matrix (m x m)**, **Z Matrix (p x m)**, **Q Matrix (m x m)** and **H Matrix (p x p)** to `LinearUnivariateTimeInvariant`. That type holds a single observed series, so the code needs p = 1 and a one-element H. R is the identity matrix and both intercepts are zero. The path comes from `simulate`, as in the **Linear Gaussian** tab, and no filter runs.
 
-## What the State Space Models Panel Leaves Out
+## How to Fit a State Space Model to an Observed Series
 
-The panel generates series from parameters you give it, and so it answers what a model implies, not which parameters fit a data set. It does not read data, estimate variances or produce a smoothed state. For a real series, StateSpaceModels.jl provides `fit!`, `kalman_filter`, `kalman_smoother` and `forecast`, which a user can call from the session on a model built with the observed values in place of the zeros.
+The panel generates series from parameters given to it, which shows what a model implies before any data enter. For an observed series, StateSpaceModels.jl provides `fit!` to estimate the variances, `kalman_filter` and `kalman_smoother` for the filtered and smoothed states, and `forecast` for the steps ahead. Each works on a model built with the observed values in place of the zeros of the **Linear Gaussian** and **Custom SSM** tabs.
 
 ## A Common Workflow for Simulating State Space Models
 

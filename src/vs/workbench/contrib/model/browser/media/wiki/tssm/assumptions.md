@@ -12,7 +12,7 @@ The local level and local linear trend models have non-stationary states, and th
 
 ## What a Filter Needs from the Model in the Nonlinear SSM Tab
 
-The filter in **Nonlinear SSM** receives the same f, h, noise levels and starting distribution that generated the data. Its result is therefore the most favourable case. With a real system, every one of these would be uncertain, and a wrong noise level leaves a filter either too slow or too jumpy. The panel offers no way to give the filter a different model, so a user who wants to test this must build a second filter in the session.
+The filter in **Nonlinear SSM** receives the same f, h, noise levels and starting distribution that generated the data. Its result is therefore the most favourable case. With a real system, every one of these would be uncertain, and a wrong noise level leaves a filter either too slow or too jumpy. A second filter, built in the session with other noise levels or functions, shows how sensitive the estimates are to the model.
 
 ## What the Unscented Filter Assumes About the State Distribution
 
@@ -24,7 +24,7 @@ A **Particle Filter** approximates the state distribution with **Particles (N)**
 
 ## What the Nonlinear SSM Tab Assumes About the Noise and Dimensions
 
-**Process Noise (sigma)** applies one standard deviation to every state, and **Obs. Noise (sigma)** one to every observed channel, both additive. A state component with no noise, or noise that scales with the state, cannot be written in these inputs. **State Dim (nx)** and **Obs. Dim (ny)** must equal the lengths that f and h return, or the run stops with an error or draws the wrong size of noise. **Input Dim (nu)** only sizes an input vector of zeros, so no external input reaches the model.
+**Process Noise (sigma)** applies one standard deviation to every state, and **Obs. Noise (sigma)** one to every observed channel, both additive. A state component with no noise, or noise that scales with the state, cannot be written in these inputs. **State Dim (nx)** and **Obs. Dim (ny)** must equal the lengths that f and h return, or the run stops with an error or draws the wrong size of noise. **Input Dim (nu)** sets the length of the input vector u, which holds zeros.
 
 ## See Also
 

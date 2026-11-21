@@ -10,8 +10,8 @@ The first decision is whether the process can be written with linear equations. 
 | A trend whose slope also changes | **Linear Gaussian** with **Local Linear Trend** | Level and slope, each with its own noise |
 | A nonlinear system to simulate and filter | **Nonlinear SSM** | Takes any f and h, and is the only tab that runs a filter |
 | A linear form with one observed series, such as an autoregression or a seasonal state | **Custom SSM** | The matrices are written directly |
-| Several observed series in a linear form | **Nonlinear SSM** with linear f and h | **Custom SSM** runs only with p = 1 |
-| A real data set to fit | None of the tabs | The panel simulates, and estimation needs `fit!` in StateSpaceModels.jl |
+| Several observed series in a linear form | **Nonlinear SSM** with linear f and h | **Custom SSM** holds one observed series |
+| A real data set to fit | `fit!` of StateSpaceModels.jl, in the session | The tabs simulate from given parameters |
 
 ## When to Choose a Local Level or a Local Linear Trend
 

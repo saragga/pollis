@@ -25,7 +25,7 @@ R, the matrix that scales the state noise, is the identity, and the intercepts d
 
 ## Why the Custom SSM Tab Needs One Observed Series
 
-The inputs are labelled with p, but the code calls `vec` on **Z Matrix (p x m)** and `only` on **H Matrix (p x p)**, and the model type holds one observed series. A larger H stops the run with an error at `only`. A Z with more than one row is flattened into a single long vector, so the size check in the constructor stops the run. To simulate several linear channels in this panel, write the matrix products as f and h in **Nonlinear SSM**, whose noise inputs are limited to one level per block.
+`LinearUnivariateTimeInvariant` holds one observed series, so **Obs. Dim (p)** is 1. **Z Matrix (p x m)** is then one row, which the code turns into a vector with `vec`, and **H Matrix (p x p)** one element, which the code reads with `only`. Several linear channels can be written as matrix products in the f and h of **Nonlinear SSM**, with one noise level for all the states and one for all the observations.
 
 ## How to Write Common Models as Custom SSM Matrices
 
@@ -39,7 +39,7 @@ Each row assumes that **State Dim (m)** equals the size of the matrix. The forms
 
 ## What the Eigenvalues of the T Matrix Decide
 
-The eigenvalues of **T Matrix (m x m)** set the long-run behaviour of the simulated state. All of them inside the unit circle give a stationary state whose variance settles. An eigenvalue on the unit circle gives a random walk or a trend, which keeps widening. Any eigenvalue outside it gives exponential growth, and the path soon leaves any sensible range. Complex pairs give cycles, whose period follows from their angle. Check with `eigvals(T_mat)`, as the tab itself does not test this.
+The eigenvalues of **T Matrix (m x m)** set the long-run behaviour of the simulated state. All of them inside the unit circle give a stationary state whose variance settles. An eigenvalue on the unit circle gives a random walk or a trend, which keeps widening. Any eigenvalue outside it gives exponential growth, and the path soon leaves any sensible range. Complex pairs give cycles, whose period follows from their angle. `eigvals(T_mat)` gives them.
 
 ## What Requirements the Q and H Matrices Must Meet
 
@@ -47,7 +47,7 @@ The eigenvalues of **T Matrix (m x m)** set the long-run behaviour of the simula
 
 ## Strengths and Limits of the Custom SSM Tab
 
-The tab turns any time-invariant linear form with one observed series into a simulation, which suits a check that a matrix form behaves as intended before fitting it elsewhere. It gives true states against which an estimator can be tested. It cannot hold time-varying matrices, nonzero intercepts, a state noise loading R other than the identity, or inputs. A loading can be imitated through Q alone, by writing it as R Q R'. To compare, a form with a known structural version can be checked against **Linear Gaussian**.
+The tab turns any time-invariant linear form with one observed series into a simulation, which suits a check that a matrix form behaves as intended before fitting it elsewhere. It gives true states against which an estimator can be tested. Its matrices are constant over time, with zero intercepts and R the identity, so a loading R enters through Q, written as R Q R'. To compare, a form with a known structural version can be checked against **Linear Gaussian**.
 
 ## References
 

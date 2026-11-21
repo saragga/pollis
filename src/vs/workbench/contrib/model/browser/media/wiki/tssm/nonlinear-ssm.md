@@ -33,15 +33,15 @@ The bootstrap filter of [Gordon, Salmond and Smith (1993)](#ref-GSS1993a) keeps 
 
 ## What the Filter Result Contains in the Nonlinear SSM Tab
 
-The tab stores the result of `forward_trajectory` as `sol_filt`, and no Next Step reads it. With **Unscented Kalman Filter**, `sol_filt.x` holds the predicted means, `sol_filt.xt` the filtered means, `sol_filt.R` and `sol_filt.Rt` their covariances, and `sol_filt.e` the innovations. With **Particle Filter**, `sol_filt.x` holds the particles, and `sol_filt.we` their weights. Both have `sol_filt.ll`, the log-likelihood of the observations under the given model. All of the Next Steps work from the true `signal` and `alpha`, not from these estimates.
+The tab stores the result of `forward_trajectory` as `sol_filt`. With **Unscented Kalman Filter**, `sol_filt.x` holds the predicted means, `sol_filt.xt` the filtered means, `sol_filt.R` and `sol_filt.Rt` their covariances, and `sol_filt.e` the innovations. With **Particle Filter**, `sol_filt.x` holds the particles, and `sol_filt.we` their weights. Both have `sol_filt.ll`, the log-likelihood of the observations under the given model. The Next Steps work from the simulated `signal` and `alpha`.
 
 ## Strengths of the Nonlinear SSM Tab
 
 Any function that Julia can compute may serve as f or h, including non-smooth ones, since neither filter takes a derivative. The pairing of a filter with its true model isolates the error that comes from the approximation itself. Comparing the two filters on the same observations shows how much the Gaussian form of the unscented filter costs on a given system. Setting h to a linear function also permits several observed series, which **Custom SSM** cannot simulate.
 
-## Where the Nonlinear SSM Tab Misleads
+## What Limits Filtering in the Nonlinear SSM Tab
 
-A good result here does not carry over to real data, where f, h and the noise levels are all guesses. **Plot State Path**, **Signal-to-Noise Ratio** and **Marginal Variance** see only the first observed channel, so with **Obs. Dim (ny)** above 1 they ignore the rest. **Input Dim (nu)** does not add an input, as the code always passes zeros. Particle filters also suffer as state dimension grows, since the particle count needed rises steeply with it, as [Snyder, Bengtsson, Bickel and Anderson (2008)](#ref-SBBA2008a) showed.
+A filter given the true f, h and noise levels shows the error of its approximation alone, whereas with real data f, h and the noise levels are themselves estimates. **Plot State Path**, **Signal-to-Noise Ratio** and **Marginal Variance** read the first observed channel, so with **Obs. Dim (ny)** above 1 the other channels are read from `ys` in the session. Particle filters also suffer as state dimension grows, since the particle count needed rises steeply with it, as [Snyder, Bengtsson, Bickel and Anderson (2008)](#ref-SBBA2008a) showed.
 
 ## What to Compare the Filters in the Nonlinear SSM Tab With
 

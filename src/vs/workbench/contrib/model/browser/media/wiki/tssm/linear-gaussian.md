@@ -1,6 +1,6 @@
 # State Space Models — Linear Gaussian
 
-The **Linear Gaussian** tab draws paths from two structural time series models, the local level and the local linear trend. It sets their variances from your inputs and simulates. It does not fit them or run a filter.
+The **Linear Gaussian** tab draws paths from two structural time series models, the local level and the local linear trend. It sets their variances from your inputs and simulates.
 
 ## What the Local Level and Local Linear Trend Models Say
 
@@ -34,13 +34,13 @@ The code builds `LocalLevel(zeros(n))` or `LocalLinearTrend(zeros(n))`, sets `mo
 
 ## What a Kalman Filter Would Add to a Local Level Model
 
-The [Kalman (1960)](#ref-Kal1960a) recursion would turn each observation into an updated estimate of the level, using a gain that settles once the variance of the estimate stops changing. For the local level model, that settled filter is exponential smoothing, whose forecasts [Muth (1960)](#ref-Mut1960a) showed to be optimal for a random walk observed with noise. The gain depends on the ratio q that **Signal-to-Noise Ratio** prints. The tab does not run this recursion, and `kalman_filter` and `kalman_smoother` in StateSpaceModels.jl are there for a user who wants it.
+The [Kalman (1960)](#ref-Kal1960a) recursion would turn each observation into an updated estimate of the level, using a gain that settles once the variance of the estimate stops changing. For the local level model, that settled filter is exponential smoothing, whose forecasts [Muth (1960)](#ref-Mut1960a) showed to be optimal for a random walk observed with noise. The gain depends on the ratio q that **Signal-to-Noise Ratio** prints. In StateSpaceModels.jl, `kalman_filter` and `kalman_smoother` run this recursion on a model built from observed values.
 
 ## What Simulating a Linear Gaussian Model Is Good For
 
 Simulation shows what a set of variances implies before any data enter: how smooth a path is, how often it seems to trend and how much of it the measurement error hides. It also gives series with known true states, which a user can pass to a filter or an estimator to test it, a practice described at length by [Durbin and Koopman (2012)](#ref-DK2012a). A path costs very little to draw, so seeds can be varied freely.
 
-## Where a Linear Gaussian Simulation Misleads
+## What Limits a Linear Gaussian Simulation
 
 A local level path often appears to contain trends and cycles, and these are chance patterns of an accumulated random walk. Sample statistics from one path are poor guides to the model, since non-stationary states make them depend on n and on **Seed**. The Gaussian noise understates large moves compared with most financial and economic series. A zero starting mean also matters: the slope starts near zero, so a persistent direction appears only after the slope noise has had time to build one.
 

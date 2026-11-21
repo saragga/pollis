@@ -10,7 +10,6 @@ A state space model describes a series through a hidden state with its own dynam
 | **Julia stack** | StateSpaceModels.jl for the linear tabs, LowLevelParticleFilters.jl for the nonlinear tab, with Plots.jl, StatsBase.jl and Distributions.jl |
 | **Models** | Local level, local linear trend, nonlinear f and h with additive Gaussian noise, and a time-invariant linear model with one observed series |
 | **Input shape** | Settings and matrices, not data: every series is generated inside the code |
-| **Not included** | Estimation of parameters from data, and any Kalman filter or smoother in the two linear tabs |
 | **Key choice** | Whether the structure is a standard trend, a nonlinear system or a matrix form of your own |
 
 ## What Differs Between the Tabs of the State Space Models Panel
