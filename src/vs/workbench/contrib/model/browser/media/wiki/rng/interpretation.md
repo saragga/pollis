@@ -1,7 +1,7 @@
 # Interpretation
 
 ## The Draws
-The main code prints the values drawn. **Uniform Floats** lie in [0, 1); **Integer Range** includes both **Min** and **Max**; **Uniform Integers** cover the whole range of the **Numeric Type**, negative included for Int64; **Shuffle** returns a new vector, leaving the **Collection** unchanged (shuffle! changes it in place).
+The main code prints the values drawn. **Uniform Floats** lie in [0, 1); **Integer Range** includes both **Min** and **Max**; **Uniform Integers** cover the whole range of the **Numeric Type**, negative included for Int64; **Shuffle** returns a new vector, leaving the **Collection** unchanged (`shuffle!` changes it in place).
 
 ## Generator Properties
 **Generator Properties** gives the algorithm, the period, whether the stream is the same across Julia versions, and the intended use of the chosen generator. Only StableRNG answers true for stability.
