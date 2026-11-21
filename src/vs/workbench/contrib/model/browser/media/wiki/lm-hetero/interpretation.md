@@ -4,11 +4,11 @@ The panel reports two equations, one for the mean of y and one for its spread. E
 
 ## How to Read the Weighted Coefficients of a Heteroskedastic Regression
 
-**Coefficients** lists **estimate**, **std_error**, **t**, **p**, **lower95** and **upper95** for the mean equation. Each slope is the change in the mean of y per unit of the regressor, as in OLS, because the weights change precision and not the meaning of beta. Under **Maximum likelihood** the standard errors come from the inverse observed information. They depend on the normal likelihood and on the variance form being right ([White (1982)](#ref-Whi1982a)). A weighted estimate far from the OLS one is a warning about the specification and should not be read as a better estimate.
+**Coefficients** lists **estimate**, `std_error`, **t**, **p**, **lower95** and **upper95** for the mean equation. Each slope is the change in the mean of y per unit of the regressor, as in OLS, because the weights change precision and not the meaning of beta. Under **Maximum likelihood** the standard errors come from the inverse observed information. They depend on the normal likelihood and on the variance form being right ([White (1982)](#ref-Whi1982a)). A weighted estimate far from the OLS one is a warning about the specification and should not be read as a better estimate.
 
 ## How FWLS Standard Errors Are Computed
 
-**std_error** under **Two-step FWLS** and **Iterated FWLS**, and **weighted_se** in **Compare with OLS**, come from the weighted fit: the estimated variance is sum(w e²) / (n − k), times the inverse of X'WX. They treat the fitted weights as known, and **t**, **p** and the interval columns are built from them. If y is multiplied by a constant, the standard errors are multiplied by the same constant.
+`std_error` under **Two-step FWLS** and **Iterated FWLS**, and `weighted_se` in **Compare with OLS**, come from the weighted fit: the estimated variance is sum(w e²) / (n − k), times the inverse of X'WX. They treat the fitted weights as known, and **t**, **p** and the interval columns are built from them. If y is multiplied by a constant, the standard errors are multiplied by the same constant.
 
 ## How to Read the Variance Equation in Each Tab
 
@@ -27,7 +27,7 @@ Under FWLS the standard errors of gamma come from classical least squares on the
 
 ## How to Read Compare with OLS in a Heteroskedastic Regression
 
-**Compare with OLS** lists **ols**, **ols_se**, **white_se**, **weighted** and **weighted_se** by term. **white_se** is the HC1 form of the estimator of [White (1980)](#ref-Whi1980a) and applies to the OLS coefficients. A gap between **ols_se** and **white_se** measures how far heteroskedasticity disturbs classical inference for OLS. **weighted_se** belongs to a different estimator, and under FWLS it treats the fitted weights as known, so a smaller value is not by itself a gain in precision.
+**Compare with OLS** lists **ols**, `ols_se`, `white_se`, **weighted** and `weighted_se` by term. `white_se` is the HC1 form of the estimator of [White (1980)](#ref-Whi1980a) and applies to the OLS coefficients. A gap between `ols_se` and `white_se` measures how far heteroskedasticity disturbs classical inference for OLS. `weighted_se` belongs to a different estimator, and under FWLS it treats the fitted weights as known, so a smaller value is not by itself a gain in precision.
 
 ## How to Read Predictions at New Values
 

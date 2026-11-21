@@ -28,7 +28,7 @@ Nothing keeps gamma_0 + z_i' gamma positive. If it reaches zero the fit stops wi
 
 ## What to Compare the Quadratic Variance Model With
 
-**Linear** is the natural alternative, modelling the variance in place of the standard deviation. A comparison with **Power**, on a single positive driver, shows whether an exponent near 2 is supported. **sd_standardised** in **Remaining Heteroskedasticity** shows whether the scale looks right. **Compare Variance Models** includes **Quadratic**, and lists it as not fitted if a fitted sigma_i reaches zero.
+**Linear** is the natural alternative, modelling the variance in place of the standard deviation. A comparison with **Power**, on a single positive driver, shows whether an exponent near 2 is supported. `sd_standardised` in **Remaining Heteroskedasticity** shows whether the scale looks right. **Compare Variance Models** includes **Quadratic**, and lists it as not fitted if a fitted sigma_i reaches zero.
 
 ## References
 

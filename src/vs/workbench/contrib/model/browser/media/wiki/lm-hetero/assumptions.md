@@ -8,7 +8,7 @@ The tabs assume that y is linear in X and that the regressors are uncorrelated w
 
 ## What Happens When the Variance Form Is Wrong
 
-With exogenous regressors a wrong variance form does not make the weighted estimates inconsistent, but it costs efficiency and invalidates standard errors that rest on that form. **Maximum likelihood** can suffer more: [Carroll and Ruppert (1982)](#ref-CR1982a) showed that it is more sensitive than generalised least squares to small misspecifications of the variance function, in a model where the variances depend on the regression parameter and not on separate drivers. Warnings include a small **breusch_pagan_standardised_p** and a band in **Standardised Residuals** that is still uneven. [Romano and Wolf (2017)](#ref-RW2017a) recommend weighted least squares with heteroskedasticity-consistent standard errors for this reason. The panel does not provide those for the weighted fit.
+With exogenous regressors a wrong variance form does not make the weighted estimates inconsistent, but it costs efficiency and invalidates standard errors that rest on that form. **Maximum likelihood** can suffer more: [Carroll and Ruppert (1982)](#ref-CR1982a) showed that it is more sensitive than generalised least squares to small misspecifications of the variance function, in a model where the variances depend on the regression parameter and not on separate drivers. Warnings include a small `breusch_pagan_standardised_p` and a band in **Standardised Residuals** that is still uneven. [Romano and Wolf (2017)](#ref-RW2017a) recommend weighted least squares with heteroskedasticity-consistent standard errors for this reason. The panel does not provide those for the weighted fit.
 
 ## Which Conditions Variance Drivers Must Meet
 
@@ -20,7 +20,7 @@ The weights handle a changing variance but not correlation between errors. With 
 
 ## Where Normal Errors Matter in Heteroskedastic Regression
 
-**Maximum likelihood** assumes normal errors. So do several constants in FWLS: 1.2704 in **Exponential** and **Power** and sqrt(pi/2) in **Quadratic**. Under other distributions those constants scale the fitted variance wrongly, and the weights keep their relative sizes only as long as the error shape does not vary across observations. Coefficients then remain usable, but level-dependent output suffers, including the 1.96 intervals and the envelope of **Residual Spread**. **jarque_bera_p** in **Remaining Heteroskedasticity** tests normality of the standardised residuals.
+**Maximum likelihood** assumes normal errors. So do several constants in FWLS: 1.2704 in **Exponential** and **Power** and sqrt(pi/2) in **Quadratic**. Under other distributions those constants scale the fitted variance wrongly, and the weights keep their relative sizes only as long as the error shape does not vary across observations. Coefficients then remain usable, but level-dependent output suffers, including the 1.96 intervals and the envelope of **Residual Spread**. `jarque_bera_p` in **Remaining Heteroskedasticity** tests normality of the standardised residuals.
 
 ## Why Fitted Variances Must Stay Positive in the Linear and Quadratic Tabs
 

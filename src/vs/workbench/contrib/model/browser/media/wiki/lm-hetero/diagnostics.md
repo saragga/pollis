@@ -4,7 +4,7 @@ The checks in the panel come in two kinds: tests of constant variance on OLS res
 
 ## How to Test for Heteroskedasticity Before Weighting a Regression
 
-**Heteroskedasticity Tests** reports four p-values on OLS residuals. **harvey_p** and **glejser_p** use **Variance drivers (Z)**, while **breusch_pagan_p** and **white_p** always use X. The first reflects [Harvey (1976)](#ref-Har1976a), the second [Glejser (1969)](#ref-Gle1969a). **breusch_pagan_p** is the n R² form of [Koenker (1981)](#ref-Koe1981a), which adapts the test of [Breusch and Pagan (1979)](#ref-BP1979a) to non-normal errors. **white_p** follows [White (1980)](#ref-Whi1980a), adding squares and cross-products of X. Small p-values reject constant variance. A large p-value only says that these tests, on these drivers, found nothing. A wrong mean equation can also produce small p-values.
+**Heteroskedasticity Tests** reports four p-values on OLS residuals. `harvey_p` and `glejser_p` use **Variance drivers (Z)**, while `breusch_pagan_p` and `white_p` always use X. The first reflects [Harvey (1976)](#ref-Har1976a), the second [Glejser (1969)](#ref-Gle1969a). `breusch_pagan_p` is the n R² form of [Koenker (1981)](#ref-Koe1981a), which adapts the test of [Breusch and Pagan (1979)](#ref-BP1979a) to non-normal errors. `white_p` follows [White (1980)](#ref-Whi1980a), adding squares and cross-products of X. Small p-values reject constant variance. A large p-value only says that these tests, on these drivers, found nothing. A wrong mean equation can also produce small p-values.
 
 ## How to Read the Residual Spread of a Variance Model
 
@@ -16,11 +16,11 @@ The checks in the panel come in two kinds: tests of constant variance on OLS res
 
 ## How to Test Whether the Variance Model Captured the Pattern
 
-**Remaining Heteroskedasticity** regresses squared standardised residuals on a constant and the drivers. A small **breusch_pagan_standardised_p** means a pattern remains. For **Power**, the test uses the drivers themselves and not their logarithms. **sd_standardised** should lie near one. A value well away from one means the scale of the variance equation is off, which can come from non-normal errors under FWLS. **jarque_bera_p** uses the test of [Jarque and Bera (1987)](#ref-JB1987a) on the standardised residuals, and a small value warns against trusting 1.96 intervals.
+**Remaining Heteroskedasticity** regresses squared standardised residuals on a constant and the drivers. A small `breusch_pagan_standardised_p` means a pattern remains. For **Power**, the test uses the drivers themselves and not their logarithms. `sd_standardised` should lie near one. A value well away from one means the scale of the variance equation is off, which can come from non-normal errors under FWLS. `jarque_bera_p` uses the test of [Jarque and Bera (1987)](#ref-JB1987a) on the standardised residuals, and a small value warns against trusting 1.96 intervals.
 
 ## How to Check the Coverage of Heteroskedastic Prediction Intervals
 
-**Prediction Intervals** draws a ribbon of 1.96 sigma_i around the fitted values and reports **coverage_model** and **coverage_constant_width**. Both are in-sample shares of residuals inside the band, so they flatter the model. Coverage near 0.95 is the aim. Aggregate coverage can look fine for both, since a constant-width band may overcover quiet regions and undercover noisy ones. Read the ribbon too, as it shows where points escape. Use a held-out set for a genuine test, which the panel does not run for you.
+**Prediction Intervals** draws a ribbon of 1.96 sigma_i around the fitted values and reports `coverage_model` and `coverage_constant_width`. Both are in-sample shares of residuals inside the band, so they flatter the model. Coverage near 0.95 is the aim. Aggregate coverage can look fine for both, since a constant-width band may overcover quiet regions and undercover noisy ones. Read the ribbon too, as it shows where points escape. Use a held-out set for a genuine test, which the panel does not run for you.
 
 ## How to Rank Variance Forms with Compare Variance Models
 

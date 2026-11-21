@@ -14,7 +14,7 @@ Two choices shape every fit in the panel: the form of the variance and the way i
 
 ## Whether to Model the Variance or Only Correct the Standard Errors
 
-Consider leaving the coefficients alone when the aim is valid inference on OLS and no variance form has support. **white_se** in **Compare with OLS** gives that inference without assuming any form, as [White (1980)](#ref-Whi1980a) showed for large samples. Model the variance when the form is credible, when the efficiency gain matters, or when the prediction intervals need to follow the spread. [Romano and Wolf (2017)](#ref-RW2017a) argue for a combination, weighted fits with robust errors, which the panel leaves to the user.
+Consider leaving the coefficients alone when the aim is valid inference on OLS and no variance form has support. `white_se` in **Compare with OLS** gives that inference without assuming any form, as [White (1980)](#ref-Whi1980a) showed for large samples. Model the variance when the form is credible, when the efficiency gain matters, or when the prediction intervals need to follow the spread. [Romano and Wolf (2017)](#ref-RW2017a) argue for a combination, weighted fits with robust errors, which the panel leaves to the user.
 
 ## How to Choose Between FWLS and Maximum Likelihood for Heteroskedastic Regression
 
@@ -22,7 +22,7 @@ Consider leaving the coefficients alone when the aim is valid inference on OLS a
 
 ## How to Choose Variance Drivers for a Heteroskedastic Regression
 
-Leaving **Variance drivers (Z)** at `nothing` uses every regressor, which spends degrees of freedom on variables that may not affect the spread, and with **Power** zeros are clipped and give meaningless exponents. Choosing a few drivers on substantive grounds gives a simpler, more stable equation. Scale variables, such as firm size or population, are common candidates. Choosing drivers after seeing many test results raises the chance of a spurious pattern. Keep in mind that **breusch_pagan_p** and **white_p** ignore this input.
+Leaving **Variance drivers (Z)** at `nothing` uses every regressor, which spends degrees of freedom on variables that may not affect the spread, and with **Power** zeros are clipped and give meaningless exponents. Choosing a few drivers on substantive grounds gives a simpler, more stable equation. Scale variables, such as firm size or population, are common candidates. Choosing drivers after seeing many test results raises the chance of a spurious pattern. Keep in mind that `breusch_pagan_p` and `white_p` ignore this input.
 
 ## When to Leave the Heteroskedasticity Panel for Another Approach
 

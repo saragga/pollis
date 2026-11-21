@@ -28,7 +28,7 @@ Exponential growth is steep. A driver with an extreme value receives a very larg
 
 ## What to Compare the Exponential Variance Model With
 
-**Compare Variance Models** ranks **Exponential** against the other forms using two-step FWLS. **Power** is the closest alternative for a positive size variable, since it uses log z in place of z. **Maximum likelihood** provides a check on FWLS, as a large gap in gamma suggests small residuals are driving the auxiliary regression. **white_se** in **Compare with OLS** gives inference on the OLS slopes that assumes no variance form at all.
+**Compare Variance Models** ranks **Exponential** against the other forms using two-step FWLS. **Power** is the closest alternative for a positive size variable, since it uses log z in place of z. **Maximum likelihood** provides a check on FWLS, as a large gap in gamma suggests small residuals are driving the auxiliary regression. `white_se` in **Compare with OLS** gives inference on the OLS slopes that assumes no variance form at all.
 
 ## References
 
