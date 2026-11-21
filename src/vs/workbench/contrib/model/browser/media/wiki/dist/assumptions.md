@@ -2,12 +2,12 @@
 
 ## Parameters and Parametrisation
 Every family has a valid parameter range: probabilities in [0, 1], scales positive, degrees of freedom positive. Distributions.jl checks them and raises an error otherwise. The **parametrisation** is the most common source of mistakes:
-- **Normal(mu, sigma)** takes the standard deviation, not the variance.
-- **Gamma(alpha, theta)** takes a shape and a **scale**; a rate beta corresponds to theta = 1/beta.
-- **Exponential(theta)** takes the scale (the mean), not the rate.
-- **NegativeBinomial(r, p)** counts failures before the r-th success.
-- **Geometric(p)** counts failures before the first success, starting at 0.
-- **MvNormal(mu, Sigma)** takes a covariance matrix, which must be symmetric positive definite.
+- `Normal(mu, sigma)` takes the standard deviation, not the variance.
+- `Gamma(alpha, theta)` takes a shape and a **scale**; a rate beta corresponds to theta = 1/beta.
+- `Exponential(theta)` takes the scale (the mean), not the rate.
+- `NegativeBinomial(r, p)` counts failures before the r-th success.
+- `Geometric(p)` counts failures before the first success, starting at 0.
+- `MvNormal(mu, Sigma)` takes a covariance matrix, which must be symmetric positive definite.
 
 ## Support
 Each distribution lives on a **support**: the non-negative integers for Poisson, (0, 1) for Beta, the positive reals for Gamma. The pdf is zero outside it, and the log density is -Inf. **Parameters and Support** shows whether the evaluation point is inside it.
