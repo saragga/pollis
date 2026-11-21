@@ -10,7 +10,11 @@
 		"activityBarBadge.foreground": "#1C3A5E",
 		"activityBar.activeBorder": "#F2B446",
 		"activityBarTop.activeBorder": "#F2B446",
+		"activityBar.background": "#173F63",
+		"activityBar.border": "#173F63",
 		"tab.activeBorderTop": "#F2B446",
-		"panelTitle.activeBorder": "#F2B446"
+		"panelTitle.activeBorder": "#F2B446",
+		"statusBar.background": "#007ACC",
+		"statusBar.noFolderBackground": "#007ACC"
 	}
 }
