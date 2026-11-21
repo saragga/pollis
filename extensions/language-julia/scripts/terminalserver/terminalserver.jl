@@ -1,7 +1,7 @@
 # this script loads VSCodeServer and handles ARGS
 let
     @debug "terminalserver start" time=round(Int, time()*10)
-    args = [popfirst!(Base.ARGS) for _ in 1:9]
+    args = [popfirst!(Base.ARGS) for _ in 1:8]
     conn_pipename, debug_pipename, telemetry_pipename = args[1:3]
     has_revise = true
 
