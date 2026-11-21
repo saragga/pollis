@@ -59,6 +59,7 @@ import './snowballSearchPage.js';
 import { FORECASTING_COMPETITIONS_COMMAND_ID } from './forecastingCompetitionsPage.js';
 import { FORECASTING_CATALOGUE_COMMAND_ID } from './forecastingActive.js';
 import './forecastingCataloguePage.js';
+import { MODEL_ZOO_COMMAND_ID } from './modelZooPage.js';
 import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { TIMEFUNCTION_PANEL } from '../../model/browser/commands/timeFunction.command.js';
 import { FINDALLOCS_PANEL } from '../../model/browser/commands/findAllocs.command.js';
@@ -247,6 +248,13 @@ MenuRegistry.appendMenuItem(ForecastingCompetitionsMenu, {
 	group: '1_competitions',
 	command: { id: AGENT_FORECASTING_COMMAND_ID, title: localize('competitions.agentForecasting', "Agents' Forecasting Competition...") },
 	order: 3,
+});
+
+// The models the benchmarks and competitions scored, with where each is in Julia (modelZooPage.ts)
+MenuRegistry.appendMenuItem(ForecastingCompetitionsMenu, {
+	group: '1_competitions',
+	command: { id: MODEL_ZOO_COMMAND_ID, title: localize('competitions.modelZoo', "Model Zoo...") },
+	order: 4,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {

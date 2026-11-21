@@ -39,15 +39,15 @@
 \begin{nbox}
 {\color{amber}\bfseries Drill-down.}\enspace
 A look under the surface of the menu \textbf{Compose\gt Prediction Challenges}: Manage Challenge Datasets, Score
-Models and Agents' Forecasting Competition. It is for anyone who wants to know where each file is and what it holds,
-and for whoever maintains Pollis. It describes the state of 20 November 2026.
+Models, Agents' Forecasting Competition and Model Zoo. It is for anyone who wants to know where each file is and what
+it holds, and for whoever maintains Pollis. It describes the state of 21 November 2026.
 \end{nbox}
 
 \tableofcontents
 
 \section{Prediction Challenges in one table}
 
-Three pages share one package and one rule. Every dataset is found, read and scored the same way, whoever contributes
+Four pages share one package and one rule. Every dataset is found, read and scored the same way, whoever contributes
 it: the package, a toolbox or you.
 
 \begin{center}\footnotesize
@@ -69,6 +69,11 @@ Scores with & \textendash & \file{PC.score}, \file{PC.benchmarks}, \file{PC.step
 \bottomrule
 \end{tabularx}
 \end{center}
+
+The fourth page, Model Zoo, reads \file{metadata/models.toml}, \file{metadata/benchmarks.toml} and
+\file{metadata/datasets.toml} of the installed package each time it opens, and writes nothing: a row for each model,
+with the benchmarks and competitions that scored it (the words before the colon of the \file{split_protocol} of its
+runs), its datasets, and its \file{julia_package} and \file{julia_checked}.
 
 Pollis keeps one setting of its own: the datasets ticked Active, in the profile's storage
 (\file{pollis.manageCompetitionDatasets.active}), which Score Models lists in its step 1.
@@ -103,7 +108,7 @@ PollisCompetitions.jl/
     dataset_benchmarks.jl      the benchmarks on the series of a dataset
   metadata/
     datasets.toml              the Dataset Catalog: 132 datasets
-    models.toml                the Model Catalog: 268 models
+    models.toml                the Model Catalog: 301 models
     benchmarks.toml            the Benchmarks: 5,828 runs
   data/builtin/<dataset_id>/   the 60 built-in datasets: 10 of series, 50 tabular
   test/runtests.jl
@@ -237,6 +242,8 @@ estimator_family = "Foundation Model"       # one of nine families
 estimator_method = "Pretrained in-context learner"   # one of the methods of its family
 package = "LimiX"
 language = "Python"                         # Julia | Python | R | C/C++ | Fortran
+                                            # julia_package = "LightGBM": where it is in Julia (left out: nowhere)
+                                            # julia_checked = false: true once it gives the published scores
 
   [[models.references]]
   bibtex_key = "ZRYZT...2026a"
@@ -246,6 +253,12 @@ language = "Python"                         # Julia | Python | R | C/C++ | Fortr
 There are nine families: Foundation Model, Tree-based, Neural Network, Baseline, Statistical, Kernel Methods, Fuzzy
 System, Hybrid and Other. Each has a closed list of methods, which the header of \file{models.toml} gives and
 \file{ESTIMATOR_METHODS} checks. A Hybrid model's method names the methods it combines.
+
+\file{julia_package} says where the model is in Julia: the registered package that has its estimator, written in Julia
+or bound to the compiled library the original runs (a package that runs Python does not count), for every
+configuration of the model, default or tuned; \file{ModelZoo} for a model of ModelZoo.jl; left out when no package
+has it. \file{julia_checked} is true when that package, run on the benchmark's splits, gives the published scores,
+and false when it has the same estimator but has not been checked against them. The two are given together.
 
 \subsection{The Benchmarks: metadata/benchmarks.toml}
 
@@ -354,7 +367,9 @@ CREATE TABLE dataset_references (
 CREATE TABLE model_catalog (
   model_id TEXT PRIMARY KEY, model_name TEXT NOT NULL,
   estimator_family TEXT NOT NULL, estimator_method TEXT NOT NULL,   -- a method of its family
-  package TEXT, language TEXT CHECK (language IN ('Julia', 'Python', 'R', 'C/C++', 'Fortran')));
+  package TEXT, language TEXT CHECK (language IN ('Julia', 'Python', 'R', 'C/C++', 'Fortran')),
+  julia_package TEXT, julia_checked BOOLEAN,        -- both given, or neither
+  CHECK ((julia_package IS NULL) = (julia_checked IS NULL)));
 
 CREATE TABLE model_references (
   model_id TEXT REFERENCES model_catalog, bibtex_key TEXT,
@@ -368,7 +383,7 @@ CREATE TABLE benchmarks (
 
 CREATE VIEW model_comparisons AS
 SELECT b.run_id, b.model_id, m.model_name, m.estimator_family, m.estimator_method, m.package, m.language,
-  b.dataset_id, d.dataset_name, d.data_structure, d.geometry, d.response_type,
+  m.julia_package, m.julia_checked, b.dataset_id, d.dataset_name, d.data_structure, d.geometry, d.response_type,
   b.split_protocol, b.metric, b.score
 FROM benchmarks b JOIN model_catalog m USING (model_id) JOIN dataset_catalog d USING (dataset_id);
 \end{lstlisting}
@@ -594,7 +609,8 @@ forecasts) or a benchmark, with \file{kind}, \file{name} and \file{scores}.
 \file{.../compose/browser/forecastingActive.ts} & The datasets ticked Active\\
 \file{.../compose/browser/forecastingCompetitionsPage.ts} & Score Models: the runs and their scripts\\
 \file{.../compose/browser/agentForecastingPage.ts} & Agents' Forecasting Competition: the studies and their scripts\\
-\file{.../model/browser/webviews/forecasting*.toml}, \file{agentForecasting.toml} & The panel texts, wikis and references of the three pages\\
+\file{.../compose/browser/modelZooPage.ts} & Model Zoo: reading the Model Catalog and its runs\\
+\file{.../model/browser/webviews/forecasting*.toml}, \file{agentForecasting.toml}, \file{modelZoo.toml} & The panel texts, wikis and references of the four pages\\
 \file{pollis-agents/skills/forecast-independently/SKILL.md} & The rules the agents follow\\
 \bottomrule
 \end{tabularx}

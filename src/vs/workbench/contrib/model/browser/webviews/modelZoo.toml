@@ -1,0 +1,45 @@
+# Model Zoo Webview Configuration
+# A page of Compose in the Minimal style of the scaffold, not a panel: only its Powered by, Learn More and References.
+# Its models are those of the Model Catalog of PollisCompetitions.jl, metadata/models.toml, with the benchmarks and
+# competitions that scored them, from metadata/benchmarks.toml. `pageCommand` is the command that opens it. The build
+# script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/modelZoo.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Model Zoo"
+viewType = "pollis.modelZoo"
+pageCommand = "pollis.competitions.modelZoo"
+
+[[packages]]
+name = "PollisCompetitions.jl"
+github = "https://github.com/Trumpingtons/PollisCompetitions.jl"
+
+[[packages]]
+name = "ModelZoo.jl"
+github = "https://github.com/Trumpingtons/ModelZoo.jl"
+
+[[wikis]]
+name = "Overview"
+file = "modelZoo/overview.md"
+bundled = true
+description = "What the page lists, where its models come from, how to filter, sort and expand them, and what the columns In Julia and Checked say"
+
+[[wikis]]
+name = "Factsheet"
+file = "modelZoo/factsheet.md"
+bundled = true
+description = "The columns, the filters and the details of a model at a glance, and the files the page reads"
+
+[[wikis]]
+name = "Where Models Are in Julia"
+file = "modelZoo/julia-packages.md"
+bundled = true
+description = "Which Julia packages count as having a model, why a package that runs Python does not, what Checked means, and what ModelZoo.jl holds"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "EPTHD...2025a"
