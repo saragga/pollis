@@ -17,7 +17,7 @@ The normalising constant of p cancels in the ratio, which is why the method work
 - **Random walk**: x' = x plus a small symmetric perturbation, so q cancels in the ratio (the original Metropolis algorithm). The step scale is the only setting; an acceptance rate around 0.23 is the classic optimum in many dimensions.
 - **Independence**: x' is drawn from a fixed distribution, regardless of x. It works well only when that distribution is close to the target.
 
-In Turing, **MH()** with no arguments is an independence sampler that proposes each parameter from its **prior**. MH(Sigma), with a covariance matrix, gives a random-walk proposal; pairs of a parameter and a proposal set them one by one.
+In Turing, `MH()` with no arguments is an independence sampler that proposes each parameter from its **prior**. `MH(Sigma)`, with a covariance matrix, gives a random-walk proposal; pairs of a parameter and a proposal set them one by one.
 
 ## Strengths and Limits
 Metropolis-Hastings needs no gradients, so it works with discrete parameters, black-box likelihoods and non-differentiable models. But a random walk covers a distance that grows only with the square root of the number of steps, and its efficiency falls as the dimension grows: beyond a handful of parameters, or with strong correlations, gradient-based samplers are far more efficient. Expect a low ESS relative to the number of draws.

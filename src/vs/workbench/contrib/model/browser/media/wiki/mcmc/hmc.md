@@ -15,7 +15,7 @@ The motion is simulated with the **leapfrog** integrator, L steps of size epsilo
 The end point is the proposal. Because the integrator conserves energy only approximately, the proposal is accepted with probability min(1, exp(H_old - H_new)), which keeps the target exact. The leapfrog is reversible and preserves volume, which this acceptance rule needs.
 
 ## The Settings
-- **Step size epsilon**: too large, and the energy error grows, proposals are rejected, and trajectories diverge; too small, and each trajectory needs many gradient evaluations. The panel starts from find_good_stepsize and adapts it to a target acceptance of 0.65.
+- **Step size epsilon**: too large, and the energy error grows, proposals are rejected, and trajectories diverge; too small, and each trajectory needs many gradient evaluations. The panel starts from `find_good_stepsize` and adapts it to a target acceptance of 0.65.
 - **Number of leapfrog steps L**: the trajectory length is L epsilon. Too short gives random-walk behaviour; too long wastes work or brings the particle back. This is the setting NUTS removes.
 - **Mass matrix M**: a diagonal M, adapted during warm-up, rescales each parameter so that one step size suits all.
 
