@@ -15,10 +15,10 @@ The steps, inputs, files, types, requirements and agent task of Translate Julia 
 
 | Input | Step | Default | Meaning |
 |---|---|---|---|
-| **Function** | The Function | fractal_counts | The Julia function to translate, by name |
-| **Arguments** | The Function | x0, y0, spacing, height, width, julia_set, c, maxiter | The arguments of the call, as written in it, on one line |
+| **Function** | The Function | `fractal_counts` | The Julia function to translate, by name |
+| **Arguments** | The Function | `x0, y0, spacing, height, width, julia_set, c, maxiter` | The arguments of the call, as written in it, on one line |
 | **Example** | The Function | Mandelbrot Set | The Mandelbrot set, or the Julia set of c = -0.8 + 0.156i; shown only for the example |
-| **Rust Version** | Translate | fractal_counts_rust | The name of the Julia function that calls the Rust version, other than the function's |
+| **Rust Version** | Translate | `fractal_counts_rust` | The name of the Julia function that calls the Rust version, other than the function's |
 | **Folder** | Build | `programs/rust` of the open Pollis Workspace, else `~/.pollis/programs/rust` | Where the example's crate is built, and where Translate with Agent saves the example; **Choose...** picks another; shown only for the example |
 
 The example's crate is shown in Translate only while the function and the Rust version have the example's names; **Build**, **Compare** and **Translate with Agent** are off while the Rust version has no name of its own.
