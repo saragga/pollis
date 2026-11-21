@@ -9,7 +9,7 @@ The Neighbour Embedding panel draws each observation as a point in two or more d
 | **Purpose** | A nonlinear map of local neighbourhoods, for visual exploration |
 | **Julia stack** | TSne.jl and UMAP.jl for the embeddings; Distances.jl for the checks; Plots.jl for the Next Steps |
 | **Models** | **t-SNE** and **UMAP** tabs |
-| **Input shape** | **Feature Matrix** is n × p, one row per observation, and the tabs apply no per-feature scaling |
+| **Input shape** | **Feature Matrix** is n × p, one row per observation, standardised beforehand when the units of the features differ |
 | **Output** | Embedding `Y` (n × d) and the value of `trustworthiness(Y)` with 10 neighbours |
 | **Key choice** | The neighbourhood size, set by **Perplexity** or **n_neighbors** |
 
@@ -25,7 +25,7 @@ The Neighbour Embedding panel draws each observation as a point in two or more d
 
 ## Which Inputs the Neighbour Embedding Tabs Use
 
-**Feature Matrix** and **Embedding Dimensions** (d, default 2) apply to both tabs. **Perplexity** (default 30), **max_iter** (default 1000) and **Learning Rate** (default 200.0) apply to **t-SNE** alone. **n_neighbors** (default 15) and **min_dist** (default 0.1) apply to **UMAP** alone. Features on different scales should be standardised before entering **Feature Matrix**, since neither tab does so per feature. Next Steps that plot two coordinates need **Embedding Dimensions** of at least 2.
+**Feature Matrix** and **Embedding Dimensions** (d, default 2) apply to both tabs. **Perplexity** (default 30), **max_iter** (default 1000) and **Learning Rate** (default 200.0) apply to **t-SNE** alone. **n_neighbors** (default 15) and **min_dist** (default 0.1) apply to **UMAP** alone. Features on different scales are standardised before they enter **Feature Matrix**, as the example does with the training means and standard deviations. Next Steps that plot two coordinates need **Embedding Dimensions** of at least 2.
 
 ## See Also
 

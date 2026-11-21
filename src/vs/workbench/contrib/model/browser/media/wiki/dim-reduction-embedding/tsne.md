@@ -28,7 +28,7 @@ Local groups in small or moderate samples are its strength, and the layouts ofte
 
 ## Where t-SNE Misleads
 
-Sizes of clusters and gaps between them are not reliable, and noise can form clumps at some settings, as [Wattenberg, Viégas and Johnson (2016)](#ref-WVJ2016a) show. Global arrangement depends strongly on the start, and [Kobak and Linderman (2021)](#ref-KL2021a) report that starting from a meaningful layout preserves more of it, whereas this tab starts at random. Each iteration costs on the order of n squared, because TSne.jl compares all pairs. There is no mapping from features to layout: for **Embed New Data**, the tab rebuilds each new point from its 10 nearest training points with local weights, so a new point far from all the training data is still placed near those neighbours.
+Sizes of clusters and gaps between them are not reliable, and noise can form clumps at some settings, as [Wattenberg, Viégas and Johnson (2016)](#ref-WVJ2016a) show. Global arrangement depends strongly on the start, and [Kobak and Linderman (2021)](#ref-KL2021a) report that starting from a meaningful layout preserves more of it; the tab starts from a random layout after `Random.seed!(1)`. Each iteration costs on the order of n squared, because TSne.jl compares all pairs. There is no mapping from features to layout: for **Embed New Data**, the tab rebuilds each new point from its 10 nearest training points with local weights, so a new point far from all the training data is still placed near those neighbours.
 
 ## How to Check a t-SNE Layout
 

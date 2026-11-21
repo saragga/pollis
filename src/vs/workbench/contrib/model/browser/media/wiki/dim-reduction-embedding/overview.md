@@ -23,7 +23,7 @@ Both methods turn distances into weights on pairs of nearby points, then move po
 | New points must be added to an existing layout | **UMAP** | `UMAP.transform` optimises each new point against the fitted graph |
 | The layout will guide a decision | Both | Agreement across tabs is better evidence than one layout |
 
-The panel describes **UMAP** as better at preserving global structure, but the claim is disputed. [Kobak and Linderman (2021)](#ref-KL2021a) traced that difference largely to the starting layout, which is random for the **t-SNE** tab and spectral for the **UMAP** tab.
+Better preservation of global structure is often claimed for UMAP. [Kobak and Linderman (2021)](#ref-KL2021a) traced that difference largely to the starting layout, which is random for the **t-SNE** tab and spectral for the **UMAP** tab.
 
 ## What a Neighbour Embedding Cannot Establish
 
