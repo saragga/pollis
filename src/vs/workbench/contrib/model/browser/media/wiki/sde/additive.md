@@ -14,19 +14,19 @@ With f = a X, the Ornstein-Uhlenbeck equation of [Uhlenbeck and Ornstein (1930)]
 - Variance: Var[X(t)] = sigma^2 (exp(2 a t) - 1) / (2 a)
 - Stationary law for a < 0: Normal(0, sigma^2 / (2 theta)), where theta = -a
 
-**Mean and Variance** and **Stationary Distribution** overlay these formulas. Both read a from f at X = 1, so the overlay is valid only for a drift without a constant term. A level other than zero, as in `-0.5*(X-2)`, needs the curves worked out by hand.
+**Mean and Variance** and **Stationary Distribution** overlay these formulas, which hold for a drift of the form a X, with a read off f at X = 1.
 
 ## Which Solvers Suit Additive Noise
 
-Since g is constant, the Milstein correction is zero, and EM in fact reaches strong order 1 and not the 1/2 shown in its label. SRA1 and SOSRA2 are built for this noise class, with strong order 3/2 and weak order 2. SRA1 comes from [Rößler (2010)](#ref-Ros2010a), and SOSRA2 is a stability-optimised method ([Rackauckas and Nie (2020)](#ref-RN2020a)). Both are adaptive, though the label of SRA1 says fixed step. LambaEM adapts the step of EM with the controller of [Lamba (2003)](#ref-Lam2003a).
+Since g is constant, the Milstein correction is zero, and EM reaches strong order 1. SRA1 and SOSRA2 are built for this noise class, with strong order 3/2 and weak order 2. SRA1 comes from [Rößler (2010)](#ref-Ros2010a), and SOSRA2 is a stability-optimised method ([Rackauckas and Nie (2020)](#ref-RN2020a)). Both are adaptive in StochasticDiffEq.jl. LambaEM adapts the step of EM with the controller of [Lamba (2003)](#ref-Lam2003a).
 
 ## Where Additive Noise Modelling Is Strong
 
 Additive noise fits disturbances whose size has nothing to do with the state: outside forcing and measurement-like shocks. Results are easy to check, as the linear case is fully known. Itô and Stratonovich give one equation here, so no choice of calculus is involved. Solver cost is low too, as there is no derivative of g to approximate. That makes it a sound first model to try.
 
-## Where Additive Noise Modelling Misleads
+## What Limits Additive Noise Models
 
-Additive noise pays no attention to boundaries, so X can go negative with positive probability, however large the current level and however small sigma is. Prices, populations and concentrations therefore fit it poorly, except as an approximation near a level far from zero. A state-dependent expression typed into **Noise sigma** still runs with EM or LambaEM, but SRA1 and SOSRA2 then lose their basis, and **Mean and Variance** reads the value at X = 1 as a constant. Under a drift with a > 0 there is no stationary law, and the panel draws no normal curve.
+Additive noise pays no attention to boundaries, so X can go negative with positive probability, however large the current level and however small sigma is. Prices, populations and concentrations therefore fit it poorly, except as an approximation near a level far from zero. SRA1 and SOSRA2 are built for a **Noise sigma** that does not depend on X. Under a drift with a > 0 there is no stationary law, as the variance grows without bound.
 
 ## What to Compare the Additive Noise Tab With
 

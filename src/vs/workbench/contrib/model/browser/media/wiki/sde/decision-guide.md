@@ -25,7 +25,7 @@ For a fixed step, start with **Step size dt** well under the fastest time scale 
 
 ## When a Pure Diffusion Is the Wrong Model
 
-A diffusion suits smooth accumulation of many small shocks. Sudden moves that a continuous path cannot produce on a short horizon call for the Jump-Diffusion Processes panel. The panel also cannot express correlated noises without editing the code, as its problem is built with diagonal noise. A model stated in the Stratonovich form, as physical models driven by fast smooth noise often are, belongs in the Stochastic Differential Equations panel of the Core Mathematics Toolbox. The panel estimates nothing, so parameters fitted to observed series must come from elsewhere, and a model chosen here has not been tested against any data.
+A diffusion suits smooth accumulation of many small shocks. Sudden moves that a continuous path cannot produce on a short horizon call for the Jump-Diffusion Processes panel. Correlated noises take a `noise_rate_prototype` matrix in the `SDEProblem` call. A model stated in the Stratonovich form, as physical models driven by fast smooth noise often are, belongs in the Stochastic Differential Equations panel of the Core Mathematics Toolbox. The panel simulates from given coefficients, so parameters for an observed series come from an estimation method first.
 
 ## See Also
 

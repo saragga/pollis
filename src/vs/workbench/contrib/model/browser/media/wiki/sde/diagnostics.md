@@ -12,11 +12,11 @@ The diffusion panel has no data to validate against, so its checks ask two narro
 
 ## How to Read the Strong Convergence Check
 
-**Strong Convergence** runs EM on a fixed test equation, geometric Brownian motion with a = 1.01 and b = 0.87 over [0, 1], for steps from 1/512 to 1/16 and 1000 paths each. It reports the strong error at the final time and the slope of log error on log step. A slope near the expected 0.5 is the good result, with some scatter from sampling. A distant slope suggests a broken install or too few paths. The check ignores **Drift f(X,t)**, **Diffusion g(X,t)** and **Solver**, so it says nothing about the accuracy of your own run.
+**Strong Convergence** runs EM on a fixed test equation, geometric Brownian motion with a = 1.01 and b = 0.87 over [0, 1], for steps from 1/512 to 1/16 and 1000 paths each. It reports the strong error at the final time and the slope of log error on log step. A slope near the expected 0.5 is the good result, with some scatter from sampling. A distant slope suggests too few paths. The step test of the last section applies the same idea to the equation of the tab.
 
 ## How to Compare a Diffusion Ensemble with Closed Forms
 
-**Mean and Variance** computes moments over 1000 paths and overlays closed forms. Solid and dashed curves that stay close, apart from sampling noise that grows with the variance, are the good outcome. A gap that shrinks with **Step size dt** is discretisation error. The formulas read a and b off f and g at X = 1, so they apply only to f = a X and, outside **Additive Noise**, g = b X, and nothing warns otherwise. A drift such as `-0.5*(X-2)` gives a wrong dashed curve, and a = 0 gives `NaN` for the additive variance.
+**Mean and Variance** computes moments over 1000 paths and overlays closed forms. Solid and dashed curves that stay close, apart from sampling noise that grows with the variance, are the good outcome. A gap that shrinks with **Step size dt** is discretisation error. The closed forms are those of f = a X and, in **Multiplicative Noise**, g = b X, with a and b read off f and g at X = 1.
 
 ## How to Read the Additive vs Multiplicative Noise Chart
 
@@ -28,7 +28,7 @@ The diffusion panel has no data to validate against, so its checks ask two narro
 
 ## How to Test the Step Size on Your Own Diffusion
 
-The panel offers no convergence check for your own equation, and one can be made by hand. Run **Mean and Variance** or your own ensemble at **Step size dt**, then at half that value, and compare the statistic you care about against its Monte Carlo error. With an adaptive solver, pass `abstol=1e-3, reltol=1e-3` to `solve` and compare again. If the statistic moves by more than sampling noise, keep refining. A fixed `seed` does not align two runs that use different steps, as the Brownian increments differ.
+A convergence check for the equation of the tab compares runs at two steps. Run **Mean and Variance** or your own ensemble at **Step size dt**, then at half that value, and compare the statistic you care about against its Monte Carlo error. With an adaptive solver, pass `abstol=1e-3, reltol=1e-3` to `solve` and compare again. If the statistic moves by more than sampling noise, keep refining. A fixed `seed` does not align two runs that use different steps, as the Brownian increments differ.
 
 ## See Also
 

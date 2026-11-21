@@ -4,7 +4,7 @@ Outputs from the diffusion panel describe the equation you typed, not any observ
 
 ## What One Simulated Diffusion Path Represents
 
-The object `sol` from the main code holds one draw of the random path, with times in `sol.t` and states in `sol.u`. Peaks, troughs and crossings in **Plot Trajectory** belong to that draw and change on each run, since the panel sets no `seed`. Passing `seed=1` to `solve` repeats a draw. Fixed-step solvers save points evenly, and adaptive ones crowd points where the error control asks for smaller steps. Between saved points `sol(t)` interpolates in a straight line, which understates the true roughness of the path.
+The object `sol` from the main code holds one draw of the random path, with times in `sol.t` and states in `sol.u`. Peaks, troughs and crossings in **Plot Trajectory** belong to that draw and change on each run, since each run draws a new Brownian path. Passing `seed=1` to `solve` repeats a draw. Fixed-step solvers save points evenly, and adaptive ones crowd points where the error control asks for smaller steps. Between saved points `sol(t)` interpolates in a straight line, which understates the true roughness of the path.
 
 ## How to Read the Spread in Ensemble Paths
 

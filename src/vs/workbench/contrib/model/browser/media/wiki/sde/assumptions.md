@@ -4,7 +4,7 @@ A simulated diffusion is only as sound as the equation behind it and the scheme 
 
 ## What Makes a Stochastic Differential Equation Well Posed
 
-The standard theorem asks that f and g be Lipschitz in X and grow at most linearly, which gives one solution with finite moments ([Øksendal (2003)](#ref-Oks2003a)). A **Drift f(X,t)** such as `X^2` can blow up in finite time, and the panel has no guard against it. Coefficients that grow faster than linearly can also defeat the scheme when the equation itself is fine: Euler's method can diverge for them, in both the strong and the weak sense ([Hutzenthaler, Jentzen and Kloeden (2011)](#ref-HJK2011a)). Signs of trouble are `Inf` or `NaN` values, a run of runaway paths in **Ensemble Paths**, and sample moments that change sharply with the step.
+The standard theorem asks that f and g be Lipschitz in X and grow at most linearly, which gives one solution with finite moments ([Øksendal (2003)](#ref-Oks2003a)). A **Drift f(X,t)** such as `X^2` can blow up in finite time. Coefficients that grow faster than linearly can also defeat the scheme when the equation itself is fine: Euler's method can diverge for them, in both the strong and the weak sense ([Hutzenthaler, Jentzen and Kloeden (2011)](#ref-HJK2011a)). Signs of trouble are `Inf` or `NaN` values, a run of runaway paths in **Ensemble Paths**, and sample moments that change sharply with the step.
 
 ## What the Brownian Driver Assumes About Noise
 
@@ -12,11 +12,11 @@ The driver W has continuous paths and independent Gaussian increments. A diffusi
 
 ## Which Noise Structures the Diffusion Panel Can Express
 
-With a vector **Initial state X0**, the call `SDEProblem(f, g, X0, tspan)` sets up diagonal noise: each component receives its own independent Brownian motion, and g must return one value per component. Correlated noises need a `noise_rate_prototype` matrix, which the panel does not pass, and SRIW1 and RKMil accept diagonal noise only. The closed forms in **Mean and Variance** and the histogram in **Stationary Distribution** assume a scalar state.
+With a vector **Initial state X0**, the call `SDEProblem(f, g, X0, tspan)` sets up diagonal noise: each component receives its own independent Brownian motion, and g must return one value per component. Correlated noises take a `noise_rate_prototype` matrix in `SDEProblem`, and SRIW1 and RKMil accept diagonal noise only. The closed forms in **Mean and Variance** and the histogram in **Stationary Distribution** assume a scalar state.
 
 ## What Happens When a Diffusion Leaves Its Allowed Range
 
-Many models need X above zero, and the discretised path need not respect that even where the exact solution does. Geometric Brownian motion stays positive, yet an EM step can cross zero when the noise draw is large against the step. A g such as `sqrt(X)` then raises a `DomainError`, as the panel adds no boundary treatment. Smaller steps make crossings rarer. Writing the equation for log X removes them, and `solve` also accepts an `isoutofdomain` function, which makes adaptive solvers reject such steps.
+Many models need X above zero, and the discretised path need not respect that even where the exact solution does. Geometric Brownian motion stays positive, yet an EM step can cross zero when the noise draw is large against the step. A g such as `sqrt(X)` then raises a `DomainError`. Smaller steps make crossings rarer. Writing the equation for log X removes them, and `solve` also accepts an `isoutofdomain` function, which makes adaptive solvers reject such steps.
 
 ## What the Solver Settings Assume About Accuracy
 

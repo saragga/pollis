@@ -20,9 +20,11 @@ The Diffusion Processes panel simulates stochastic differential equations, dX = 
 | **Additive Noise** | **Noise sigma**, a constant | EM, LambaEM, SRA1, SOSRA2 | Itô, with constant g |
 | **Multiplicative Noise** | **Diffusion g(X,t)** | SRIW1, EM, LambaEM, RKMil | Itô |
 
+The two tabs share **Drift f(X,t)**, **Initial state X0**, **Time span T** and **Step size dt**, so a drift moves from one tab to the other unchanged.
+
 ## How Each Diffusion Solver Controls Its Step
 
-The table gives the type in StochasticDiffEq.jl, which differs from the menu label for SRA1 and RKMil. Those two are adaptive solvers, so **Step size dt** sets only their first step. Adaptive solvers run at the package default tolerances, `abstol` and `reltol` of 0.01, since the panel sets neither.
+The table gives the step control and order of each solver in StochasticDiffEq.jl. For an adaptive solver, **Step size dt** sets only the first step, and the step then follows the package default tolerances, `abstol` and `reltol` of 0.01, which the `solve` call can tighten.
 
 | Solver | Step control | Strong order |
 |---|---|---|

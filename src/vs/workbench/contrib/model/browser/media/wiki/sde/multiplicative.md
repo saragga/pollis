@@ -15,7 +15,7 @@ With f = a X and g = b X, the equation is the one behind [Black and Scholes (197
 - Variance: Var[X(t)] = X0^2 exp(2 a t) (exp(b^2 t) - 1)
 - Median: X0 exp((a - b^2/2) t)
 
-**Mean and Variance** overlays the mean and the variance, and **Strong Convergence** uses the exact solution on a fixed test problem. For a drift or diffusion of another form the panel still draws the overlay, and that curve does not apply.
+**Mean and Variance** overlays the mean and the variance, which hold for f = a X and g = b X, and **Strong Convergence** uses the exact solution on a fixed test problem.
 
 ## How the Multiplicative Noise Solvers Differ
 
@@ -26,15 +26,15 @@ With f = a X and g = b X, the equation is the one behind [Black and Scholes (197
 | RKMil | EM + 0.5 g g' (dW^2 - dt), g g' by finite difference | 1 |
 | SRIW1 | Stochastic Runge-Kutta with an embedded error estimate | 3/2 |
 
-The Milstein term comes from [Mil'shtejn (1975)](#ref-Mil1975a), and SRIW1 from [Rößler (2010)](#ref-Ros2010a). RKMil and SRIW1 accept only scalar or diagonal noise. RKMil is adaptive in StochasticDiffEq.jl, although its label says fixed step, and its **Step size dt** is only a first step.
+The Milstein term comes from [Mil'shtejn (1975)](#ref-Mil1975a), and SRIW1 from [Rößler (2010)](#ref-Ros2010a). RKMil and SRIW1 accept only scalar or diagonal noise. In StochasticDiffEq.jl, RKMil is adaptive, and **Step size dt** sets its first step.
 
 ## How Adaptive Stepping Keeps a Brownian Path Consistent
 
-When an adaptive solver rejects a step, it cannot simply draw again, since that would bias the noise toward draws that were easy to accept. StochasticDiffEq.jl stores the rejected information and fills in a Brownian bridge, the rejection sampling with memory of [Rackauckas and Nie (2017)](#ref-RN2017b). Error control then helps with the large swings of multiplicative noise, as steps shrink where g changes fast. The panel runs at the default tolerances of 0.01. For statistics that need care, pass tighter `abstol` and `reltol` to `solve`.
+When an adaptive solver rejects a step, it cannot simply draw again, since that would bias the noise toward draws that were easy to accept. StochasticDiffEq.jl stores the rejected information and fills in a Brownian bridge, the rejection sampling with memory of [Rackauckas and Nie (2017)](#ref-RN2017b). Error control then helps with the large swings of multiplicative noise, as steps shrink where g changes fast. The code runs at the default tolerances of 0.01. For statistics that need care, pass tighter `abstol` and `reltol` to `solve`.
 
-## Where the Multiplicative Noise Tab Misleads
+## What Limits Multiplicative Noise Models
 
-Proportional noise brings heavy right tails, and sample moments over long horizons then rest on a handful of paths. An exact solution of geometric Brownian motion stays positive, while a discrete step may not, and expressions such as `sqrt(X)` then fail. Non-Lipschitz forms such as `X^2` can blow up, and step shrinkage may end the run with a warning about `dt`. The **Stationary Distribution** chart is drawn for any g, with no reference curve here, and a proportional g has no proper stationary law.
+Proportional noise brings heavy right tails, and sample moments over long horizons then rest on a handful of paths. An exact solution of geometric Brownian motion stays positive, while a discrete step may not, and expressions such as `sqrt(X)` then fail. Non-Lipschitz forms such as `X^2` can blow up, and step shrinkage may end the run with a warning about `dt`. A proportional g with a linear drift has no proper stationary law, so the histogram of **Stationary Distribution** describes where one long path has been.
 
 ## What to Compare the Multiplicative Noise Tab With
 
