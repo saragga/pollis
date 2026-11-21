@@ -1,0 +1,351 @@
+% Pollis drill-down: Customisation, the settings of Pollis: every setting of Pollis's own and a few others that matter
+% most, each with its default, its alternatives and where it is changed (21 November 2026). For users who want to make
+% Pollis their own, and for whoever maintains Pollis.
+% Compile with: latexmk -pdf workflow_customisation.tex
+\input{workflow_style}
+
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\fancyhf{}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: Customisation}
+\fancyfoot[R]{\footnotesize\color{soft}\thepage}
+
+\titleformat{\section}{\color{navy}\large\bfseries}{\color{deepamber}\thesection}{0.6em}{}
+\titleformat{\subsection}{\color{navy}\normalsize\bfseries}{\color{deepamber}\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+\setlength{\parskip}{4pt}
+
+\usepackage{xurl}
+\newcommand{\file}[1]{{\small\nolinkurl{#1}}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcommand{\ui}[1]{\textbf{#1}}
+% Code with braces or spaces in it, which \file would not show as written
+\newcommand{\code}[1]{\texttt{\small #1}}
+% A setting: its name in the Settings editor, its id and its default
+\newcommand{\setitem}[3]{\item \ui{#1} (\file{#2}), \emph{#3}:}
+% One theme's picture with its name
+\newcommand{\themeshot}[2]{%
+  \begin{minipage}[t]{0.82\linewidth}\centering
+    \includegraphics[width=\linewidth]{#1}\\[2pt]
+    {\small\ui{#2}}
+  \end{minipage}}
+
+\begin{document}
+
+\workflowhead[Drill-Down]{Customisation}
+  {The settings of Pollis}
+  {Every setting of Pollis's own, and a few others that matter most: what each does, its default, the alternatives,
+   and where to change it.}
+
+\begin{nbox}
+{\color{amber}\bfseries Drill-down.}\enspace
+Pollis works as it is installed. Its settings change how it looks, where charts and maps appear, which models answer
+questions and run agents, and which feeds it reads. Most of them have a page or a command of their own in Pollis, and
+all of them can be changed in the Settings editor.
+
+This drill-down lists every setting of Pollis's own, also those that are empty until you use the feature, and a few
+settings of the editor and of Julia that matter most. It describes the state of 21 November 2026; \S\ref{sec:glance}
+lists them all at a glance.
+\end{nbox}
+
+\tableofcontents
+
+\section{Changing a setting}\label{sec:change}
+\begin{itemize}
+  \item \textbf{The Settings editor.} Choose the \ui{Manage} gear at the bottom left, then \ui{Settings}, or press
+    \ui{Cmd+,} (\ui{Ctrl+,} on Windows and Linux). Type in the search box a word, or a setting's id, such as
+    \file{pollis.plots.keepLatest}. A setting changed from its default has a bar beside it, and its gear menu has
+    \ui{Reset Setting}.
+  \item \textbf{The settings file.} \ui{Preferences: Open User Settings (JSON)}, in the Command Palette, opens
+    \file{settings.json}, where each setting is its id and its value. Settings that are lists, such as the RSS feeds,
+    are edited there.
+  \item \textbf{User and Workspace.} A setting of the \ui{User} tab applies to every window; one of the
+    \ui{Workspace} tab applies only to the folder open. Most settings of Pollis apply to the whole application, and
+    are in the \ui{User} tab only.
+  \item \textbf{In Pollis itself.} Most settings have a page, a command or a button that changes them, named below
+    with each. A change there is written to the setting, and a change of the setting shows there.
+\end{itemize}
+
+\section{Appearance}\label{sec:appearance}
+\subsection{Colour theme}
+\begin{itemize}
+  \setitem{Workbench: Color Theme}{workbench.colorTheme}{Pollis 2026 Dark}
+    the colours of the whole window and of the code. Change it with \ui{Manage > Themes > Color Theme}, which shows
+    each theme as you move through the list. Pollis has four themes of its own, at the top of the list: the dark ones
+    above the other dark themes, the light ones above the other light themes.
+\end{itemize}
+\begin{center}
+\themeshot{images/theme_pollis_dark.png}{Pollis Dark}\\[8pt]
+\themeshot{images/theme_pollis_2026_dark.png}{Pollis 2026 Dark}
+\end{center}
+\begin{itemize}
+  \item \textbf{Pollis Dark and Pollis Light} are the colours of Dark (Visual Studio) and Light (Visual Studio), with
+    Pollis's yellow on four things: the badges with a number, such as those of the \ui{Extensions} view; the line
+    beside the selected item of the activity bar; the top of the selected tab, such as \ui{Particle Filter}; and the
+    line under the selected title of a panel, such as \ui{Terminal} and \ui{Ask Pollis}.
+  \item \textbf{Pollis 2026 Dark and Pollis 2026 Light}, the default themes, have Pollis's own colours for the window,
+    darker and with outlined fields, with the same yellow, and the code in the colours of Dark (Visual Studio) and
+    Light (Visual Studio).
+  \item \textbf{Pollis Light and Pollis 2026 Light} are the light themes of each pair, with the same yellow.
+  \item \textbf{The other themes} are those of VS Code, among them the high-contrast themes for low vision, and those
+    of extensions you install.
+\end{itemize}
+
+\subsection{Pollis Views}
+\begin{itemize}
+  \setitem{Pollis: View}{pollis.view}{Max}
+    the View in use: which menu items Pollis shows. \ui{Max} shows every item; \ui{Min} shows a short selection; your
+    own Views are JSON files in \file{~/.pollis/views}. Change it with the name of the View in the title bar, such as
+    \ui{View: Max}, or the command \ui{Pollis: Select View...}. The Pollis Guide describes how to make a View.
+\end{itemize}
+
+\section{Julia}\label{sec:julia}
+Settings of the Julia extension, which runs the Julia REPL, notebooks and the panels' code.
+\begin{itemize}
+  \setitem{Julia: Num Threads}{julia.NumThreads}{auto}
+    how many threads Julia starts with. \file{auto} starts one thread for each core of the computer; a number starts
+    that many. It applies when the REPL starts again.
+  \setitem{Julia: Start REPL On Startup}{julia.startREPLOnStartup}{on}
+    whether the Julia REPL starts with Pollis, so that it is ready when you run a panel's code. Off, Pollis starts
+    sooner, and the REPL starts the first time it is needed.
+  \setitem{Julia: Executable Path}{julia.executablePath}{empty}
+    the Julia that Pollis runs. Empty, it is the \file{julia} of the system's path, which juliaup installs; otherwise
+    the path of a Julia, or a channel of juliaup, such as \file{julia +release}.
+  \setitem{Julia: Use Revise}{julia.useRevise}{on}
+    whether the REPL loads Revise.jl, so that a change to a package or a file you included applies without starting
+    the REPL again.
+\end{itemize}
+
+\section{Plots and maps}\label{sec:plots}
+Where the charts and maps shown in the Julia REPL appear. Notebooks and Pluto notebooks draw them in the cell's output,
+whatever these settings say. The drill-down Plotting says what each place costs in memory.
+\begin{itemize}
+  \setitem{Plots: Show Charts In}{pollis.plots.showChartsIn}{Plots Tab}
+    where a chart appears.
+    \begin{itemize}
+      \item \ui{Plots Tab}: the \ui{Plots} tab, which draws one chart at a time and keeps the others, with the
+        \ui{Plot Navigator} and the commands to page through them and save them.
+      \item \ui{Separate Window}: the \ui{Plots} tab in a window of its own, which can go on another screen.
+      \item \ui{Browser Page}: each chart on a page of its own in Pollis's browser, so that charts can be side by side.
+      \item \ui{External Viewer}: each chart on a page of its own in the program of \ui{Plots: External Viewer}.
+    \end{itemize}
+    A page has none of the commands of the \ui{Plots} tab: a chart is saved from the page.
+  \setitem{Plots: Show Maps In}{pollis.plots.showMapsIn}{Browser Page}
+    where a map of \file{Pollis.webmap} or \file{Pollis.streetview} appears: \ui{Browser Page}, a page in Pollis's
+    browser for each map title, so that maps can be side by side; \ui{Plots Tab}, one map at a time, lighter on
+    memory; or \ui{External Viewer}.
+  \setitem{Plots: External Viewer}{pollis.plots.externalViewer}{empty}
+    the program of \ui{External Viewer}: a web browser, since a chart or a map is a web page. Empty, it is the
+    system's default browser; on macOS, otherwise, the name of an application, such as Firefox, Google Chrome or
+    Safari, and elsewhere its command or path.
+  \setitem{Plots: Keep Latest}{pollis.plots.keepLatest}{50}
+    how many plots the \ui{Plots} tab keeps, the oldest removed when a new one would pass it; and how many pages of
+    charts Pollis keeps for \ui{Browser Page} and \ui{External Viewer}. Fewer plots use less memory.
+\end{itemize}
+
+\section{Ask Pollis}\label{sec:ask}
+The settings of \ui{Help > Ask Pollis}. Most are set on its own pages: \ui{Compose > Local AI Models > Set Active
+Models} chooses the models, and \ui{Strategy}, under the question, the answering strategy.
+\begin{itemize}
+  \setitem{Answer With}{pollis.ask.answerWith}{This Computer}
+    who writes the answers: \ui{This Computer}, with the chat model of \file{pollis.ask.chatModel}, or a cloud model
+    of Anthropic, Google or OpenAI, with your own key, kept in Pollis's secret storage. A cloud model is sent the
+    question, the conversation so far and the passages found on this computer, never your files. \ui{Set Models} in
+    \ui{Set Active Models} chooses it.
+  \setitem{Chat Model}{pollis.ask.chatModel}{the default chat model}
+    the model that writes the answers on this computer: a GGUF file of Hugging Face, as
+    \file{hf:owner/repository/file.gguf}, downloaded the first time, or the path of a GGUF file. It runs in the
+    llama.cpp that comes with Pollis.
+  \setitem{Embedding Model}{pollis.ask.embeddingModel}{the default embedding model}
+    the model that finds passages by their meaning, in the same forms. When it changes, the passages are embedded
+    again the next time the Julia REPL starts; until then they are found by their words only.
+  \setitem{Reranker}{pollis.ask.reranker}{empty}
+    the model that chooses among the passages found, also for a collection of Retrieval-Augmented Generation without a
+    reranker of its own. Empty, there is none.
+  \setitem{Strategy}{pollis.ask.strategy}{panelAware}
+    how the passages are found and chosen, and how the model is asked: \file{base}, \file{panelAware}, or a strategy
+    of yours, a TOML file in \file{~/.pollis/ask/strategies}. \ui{Compose > Local AI Models > Evaluate Answering
+    Models...} compares them.
+  \setitem{Passages}{pollis.ask.passages}{8}
+    how many passages go to the model with each question, from 1 to 20. More passages answer more, but take longer on
+    this computer and cost more with a cloud model.
+  \setitem{Julia Manual}{pollis.ask.juliaManual}{on}
+    whether Ask Pollis searches the Julia Manual too: the Manual, Base and the standard library of the Julia that
+    Pollis runs.
+  \setitem{DuckDB Manual}{pollis.ask.duckdbManual}{on}
+    whether it searches the DuckDB Manual too, at the version of the DuckDB that Pollis carries, downloaded once from
+    duckdb.org.
+  \setitem{Package APIs}{pollis.ask.packageApis}{on}
+    whether it can search the docstrings of the packages of the panels, some twenty thousand passages, about 120 MB in
+    the index. They are searched only with \ui{Search In: Package APIs} or \ui{All Sources}.
+  \setitem{Passage Prefix}{pollis.ask.passagePrefix}{the form of the default embedding model}
+    what each passage is given to the embedding model as: \code{\{title\}} is its document and heading,
+    \code{\{text\}} its text. Another embedding model may want another form, or \code{\{text\}} alone.
+  \setitem{Query Prefix}{pollis.ask.queryPrefix}{the form of the default embedding model}
+    what a question is given to the embedding model as, \code{\{text\}} being the question.
+\end{itemize}
+
+\section{Local models}\label{sec:local}
+\begin{itemize}
+  \setitem{Local Models: Publishers}{pollis.localModels.publishers}{ten publishers}
+    the publishers of Hugging Face whose GGUF models the \ui{Choose...} button beside a local model field offers:
+    small models of the last year, the most downloaded in the last month first. The default list is ggml-org, unsloth,
+    bartowski, lmstudio-community, Qwen, google, nomic-ai, mistralai, microsoft and ibm-granite.
+\end{itemize}
+
+\section{Agents and models}\label{sec:agents}
+The coding agents and the models of the agent tasks: \ui{Compose > Orchestration > Model Tasks and Routing} and
+\ui{Compose > Coding Agents} change them all.
+\begin{itemize}
+  \setitem{Tier Cells}{pollis.agents.tierCells}{Light, Standard and Strong on Claude Code}
+    the agent and the model of each tier. Each tier, \file{light}, \file{standard}, \file{strong} or one of your own,
+    has its \file{agent}, by name, and its \file{model}: \file{cloud:} and a model of \file{pollis.agents.cloudModels},
+    or \file{local:} and a GGUF file served on this computer by the llama.cpp that comes with Pollis.
+  \setitem{Cloud Models}{pollis.agents.cloudModels}{the cloud models Pollis lists}
+    the cloud models of the rows of Model Tasks and Routing: each its \file{name} and, for each agent that runs it,
+    the arguments that choose it, such as \code{"Codex": "-m model-name"}. An agent with no arguments for a model cannot
+    run it.
+  \setitem{Task Tiers}{pollis.agents.taskTiers}{empty}
+    the tier of an agent task when it is not its default one.
+  \setitem{Other Agents}{pollis.agents.otherAgents}{empty}
+    agents of your own, besides Claude Code, Codex, OpenCode, GitHub Copilot CLI and Antigravity CLI: each its name
+    and its command line, with \code{\{prompt\}} where the first message goes.
+\end{itemize}
+
+\section{Literature}\label{sec:literature}
+The feeds of \ui{Explore > RSS > RSS Feeds} and of the welcome page. All are set from \ui{RSS Feeds} itself; the
+lists are kept in these settings.
+\begin{itemize}
+  \setitem{Feeds}{pollis.rss.feeds}{empty}
+    the RSS and Atom feeds followed: an address, or an address with a topic and a name. \ui{Add Feed} adds one.
+  \setitem{Display Days}{pollis.rss.displayDays}{30}
+    how far back items are shown: the last 7, 30 or 90 days, or 0 for every item kept. Items without a date are
+    always shown.
+  \setitem{Alerts Mailbox}{pollis.rss.alertsMailbox}{empty}
+    the mailbox the email alerts of Google Scholar, JSTOR, HeinOnline and other sources are sent to: its IMAP server,
+    port (993), user and folder (\file{INBOX}). Pollis reads it, read only, to make a feed of each alert. Set it with
+    \ui{Add Feed > Set Mailbox...}, which keeps the password in the system's keychain.
+  \setitem{Hidden Feeds}{pollis.rss.hiddenFeeds}{empty}
+    the feeds whose items are not shown, in RSS Feeds or on the welcome page; they are still read and kept.
+  \setitem{Welcome Hidden Feeds}{pollis.rss.welcomeHiddenFeeds}{empty}
+    the feeds whose news the welcome page does not show.
+  \setitem{Unsubscribed Feeds}{pollis.rss.unsubscribedFeeds}{empty}
+    the feeds no longer read; their items stay, and are still shown.
+  \setitem{Removed Feeds}{pollis.rss.removedFeeds}{empty}
+    the feeds removed from RSS Feeds, which \ui{Restore} under \ui{Add Feed > Removed Feeds} brings back.
+\end{itemize}
+
+\section{Workspace, content and publishing}\label{sec:workspace}
+\begin{itemize}
+  \setitem{Pollis Workspace: Location}{pollis.workspace.location}{empty}
+    the folder of your Pollis Workspace, where Pollis saves your work and the copies you choose to save, also when the
+    workspace is not open in the window. Pollis sets it when you create or open a Pollis Workspace; one open in the
+    window is used first.
+  \setitem{Content: Check for Updates}{pollis.content.checkForUpdates}{on}
+    whether Pollis checks once a day for new and updated replications and published benchmarks, published between
+    releases of Pollis.
+  \setitem{Content: Repository}{pollis.content.repository}{\file{https://github.com/Trumpingtons/pollis-content}}
+    the GitHub repository that content is read from.
+  \setitem{Article Methods: GitHub Owner}{pollis.newMethods.githubOwner}{Trumpingtons}
+    the GitHub user or organisation that \ui{Package and Publish}, on the page of an article method, pushes method
+    packages to.
+  \setitem{Article Methods: Registry}{pollis.newMethods.registry}{\file{https://github.com/Trumpingtons/PollisRegistry}}
+    the Julia registry that \ui{Package and Publish} registers method packages in, when they meet the rules of the
+    Pollis registry.
+  \setitem{Collaboration: Signalling}{pollis.collaboration.signalling}{nostr}
+    the free public servers that introduce the participants of a session you start, after which they connect
+    directly: \file{nostr}, public nostr relays, or \file{mqtt}, public MQTT brokers, for networks that block the
+    relays. The invitation says which, so the others need not change it. \ui{Compose > Collaboration > Test
+    Connection...} shows which are reachable from your network.
+\end{itemize}
+
+\section{All settings at a glance}\label{sec:glance}
+{\small
+\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{@{}p{0.43\linewidth}p{0.2\linewidth}p{0.31\linewidth}@{}}
+\toprule
+\textbf{Id} & \textbf{Default} & \textbf{Changed in Pollis with}\\
+\midrule
+\endhead
+\multicolumn{3}{@{}l}{\textbf{Appearance}}\\
+\file{workbench.colorTheme} & Pollis 2026 Dark & Manage > Themes > Color Theme\\
+\file{pollis.view} & Max & Pollis: Select View...\\
+\multicolumn{3}{@{}l}{\textbf{Julia}}\\
+\file{julia.NumThreads} & auto & Settings\\
+\file{julia.startREPLOnStartup} & on & Settings\\
+\file{julia.executablePath} & empty & Settings\\
+\file{julia.useRevise} & on & Settings\\
+\multicolumn{3}{@{}l}{\textbf{Plots and maps}}\\
+\file{pollis.plots.showChartsIn} & Plots Tab & Settings\\
+\file{pollis.plots.showMapsIn} & Browser Page & Settings\\
+\file{pollis.plots.externalViewer} & empty & Settings\\
+\file{pollis.plots.keepLatest} & 50 & Settings\\
+\multicolumn{3}{@{}l}{\textbf{Ask Pollis}}\\
+\file{pollis.ask.answerWith} & This Computer & Set Active Models\\
+\file{pollis.ask.chatModel} & default chat model & Set Active Models\\
+\file{pollis.ask.embeddingModel} & default embedding model & Set Active Models\\
+\file{pollis.ask.reranker} & empty & Set Active Models\\
+\file{pollis.ask.strategy} & panelAware & Strategy, under the question\\
+\file{pollis.ask.passages} & 8 & Settings\\
+\file{pollis.ask.juliaManual} & on & Settings\\
+\file{pollis.ask.duckdbManual} & on & Settings\\
+\file{pollis.ask.packageApis} & on & Settings\\
+\file{pollis.ask.passagePrefix} & default form & Settings\\
+\file{pollis.ask.queryPrefix} & default form & Settings\\
+\multicolumn{3}{@{}l}{\textbf{Local models}}\\
+\file{pollis.localModels.publishers} & ten publishers & Settings (JSON)\\
+\multicolumn{3}{@{}l}{\textbf{Agents and models}}\\
+\file{pollis.agents.tierCells} & Claude Code & Model Tasks and Routing\\
+\file{pollis.agents.cloudModels} & Pollis's list & Model Tasks and Routing\\
+\file{pollis.agents.taskTiers} & empty & Model Tasks and Routing\\
+\file{pollis.agents.otherAgents} & empty & Coding Agents\\
+\multicolumn{3}{@{}l}{\textbf{Literature}}\\
+\file{pollis.rss.feeds} & empty & RSS Feeds > Add Feed\\
+\file{pollis.rss.displayDays} & 30 & Settings\\
+\file{pollis.rss.alertsMailbox} & empty & Add Feed > Set Mailbox...\\
+\file{pollis.rss.hiddenFeeds} & empty & RSS Feeds\\
+\file{pollis.rss.welcomeHiddenFeeds} & empty & RSS Feeds\\
+\file{pollis.rss.unsubscribedFeeds} & empty & RSS Feeds\\
+\file{pollis.rss.removedFeeds} & empty & Add Feed > Removed Feeds\\
+\multicolumn{3}{@{}l}{\textbf{Workspace, content and publishing}}\\
+\file{pollis.workspace.location} & empty & creating or opening a Pollis Workspace\\
+\file{pollis.content.checkForUpdates} & on & Settings\\
+\file{pollis.content.repository} & pollis-content & Settings\\
+\file{pollis.newMethods.githubOwner} & Trumpingtons & Settings\\
+\file{pollis.newMethods.registry} & PollisRegistry & Settings\\
+\file{pollis.collaboration.signalling} & nostr & Settings\\
+\bottomrule
+\end{longtable}
+}
+
+\section{Where things are}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.55\linewidth}L@{}}
+\toprule
+\textbf{File} & \textbf{Settings}\\
+\midrule
+\file{extensions/theme-defaults/themes/pollis-*.json} & The four Pollis themes\\
+\file{src/vs/workbench/contrib/pollisViews/browser/pollisViews.contribution.ts} & \file{pollis.view}\\
+\file{extensions/language-julia/package.json} & \file{julia.*}, \file{pollis.plots.*},
+  \file{pollis.localModels.publishers}\\
+\file{src/vs/workbench/contrib/compose/browser/askPollisPage.ts} & \file{pollis.ask.*}\\
+\file{src/vs/workbench/contrib/compose/browser/modelRouting.ts} & \file{pollis.agents.tierCells}, \file{cloudModels},
+  \file{taskTiers}\\
+\file{src/vs/workbench/contrib/compose/browser/pollisAgents.ts} & \file{pollis.agents.otherAgents}\\
+\file{src/vs/workbench/contrib/monitor/browser/rssFeedsService.ts} & \file{pollis.rss.*}\\
+\file{src/vs/workbench/contrib/pollisWorkspace/browser/pollisWorkspace.contribution.ts} &
+  \file{pollis.workspace.location}\\
+\file{src/vs/workbench/contrib/compose/browser/pollisContent.ts} & \file{pollis.content.*}\\
+\file{src/vs/workbench/contrib/compose/browser/newMethods.ts} & \file{pollis.newMethods.*}\\
+\file{src/vs/workbench/contrib/compose/browser/collaboration/collaboration.contribution.ts} &
+  \file{pollis.collaboration.signalling}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\end{document}
