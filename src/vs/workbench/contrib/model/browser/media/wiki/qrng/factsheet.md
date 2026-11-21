@@ -1,6 +1,6 @@
 # Quasi-Random Numbers Generation — Factsheet
 
-A **quasi-random** or **low-discrepancy** sequence places points in a hypercube so that they cover it more evenly than independent random draws. Used in place of random points to average a function, it gives **quasi-Monte Carlo** (QMC) integration, whose error falls close to 1 / n rather than the 1 / sqrt(n) of Monte Carlo. QuasiMonteCarlo.jl generates these sequences behind one function, sample(n, lb, ub, algorithm).
+A **quasi-random** or **low-discrepancy** sequence places points in a hypercube so that they cover it more evenly than independent random draws. Used in place of random points to average a function, it gives **quasi-Monte Carlo** (QMC) integration, whose error falls close to 1 / n rather than the 1 / sqrt(n) of Monte Carlo. QuasiMonteCarlo.jl generates these sequences behind one function, `sample(n, lb, ub, algorithm)`.
 
 | | |
 |---|---|
