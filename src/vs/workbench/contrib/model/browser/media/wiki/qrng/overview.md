@@ -1,6 +1,6 @@
 # Quasi-Random Numbers Generation — Overview
 
-Every model calls QuasiMonteCarlo.sample with **Number of Samples (n)**, **Lower Bounds (lb)** and **Upper Bounds (ub)**, one bound per dimension: zeros(2) and ones(2) give the unit square.
+Every model calls `QuasiMonteCarlo.sample` with **Number of Samples (n)**, **Lower Bounds (lb)** and **Upper Bounds (ub)**, one bound per dimension: `zeros(2)` and `ones(2)` give the unit square.
 
 ## The Sequences
 - **Sobol**: digital (t, s)-sequences in base 2, the standard choice for integration, also in high dimension. Best balanced at n a power of 2.
