@@ -7,7 +7,7 @@ The steps, inputs, agents, files, figures and requirements of Specification Curv
 | Step | What it sets or does | Button |
 |---|---|---|
 | **Question and Data** | The study's name, the data, the question and the estimate; **Open a Study** reopens an earlier one, **New Study** starts another | — |
-| **The Choices** | Where the choices come from, how many agents propose them and the agent and model of each; then the decisions and options, each with a tick box | **Ask the Agents**, or **Take the Study's Choices** |
+| **The Choices** | Where the choices come from, how many agents propose them and the agent and model of each; then the decisions and options, each with a tick box and the links of **Change** | **Ask the Agents**, or **Take the Study's Choices** |
 | **The Code** | The agent and model that write `specification.jl`; its status, and the result of its check | **Write the Code** |
 | **The Curve** | Runs every specification in Julia and draws the figures, the curve with its grid of choices, and Which Choices Matter | **Run Every Specification** |
 | **Inference Under the Null** | The number of resamples and the seed; runs the joint test and shows its table | **Run the Test** |
@@ -25,6 +25,7 @@ The blue button is always the next one to press.
 | **How Many** | The Choices | 3 | The number of agents that propose, from 2 to 4 |
 | **Agent 1** to **Agent N** | The Choices | The cells in turn | The agent and model of each proposer |
 | **Keep** | The Choices | Ticked | Whether an option enters the specifications; at most 2,000 specifications |
+| **Same As...**, **Rename**, **Drop** | The Choices | No change | Merge an option or a decision into another, change a label, or leave a decision out; **Undo Last Change** takes back the latest |
 | **Agent and Model** | The Code | A strong model, when there is one | The coder's agent and model |
 | **Resamples** | Inference Under the Null | 500 | 200, 500 or 1,000 resamples of the data |
 | **Seed** | Inference Under the Null | 1 | The seed of the resamples: the same seed gives the same test |

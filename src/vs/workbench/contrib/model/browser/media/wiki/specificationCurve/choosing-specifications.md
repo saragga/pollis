@@ -16,7 +16,7 @@ Every specification must estimate the same quantity in the same unit, the one **
 
 ## How Does Specification Curve Merge the Agents' Proposals?
 
-Each proposer writes its `decisions.toml` on its own, and the page merges them by id: a decision or an option of the same id from two proposers is shown once, with both proposers' numbers in **Proposed By** and both reasons in its tooltip. Options of the same meaning under different ids stay apart, and are the first to look for when unticking. An option proposed by every agent is usually central; one proposed by a single agent may be a useful idea the others missed, or one to leave out. The skill asks each proposer for the options a careful researcher would defend, and for the reason of each.
+Each proposer writes its `decisions.toml` on its own, and the page merges them by id: a decision or an option of the same id from two proposers is shown once, with both proposers' numbers in **Proposed By** and both reasons in its tooltip. Proposers often give one idea under different ids, as two options or two decisions. **Same As...** in the **Change** column merges an option into another of its decision, or a decision into another, whose options then join it; the one merged into keeps its id and label, and gains the proposers and reasons of the other. **Rename** changes a label, **Drop** leaves a decision out of the code and the count, and **Restore** brings it back; **Undo Last Change** takes back the latest change. The changes are kept in `edits.json` of the study, and the code is written from the choices they give. An option proposed by every agent is usually central; one proposed by a single agent may be a useful idea the others missed, or one to leave out. The skill asks each proposer for the options a careful researcher would defend, and for the reason of each.
 
 ## How Does Specification Curve Take the Choices of a Many Analysts Study?
 
@@ -24,7 +24,7 @@ Each proposer writes its `decisions.toml` on its own, and the page merges them b
 
 ## How Many Specifications Can a Specification Curve Have?
 
-The count under the table of decisions changes as options are ticked and unticked. **Write the Code** accepts at most 2,000 specifications, so that the curve and the test finish in minutes. Each decision multiplies the count, so a curve grows quickly: one more option of a decision with three adds a third to the count. Every specification runs once for **The Curve**, and once for each resample for **Inference Under the Null**, so 2,000 specifications with 500 resamples run a million estimates. Leaving out redundant options, or fixing a decision that matters little, keeps the curve to its informative part.
+The count under the table of decisions changes as options are ticked and unticked. **Write the Code** accepts at most 2,000 specifications, so that the curve and the test finish in minutes. Each decision multiplies the count, so a curve grows quickly: one more option of a decision with three adds a third to the count. Every specification runs once for **The Curve**, and once for each resample for **Inference Under the Null**, so 2,000 specifications with 500 resamples run a million estimates. Merging redundant options, or dropping a decision that matters little, keeps the curve to its informative part.
 
 ## References
 

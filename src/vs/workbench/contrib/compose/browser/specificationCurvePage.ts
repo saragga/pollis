@@ -48,7 +48,8 @@ import { pollisJlPath, skillFile } from './pollisAgents.js';
 // coding agent (write-specification-code) and checked on every specification; 4, The Curve, every specification run
 // in Julia; 5, Inference Under the Null. A study is a folder, orchestration/specification-curve/<study> of the
 // Pollis Workspace: study.toml, data/ for a file of the user's own, proposer-1 to proposer-N, each with its SKILL.md,
-// TASK.md and decisions.toml, or proposals.toml for choices taken from a study; coder/, with choices.toml,
+// TASK.md and decisions.toml, or proposals.toml for choices taken from a study; edits.json, the user's changes to
+// the choices proposed (decisions dropped, options or decisions merged, labels renamed); coder/, with choices.toml,
 // curve.jl (written by Pollis), specification.jl, check.json; then curve.json and inference.json.
 
 export const SPECIFICATION_CURVE_COMMAND_ID = 'pollis.orchestration.specificationCurve';
@@ -61,6 +62,8 @@ const STUDY_FILE = 'study.toml';
 const PROPOSALS_FILE = 'proposals.toml';
 const DECISIONS_FILE = 'decisions.toml';
 const CHOICES_FILE = 'choices.toml';
+const EDITS_FILE = 'edits.json';
+const MAX_LABEL = 200;
 const RUNNER_FILE = 'curve.jl';
 const CODE_FILE = 'specification.jl';
 const CHECK_FILE = 'check.json';
@@ -120,7 +123,20 @@ interface IDecision {
 	readonly id: string;
 	readonly label: string;
 	readonly options: IOption[];
+	/** Dropped by the user in step 2: shown, but left out of the code and the count. */
+	readonly dropped?: boolean;
 }
+
+/**
+ * A change the user makes in step 2 to the decisions proposed, before the code is written. The changes are kept in
+ * edits.json, in the order made, and applied in that order each time the proposals are read, so that a proposer
+ * still running adds its decisions under them. A merge keeps the id and the label of the decision or option merged into.
+ */
+type ChoiceEdit =
+	| { readonly kind: 'drop'; readonly decision: string }
+	| { readonly kind: 'mergeDecision'; readonly decision: string; readonly into: string }
+	| { readonly kind: 'mergeOption'; readonly decision: string; readonly option: string; readonly into: string }
+	| { readonly kind: 'rename'; readonly decision: string; readonly option?: string; readonly label: string };
 
 /** The runs of the agents of every study started since Pollis started. */
 const runs = new StudyRuns();
@@ -135,7 +151,10 @@ type SpecificationCurveMessage =
 	| { readonly command: 'newStudy' }
 	| { readonly command: 'open'; readonly agent: string; readonly what: 'code' | 'decisions' | 'terminal' | 'stop' }
 	| { readonly command: 'chooseFile'; readonly value: string }
-	| { readonly command: 'restart'; readonly agent: string; readonly cell: { readonly agent: string; readonly model: string } };
+	| { readonly command: 'restart'; readonly agent: string; readonly cell: { readonly agent: string; readonly model: string } }
+	| { readonly command: 'edit'; readonly edit: ChoiceEdit }
+	| { readonly command: 'undoEdit' }
+	| { readonly command: 'restoreDecision'; readonly decision: string };
 
 /** The open page, so a second request shows the same page. */
 let openPage: WebviewInput | undefined;
@@ -239,6 +258,13 @@ function decisionsOf(content: string): { id: string; label: string; options: { i
 	return decisions;
 }
 
+/** Adds to an option the proposers and the reasons of another that says the same. */
+function joinOption(into: IOption, proposedBy: readonly number[], reasons: readonly string[]): void {
+	into.proposedBy.push(...proposedBy.filter(k => !into.proposedBy.includes(k)));
+	into.proposedBy.sort((a, b) => a - b);
+	into.reasons.push(...reasons.filter(reason => !into.reasons.includes(reason)));
+}
+
 /** The decisions of a file, merged into `merged`: a decision or an option of an id already there gains the proposer. */
 function mergeDecisions(merged: IDecision[], decisions: ReturnType<typeof decisionsOf>, proposer: number | undefined): void {
 	for (const decision of decisions) {
@@ -251,15 +277,81 @@ function mergeDecisions(merged: IDecision[], decisions: ReturnType<typeof decisi
 			const by = proposer === undefined ? option.proposedBy : [proposer];
 			const same = into.options.find(other => other.id === option.id);
 			if (same) {
-				same.proposedBy.push(...by.filter(k => !same.proposedBy.includes(k)));
-				if (option.reason) {
-					same.reasons.push(option.reason);
-				}
+				joinOption(same, by, option.reason ? [option.reason] : []);
 			} else {
 				into.options.push({ id: option.id, label: option.label, reasons: option.reason ? [option.reason] : [], proposedBy: [...by] });
 			}
 		}
 	}
+}
+
+/** A change of step 2 as the page sent it, or as edits.json holds it, checked; undefined when it is not well formed. */
+function checkedEdit(value: unknown): ChoiceEdit | undefined {
+	if (!value || typeof value !== 'object') {
+		return undefined;
+	}
+	const record = value as Record<string, unknown>;
+	if (!validId(record.decision)) {
+		return undefined;
+	}
+	switch (record.kind) {
+		case 'drop':
+			return { kind: 'drop', decision: record.decision };
+		case 'mergeDecision':
+			return validId(record.into) && record.into !== record.decision ? { kind: 'mergeDecision', decision: record.decision, into: record.into } : undefined;
+		case 'mergeOption':
+			return validId(record.option) && validId(record.into) && record.into !== record.option ? { kind: 'mergeOption', decision: record.decision, option: record.option, into: record.into } : undefined;
+		case 'rename': {
+			const label = typeof record.label === 'string' ? record.label.trim() : '';
+			if (!label || label.length > MAX_LABEL || (record.option !== undefined && !validId(record.option))) {
+				return undefined;
+			}
+			return record.option === undefined ? { kind: 'rename', decision: record.decision, label } : { kind: 'rename', decision: record.decision, option: record.option, label };
+		}
+		default:
+			return undefined;
+	}
+}
+
+/** The decisions proposed, with the user's changes applied in order; a change whose decision or option is not there is passed over. */
+function applyEdits(proposed: readonly IDecision[], edits: readonly ChoiceEdit[]): IDecision[] {
+	let decisions = proposed.map(decision => ({ id: decision.id, label: decision.label, dropped: false, options: decision.options.map(option => ({ ...option, reasons: [...option.reasons], proposedBy: [...option.proposedBy] })) }));
+	for (const edit of edits) {
+		const decision = decisions.find(other => other.id === edit.decision);
+		if (!decision) {
+			continue;
+		}
+		if (edit.kind === 'drop') {
+			decision.dropped = true;
+		} else if (edit.kind === 'rename') {
+			const target = edit.option === undefined ? decision : decision.options.find(option => option.id === edit.option);
+			if (target) {
+				target.label = edit.label;
+			}
+		} else if (edit.kind === 'mergeDecision') {
+			const into = decisions.find(other => other.id === edit.into);
+			if (into) {
+				// Options of the same id say the same, as when the proposals are merged
+				for (const option of decision.options) {
+					const same = into.options.find(other => other.id === option.id);
+					if (same) {
+						joinOption(same, option.proposedBy, option.reasons);
+					} else {
+						into.options.push(option);
+					}
+				}
+				decisions = decisions.filter(other => other !== decision);
+			}
+		} else {
+			const option = decision.options.find(other => other.id === edit.option);
+			const into = decision.options.find(other => other.id === edit.into);
+			if (option && into) {
+				joinOption(into, option.proposedBy, option.reasons);
+				decision.options = decision.options.filter(other => other !== option);
+			}
+		}
+	}
+	return decisions;
 }
 
 /** The choices of a Many Analysts study as decisions: each analyst's sample, controls and estimator an option, the same words one option. */
@@ -642,6 +734,30 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 		return merged;
 	};
 
+	/** The user's changes to the decisions proposed, in the order made. */
+	const readEdits = async (study: IStudy): Promise<ChoiceEdit[]> => {
+		const json = await readJson(fileService, joinPath(study.folder, EDITS_FILE));
+		return Array.isArray(json?.edits) ? json.edits.map(checkedEdit).filter((edit): edit is ChoiceEdit => !!edit) : [];
+	};
+
+	/** The decisions proposed, with the user's changes, a dropped decision marked as such. */
+	const editedProposals = async (study: IStudy): Promise<IDecision[]> => applyEdits(await proposals(study), await readEdits(study));
+
+	/** Changes the list of the user's changes to the choices, which stays as it is once the code is written from them. */
+	const changeEdits = async (change: (edits: ChoiceEdit[]) => ChoiceEdit[]) => {
+		const study = current && await readStudy(fileService, current.folder);
+		if (!study) {
+			return;
+		}
+		if (study.coder) {
+			post({ command: 'problem', step: 'choices', text: localize('specificationCurve.choicesFrozen', "The code is written from these choices: choose New Study to change them.") });
+			return;
+		}
+		const edits = change(await readEdits(study));
+		await fileService.writeFile(joinPath(study.folder, EDITS_FILE), VSBuffer.fromString(JSON.stringify({ edits }, undefined, '\t') + '\n'));
+		await sendState();
+	};
+
 	/** The decisions and options kept, once the code was asked for. */
 	const keptChoices = async (study: IStudy): Promise<IDecision[] | undefined> => {
 		try {
@@ -738,7 +854,8 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 				source: study.source,
 				from: study.from,
 				proposers: await Promise.all(study.proposers.map((entry, index) => agentState(study, `proposer-${index + 1}`, entry, DECISIONS_FILE))),
-				proposals: await proposals(study),
+				proposals: await editedProposals(study),
+				edits: (await readEdits(study)).length,
 				kept,
 				coder: study.coder && await agentState(study, CODER, study.coder, CODE_FILE),
 				check: check && { specifications: finite(check.specifications), failed: finite(check.failed), checked: typeof check.checked === 'string' ? check.checked : '' },
@@ -844,8 +961,12 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 		if (!study) {
 			return;
 		}
-		const decisions = (await proposals(study)).map(decision => ({ ...decision, options: decision.options.filter(option => kept[decision.id]?.includes(option.id)) }));
+		const decisions = (await editedProposals(study)).filter(decision => !decision.dropped).map(decision => ({ id: decision.id, label: decision.label, options: decision.options.filter(option => kept[decision.id]?.includes(option.id)) }));
 		const count = specificationCount(decisions);
+		if (!decisions.length) {
+			post({ command: 'problem', step: 'code', text: localize('specificationCurve.noDecision', "Keep at least one decision.") });
+			return;
+		}
 		if (decisions.some(decision => !decision.options.length)) {
 			post({ command: 'problem', step: 'code', text: localize('specificationCurve.emptyDecision', "Keep at least one option of each decision.") });
 			return;
@@ -989,6 +1110,16 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 				if (cell) {
 					await restartProposer(Number(message.agent.slice('proposer-'.length)) - 1, cell);
 				}
+			} else if (message.command === 'edit' && hasKey(message, { edit: true })) {
+				const edit = checkedEdit(message.edit);
+				if (edit) {
+					await changeEdits(edits => [...edits, edit]);
+				}
+			} else if (message.command === 'undoEdit') {
+				await changeEdits(edits => edits.slice(0, -1));
+			} else if (message.command === 'restoreDecision' && hasKey(message, { decision: true }) && validId(message.decision)) {
+				const decision = message.decision;
+				await changeEdits(edits => edits.filter(edit => !(edit.kind === 'drop' && edit.decision === decision)));
 			} else if (message.command === 'chooseFile' && hasKey(message, { value: true })) {
 				const home = await pathService.userHome({ preferLocal: true });
 				const value = folderUri(message.value, home);
@@ -1060,7 +1191,17 @@ function pageHtml(): string {
 		option: localize('specificationCurve.option', "Option"),
 		proposedBy: localize('specificationCurve.proposedBy', "Proposed By"),
 		keep: localize('specificationCurve.keep', "Keep"),
-		keptHint: localize('specificationCurve.keptHint', "Untick an option you would not defend before other researchers, or one that says the same as another; hover an option for the reasons given. Every specification is one option of each decision kept."),
+		keptHint: localize('specificationCurve.keptHint', "Untick an option you would not defend before other researchers; hover an option for the reasons given. Where two options, or two decisions, say the same, choose under Same As the one to merge into: it keeps its label, which Rename changes, and gains the proposers and reasons of the other. Drop a decision that should not vary. Every specification is one option of each decision kept."),
+		change: localize('specificationCurve.change', "Change"),
+		rename: localize('specificationCurve.rename', "Rename"),
+		drop: localize('specificationCurve.drop', "Drop"),
+		dropTooltip: localize('specificationCurve.dropTooltip', "Leave this decision out of the code and the count; Restore brings it back"),
+		restore: localize('specificationCurve.restore', "Restore"),
+		dropped: localize('specificationCurve.dropped', "Dropped"),
+		sameAs: localize('specificationCurve.sameAs', "Same As..."),
+		sameAsDecisionTooltip: localize('specificationCurve.sameAsDecisionTooltip', "Merge this decision into the one chosen: its options join that decision's, those of the same id as one"),
+		sameAsOptionTooltip: localize('specificationCurve.sameAsOptionTooltip', "Merge this option into the one chosen, which keeps its label"),
+		undoEdit: localize('specificationCurve.undoEdit', "Undo Last Change"),
 		count: localize('specificationCurve.countText', "{0} specifications"),
 		tooMany: localize('specificationCurve.tooManyText', "More than {0}: keep fewer options.", MAX_SPECIFICATIONS),
 		noProposals: localize('specificationCurve.noProposals', "The decisions show here once an agent has proposed them."),
@@ -1119,6 +1260,9 @@ function pageHtml(): string {
 		.sc-decision td { padding-top: 10px; font-weight: 600; }
 		.sc-option td:first-child { padding-left: 18px; }
 		.sc-reason { cursor: help; }
+		.sc-dropped td:first-child { opacity: 0.6; }
+		td.links select.sc-same { margin-left: 10px; max-width: 220px; }
+		.sc-rename { min-width: 16em; }
 		.sc-plot { max-width: 1000px; margin: 8px 0 16px 0; }
 		.sc-plot text { fill: var(--vscode-foreground); font-size: 11px; font-family: var(--vscode-font-family); }
 		.sc-plot .group { font-weight: 600; }
@@ -1164,10 +1308,12 @@ function pageHtml(): string {
 		<div id="proposals" hidden>
 			<p class="hint">${text.keptHint}</p>
 			<table class="ma">
-				<thead><tr><th>${text.decision} / ${text.option}</th><th>${text.proposedBy}</th><th>${text.keep}</th></tr></thead>
+				<thead><tr><th>${text.decision} / ${text.option}</th><th>${text.proposedBy}</th><th>${text.keep}</th><th>${text.change}</th></tr></thead>
 				<tbody id="proposalRows"></tbody>
 			</table>
 			<p class="small" id="specCount"></p>
+			<button class="link" id="undoEdit" hidden>${text.undoEdit}</button>
+			<div class="small status missing" id="choicesProblem"></div>
 		</div>
 		<p class="hint" id="noProposals" hidden>${text.noProposals}</p>
 `,
@@ -1245,6 +1391,8 @@ function pageHtml(): string {
 	let chosenStudy = '';
 	/** The options kept, by decision: unticked ones are left out; a new study keeps every option. */
 	let unticked = new Set();
+	/** The decision/option whose label is being renamed, or '' when none is. */
+	let renaming = '';
 	let timer = undefined;
 ${orchestrationPageJs}
 	function sourceKind() {
@@ -1347,19 +1495,48 @@ ${orchestrationPageJs}
 		}
 	}
 
-	/** The decisions proposed, each option with a tick box, or the options kept once the code was asked for. */
+	/** A link of the Change column, for the decision, or the option of it, given. */
+	function changeLink(label, change, decision, option, title) {
+		return '<button class="link" data-change="' + change + '" data-decision="' + escapeHtml(decision) + '"' + (option ? ' data-option="' + escapeHtml(option) + '"' : '') + (title ? ' title="' + escapeHtml(title) + '"' : '') + '>' + escapeHtml(label) + '</button>';
+	}
+	/** The menu of the decisions, or options, a decision or an option can be merged into; none when there is no other. */
+	function sameAsMenu(decision, option, others, title) {
+		if (!others.length) {
+			return '';
+		}
+		return '<select class="sc-same" title="' + escapeHtml(title) + '" data-decision="' + escapeHtml(decision) + '"' + (option ? ' data-option="' + escapeHtml(option) + '"' : '') + '><option value="">' + escapeHtml(TEXT.sameAs) + '</option>' + others.map(other => '<option value="' + escapeHtml(other.id) + '">' + escapeHtml(other.label) + '</option>').join('') + '</select>';
+	}
+	/**
+	 * The decisions proposed, with the user's changes, each option with a tick box and the links that change the
+	 * choices, or the options kept once the code was asked for. A label being renamed keeps its box until it is done.
+	 */
 	function drawProposals() {
 		const study = state.study;
 		const decisions = study ? (study.kept || study.proposals) : [];
 		document.getElementById('proposals').hidden = !decisions.length;
 		document.getElementById('noProposals').hidden = !study || decisions.length > 0;
 		const frozen = !!(study && study.kept);
-		document.getElementById('proposalRows').innerHTML = decisions.map(decision =>
-			'<tr class="sc-decision"><td colspan="3">' + escapeHtml(decision.label) + '</td></tr>' + decision.options.map(option => {
+		document.getElementById('undoEdit').hidden = frozen || !(study && study.edits);
+		if (renaming) {
+			drawCount();
+			return;
+		}
+		const live = decisions.filter(decision => !decision.dropped);
+		document.getElementById('proposalRows').innerHTML = decisions.map(decision => {
+			const changes = frozen ? ''
+				: decision.dropped ? changeLink(TEXT.restore, 'restore', decision.id)
+					: changeLink(TEXT.rename, 'rename', decision.id) + changeLink(TEXT.drop, 'drop', decision.id, '', TEXT.dropTooltip) + sameAsMenu(decision.id, '', live.filter(other => other.id !== decision.id), TEXT.sameAsDecisionTooltip);
+			const head = '<tr class="sc-decision' + (decision.dropped ? ' sc-dropped' : '') + '"><td colspan="3">' + escapeHtml(decision.label) + (decision.dropped ? ' <span class="small">(' + escapeHtml(TEXT.dropped) + ')</span>' : '') + '</td><td class="links">' + changes + '</td></tr>';
+			if (decision.dropped) {
+				return head;
+			}
+			return head + decision.options.map(option => {
 				const key = optionKey(decision.id, option.id);
 				const reasons = option.reasons.join(' / ');
-				return '<tr class="sc-option"><td' + (reasons ? ' class="sc-reason" title="' + escapeHtml(reasons) + '"' : '') + '>' + escapeHtml(option.label) + '</td><td class="small">' + escapeHtml(option.proposedBy.join(', ')) + '</td><td><input type="checkbox" data-key="' + escapeHtml(key) + '"' + (frozen || !unticked.has(key) ? ' checked' : '') + (frozen ? ' disabled' : '') + '></td></tr>';
-			}).join('')).join('');
+				const optionChanges = frozen ? '' : changeLink(TEXT.rename, 'rename', decision.id, option.id) + sameAsMenu(decision.id, option.id, decision.options.filter(other => other.id !== option.id), TEXT.sameAsOptionTooltip);
+				return '<tr class="sc-option"><td' + (reasons ? ' class="sc-reason" title="' + escapeHtml(reasons) + '"' : '') + '>' + escapeHtml(option.label) + '</td><td class="small">' + escapeHtml(option.proposedBy.join(', ')) + '</td><td><input type="checkbox" data-key="' + escapeHtml(key) + '"' + (frozen || !unticked.has(key) ? ' checked' : '') + (frozen ? ' disabled' : '') + '></td><td class="links">' + optionChanges + '</td></tr>';
+			}).join('');
+		}).join('');
 		drawCount();
 	}
 	function keptDecisions() {
@@ -1370,7 +1547,54 @@ ${orchestrationPageJs}
 		if (study.kept) {
 			return study.kept;
 		}
-		return study.proposals.map(decision => ({ ...decision, options: decision.options.filter(option => !unticked.has(optionKey(decision.id, option.id))) }));
+		return study.proposals.filter(decision => !decision.dropped).map(decision => ({ ...decision, options: decision.options.filter(option => !unticked.has(optionKey(decision.id, option.id))) }));
+	}
+	/** Turns the label of a decision, or of an option, into a box: Enter or leaving it renames, Escape keeps the label. */
+	function startRename(button) {
+		const decisions = state.study ? state.study.proposals : [];
+		const decision = decisions.find(d => d.id === button.dataset.decision);
+		const option = decision && button.dataset.option ? decision.options.find(o => o.id === button.dataset.option) : undefined;
+		const target = option || decision;
+		if (!target) {
+			return;
+		}
+		const cell = button.closest('tr').firstElementChild;
+		const box = document.createElement('input');
+		box.type = 'text';
+		box.className = 'sc-rename';
+		box.value = target.label;
+		box.spellcheck = false;
+		cell.replaceChildren(box);
+		renaming = optionKey(decision.id, option ? option.id : '');
+		let done = false;
+		const finish = keep => {
+			// A box taken off the page, when another study is opened, renames nothing
+			if (done || !box.isConnected) {
+				return;
+			}
+			done = true;
+			renaming = '';
+			const label = box.value.trim();
+			if (keep && label && label !== target.label) {
+				const edit = { kind: 'rename', decision: decision.id, label };
+				if (option) {
+					edit.option = option.id;
+				}
+				vscode.postMessage({ command: 'edit', edit });
+			} else {
+				drawProposals();
+			}
+		};
+		box.addEventListener('keydown', event => {
+			if (event.key === 'Enter') {
+				finish(true);
+			} else if (event.key === 'Escape') {
+				finish(false);
+			}
+		});
+		box.addEventListener('blur', () => finish(true));
+		box.focus();
+		box.select();
 	}
 	function drawCount() {
 		const decisions = keptDecisions();
@@ -1623,9 +1847,10 @@ ${orchestrationPageJs}
 	count.addEventListener('change', drawProposers);
 	earlier.addEventListener('change', () => {
 		unticked = new Set();
+		renaming = '';
 		vscode.postMessage(earlier.value ? { command: 'load', name: earlier.value } : { command: 'newStudy' });
 	});
-	document.getElementById('newStudy').addEventListener('click', () => { unticked = new Set(); vscode.postMessage({ command: 'newStudy' }); });
+	document.getElementById('newStudy').addEventListener('click', () => { unticked = new Set(); renaming = ''; vscode.postMessage({ command: 'newStudy' }); });
 	document.getElementById('chooseFile').addEventListener('click', () => vscode.postMessage({ command: 'chooseFile', value: fileInput.value }));
 	document.getElementById('propose').addEventListener('click', () => {
 		if (!explainBlocked('propose')) {
@@ -1633,6 +1858,15 @@ ${orchestrationPageJs}
 		}
 	});
 	document.getElementById('proposalRows').addEventListener('change', event => {
+		const same = event.target.closest('select.sc-same');
+		if (same && same.value) {
+			document.getElementById('choicesProblem').textContent = '';
+			const edit = same.dataset.option
+				? { kind: 'mergeOption', decision: same.dataset.decision, option: same.dataset.option, into: same.value }
+				: { kind: 'mergeDecision', decision: same.dataset.decision, into: same.value };
+			vscode.postMessage({ command: 'edit', edit });
+			return;
+		}
 		const box = event.target.closest('input[data-key]');
 		if (box) {
 			if (box.checked) {
@@ -1642,6 +1876,25 @@ ${orchestrationPageJs}
 			}
 			drawCount();
 		}
+	});
+	document.getElementById('proposalRows').addEventListener('click', event => {
+		const button = event.target.closest('button[data-change]');
+		if (!button) {
+			return;
+		}
+		document.getElementById('choicesProblem').textContent = '';
+		const change = button.dataset.change;
+		if (change === 'rename') {
+			startRename(button);
+		} else if (change === 'drop') {
+			vscode.postMessage({ command: 'edit', edit: { kind: 'drop', decision: button.dataset.decision } });
+		} else if (change === 'restore') {
+			vscode.postMessage({ command: 'restoreDecision', decision: button.dataset.decision });
+		}
+	});
+	document.getElementById('undoEdit').addEventListener('click', () => {
+		document.getElementById('choicesProblem').textContent = '';
+		vscode.postMessage({ command: 'undoEdit' });
 	});
 	/** Asks for the code, from the options kept, by the agent and model chosen in the coder's menu: first written or written again. */
 	function writeCode() {
@@ -1710,7 +1963,7 @@ ${orchestrationPageJs}
 		} else if (message.command === 'file') {
 			fileInput.value = message.value;
 		} else if (message.command === 'problem') {
-			document.getElementById(message.step === 'code' ? 'codeProblem' : 'proposeProblem').textContent = message.text;
+			document.getElementById(message.step === 'code' ? 'codeProblem' : message.step === 'choices' ? 'choicesProblem' : 'proposeProblem').textContent = message.text;
 		} else if (message.command === 'sent') {
 			document.getElementById(message.step === 'null' ? 'nullStatus' : 'curveStatus').textContent = message.step === 'null' ? TEXT.sentNull : TEXT.sentCurve;
 		}
