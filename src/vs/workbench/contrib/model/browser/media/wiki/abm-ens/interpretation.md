@@ -16,7 +16,7 @@ The standard error measures how precisely the mean is known, and differs from th
 
 ## How to Read an Equilibrium Summary
 
-**Equilibrium Summary** prints one row per combination with `threshold`, `density`, `eq_mean`, `eq_std` and `runs`. **eq_mean** is the mean of the last-step outcome across seeds, and **eq_std** the spread between them. A high **eq_std** marks combinations where chance decides the result, and those often lie near a transition. The name assumes a settled state, so a combination still moving at **Steps (T)** gets a value that is not an equilibrium. Differences between rows should be judged against **eq_std** / sqrt(**runs**).
+**Equilibrium Summary** prints one row per combination with `threshold`, `density`, `eq_mean`, `eq_std` and `runs`. `eq_mean` is the mean of the last-step outcome across seeds, and `eq_std` the spread between them. A high `eq_std` marks combinations where chance decides the result, and those often lie near a transition. The name assumes a settled state, so a combination still moving at **Steps (T)** gets a value that is not an equilibrium. Differences between rows should be judged against `eq_std` / sqrt(**runs**).
 
 ## How to Read First-Order and Total Sobol Indices
 
