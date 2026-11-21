@@ -10,7 +10,7 @@ The **KKT Conditions** action lists, for each constraint and bound, its value, i
 **Constraint Activity** lists the constraints and bounds with their slack and whether they bind (slack below 1e-6). Binding constraints shape the solution; the slack ones could be dropped without changing it, as long as the solver stays in the same basin.
 
 ## Constraint Sensitivity and Shadow Prices
-**Constraint Sensitivity** gives the **shadow price** of each constraint: the change in the optimal objective per unit relaxation of its right-hand side. JuMP's shadow_price follows the economic convention, so its sign is that of an improvement for a relaxation, in minimisation and maximisation alike. A shadow price is a **local** derivative: valid for small changes, and on a nonconvex problem only around the local optimum found.
+**Constraint Sensitivity** gives the **shadow price** of each constraint: the change in the optimal objective per unit relaxation of its right-hand side. JuMP's `shadow_price` follows the economic convention, so its sign is that of an improvement for a relaxation, in minimisation and maximisation alike. A shadow price is a **local** derivative: valid for small changes, and on a nonconvex problem only around the local optimum found.
 
 ## Parametric Sweep of the Bounds
 The **Parametric Sweep** tightens the upper bound on every variable in 15 steps, from ub to near lb, and plots the optimal objective against it. Flat stretches mean the bound does not bind; where it binds, the slope is the bound's shadow price; a jump can mean the solver moved to another local optimum, or that the problem became infeasible (NaN). The bound is restored afterwards.
