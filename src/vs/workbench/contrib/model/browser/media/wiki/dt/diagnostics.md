@@ -1,7 +1,7 @@
 # Diagnostics
 
 ## Overfitting
-**Depth vs Accuracy** plots the training accuracy and the 5-fold cross-validated accuracy as max_depth grows. The training accuracy keeps rising, towards a perfect fit; the cross-validated accuracy rises, levels off and then falls. Choose the depth where it levels off: beyond that the tree is learning noise. A large gap between the two curves at the chosen depth means the tree is still too complex, or the data too few.
+**Depth vs Accuracy** plots the training accuracy and the 5-fold cross-validated accuracy as **max_depth** grows. The training accuracy keeps rising, towards a perfect fit; the cross-validated accuracy rises, levels off and then falls. Choose the depth where it levels off: beyond that the tree is learning noise. A large gap between the two curves at the chosen depth means the tree is still too complex, or the data too few.
 
 ## Cross-Validation
 **Cross-Validation** reports the k-fold accuracy (classification) or R-squared (regression), with its spread over the folds. A wide spread means the tree, and its score, depend strongly on which samples it saw: the high variance of single trees.

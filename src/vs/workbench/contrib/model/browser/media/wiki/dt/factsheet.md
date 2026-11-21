@@ -9,7 +9,7 @@ A **decision tree** partitions the feature space into rectangles by recursive bi
 | **Core packages** | [DecisionTree.jl](https://github.com/JuliaAI/DecisionTree.jl), [ModalDecisionTrees.jl](https://github.com/aclai-lab/ModalDecisionTrees.jl) |
 | **Methods** | Decision Tree (CART), Modal Decision Tree |
 | **Output** | The fitted splits and leaves, predictions, class probabilities, accuracy or R-squared, feature importances |
-| **Key choice** | The size of the tree (max_depth, min_samples_leaf): deep trees fit the training data and overfit, shallow ones underfit |
+| **Key choice** | The size of the tree (**max_depth**, **min_samples_leaf**): deep trees fit the training data and overfit, shallow ones underfit |
 
 ## When to Use
 

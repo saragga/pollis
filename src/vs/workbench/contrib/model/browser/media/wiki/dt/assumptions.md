@@ -5,7 +5,7 @@ Decision trees make few assumptions about the data; most of what follows is abou
 ## Both Methods
 - **Training and test data from the same distribution.** A tree learns thresholds on the training data; samples outside their range get the prediction of an edge leaf.
 - **Independent samples**, or a split into training and test sets that respects their grouping (all samples of one patient in the same set), or the test accuracy will be too optimistic.
-- **Enough samples per leaf.** A leaf with very few samples predicts noise; min_samples_leaf guards against it.
+- **Enough samples per leaf.** A leaf with very few samples predicts noise; **min_samples_leaf** guards against it.
 - **Informative features.** No scaling or normality is needed, and monotone transformations of a feature change nothing, but a tree cannot find a signal that is spread thinly over many features as well as a linear model can.
 
 ## Decision Tree
