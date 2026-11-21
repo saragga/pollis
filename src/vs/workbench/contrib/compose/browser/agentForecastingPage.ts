@@ -257,7 +257,8 @@ let folder = @__DIR__
 	Core.eval(method, :(const Pollis = Main.Pollis))
 	Base.include(method, joinpath(folder, "method.jl"))
 	isdefined(method, :forecast) || error("method.jl defines no function forecast(y, h, period)")
-	forecast = getfield(method, :forecast)
+	# Read in the latest world, as method.jl was included after this code began
+	forecast = Base.invokelatest(getfield, method, :forecast)
 	failed = fill("", length(names))
 	started = time()
 	Threads.@threads for k in eachindex(names)
@@ -328,7 +329,8 @@ ${JULIA_TO_JSON}
 			Core.eval(method, :(const Pollis = Main.Pollis))
 			cd(() -> Base.include(method, file), folder)
 			isdefined(method, :forecast) || error("method.jl defines no function forecast(y, h, period)")
-			forecast = getfield(method, :forecast)
+			# Read in the latest world, as method.jl was included after this code began
+			forecast = Base.invokelatest(getfield, method, :forecast)
 			Threads.@threads for k in 1:n
 				h = horizon[numbers[k]]
 				try

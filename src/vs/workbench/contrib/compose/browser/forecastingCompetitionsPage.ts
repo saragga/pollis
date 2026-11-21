@@ -692,7 +692,8 @@ ${JULIA_JSON}
 		method = Module(:Method)
 		Base.include(method, joinpath(run, "${METHOD_FILE}"))
 		isdefined(method, :forecast) || error("method.jl defines no function forecast(y, h, period).")
-		forecast = getfield(method, :forecast)
+		# Read in the latest world, as method.jl was included after this code began
+		forecast = Base.invokelatest(getfield, method, :forecast)
 		known = PC.series(id; frequency = isempty(frequency) ? nothing : frequency)
 		numbers = collect(known.series)
 		whole = sample <= 0 || sample >= length(numbers)
@@ -784,7 +785,8 @@ ${JULIA_JSON}
 		method = Module(:Method)
 		Base.include(method, joinpath(run, "${METHOD_FILE}"))
 		isdefined(method, :predict) || error("method.jl defines no function predict.")
-		predict = getfield(method, :predict)
+		# Read in the latest world, as method.jl was included after this code began
+		predict = Base.invokelatest(getfield, method, :predict)
 		fields = PC.info(id)
 		response_type = PC.competition(id)["response_type"]
 		data = PC.query("SELECT * FROM $(PC.table_sql(id, "data.parquet"))")
