@@ -1,7 +1,7 @@
 {
 	"$schema": "vscode://schemas/color-theme",
 	"name": "Pollis Dark",
-	"include": "./2026-dark.json",
+	"include": "./pollis-dark-base.json",
 	"type": "dark",
 	"colors": {
 		"focusBorder": "#0078D4B3",
@@ -65,35 +65,13 @@
 		"statusBarItem.remoteBackground": "#0078D4",
 		"statusBarItem.remoteForeground": "#FFFFFF"
 	},
-	// SQL, coloured as Julia is: its clauses as Julia's control keywords (if, for, end), its types as Julia's types,
-	// NULL as nothing and missing; CREATE, DROP and TABLE keep the red of function and struct
+	// The code as Dark (Visual Studio) colours it, which the base theme includes; the text without a colour of its own too
 	"tokenColors": [
 		{
-			"name": "SQL clauses",
-			"scope": [
-				"keyword.other.DML.sql",
-				"keyword.other.DML.II.sql",
-				"keyword.other.alias.sql",
-				"keyword.other.order.sql",
-				"keyword.other.data-integrity.sql",
-				"keyword.other.LUW.sql"
-			],
+			"name": "Code text, as in Dark (Visual Studio)",
+			"scope": ["source", "text"],
 			"settings": {
-				"foreground": "#C586C0"
-			}
-		},
-		{
-			"name": "SQL types",
-			"scope": "storage.type.sql",
-			"settings": {
-				"foreground": "#4EC9B0"
-			}
-		},
-		{
-			"name": "SQL NULL",
-			"scope": "keyword.other.DDL.create.II.sql",
-			"settings": {
-				"foreground": "#569CD6"
+				"foreground": "#D4D4D4"
 			}
 		}
 	]
