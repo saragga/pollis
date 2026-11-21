@@ -1,6 +1,6 @@
 # Distribution Functions — Factsheet
 
-A **probability distribution** describes the possible values of a random quantity and how likely each is. Distributions.jl represents each one as an object, such as Normal(0, 1) or Poisson(3), on which the same functions work: pdf, cdf, quantile, mean, var, rand, fit_mle and many more. The Distribution Functions panel evaluates those functions and shows the shape of the distribution.
+A **probability distribution** describes the possible values of a random quantity and how likely each is. Distributions.jl represents each one as an object, such as `Normal(0, 1)` or `Poisson(3)`, on which the same functions work: `pdf`, `cdf`, `quantile`, `mean`, `var`, `rand`, `fit_mle` and many more. The Distribution Functions panel evaluates those functions and shows the shape of the distribution.
 
 | | |
 |---|---|
