@@ -153,15 +153,38 @@ The \ui{Plots} tab also draws pictures of other kinds that a Julia package shows
 Vega-Lite charts, and Plotly charts.
 
 \subsection{When memory is short}\label{sec:memory}
-Two settings of Pollis, under \ui{Plots}, keep the pictures of a long session light.
+Charts and maps shown from the Julia REPL do not cost the same memory.
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.16\linewidth}p{0.3\linewidth}L@{}}
+\toprule
+& \textbf{Where it goes} & \textbf{Memory}\\
+\midrule
+Charts & The \ui{Plots} tab & Light: the tab is one page and draws one chart at a time; the others are kept only as
+  their HTML until you page back to them\\
+Maps & A page in Pollis's browser, one for each map title & Heavier: each map stays open as a page of its own, with
+  MapLibre GL JS, WebGL and the tiles it has fetched, and maps with other titles add pages\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The \ui{Plot Navigator} is not a place a plot can go: it is the list of what the \ui{Plots} tab holds, with a
+thumbnail of each, so where it sits makes no difference to memory. The \ui{Plots} tab draws maps as well as charts, so
+when memory is short the choice is between pages in the browser and the \ui{Plots} tab. Two settings of Pollis, under
+\ui{Plots}, make it.
 \begin{itemize}
+  \item \ui{Plots: Show Maps In} (\file{pollis.plots.showMapsIn}). \ui{Browser Page}, the default, opens each map on
+    its own page, so that maps can be side by side. \ui{Plots Tab} draws each map in the \ui{Plots} tab, which shows one
+    plot at a time, so that ten maps cost about what one does; maps are then no longer side by side. The setting
+    applies from the next map, without starting the REPL again. If the \ui{Plots} tab is turned off, maps go to their
+    pages.
   \item \ui{Plots: Keep Latest} (\file{pollis.plots.keepLatest}), 50 by default: how many plots the \ui{Plots} tab
-    keeps. When a new plot would pass it, the oldest is removed. The tab draws one plot at a time and keeps the others
-    as their HTML, which for a PNG or GIF image can be megabytes.
-  \item \ui{Plots: Show Maps In} (\file{pollis.plots.showMapsIn}): \ui{browserPage}, the default, opens each map on
-    its own page, with MapLibre GL JS and its tiles, so that maps can be side by side; \ui{plotsTab} draws the maps in
-    the \ui{Plots} tab, one at a time, as charts are, which uses much less memory when many maps are shown.
+    keeps; when a new plot would pass it, the oldest is removed from the tab and from the \ui{Plot Navigator}. A chart of
+    ECharts is small there, as the tab takes out its copy of the library, but a PNG or GIF image can be megabytes.
 \end{itemize}
+\textbf{How a map reaches one or the other.} When the REPL shows a map, \file{Pollis.jl} writes the map's page and sends
+Pollis both the page and the map's JSON, of the type \file{application/vnd.pollis.map+json}, with the notification
+\file{pollis/map}. Pollis reads \ui{Plots: Show Maps In} and opens the page in its browser, or draws the JSON in the
+\ui{Plots} tab. Notebooks and Pluto notebooks draw every map in the cell's output, whatever the setting.
 
 \section{When ECharts is not enough}\label{sec:beyond}
 Some pictures need a library made for them, and the panels that use one open a page of their own in Pollis's browser.
