@@ -26,4 +26,4 @@ The series of a dataset can be of very different sizes, from a few units to mill
 
 ## See Also
 
-- [Overview](overview.md) · [Factsheet](factsheet.md) · [Scoring a Method](scoring-method.md) · [Licences and Downloads](licences-downloads.md)
+- [Overview](overview.md) · [Factsheet](factsheet.md) · [Tabular and Survival Measures](tabular-survival-measures.md) · [Scoring a Method](scoring-method.md) · [Licences and Downloads](licences-downloads.md)

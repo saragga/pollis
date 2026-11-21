@@ -19,13 +19,13 @@ suite('Forecasting workspace', () => {
 	test('a saved dataset is saved, then changed when a file is edited, added or removed', async () => {
 		const fileService = disposables.add(new FileService(new NullLogService()));
 		disposables.add(fileService.registerProvider('mem', disposables.add(new InMemoryFileSystemProvider())));
-		const source = URI.parse('mem:/competitions/m3');
+		const source = URI.parse('mem:/competitions/nn5');
 		const folder = URI.parse('mem:/workspace/data/forecasting');
-		await fileService.writeFile(URI.joinPath(source, 'info.toml'), VSBuffer.fromString('name = "M3"\n'));
+		await fileService.writeFile(URI.joinPath(source, 'info.toml'), VSBuffer.fromString('name = "NN5"\n'));
 		await fileService.writeFile(URI.joinPath(source, 'observations.parquet'), VSBuffer.fromString('abc'));
 		await fileService.writeFile(URI.joinPath(source, 'forecasts', 'naive.parquet'), VSBuffer.fromString('left out'));
 		for (const id of ['edited', 'added', 'removed', 'untouched']) {
-			await saveDataset(fileService, folder, id, source, 'PollisCompetitions.jl (m3)');
+			await saveDataset(fileService, folder, id, source, 'PollisCompetitions.jl (nn5)');
 		}
 		const before = await savedStatuses(fileService, folder);
 		await new Promise(resolve => setTimeout(resolve, 5));

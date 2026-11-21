@@ -152,7 +152,9 @@ export interface IWorkSought {
 /** The references of Pollis, as it ships them. */
 const POLLIS_REFERENCES = 'vs/workbench/contrib/model/browser/media/references/references.json';
 
+/** The references of Pollis as last read, and the time and size package.json had then, empty when it was not there. */
 let pollisReferences: Promise<IPollisReferences> | undefined;
+let pollisReferencesStamp = '';
 
 /** ~/.pollis/references, in the home folder `userHome`: the references of Pollis, as installed, and the file that names the folder of the user's. */
 export function referencesFolderOf(userHome: URI): URI {
@@ -474,12 +476,18 @@ export class ReferenceLibrary {
 	}
 
 	/**
-	 * The references of Pollis, their citation counts and the panels that cite them, read once: the works and counts of
-	 * PollisReferences.jl, which PollisDB copies into package.json, when they have every key the panels cite, else
-	 * those this Pollis came with. The works this Pollis came with that the copy lacks are added to it, as toolbox panels,
-	 * which the panels here do not list, may cite works newer than the copy.
+	 * The references of Pollis, their citation counts and the panels that cite them, read again whenever package.json
+	 * changes: the works and counts of PollisReferences.jl, which PollisDB copies into package.json, when they have
+	 * every key the panels cite, else those this Pollis came with. The works this Pollis came with that the copy lacks
+	 * are added to it, as toolbox panels, which the panels here do not list, may cite works newer than the copy.
 	 */
-	pollis(): Promise<IPollisReferences> {
+	async pollis(): Promise<IPollisReferences> {
+		const stat = await this.fileService.stat(joinPath(this.home, 'package.json')).catch(() => undefined);
+		const stamp = stat ? `${stat.mtime}:${stat.size}` : '';
+		if (stamp !== pollisReferencesStamp) {
+			pollisReferences = undefined;
+			pollisReferencesStamp = stamp;
+		}
 		pollisReferences ??= (async () => {
 			try {
 				const shipped = JSON.parse((await this.fileService.readFile(FileAccess.asFileUri(POLLIS_REFERENCES))).value.toString());

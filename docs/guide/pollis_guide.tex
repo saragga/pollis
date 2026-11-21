@@ -986,13 +986,15 @@ account.
 % =====================================================================
 % FORECASTING COMPETITIONS
 % =====================================================================
-\topic{Score Models}{Compose > Prediction Challenges > Score Models}{Your own forecasting method, scored on the held-out values of forecasting datasets, beside the benchmarks.}
+\topic{Score Models}{Compose > Prediction Challenges > Score Models}{Your own method, scored on the held-out values or rows of challenge datasets, beside the benchmarks or the published runs.}
 
 A forecasting competition gives many forecasters the same series without their future values, then scores
 every forecast on what happened. The page runs a method of yours on the series of forecasting datasets,
 scores its forecasts by sMAPE, MASE and OWA, and sets them beside eight statistical benchmarks computed on
-the same series. Its datasets come from the package PollisCompetitions, which Pollis installs from the
-Pollis registry (Pollis Packages, \pg{Pollis Packages}), and from the datasets you add.
+the same series. On tabular and survival datasets, it fits the method on the training rows of each published
+split, scores its predictions of the test rows by the measures of the dataset's benchmark, and ranks it among
+the benchmark's published runs. Its datasets come from the package PollisCompetitions, which Pollis installs
+from the Pollis registry (Pollis Packages, \pg{Pollis Packages}), and from the datasets you add.
 
 \smallskip
 {\small\renewcommand{\arraystretch}{1.25}%
@@ -1000,45 +1002,62 @@ Pollis registry (Pollis Packages, \pg{Pollis Packages}), and from the datasets y
 \textcolor{navy}{\bfseries A dataset is listed when} & \textcolor{navy}{\bfseries Because} \\
 It is active & It is ticked in the column Active of Manage Challenge Datasets \\
 Its data are here & Built in with PollisCompetitions, downloaded into \texttt{\textasciitilde/.pollis/competitions}, or added to the Pollis Workspace \\
-Its \texttt{info.toml} gives its frequencies & The format \texttt{monash}: series and observations, the last values of each series held out \\
+Its \texttt{info.toml} describes it & The format \texttt{monash}: series and observations, the last values of each series held out; the format \texttt{tabular}: rows and their published splits \\
+It has a measure & A tabular dataset's Response Type has one: rmse, roc\_auc or log\_loss; a survival dataset names its event \\
 \end{tabularx}}
 
 \subhead{1. Datasets}
-The step lists the datasets, with their series and the horizon of each frequency. Choose the \ui{Frequency},
-when one dataset has several, and the \ui{Series to Run}: \ui{All}, or \ui{A Sample of} a number of series
-drawn with a \ui{Seed}. The same seed draws the same series, so two methods can be compared on one sample.
-Several datasets are run in turn, with the same sample size and seed.
+A run holds datasets of one kind: with active datasets of several kinds, choose the \ui{Kind of Dataset},
+\ui{Series}, \ui{Tabular} or \ui{Survival}. For series, the step lists the datasets with their series and the
+horizon of each frequency. Choose the \ui{Frequency}, when one dataset has several, and the \ui{Series to
+Run}: \ui{All}, or \ui{A Sample of} a number of series drawn with a \ui{Seed}. The same seed draws the same
+series, so two methods can be compared on one sample. For tabular and survival datasets, the step lists their
+rows, Response Type, measure and splits; choose the \ui{Splits to Run}: \ui{All the Published Splits}, to be
+compared with the published means as an equal, or \ui{The First Repeat}, for an indicative comparison in
+fewer fits. Several datasets are run in turn, with the same choices.
 
 \subhead{2. Your Method}
-Write a Julia function \texttt{forecast(y, h, period)}: the values the forecasters saw, the number of steps
-to forecast and the seasonal period, 1 for none; it returns \texttt{h} forecasts. The example is the
-benchmark Theta, written with the functions of \texttt{PollisCompetitions.Benchmarks}. \ui{Reset to the
-Example} brings the example back; any package installed in your Julia session can be loaded with
-\texttt{using}.
+For series, write a Julia function \texttt{forecast(y, h, period)}: the values the forecasters saw, the
+number of steps to forecast and the seasonal period, 1 for none; it returns \texttt{h} forecasts. The example
+is the benchmark Theta, written with the functions of \texttt{PollisCompetitions.Benchmarks}. For tabular
+datasets, write \texttt{predict(train, test, target, response\_type, classes)}, which returns a number, the
+probability of the second class, or a probability for each class, for each test row; the example predicts
+the training mean or the share of each class. For survival datasets, write \texttt{predict(train, test, time,
+event, times)}, which returns each test row's probability of surviving past each of \texttt{times}; the
+example is the Kaplan-Meier estimate. \ui{Reset to the Example} brings the example of the kind back; any
+package installed in your Julia session can be loaded with \texttt{using}.
 
 \newpage
 \subhead{3. Run}
 \ui{Run the Method} writes a folder for the run in \texttt{\textasciitilde/.pollis/competitions/runs}, with
 \texttt{method.jl} and \texttt{run.jl}, and runs it in the Julia REPL. The series are forecast over the
-threads of the session: start Julia with \texttt{--threads=auto} for more at a time. The step shows how many
-are done; \ui{method.jl}, \ui{run.jl} and \ui{forecasts.csv} open the run's files. \ui{Earlier runs...}
-reopens a run, and \ui{New Run} starts another.
+threads of the session: start Julia with \texttt{--threads=auto} for more at a time; the splits of a tabular
+or survival dataset are run one at a time. The step shows how many are done; \ui{method.jl}, \ui{run.jl},
+and \ui{forecasts.csv} or \ui{scores.csv} open the run's files. \ui{Earlier runs...} reopens a run, and
+\ui{New Run} starts another.
 
 \subhead{4. Scores}
 \ui{Scores} gives the method's sMAPE, MASE and OWA beside those of the eight benchmarks (Naive, sNaive,
 Naive2, SES, Holt, Damped, Theta and Com), computed on the same series; a benchmark that a series is too
-short for is left out. \ui{A Series} plots the first series of the run with the method's forecast.
+short for is left out. \ui{A Series} plots the first series of the run with the method's forecast. On a
+tabular or survival dataset, \ui{Scores} gives the method's mean over the splits on each measure, its rank
+among the published runs, and the best, median and worst of them; \ui{Published Runs} lists them with the
+method among them, and \ui{Scores by Split} the score of each split. A run of several tabular or survival
+datasets adds \ui{Across the Datasets}: on each measure, the method's mean rank among the published models
+run on all of those datasets, and its place among them.
 
 \subhead{Next Steps}
 \ui{Errors by Horizon}, the errors at each step ahead; \ui{Browse the Series}, one series at a time;
 \ui{Where It Fails}, the series where the method does worst against Naive2; \ui{Compare Two Runs}, two runs
-on the same series, side by side. \ui{Learn More} has the wikis: the error measures, scoring a method, and
-where the data come from.
+on the same series or splits, side by side. The first three are about series, so a tabular or survival run
+offers \ui{Compare Two Runs} only. \ui{Learn More} has the wikis: the error measures, the tabular and survival
+measures, scoring a method, and where the data come from.
 
 \begin{trouble}
 \textbf{\emph{The data of \ldots are not on this computer}} & Score Models runs a dataset from its data on this computer, in \texttt{data/builtin} of PollisCompetitions or in \texttt{\textasciitilde/.pollis/competitions}. \\
-\textbf{\emph{Your method must define a function \ldots}} & Name the function \texttt{forecast}. \\
+\textbf{\emph{Your method must define a function \ldots}} & Name the function \texttt{forecast} for series, \texttt{predict} for tabular and survival datasets. \\
 \textbf{The run stops on a series} & Scores names the first series that failed, with its error: fix \texttt{method.jl} and run again. \\
+\textbf{The run stops on a split} & Scores names the split, its repeat and fold, and the error, such as predictions of the wrong shape: fix \texttt{method.jl} and run again. \\
 \textbf{A dataset is not listed} & Tick it in Manage Challenge Datasets, and check that its column Model Scoring says Ready. \\
 \end{trouble}
 

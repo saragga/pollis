@@ -23,7 +23,7 @@ description = "What the page does, its four steps, the datasets it scores models
 name = "Factsheet"
 file = "forecastingCompetitions/factsheet.md"
 bundled = true
-description = "What a dataset gives, the files of a run, the benchmarks and the requirements at a glance"
+description = "What a dataset of each kind gives, the files of a run, what a method is scored beside and the requirements at a glance"
 
 [[wikis]]
 name = "The Error Measures"
@@ -32,10 +32,16 @@ bundled = true
 description = "sMAPE, MASE and OWA: what each measures, how it is scaled, and how the totals are taken"
 
 [[wikis]]
+name = "Tabular and Survival Measures"
+file = "forecastingCompetitions/tabular-survival-measures.md"
+bundled = true
+description = "Which measures score tabular and survival datasets, what each measures, and how a method is ranked among the published runs"
+
+[[wikis]]
 name = "Scoring a Method"
 file = "forecastingCompetitions/scoring-method.md"
 bundled = true
-description = "Writing the forecast function, the benchmarks it is scored beside, samples of series, and the Next Steps"
+description = "Writing the forecast and predict functions, what a method is scored beside, samples of series, the splits to run, and the Next Steps"
 
 [[wikis]]
 name = "Licences and Downloads"
@@ -57,6 +63,30 @@ key = "HK2006a"
 key = "AN2000a"
 
 [[references]]
+key = "HM1982a"
+
+[[references]]
+key = "HCPLR1982a"
+
+[[references]]
+key = "UCPDW2011a"
+
+[[references]]
+key = "GSSS1999a"
+
+[[references]]
+key = "Hou2000a"
+
+[[references]]
+key = "HHDG2020a"
+
+[[references]]
+key = "KM1958a"
+
+[[references]]
+key = "Aal1978a"
+
+[[references]]
 separator = true
 label = "Software and Data"
 
@@ -65,3 +95,15 @@ key = "HK2008a"
 
 [[references]]
 key = "GBWHM2021a"
+
+[[references]]
+key = "EPTHD...2025a"
+
+[[references]]
+key = "BZBBW...2026a"
+
+[[references]]
+key = "SKBBL2021a"
+
+[[references]]
+key = "PVGMT...2011a"

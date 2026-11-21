@@ -4,14 +4,14 @@ Manage Challenge Datasets, in Compose > Prediction Challenges, shows the Dataset
 
 ## What Columns Does Each View of Manage Challenge Datasets Show?
 
-Every view keeps Name on the left, after Active and before Model Scoring and Workspace, with Topic as a tag under it, then shows these columns.
+Every view keeps Name on the left, after Active and before Model Scoring and Saved, with Topic as a tag under it, then shows these columns.
 
 | View | Columns after Name |
 |---|---|
 | Identity | Competition, Year, Collections, Source |
 | Data | Data Structure, Geometry, Response Type, Rows, Features, Size (MB) |
 | Access and Licence | Delivery, Licence, Source, Contributor |
-| Curation | Contributor, Delivery, Licence, Missing Fields, which the view sorts by |
+| Curation | Contributor, Delivery, Licence |
 
 ## What Columns Does the Tab Curated Collections Show?
 
@@ -27,7 +27,7 @@ Every view keeps Name on the left, after Active and before Model Scoring and Wor
 
 | Filter | What it does |
 |---|---|
-| Filter by: | Chooses a field, Topic, Data Structure, Geometry, Response Type or Delivery, and shows its values to tick under it, each with its number of datasets; None hides them |
+| Filter by: | Chooses a field, Topic, Data Structure, Geometry, Response Type, Delivery or Saved, and shows its values to tick under it, each with its number of datasets; None hides them |
 | A value ticked | Keeps the datasets with any of the values ticked of that field |
 | A tag in a cell | Keeps the datasets with that value of that field |
 | A chip | Removes the filter it names |
@@ -41,7 +41,7 @@ Every view keeps Name on the left, after Active and before Model Scoring and Wor
 | Expand, Restore Size | Under the tick of a row | Expand opens the details of the dataset or collection under its row, and Restore Size closes them |
 | Active | The first column of the tab Datasets | Makes any dataset active, or not, kept for the next time |
 | Model Scoring | The second column of the tab Datasets | Says whether models can be scored on the dataset: Ready, with how in its hover, or Not Yet |
-| Workspace | The third column of the tab Datasets | Says whether the dataset is saved in the Pollis Workspace: Not Saved, Saved, or Saved and Changed; No Workspace, with Create Workspace..., when there is none |
+| Saved | The third column of the tab Datasets | Says where the data of the dataset are kept on this computer: Built-in, Downloaded, Workspace, or Workspace (Changed) for a copy changed since it was saved, each place with its folder in the hover; No when they are not on this computer |
 | Score Challenge Models | Above the table, in the tab Datasets | Opens Score Models, which lists the active datasets on which it can score models, and says which it leaves out |
 | Save Active Datasets to Workspace | Above the table, in the tab Datasets | Saves the active datasets whose data are on this computer in `data/forecasting/` of the Pollis Workspace, and says what it saved |
 | Add a Dataset... | Above the table, in the tab Datasets | Opens a form that converts a table of your own, a row for each observation, into `data/forecasting/<id>/` of the Pollis Workspace |

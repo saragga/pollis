@@ -1,5 +1,5 @@
 % Pollis drill-down: Prediction Challenges, the package PollisCompetitions.jl, its TOML files, its DuckDB database and
-% the folders that Manage Challenge Datasets, Score Models and Agents' Forecasting Competition write (20 November 2026).
+% the folders that Manage Challenge Datasets, Score Models and Agents' Forecasting Competition write (21 November 2026).
 % For users who want the detail, and for whoever maintains Pollis.
 % Compile with: latexmk -pdf workflow_prediction_challenges.tex
 \input{workflow_style}
@@ -57,15 +57,15 @@ it: the package, a toolbox or you.
 & \textbf{Manage Challenge Datasets} & \textbf{Score Models} & \textbf{Agents' Forecasting Competition}\\
 \midrule
 Does & Lists the Dataset Catalog; you tick the datasets that are Active, save one to the workspace, or add one of your own
-  & Runs a Julia function \sig{forecast(y, h, period)} of yours on the series of the active datasets and scores it
+  & Runs a Julia function of yours on the active datasets of one kind and scores it: \sig{forecast(y, h, period)} on series, \sig{predict} on the splits of tabular and survival datasets
   & Several coding agents each write a forecasting method for the same series; Pollis scores them, and their mean and median\\
 Reads & \file{metadata/datasets.toml}, the toolboxes' datasets, each \file{dataset.toml} of the workspace, the schema \file{forecastingCatalogue.toml}
-  & The \file{info.toml} and Parquet files of each dataset; \file{run.toml}, \file{progress.json}, \file{results.json}
+  & The \file{info.toml} and Parquet files of each dataset; the published runs; \file{run.toml}, \file{progress.json}, \file{results.json}
   & The same data; \file{study.toml}, \file{prepared.toml}, each agent's \file{method.jl} and \file{REPORT.md}\\
 Writes & \file{data/forecasting/} of the Pollis Workspace
   & \file{~/.pollis/competitions/runs/<run>/}
   & \file{orchestration/forecasting-competition/<study>/} of the Pollis Workspace\\
-Scores with & \textendash & \file{PC.score}, \file{PC.benchmarks}, \file{PC.step_errors} & \file{PC.score}, \file{PC.benchmarks}\\
+Scores with & \textendash & \file{PC.score}, \file{PC.benchmarks}, \file{PC.step_errors}; \file{PC.tabular_scores}, \file{PC.survival_scores}, \file{PC.published_scores} & \file{PC.score}, \file{PC.benchmarks}\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -139,6 +139,12 @@ call; the others are the parts they are built from.
 \file{load_table(name)} & One of the five tables, or the view \file{model_comparisons}\\
 \file{load_dataset(id)} & The \file{data.parquet} of a built-in tabular dataset\\
 \file{read_tsf(path)} & A \file{.tsf} file of the Monash archive, read into series and values\\
+\multicolumn{2}{@{}l}{\textit{Scoring tabular and survival datasets (tabular.jl, survival.jl, scoring.jl)}}\\
+\file{outer_splits(id)} & The splits of a tabular dataset, by repeat and fold: each with its training rows and its test rows\\
+\sig{tabular_scores(response_type, truth, prediction)} & The measure of the Response Type, from \file{TABULAR_MEASURES}: \file{rmse}, \file{roc_auc} or \file{log_loss}\\
+\sig{survival_scores(train_time, train_event, test_time, test_event, times, survival)} & The eight measures of \file{SURVIVAL_MEASURES} of the survival curves of the test rows\\
+\file{published_scores(ids)} & The published runs of models on each dataset of \file{ids}: model, name, measure and score\\
+\sig{measure_loss(measure, value)} & A value as a number of which lower is better, from \file{MEASURE_BEST}, to rank scores by\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -294,7 +300,8 @@ competition = "heloc"
 name = "heloc"
 format = "tabular"
 target = "RiskPerformance"                   # the response column of data.parquet
-                                             # (a survival dataset adds event = "status": 1 event, 0 censored)
+                                             # (a survival dataset adds event = "status": 1 event, 0 censored,
+                                             # and [factors], the levels of each factor column in order)
 openml_task = 363676
 openml_dataset = 46932
 repeats = 10
@@ -311,6 +318,10 @@ splits = 104590
 Score Models lists a dataset, and Manage Challenge Datasets shows it as Ready in its column Model Scoring, when its
 \file{info.toml} has \sig{format = "monash"} and at least one \file{[[frequencies]]} table. The step Datasets shows
 the horizon of a frequency as one number, or as a range when \file{shortest_horizon} and \file{longest_horizon} differ.
+A dataset of \sig{format = "tabular"} is Ready when \file{info.toml} gives \file{target}, \file{repeats}, \file{folds}
+and \file{[tables]} \file{data}, and its \file{response_type} in the Dataset Catalog has a measure: \file{rmse} for
+Continuous and Count, \file{roc_auc} for Binary, \file{log_loss} for Multiclass; Ordered has none yet. A survival
+dataset is Ready when \file{info.toml} also gives \file{event}, and is scored by the eight survival measures.
 
 \section{The database}
 \label{sec:database}
@@ -419,15 +430,18 @@ into the second folder. The three pages only read these folders.
 \subsection{The runs of Score Models}
 
 Each run is a folder of \file{~/.pollis/competitions/runs}, named after the dataset, the frequency and the time; a run of several datasets is named
-\file{datasets-} and the time, such as \file{datasets-20261120-101500}.
+\file{datasets-} and the time, such as \file{datasets-20261120-101500}. A run holds datasets of one kind: series,
+tabular or survival.
 
 \begin{lstlisting}
 ~/.pollis/competitions/runs/<run>/
   run.toml          the choices of step 1
-  method.jl         your forecast(y, h, period), as step 2 held it
+  method.jl         your forecast(y, h, period), or predict, as step 2 held it
   run.jl            the script the page writes and the Julia REPL runs
-  progress.json     {"done", "total", "seconds", "failed"}, every hundredth of the series
-  forecasts.csv     series,h,value
+  progress.json     {"done", "total", "seconds", "failed"}, every hundredth of the series, or after each split
+  forecasts.csv     series,h,value (series)
+  scores.csv        repeat,fold, a column per measure, seconds (tabular and survival)
+  published.tsv     model id, name, measure, score: the published runs (tabular and survival)
   results.json      what step 4 draws, or {"error": ...} when the run stopped
   <step>.jl, <step>.json   the code and the result of each Next Step run on it
   <id>/             in a run of several datasets: a run of one dataset, as above, for each
@@ -435,17 +449,21 @@ Each run is a folder of \file{~/.pollis/competitions/runs}, named after the data
 
 \begin{lstlisting}
 # run.toml of a run of one dataset
+kind = "series"                     # series, tabular or survival
 competition = "tourism_2011"        # the dataset id
 folder = "..."                      # only for a dataset of your own: read in place of the id
 frequency = "Monthly"               # "" for all its frequencies
 sample = 0                          # 0 for all the series; else the number drawn
 seed = 1
+splits = "all"                      # tabular and survival: "all" the published splits, or "first", the first repeat
 started = "2026-11-20 10:15"
 
 # run.toml of a run of several datasets
+kind = "series"
 datasets = ["tourism_2011", "nn5"]
 sample = 0
 seed = 1
+splits = "all"
 started = "2026-11-20 10:15"
 \end{lstlisting}
 
@@ -453,6 +471,14 @@ started = "2026-11-20 10:15"
 \file{Total}), \file{measures} (sMAPE, MASE, OWA), \file{method} (a score per measure) and \file{benchmarks} (a
 \file{name} and \file{scores} each). It also holds \file{plot}, with the series, its last \file{past} values,
 \file{actual} and \file{forecast}, and the run's \file{seconds}.
+
+For a tabular or survival dataset, \file{results.json} holds \file{finished}, \file{kind}, \file{response_type},
+\file{splits} (the number run), \file{all_splits}, \file{first_repeat}, \file{measures}, \file{best} (\file{lower},
+\file{higher} or \file{one} for each measure), \file{method} (the mean over the splits of each measure),
+\file{per_split} (the repeat, fold, scores and seconds of each split), \file{published} (a \file{model}, \file{name} and
+\file{scores} each), \file{ranks} (for each measure, the method's \file{rank} and the number of runs ranked, \file{of})
+and \file{seconds}. The predictions are not kept. A run of several datasets first writes the \file{published.tsv} of every
+dataset, reading the published runs of all of them at once, and the \file{run.jl} of each dataset reads its own.
 
 \subsection{Your datasets: data/forecasting of the Pollis Workspace}
 \label{sec:workspace}

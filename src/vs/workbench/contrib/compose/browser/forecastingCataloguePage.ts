@@ -40,7 +40,7 @@ import { compareCss } from './compareShared.js';
 import { IToolboxPanelsService } from '../common/toolboxPanels.js';
 import { CatalogueValue, FORECASTING_CATALOGUE_FILE, ICatalogueContribution, ICatalogueEntry, ICatalogueRead, POLLIS_COMPETITIONS_DATASETS_PATH, POLLIS_COMPETITIONS_SOURCE, readForecastingCatalogue } from './forecastingCatalogue.js';
 import { juliaPackageFolder, projectVersion } from './juliaPackages.js';
-import { competitionDataFolder, FORECASTING_COMPETITIONS_COMMAND_ID, IScoredDataset, readScoredDataset } from './forecastingCompetitionsPage.js';
+import { competitionDataFolder, FORECASTING_COMPETITIONS_COMMAND_ID, IScoredDataset, readScoredDataset, scoredMeasures } from './forecastingCompetitionsPage.js';
 import { activeDatasets, FORECASTING_CATALOGUE_COMMAND_ID, IActiveDatasets, setActiveDatasets } from './forecastingActive.js';
 import { addedDatasetFiles, forecastingFolder, IAddedDataset, readAddedDataset, recordSaved, savedStatuses, saveDataset, WORKSPACE_SOURCE, writeAddedDataset, writeCatalogueSnapshot } from './forecastingWorkspace.js';
 import { IForecastingDatasetsService, IForecastingProblem } from '../common/forecastingDatasets.js';
@@ -70,7 +70,6 @@ type CatalogueMessage =
 	| { readonly command: 'active'; readonly ids: readonly string[] }
 	| { readonly command: 'score'; readonly ids: readonly string[] }
 	| { readonly command: 'save'; readonly ids: readonly string[] }
-	| { readonly command: 'createWorkspace' }
 	| { readonly command: 'add' }
 	| { readonly command: 'chooseFile' }
 	| { readonly command: 'edit'; readonly id: string }
@@ -124,6 +123,13 @@ let openPage: WebviewInput | undefined;
 
 /** What the column Model Scoring says of a dataset of PollisCompetitions.jl that Score Models scores models on: how models are scored on it. */
 function modelScoringHint(dataset: IScoredDataset): string {
+	if (dataset.kind !== 'series') {
+		const splits = (dataset.repeats ?? 0) * (dataset.folds ?? 0);
+		const measures = scoredMeasures(dataset).join(', ');
+		return dataset.kind === 'tabular'
+			? localize('forecastingCatalogue.scoringTabular', "Score Models scores models on it: a model is fitted on the training rows of each of its {0} published splits and predicts their test rows, and its predictions are scored by {1}, the measure of its Response Type, {2}, beside the published runs on the same splits.", splits, measures, dataset.responseType ?? '')
+			: localize('forecastingCatalogue.scoringSurvival', "Score Models scores models on it: a model is fitted on the training rows of each of its {0} published splits and gives the survival curve of each test row, scored by {1}, beside the published runs on the same splits.", splits, measures);
+	}
 	const horizons = dataset.frequencies.map(frequency => {
 		const horizon = frequency.longest > frequency.shortest ? localize('forecastingCatalogue.scoringHorizons', "{0} to {1}", frequency.shortest, frequency.longest) : String(frequency.shortest);
 		return frequency.name ? localize('forecastingCatalogue.scoringHorizon', "{0} {1}", frequency.name, horizon) : horizon;
@@ -293,13 +299,18 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 			post({ command: 'state', error: toErrorMessage(error) });
 			return;
 		}
-		// Whether the data of each dataset of PollisCompetitions.jl are on this computer, by id, and those Score Models scores models on
+		// Whether the data of each dataset of PollisCompetitions.jl are on this computer, by id, where they are (built in the
+		// package, downloaded, or both), and those Score Models scores models on
 		const onComputer: Record<string, boolean> = {};
+		const places: Record<string, string[]> = {};
 		const found = new Map<string, IScoredDataset>();
 		for (const entry of read.catalogue.entries.filter(entry => entry.source === POLLIS_COMPETITIONS_SOURCE)) {
 			const data = await dataFolder(entry);
 			onComputer[entry.id] = !!data;
-			const dataset = data && await readScoredDataset(fileService, data, entry.id);
+			const builtin = !!packageFolder && await fileService.exists(joinPath(packageFolder, 'data', 'builtin', entry.id, 'info.toml'));
+			const downloaded = await fileService.exists(joinPath(competitionsFolder, entry.id, 'info.toml'));
+			places[entry.id] = [...(builtin ? ['builtin'] : []), ...(downloaded ? ['downloaded'] : [])];
+			const dataset = data && await readScoredDataset(fileService, data, entry.id, typeof entry.response_type === 'string' ? entry.response_type : undefined);
 			if (dataset) {
 				found.set(entry.id, dataset);
 			}
@@ -327,7 +338,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 			const paper = references.get(key);
 			return paper ? [[key, { authors: paper.authors, year: paper.year, title: paper.title, journal: paper.journal, doi: paper.doi, url: paper.url }]] : [];
 		}));
-		post({ command: 'state', catalogue: read.catalogue, problems: read.problems, papers, competitions: [...scored.keys()], scoring: Object.fromEntries([...scored.values()].map(dataset => [dataset.id, modelScoringHint(dataset)])), active: active.entries, workspace: !!workspace, saved, onComputer });
+		post({ command: 'state', catalogue: read.catalogue, problems: read.problems, papers, competitions: [...scored.keys()], scoring: Object.fromEntries([...scored.values()].map(dataset => [dataset.id, modelScoringHint(dataset)])), active: active.entries, saved, onComputer, places });
 	};
 
 	/** With no Pollis Workspace open, offers to create one or open one, in this window. */
@@ -586,8 +597,6 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 				if (notice) {
 					post({ command: 'notice', text: notice.text, paths: notice.paths });
 				}
-			} else if (message.command === 'createWorkspace') {
-				await commandService.executeCommand(NEW_POLLIS_WORKSPACE_COMMAND_ID);
 			} else if (message.command === 'add') {
 				await addDataset();
 			} else if (message.command === 'chooseFile') {
@@ -609,7 +618,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 /** The page, showing `rows` rows at a time at first: its texts come from here, the catalogue from the `state` message. */
 function pageHtml(rows: number): string {
 	const text = {
-		intro: localize('forecastingCatalogue.intro', "Manage Challenge Datasets lists the datasets on which models are scored and ranked, those of PollisCompetitions.jl, of the installed toolboxes and your own, and the curated collections that gather them. View shows one group of fields as columns; Filter by shows the values of a field, to tick those to keep, a value in a cell filters by it when clicked, and a column heading sorts the rows. Expand, under the tick of a row, shows everything recorded of its dataset, with its papers, and Restore Size closes it again. Tick the datasets you are working with in the column Active: Score Challenge Models opens Score Models, which lists those it can score models on, and Save Active Datasets to Workspace saves those whose data are on this computer. The column Model Scoring says whether models can be scored on a dataset, and its hover how: the values held out from the forecasters and the measures. Save to Workspace copies a dataset into data/forecasting of your Pollis Workspace, and the column Workspace says whether it is saved there and changed since. Add a Dataset adds a dataset of your own, from a table with a row for each observation."),
+		intro: localize('forecastingCatalogue.intro', "Manage Challenge Datasets lists the datasets on which models are scored and ranked, those of PollisCompetitions.jl, of the installed toolboxes and your own, and the curated collections that gather them. View shows one group of fields as columns; Filter by shows the values of a field, to tick those to keep, a value in a cell filters by it when clicked, and a column heading sorts the rows. Expand, under the tick of a row, shows everything recorded of its dataset, with its papers, and Restore Size closes it again. Tick the datasets you are working with in the column Active: Score Challenge Models opens Score Models, which lists those it can score models on, and Save Active Datasets to Workspace saves those whose data are on this computer. The column Model Scoring says whether models can be scored on a dataset, and its hover how: the values or rows held out from the models and the measures. Save to Workspace copies a dataset into data/forecasting of your Pollis Workspace, and the column Workspace says whether it is saved there and changed since. Add a Dataset adds a dataset of your own, from a table with a row for each observation."),
 		datasets: localize('forecastingCatalogue.datasets', "Datasets"),
 		collections: localize('forecastingCatalogue.collections', "Curated Collections"),
 		filterBy: localize('forecastingCatalogue.filterBy', "Filter by:"),
@@ -639,19 +648,19 @@ function pageHtml(rows: number): string {
 		scoringNotYet: localize('forecastingCatalogue.scoringNotYet', "Not Yet"),
 		scoringNotYetHint: localize('forecastingCatalogue.scoringNotYetHint', "Score Models cannot score models on this dataset yet: Pollis does not hold the values held out from its forecasters, or does not compute its measures"),
 		scoringOwnHint: localize('forecastingCatalogue.scoringOwnHint', "Score Models scores models on it: the last values of each series, as many as its horizon, are held out from the forecasters, and the forecasts are scored on them by sMAPE, MASE and OWA, against Naive2"),
-		workspace: localize('forecastingCatalogue.workspace', "Workspace"),
-		workspaceHint: localize('forecastingCatalogue.workspaceHint', "Whether the dataset is saved in data/forecasting of your Pollis Workspace"),
-		noWorkspace: localize('forecastingCatalogue.noWorkspaceStatus', "No Workspace"),
-		noWorkspaceHint: localize('forecastingCatalogue.noWorkspaceHint', "There is no Pollis Workspace, the folder where the datasets are saved"),
-		createWorkspace: localize('forecastingCatalogue.createWorkspaceLink', "Create Workspace..."),
-		createWorkspaceHint: localize('forecastingCatalogue.createWorkspaceHint', "Create a Pollis Workspace, where the datasets are saved in data/forecasting"),
-		notSaved: localize('forecastingCatalogue.notSaved', "Not Saved"),
-		notSavedHint: localize('forecastingCatalogue.notSavedHint', "Not in the workspace: Save to Workspace copies it there"),
-		notOnComputerHint: localize('forecastingCatalogue.notOnComputerHint', "Not in the workspace, and its data are not on this computer, so Save to Workspace cannot copy it there"),
 		saved: localize('forecastingCatalogue.saved', "Saved"),
-		savedHint: localize('forecastingCatalogue.savedHint', "In the workspace as it was saved"),
-		changed: localize('forecastingCatalogue.changed', "Saved and Changed"),
-		changedHint: localize('forecastingCatalogue.changedHint', "In the workspace, and changed since it was saved: a file changed, added or removed"),
+		savedHint: localize('forecastingCatalogue.savedHint', "Where the data of the dataset are kept on this computer: built into PollisCompetitions.jl, downloaded, or in your Pollis Workspace; No when they are not on this computer"),
+		builtin: localize('forecastingCatalogue.savedBuiltin', "Built-in"),
+		builtinHint: localize('forecastingCatalogue.savedBuiltinHint', "Built into PollisCompetitions.jl, in data/builtin/{0} of the package"),
+		downloaded: localize('forecastingCatalogue.savedDownloaded', "Downloaded"),
+		downloadedHint: localize('forecastingCatalogue.savedDownloadedHint', "Downloaded, in ~/.pollis/competitions/{0}"),
+		inWorkspace: localize('forecastingCatalogue.savedWorkspace', "Workspace"),
+		inWorkspaceHint: localize('forecastingCatalogue.savedWorkspaceHint', "In data/forecasting/{0} of your Pollis Workspace, as it was saved"),
+		changed: localize('forecastingCatalogue.savedChanged', "Workspace (Changed)"),
+		changedHint: localize('forecastingCatalogue.savedChangedHint', "In data/forecasting/{0} of your Pollis Workspace, and changed since it was saved: a file changed, added or removed"),
+		notSaved: localize('forecastingCatalogue.savedNo', "No"),
+		notSavedHint: localize('forecastingCatalogue.savedNoHint', "Not on this computer: its data are at its source, under Source in the details, and need an internet connection to be fetched"),
+		saveHint: localize('forecastingCatalogue.savedSaveHint', "Save to Workspace, in the details, copies it into data/forecasting/{0} of your Pollis Workspace"),
 		saveToWorkspace: localize('forecastingCatalogue.saveToWorkspace', "Save to Workspace"),
 		saveActive: localize('forecastingCatalogue.saveActive', "Save Active Datasets to Workspace"),
 		addDataset: localize('forecastingCatalogue.addDataset', "Add a Dataset..."),
@@ -687,8 +696,6 @@ function pageHtml(rows: number): string {
 		view: localize('forecastingCatalogue.view', "View:"),
 		clearFilters: localize('forecastingCatalogue.clearFilters', "Clear Filters"),
 		count: localize('forecastingCatalogue.count', "{0} of {1} datasets"),
-		missing: localize('forecastingCatalogue.missing', "Missing Fields"),
-		missingHint: localize('forecastingCatalogue.missingHint', "The fields of the schema the dataset does not have yet; hover over a number to see them"),
 		yes: localize('forecastingCatalogue.yes', "Yes"),
 		no: localize('forecastingCatalogue.no', "No"),
 		addFilter: localize('forecastingCatalogue.addFilter', "Show only the datasets with this value"),
@@ -736,10 +743,10 @@ ${sortHeadingsCss}
 		.catalogue button.expand { display: block; margin: 2px auto 0 auto; padding: 2px; line-height: 0; cursor: pointer; background: none; border: none; border-radius: 3px; color: var(--vscode-icon-foreground, var(--vscode-foreground)); }
 		.catalogue button.expand:hover { background: var(--vscode-toolbar-hoverBackground); }
 		.catalogue button.expand svg { width: 14px; height: 14px; }
-		.catalogue td.workspaceCell, .catalogue td.scoringCell { white-space: nowrap; }
+		.catalogue td.savedCell, .catalogue td.scoringCell { white-space: nowrap; }
 		.catalogue td.scoringCell.none { color: var(--vscode-descriptionForeground); }
-		.catalogue td.workspaceCell.changed { color: var(--vscode-editorWarning-foreground); }
-		.catalogue td.workspaceCell.none, .catalogue td.workspaceCell.downloading { color: var(--vscode-descriptionForeground); }
+		.catalogue td.savedCell .changed { color: var(--vscode-editorWarning-foreground); }
+		.catalogue td.savedCell.none { color: var(--vscode-descriptionForeground); }
 		.catalogue .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 		.catalogue .chips:empty { display: none; }
 		.catalogue button.chip { font: inherit; font-size: 11px; cursor: pointer; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--vscode-focusBorder); background: none; color: var(--vscode-foreground); }
@@ -826,14 +833,14 @@ ${sortHeadingsCss}
 	const FILTER_FIELDS = ['topic', 'data_structure', 'geometry', 'response_type', 'delivery'];
 	// Text too long for a cell: two lines of it there, all of it in the details
 	const LONG_FIELDS = ['licence'];
-	// The column of the Curation view that counts the fields a dataset does not have
-	const MISSING = '#missing';
-	const CURATION = 'curation';
 	// The first column of the tab Datasets, the tick that makes a dataset active, and the columns after it: whether
-	// models can be scored on the dataset, and whether it is saved in the workspace
+	// models can be scored on the dataset, and where its data are kept on this computer
 	const ACTIVE = '#active';
 	const SCORING = '#scoring';
-	const WORKSPACE = '#workspace';
+	const SAVED = '#saved';
+	// The places of the column Saved, in the order shown, and the field that Filter by offers for it
+	const PLACES = ['builtin', 'downloaded', 'workspace', 'no'];
+	const SAVED_FIELD = { name: SAVED, label: TEXT.saved, description: TEXT.savedHint, values: PLACES };
 
 	let catalogue;
 	let papers = {};
@@ -844,17 +851,16 @@ ${sortHeadingsCss}
 	let filters = {};
 	let sortField = 'dataset_name';
 	let sortDescending = false;
-	let userSorted = false;
 	let page = 0;
 	let rows = ${rows};
 	let opened = '';
 	let tab = 'datasets';
 	let active = new Set();
-	// Whether a Pollis Workspace is open; the status of each dataset saved there, by id; and whether the data of each
-	// dataset of PollisCompetitions.jl are on this computer, by id
-	let workspace = false;
+	// The status of each dataset saved in the Pollis Workspace, by id; whether the data of each dataset of
+	// PollisCompetitions.jl are on this computer, by id; and where they are, builtin, downloaded or both
 	let saved = {};
 	let onComputer = {};
+	let places = {};
 	// Whether the band of controls stays above the table already
 	let stuck = false;
 	// The form shown, as the page sent it: its mode, add or edit, its file, columns and first rows, and its values
@@ -878,22 +884,33 @@ ${sortHeadingsCss}
 		return values.reduce((result, value, index) => result.split('{' + index + '}').join(String(value)), template);
 	}
 	function field(name) {
-		return catalogue.fields.find(candidate => candidate.name === name);
+		return name === SAVED ? SAVED_FIELD : catalogue.fields.find(candidate => candidate.name === name);
 	}
 	function view() {
 		return catalogue.views.find(candidate => candidate.id === viewId) || catalogue.views[0];
 	}
 	// A value of a controlled field as the page shows it, its underscores as spaces
 	function shownValue(name, value) {
+		if (name === SAVED) {
+			return placeLabel(value);
+		}
 		const declared = field(name);
 		return declared && declared.values.length ? String(value).split('_').join(' ') : String(value);
 	}
 	function valuesOf(entry, name) {
+		if (name === SAVED) {
+			return placesOf(entry);
+		}
 		const value = entry[name];
 		return value === undefined ? [] : Array.isArray(value) ? value : [String(value)];
 	}
-	function missingOf(entry) {
-		return catalogue.fields.filter(candidate => entry[candidate.name] === undefined);
+	// Where the data of the dataset are on this computer, in the order of PLACES; no when they are nowhere on it
+	function placesOf(entry) {
+		const found = [...(places[entry.id] || []), ...(saved[entry.id] ? ['workspace'] : [])];
+		return found.length ? found : ['no'];
+	}
+	function placeLabel(place) {
+		return place === 'builtin' ? TEXT.builtin : place === 'downloaded' ? TEXT.downloaded : place === 'workspace' ? TEXT.inWorkspace : TEXT.notSaved;
 	}
 	function entryName(id) {
 		const entry = catalogue.entries.find(candidate => candidate.id === id);
@@ -915,9 +932,6 @@ ${sortHeadingsCss}
 		return Object.entries(filters).every(([name, chosen]) => !chosen.length || valuesOf(entry, name).some(value => chosen.includes(value)));
 	}
 	function sortValue(entry, name) {
-		if (name === MISSING) {
-			return missingOf(entry).length;
-		}
 		const value = entry[name];
 		if (value === undefined) {
 			return undefined;
@@ -1005,7 +1019,7 @@ ${sortHeadingsCss}
 
 	function columns() {
 		const current = view();
-		return [ACTIVE, current.pinned[0] || 'dataset_name', SCORING, WORKSPACE, ...current.columns.filter(name => !current.pinned.includes(name)), ...(current.id === CURATION ? [MISSING] : [])];
+		return [ACTIVE, current.pinned[0] || 'dataset_name', SCORING, SAVED, ...current.columns.filter(name => !current.pinned.includes(name))];
 	}
 	function drawHead() {
 		const head = document.getElementById('head');
@@ -1019,14 +1033,14 @@ ${sortHeadingsCss}
 				head.appendChild(element('th', '', TEXT.modelScoring)).title = TEXT.modelScoringHint;
 				continue;
 			}
-			if (name === WORKSPACE) {
-				head.appendChild(element('th', '', TEXT.workspace)).title = TEXT.workspaceHint;
+			if (name === SAVED) {
+				head.appendChild(element('th', '', TEXT.saved)).title = TEXT.savedHint;
 				continue;
 			}
-			const heading = element('th', 'sortable' + (name === MISSING || isNumber(name) ? ' number' : ''));
+			const heading = element('th', 'sortable' + (isNumber(name) ? ' number' : ''));
 			heading.dataset.sort = name;
-			heading.dataset.label = name === MISSING ? TEXT.missing : field(name).label;
-			heading.title = name === MISSING ? TEXT.missingHint : field(name).description + '. ' + TEXT.sortHint;
+			heading.dataset.label = field(name).label;
+			heading.title = field(name).description + '. ' + TEXT.sortHint;
 			setSortArrow(heading, heading.dataset.label, name === sortField, sortDescending);
 			head.appendChild(heading);
 		}
@@ -1038,7 +1052,7 @@ ${sortHeadingsCss}
 	function entryRow(entry, names) {
 		const row = element('tr', 'entryRow' + (entry.id === opened ? ' opened' : ''));
 		row.dataset.id = entry.id;
-		const first = names.find(name => name !== ACTIVE && name !== SCORING && name !== WORKSPACE);
+		const first = names.find(name => name !== ACTIVE && name !== SCORING && name !== SAVED);
 		for (const name of names) {
 			const cell = element('td');
 			if (name === ACTIVE) {
@@ -1052,8 +1066,8 @@ ${sortHeadingsCss}
 				cell.appendChild(expandButton(entry.id));
 			} else if (name === SCORING) {
 				drawScoring(cell, entry);
-			} else if (name === WORKSPACE) {
-				drawWorkspace(cell, entry);
+			} else if (name === SAVED) {
+				drawSaved(cell, entry);
 			} else if (name === first) {
 				// The pinned fields: the first as the row's name, the others as tags under it
 				cell.className = 'nameCell';
@@ -1062,11 +1076,6 @@ ${sortHeadingsCss}
 				for (const other of view().pinned.slice(1)) {
 					fill(pinned, entry, other, true);
 				}
-			} else if (name === MISSING) {
-				const missing = missingOf(entry);
-				cell.className = 'number';
-				cell.textContent = missing.length;
-				cell.title = missing.map(candidate => candidate.label).join(', ');
 			} else {
 				if (isNumber(name)) {
 					cell.className = 'number';
@@ -1094,22 +1103,29 @@ ${sortHeadingsCss}
 		cell.textContent = ready ? TEXT.scoringReady : TEXT.scoringNotYet;
 		cell.title = !ready ? TEXT.scoringNotYetHint : entry.source === WORKSPACE_SOURCE ? TEXT.scoringOwnHint : scoring[entry.id] || TEXT.modelScoringHint;
 	}
-	// Whether the dataset is saved in the workspace, Not Saved too for one whose data are not on this computer
-	function drawWorkspace(cell, entry) {
-		const [status, label, hint] = !workspace ? ['none', TEXT.noWorkspace, TEXT.noWorkspaceHint]
-			: saved[entry.id] === 'saved' ? ['saved', TEXT.saved, TEXT.savedHint]
-				: saved[entry.id] === 'changed' ? ['changed', TEXT.changed, TEXT.changedHint]
-					: ['none', TEXT.notSaved, onComputer[entry.id] ? TEXT.notSavedHint : TEXT.notOnComputerHint];
-		cell.className = 'workspaceCell ' + status;
-		cell.textContent = label;
-		cell.title = hint;
-		// With no workspace, a link that creates one
-		if (!workspace) {
-			cell.append(' ');
-			const create = cell.appendChild(element('button', 'link', TEXT.createWorkspace));
-			create.dataset.createWorkspace = '';
-			create.title = TEXT.createWorkspaceHint;
+	// Where the data of the dataset are kept on this computer, each place with its folder in the hover; No when they are
+	// not on it, with where they come from
+	function drawSaved(cell, entry) {
+		const found = placesOf(entry);
+		const changed = saved[entry.id] === 'changed';
+		cell.className = 'savedCell' + (found[0] === 'no' ? ' none' : '');
+		const hints = [];
+		found.forEach((place, index) => {
+			if (index) {
+				cell.append(', ');
+			}
+			if (place === 'workspace' && changed) {
+				cell.appendChild(element('span', 'changed', TEXT.changed));
+				hints.push(format(TEXT.changedHint, entry.id));
+			} else {
+				cell.append(placeLabel(place));
+				hints.push(place === 'builtin' ? format(TEXT.builtinHint, entry.id) : place === 'downloaded' ? format(TEXT.downloadedHint, entry.id) : place === 'workspace' ? format(TEXT.inWorkspaceHint, entry.id) : TEXT.notSavedHint);
+			}
+		});
+		if (onComputer[entry.id] && !saved[entry.id]) {
+			hints.push(format(TEXT.saveHint, entry.id));
 		}
+		cell.title = hints.join('\\n');
 	}
 	// Every field the entry has, group by group in the order of the schema, each group under the label of its view
 	function detailsRow(entry, span) {
@@ -1180,7 +1196,7 @@ ${sortHeadingsCss}
 		filterSelect.textContent = '';
 		filterSelect.appendChild(element('option', '', TEXT.none)).value = '';
 		filterSelect.appendChild(element('hr'));
-		for (const name of FILTER_FIELDS) {
+		for (const name of [...FILTER_FIELDS, SAVED]) {
 			const declared = field(name);
 			if (declared && declared.values.length) {
 				const option = filterSelect.appendChild(element('option', '', declared.label));
@@ -1511,14 +1527,6 @@ ${sortHeadingsCss}
 
 	viewSelect.addEventListener('change', () => {
 		viewId = viewSelect.value;
-		// The Curation view sorts by the fields missing, unless the rows were sorted by a column of the user's choice
-		if (!userSorted) {
-			sortField = viewId === CURATION ? MISSING : 'dataset_name';
-			sortDescending = viewId === CURATION;
-		} else if (sortField === MISSING && viewId !== CURATION) {
-			sortField = 'dataset_name';
-			sortDescending = false;
-		}
 		render();
 	});
 	filterSelect.addEventListener('change', () => {
@@ -1636,9 +1644,8 @@ ${sortHeadingsCss}
 			sortDescending = !sortDescending;
 		} else {
 			sortField = heading.dataset.sort;
-			sortDescending = sortField === MISSING;
+			sortDescending = false;
 		}
-		userSorted = true;
 		render();
 	});
 	document.addEventListener('click', event => {
@@ -1661,7 +1668,6 @@ ${sortHeadingsCss}
 		const open = target.closest('button[data-competition]');
 		const save = target.closest('button[data-save]');
 		const edit = target.closest('button[data-edit]');
-		const createWorkspace = target.closest('button[data-create-workspace]');
 		if (tagButton) {
 			setFilter(tagButton.dataset.field, tagButton.dataset.value, true);
 		} else if (chip) {
@@ -1675,8 +1681,6 @@ ${sortHeadingsCss}
 			vscode.postMessage({ command: 'save', ids: [save.dataset.save] });
 		} else if (edit) {
 			vscode.postMessage({ command: 'edit', id: edit.dataset.edit });
-		} else if (createWorkspace) {
-			vscode.postMessage({ command: 'createWorkspace' });
 		} else if (target.id === 'clearFilters') {
 			filters = {};
 			page = 0;
@@ -1732,9 +1736,9 @@ ${sortHeadingsCss}
 		competitions = message.competitions;
 		scoring = message.scoring || {};
 		active = new Set(message.active || []);
-		workspace = !!message.workspace;
 		saved = message.saved || {};
 		onComputer = message.onComputer || {};
+		places = message.places || {};
 		showProblems(message.problems);
 		viewSelect.textContent = '';
 		for (const candidate of catalogue.views) {
