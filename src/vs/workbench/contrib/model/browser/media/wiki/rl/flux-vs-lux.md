@@ -22,7 +22,7 @@ Package defaults are not the same in the two packages for some cells, and the pa
 |---|---|---|
 | **coRNN** | dt 0.1, gamma 1.0, epsilon 1.0 | dt 1.0, gamma 0.0, epsilon 0.0 |
 | **UnICORNN** | dt 0.1, alpha 0.0 | dt 1.0, alpha 0.0 |
-| **FastRNN** | init_alpha 3.0, init_beta -3.0 | init_alpha -3.0, init_beta 3.0 |
+| **FastRNN** | `init_alpha` 3.0, `init_beta` -3.0 | `init_alpha` -3.0, `init_beta` 3.0 |
 
 At these starts, **FastRNN** in **Flux** weights the candidate heavily and in **Lux** weights the old state heavily. **coRNN** in **Lux** has a larger step and no damping.
 
