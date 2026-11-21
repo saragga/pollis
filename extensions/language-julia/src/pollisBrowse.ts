@@ -8,7 +8,7 @@ import { MessageConnection, NotificationType } from 'vscode-jsonrpc/node'
 const notifyTypeBrowse = new NotificationType<{ page: string }>('pollis/browse')
 
 /** Opens `page`, a path or an http(s) link, in Pollis' browser, in the tab that shows it already if there is one. */
-async function browse(page: string) {
+export async function browse(page: string) {
     const url = /^https?:\/\//i.test(page) ? page : vscode.Uri.file(page).toString()
     await vscode.commands.executeCommand('workbench.action.browser.open', { url, reuseUrlFilter: url })
 }

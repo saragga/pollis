@@ -1407,6 +1407,7 @@ export function activate(
                 connection.onNotification(notifyTypeProgress, (progress: Progress) => g_progress.update(progress))
                 answerLlamaServerRequests(connection)
                 answerBrowseRequests(connection)
+                plots.answerMapRequests(connection)
                 setContext('julia.isEvaluating', false)
                 // POLLIS: the welcome page names the version in its "Julia is ready" announcement.
                 setContext('julia.replVersion', juliaExecutable?.version ?? '')

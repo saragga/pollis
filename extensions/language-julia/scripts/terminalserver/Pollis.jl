@@ -118,7 +118,7 @@ end
 
 const MAP_MIME = "application/vnd.pollis.map+json"
 Base.show(io::IO, ::MIME{Symbol(MAP_MIME)}, map::WebMap) = print(io, map.json)
-Base.show(io::IO, ::MIME"text/plain", ::WebMap) = print(io, "Pollis.webmap: a map, drawn on a page in Pollis' browser from the REPL, or in a notebook output")
+Base.show(io::IO, ::MIME"text/plain", ::WebMap) = print(io, "Pollis.webmap: a map, drawn from the REPL on a page in Pollis' browser or in the Plots tab, or in a notebook output")
 
 """The folder of the Julia extension, whose `libs` and `dist` hold the scripts the page of a map loads."""
 const EXTENSION_DIR = normpath(joinpath(@__DIR__, "..", ".."))
@@ -139,7 +139,8 @@ end
 
 Writes the page of a map of [`Pollis.webmap`](@ref) or [`Pollis.streetview`](@ref), which draws it with MapLibre GL JS
 and MapillaryJS and says in text what it shows, and opens it in Pollis' browser with [`Pollis.browse`](@ref). The
-REPL shows every map this way; a notebook draws it in the cell's output instead. The page is named after the map's
+REPL shows every map this way, or in the Plots tab, as the setting Plots: Show Maps In says; a notebook draws it in
+the cell's output instead. The page is named after the map's
 title, so a map shown again with the same title replaces it in its tab, while maps of other titles open beside it.
 The pages are kept in a temporary folder, removed when Julia exits. Returns the path of the page.
 """
@@ -187,10 +188,21 @@ PollisMap.draw(document.getElementById("pollis-map"), document.getElementById("p
 	return page
 end
 
-# The REPL's display shows a map on its page in Pollis' browser; a notebook kernel has a display of its own, which
-# draws the map in the cell's output.
+# The REPL's display writes a map's page and sends it to Pollis with the map, which shows one of them, on its page in
+# Pollis' browser or in the Plots tab, as the setting Plots: Show Maps In says; a notebook kernel has a display of its
+# own, which draws the map in the cell's output.
+function showmap(map::WebMap)
+	page = mappage(map; open = false)
+	server = isdefined(Main, :VSCodeServer) ? Main.VSCodeServer : nothing
+	if server === nothing || server.conn_endpoint[] === nothing
+		println("Open ", page)
+	else
+		server.JSONRPC.send_notification(server.conn_endpoint[], "pollis/map", Dict("page" => page, "json" => map.json))
+	end
+	return nothing
+end
 if isdefined(Main, :VSCodeServer) && isdefined(Main.VSCodeServer, :InlineDisplay)
-	@eval Base.display(::Main.VSCodeServer.InlineDisplay, map::WebMap) = (mappage(map); nothing)
+	@eval Base.display(::Main.VSCodeServer.InlineDisplay, map::WebMap) = showmap(map)
 end
 
 """The versions of MapLibre GL JS and MapillaryJS in the extension's `libs`, which a Pluto notebook loads from jsDelivr."""
@@ -289,8 +301,8 @@ end
 """
     Pollis.webmap(layers...; style = "positron", center = nothing, zoom = nothing, title = "")
 
-A web map drawn with MapLibre GL JS, on a page in Pollis' browser from the REPL (see [`Pollis.mappage`](@ref)) or in a
-notebook output: an OpenStreetMap base map, from
+A web map drawn with MapLibre GL JS, on a page in Pollis' browser or in the Plots tab from the REPL (see
+[`Pollis.mappage`](@ref)), or in a notebook output: an OpenStreetMap base map, from
 OpenFreeMap's vector tiles, with layers on it, drawn in the order given. Each layer is a [`Pollis.layer`](@ref) of
 GeoJSON features, a [`Pollis.tiles`](@ref) of raster tiles, or a GeoJSON text or file drawn with the defaults.
 `style` is `"positron"` (light grey), `"bright"`, `"liberty"`, `"dark"` or `"fiord"`, or the address of a MapLibre
@@ -321,8 +333,8 @@ end
     Pollis.streetview(image, layers...; token = ENV["MAPILLARY_ACCESS_TOKEN"], map = false, style = "positron",
         center = nothing, zoom = 17, title = "")
 
-A street-level viewer of Mapillary's images, drawn with MapillaryJS on a page in Pollis' browser from the REPL (see
-[`Pollis.mappage`](@ref)) or in a notebook output: it opens on the image whose id is `image`; dragging looks around, the arrows walk along the
+A street-level viewer of Mapillary's images, drawn with MapillaryJS on a page in Pollis' browser or in the Plots tab
+from the REPL (see [`Pollis.mappage`](@ref)), or in a notebook output: it opens on the image whose id is `image`; dragging looks around, the arrows walk along the
 sequence, and a panorama turns all the way round. `token` is a Mapillary access token (the Mapillary key of
 Settings > Credentials sets `MAPILLARY_ACCESS_TOKEN`). The token goes into the output, so a notebook saved with
 it keeps the token.

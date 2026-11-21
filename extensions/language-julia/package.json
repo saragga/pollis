@@ -824,6 +824,25 @@
             "type": "object",
             "title": "Julia",
             "properties": {
+                "pollis.plots.keepLatest": {
+                    "type": "integer",
+                    "default": 50,
+                    "minimum": 1,
+                    "description": "How many plots the Plots tab keeps. When a new plot would pass this number, the oldest is removed."
+                },
+                "pollis.plots.showMapsIn": {
+                    "type": "string",
+                    "enum": [
+                        "browserPage",
+                        "plotsTab"
+                    ],
+                    "enumDescriptions": [
+                        "Each map on a page of its own in Pollis' browser, one tab for each map title.",
+                        "Each map in the Plots tab, which draws one plot at a time: lighter on memory, but maps are no longer side by side."
+                    ],
+                    "default": "browserPage",
+                    "description": "Where a map of Pollis.webmap or Pollis.streetview shown in the Julia REPL appears. Notebooks draw maps in the cell's output."
+                },
                 "pollis.localModels.publishers": {
                     "type": "array",
                     "items": {

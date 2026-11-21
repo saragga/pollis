@@ -6,6 +6,8 @@ import { onEvent, registerCommand, setContext } from '../utils'
 import { JuliaKernel } from '../notebook/notebookKernel'
 import { displayTable, shareActiveTable } from './tables'
 import { drawPollisMap, MAP_CSS, MAP_STYLES } from './pollisMap'
+import { MessageConnection, NotificationType } from 'vscode-jsonrpc/node'
+import { browse } from '../pollisBrowse'
 
 const c_juliaPlotPanelActiveContextKey = 'julia.plotpaneFocus'
 const g_plots: Array<string> = new Array<string>()
@@ -527,6 +529,29 @@ function mapHtml(webview: vscode.Webview, payload: string) {
         </html>`
 }
 
+// POLLIS: the tab keeps only the latest plots, as many as the setting pollis.plots.keepLatest says (50 by default),
+// so that a long session does not hold every image it has shown
+function dropOldestPlots() {
+    const keep = Math.max(1, vscode.workspace.getConfiguration('pollis.plots').get<number>('keepLatest', 50))
+    const extra = g_plots.length - keep
+    if (extra <= 0) {
+        return
+    }
+    g_plots.splice(0, extra)
+    g_plotNavigatorProvider?.setPlotsInfo((plotsInfo) => {
+        plotsInfo.splice(0, extra)
+        return plotsInfo
+    })
+    for (const [key, index] of g_plot_id_map) {
+        if (index < extra) {
+            g_plot_id_map.delete(key)
+        } else {
+            g_plot_id_map.set(key, index - extra)
+        }
+    }
+    g_currentPlotIndex = Math.max(0, g_currentPlotIndex - extra)
+}
+
 function addOrUpdatePlot(plotPaneContent: string, id?: string) {
     if (id && g_plot_id_map.has(id)) {
         const ind = g_plot_id_map.get(id)
@@ -558,8 +583,30 @@ function addOrUpdatePlot(plotPaneContent: string, id?: string) {
     if (id) {
         g_plot_id_map.set(id, g_currentPlotIndex)
     }
+    dropOldestPlots()
 
     showPlotPane()
+}
+
+// POLLIS: a map of Pollis.webmap or Pollis.streetview shown in the REPL comes as `pollis/map`, with its page, which
+// Pollis.jl has written, and its JSON. The setting pollis.plots.showMapsIn says where it goes: its page in Pollis'
+// browser, one tab for each title, or the Plots tab, where it takes the tab's one page as a chart does.
+const notifyTypeMap = new NotificationType<{ page: string; json: string }>('pollis/map')
+
+/** Answers the notification `pollis/map` of the REPL's Julia process. */
+export function answerMapRequests(connection: MessageConnection) {
+    connection.onNotification(notifyTypeMap, async ({ page, json }) => {
+        const inPlotsTab = vscode.workspace.getConfiguration('pollis.plots').get<string>('showMapsIn', 'browserPage') === 'plotsTab'
+        if (inPlotsTab && vscode.workspace.getConfiguration('julia').get<boolean>('usePlotPane')) {
+            displayPlot({ kind: 'application/vnd.pollis.map+json', data: json })
+            return
+        }
+        try {
+            await browse(page)
+        } catch (error) {
+            vscode.window.showErrorMessage(`Pollis could not open ${page}: ${error instanceof Error ? error.message : String(error)}`)
+        }
+    })
 }
 
 export function displayPlot(params: { kind: string; data: string; id?: string; title?: string }, kernel?: JuliaKernel) {
