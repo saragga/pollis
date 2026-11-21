@@ -26,7 +26,7 @@ The dual value y_i is the **shadow price** of constraint i: the rate at which th
 The **reduced cost** of variable j is c_j - (A' y)_j: its objective coefficient minus the value, at the shadow prices, of the resources it uses. At the optimum it is 0 for variables in the solution and of the non-improving sign for those at 0; its size says how much c_j must improve before x_j enters.
 
 ## Sign Conventions
-JuMP's **shadow_price** is the change in the objective from a small relaxation of the constraint, and its **reduced_cost** the change from a small relaxation of the variable's active bound. Its **dual** follows the conic convention, whose sign can differ with the sense of the problem and the kind of constraint. The panel reports shadow_price and reduced_cost.
+JuMP's `shadow_price` is the change in the objective from a small relaxation of the constraint, and its `reduced_cost` the change from a small relaxation of the variable's active bound. Its `dual` follows the conic convention, whose sign can differ with the sense of the problem and the kind of constraint. The panel reports `shadow_price` and `reduced_cost`.
 
 ## See Also
 - [LP](lp.md) · [Interpretation](interpretation.md) · [MILP](milp.md)
