@@ -23,7 +23,6 @@ All training settings are fixed in the generated code and have no inputs of thei
 | Optimiser | Adam at learning rate 0.001 |
 | Epochs and batch size | 50 epochs, 32 sequences per batch |
 | Hold-out | 20% of the sequences, by a random permutation with seed 1 |
-| Regularisation | None: no dropout, gradient clipping or early stopping |
 
 ## What Differs Between the Flux and Lux Tabs of Recurrent Layers
 
@@ -34,7 +33,7 @@ All training settings are fixed in the generated code and have no inputs of thei
 | Last hidden state | Taken from the sequence by `h -> h[:, end, :]` | Returned by `Recurrence` |
 | Parameters | Held inside `model` | Held apart in `ps` and `st` |
 | Training call | `Flux.train!` on `Duplicated(model)` | `Training.single_train_step!` with `AutoEnzyme()` |
-| Weight seed | Not set | `Xoshiro(0)` |
+| Starting weights | Random on each run | From `Xoshiro(0)` |
 
 ## See Also
 

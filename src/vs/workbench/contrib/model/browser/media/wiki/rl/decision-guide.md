@@ -24,11 +24,11 @@ Published comparisons give modest expectations. [Greff, Srivastava, Koutnik, Ste
 
 ## How to Choose Width for a Recurrent Cell
 
-**hidden_size** starts at 64, and the tooltip gives a typical range of 32 to 512. Parameter count grows with its square for a dense recurrent matrix. To compare cells fairly by capacity, change **hidden_size** per cell until **Parameter Count** gives a similar figure, since **Compare with LSTM** and **Compare with GRU** hold width equal instead. If training and validation errors are both high and close, try more width, and if the gap is wide, try less. With few sequences, stay small, as the panel has no dropout to fall back on.
+**hidden_size** starts at 64, and the tooltip gives a typical range of 32 to 512. Parameter count grows with its square for a dense recurrent matrix. To compare cells fairly by capacity, change **hidden_size** per cell until **Parameter Count** gives a similar figure, since **Compare with LSTM** and **Compare with GRU** hold width equal instead. If training and validation errors are both high and close, try more width, and if the gap is wide, try less. With few sequences, stay small.
 
 ## Which of Flux or Lux to Choose for Recurrent Layers
 
-Choose by the rest of the project. **Flux** suits a project already written with mutable models, and it has all 37 cells. **Lux** suits explicit state, composable functional code, and reuse of parameters without a model object. Neither tab is presented here as more accurate, and the panel makes no speed claim. If the wanted cell is **IntersectionRNN**, **RHN**, **MiRU1** or **MiRU2**, the panel offers it only under **Flux**.
+Choose by the rest of the project. **Flux** suits a project already written with mutable models, and it has all 37 cells. **Lux** suits explicit state, composable functional code, and reuse of parameters without a model object. Neither tab is presented here as more accurate. If the wanted cell is **IntersectionRNN**, **RHN**, **MiRU1** or **MiRU2**, the panel offers it only under **Flux**.
 
 ## References
 

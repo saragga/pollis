@@ -8,7 +8,7 @@ A recurrent cell is a rule that combines the state h(t-1) with the input x(t) to
 
 ## What RecurrentLayers.jl and LuxRecurrentLayers.jl Provide
 
-[Martinuzzi (2025)](#ref-Mar2025a) describes these packages, which implement the cells for several Julia deep learning frameworks. Each cell type is constructed from a pair, `Name(input_size => hidden_size)`, so that replacing one cell by another leaves the surrounding code as it was. The packages offer extra keyword options, such as initialisers and time steps. The panel passes none of these, so every cell runs with its package defaults. In the panel, the choice is one input, **Recurrent Cell**, and the header of the generated code carries a comment on the chosen cell.
+[Martinuzzi (2025)](#ref-Mar2025a) describes these packages, which implement the cells for several Julia deep learning frameworks. Each cell type is constructed from a pair, `Name(input_size => hidden_size)`, so that replacing one cell by another leaves the surrounding code as it was. The packages offer extra keyword options, such as initialisers and time steps. The panel's code uses the package defaults for all of them. In the panel, the choice is one input, **Recurrent Cell**, and the header of the generated code carries a comment on the chosen cell.
 
 ## How the Recurrent Layers Panel Builds Its Network
 

@@ -1,10 +1,10 @@
 # Recurrent Layers — Cell Catalogue
 
-**Recurrent Cell** offers 37 cells, grouped here by how they keep memory. Each description follows the equations in the package source, and h(t) is the state, x(t) the input, and a gate a sigmoid output between 0 and 1.
+**Recurrent Cell** offers 37 cells, grouped here by how they keep memory. In each description, h(t) is the state, x(t) the input, and a gate a sigmoid output between 0 and 1.
 
 ## How the Recurrent Cell Catalogue Is Organised
 
-Every cell in the catalogue is built with `Name(input_size => hidden_size)`, and in **Lux** with `NameCell(input_size => hidden_size)` inside `Recurrence`. **IntersectionRNN**, **RHN**, **MiRU1** and **MiRU2** run only in **Flux**. Groups are a reading aid and not a taxonomy from the literature. A short comment in the panel's generated code also describes each cell, but for several cells the package equations say otherwise, and the tables follow the equations. Sources are cited where a record could be checked. The standard LSTM and GRU are not in the list, as they come from Flux and Lux themselves, through **Compare with LSTM** and **Compare with GRU**.
+Every cell in the catalogue is built with `Name(input_size => hidden_size)`, and in **Lux** with `NameCell(input_size => hidden_size)` inside `Recurrence`. **IntersectionRNN**, **RHN**, **MiRU1** and **MiRU2** run only in **Flux**. Groups are a reading aid and not a taxonomy from the literature. Sources are cited where a record could be checked. The standard LSTM and GRU are not in the list, as they come from Flux and Lux themselves, through **Compare with LSTM** and **Compare with GRU**.
 
 ## Which Recurrent Cells Are LSTM Variants
 
@@ -22,7 +22,7 @@ Every cell in the catalogue is built with `Name(input_size => hidden_size)`, and
 | Cell | Update rule | Source |
 |---|---|---|
 | **MGU** | One gate f mixes the state with a candidate that reads f times the state | [Zhou, Wu, Zhang and Zhou (2016)](#ref-ZWZZ2016a) |
-| **LiGRU** | No reset gate and a ReLU candidate, without the batch normalisation of the source paper | [Ravanelli, Brakel, Omologo and Bengio (2018)](#ref-RBOB2018a) |
+| **LiGRU** | No reset gate and a ReLU candidate | [Ravanelli, Brakel, Omologo and Bengio (2018)](#ref-RBOB2018a) |
 | **LightRU** | Candidate reads the input only, so the gate alone sees the state | [Ye, Zhang, Liu, Li, Chang and Zheng (2024)](#ref-YZLLC...2024a) |
 | **UGRNN** | One update gate between the state and a candidate | [Collins, Sohl-Dickstein and Sussillo (2016)](#ref-CSS2016a) |
 | **MinimalRNN** | Encodes the input with `tanh`, then one gate mixes it with the state | [Chen (2017)](#ref-Che2017a) |
@@ -45,7 +45,7 @@ Every cell in the catalogue is built with `Name(input_size => hidden_size)`, and
 | **MiRU1** | A reset gate r on the state inside the candidate | Update coefficient of 0.5 |
 | **MiRU2** | None | Reset coefficient of 0.5 and update coefficient of 0.5 |
 
-In both cells, the fixed update coefficient sets how fast the state moves towards the candidate, so that memory fades at a rate that training cannot change. The panel leaves those values at the defaults and offers the cells only in **Flux**.
+In both cells, the fixed update coefficient sets how fast the state moves towards the candidate, so that memory fades at a rate that training cannot change. Both cells run in **Flux**.
 
 ## Which Recurrent Cells Came from an Architecture Search
 
@@ -62,7 +62,7 @@ In both cells, the fixed update coefficient sets how fast the state moves toward
 | **IndRNN** | Each unit recurs only on itself, with weights element by element | [Li, Li, Cook, Zhu and Gao (2018)](#ref-LLCZG2018a) |
 | **STAR** | State is `tanh` of a gated sum, for very deep stacks | [Turkoglu, D'Aronco, Wegner and Schindler (2019)](#ref-TDWS2019a) |
 
-The panel trains a single layer, so depth-oriented benefits of **IndRNN** and **STAR** are not tested by it.
+The designs of **IndRNN** and **STAR** aim at stacks of many layers, and the panel's network has one recurrent layer.
 
 ## Which Recurrent Cells Follow Stable Dynamics
 
@@ -83,13 +83,13 @@ These cells rely on constants such as dt, and the source papers often tune them.
 | **SCRN** | A context s(t) = (1 - alpha) W x(t) + alpha s(t-1), with alpha starting at 0.0 | [Mikolov, Joulin, Chopra, Mathieu and Ranzato (2014)](#ref-MJCMR2014a) |
 | **CFN** | h(t) = theta tanh(h(t-1)) + eta tanh(W x(t)), with two gates | [Laurent and von Brecht (2016)](#ref-LB2016a) |
 | **FastRNN** | h(t) = sigmoid(alpha) times candidate + sigmoid(beta) times h(t-1), with two learned scalars | [Kusupati, Singh, Bhatia, Kumar, Jain and Varma (2019)](#ref-KSBKJ...2019a) |
-| **FastGRNN** | **FastRNN** with a gate; the package has no low-rank or quantised weights | Same source |
+| **FastGRNN** | **FastRNN** with a gate | Same source |
 | **BR** | Each neuron can hold two stable values, through its own feedback | [Vecoven, Ernst and Drion (2021)](#ref-VED2021a) |
 | **NBR** | **BR** with full recurrent matrices that alter the neuron's behaviour | Same source |
 
-## What the Recurrent Cell Catalogue Leaves Out
+## Which Further Cells and Wrappers RecurrentLayers.jl Offers
 
-The RecurrentLayers.jl package has more than the panel lists. Five further cell types, **DSGU**, **MCLSTM**, **ResLSTM**, **SGU** and **TauGRU**, have no entry in **Recurrent Cell**. Its wrappers `StackedRNN`, `Multiplicative` and `FastSlow` are not used either, so the panel cannot stack layers. Keywords such as `independent_recurrence` and `integration_mode` are also left at their defaults. To use any of these, edit the generated code by hand, keeping to the constructor of the package. Stacking is available directly through the **num_layers** input of the Recurrent Neural Networks panel, for its standard cells.
+RecurrentLayers.jl has five further cell types beside those of **Recurrent Cell**: `DSGU`, `MCLSTM`, `ResLSTM`, `SGU` and `TauGRU`. Its wrappers `StackedRNN`, `Multiplicative` and `FastSlow` build stacks and combinations of cells, and keywords such as `independent_recurrence` and `integration_mode` change how a cell updates. Each of them goes into the generated code by hand, keeping to the constructor of the package. Stacking is available directly through the **num_layers** input of the Recurrent Neural Networks panel, for its standard cells.
 
 ## References
 

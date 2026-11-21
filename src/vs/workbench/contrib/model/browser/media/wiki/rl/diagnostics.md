@@ -22,9 +22,9 @@ An exotic cell gets its first test against two plain questions: does it learn mo
 
 **Parameter Count** prints the number of trainable values, including the readout. Comparing it with the number of training sequences gives a first warning: far more parameters than target values invite overfitting. Comparing across cells at one **hidden_size** shows how much each design costs, since a multi-gate cell can hold several times the weights of a single-gate one. Counts do not transfer between tabs in every case, because the bias vectors differ. The number alone says nothing of quality.
 
-## What the Recurrent Layers Panel Does Not Check
+## How to Check Convergence and Stability of a Recurrent Cell
 
-The panel records no learning curve, so write the training loop to save the error for each epoch if convergence is in doubt. It has no time-ordered split, no repeated runs and no check of hidden-state growth. To test stability, rerun with other seeds and compare the spread of validation errors with the gap between cells. To look for state explosion, compute the largest absolute value in the states of **Hidden State Heatmap** and watch it across sequence lengths. For series forecasts, compare with a naive forecast, which the training-mean baseline does not replace.
+A learning curve comes from saving the error after each epoch inside the training loop, and shows whether 50 epochs were enough. Repeated runs with other seeds give the spread of validation errors, to set against the gap between cells. To look for state explosion, compute the largest absolute value in the states of **Hidden State Heatmap** and watch it across sequence lengths. For series forecasts, compare with a naive forecast, which the training-mean baseline does not replace.
 
 ## See Also
 

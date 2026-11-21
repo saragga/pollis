@@ -12,7 +12,7 @@ The **Flux** tab uses a whole-sequence layer, such as `MGU(input_size => hidden_
 
 ## How Training Differs Between Flux and Lux in Recurrent Layers
 
-Both tabs use Adam at 0.001, 50 epochs, batches of 32, mean squared error and Enzyme.jl, and both draw the split from `Xoshiro(1)`. **Flux** builds a `DataLoader` and passes `Duplicated(model)` to `Flux.train!`. **Lux** builds a `Training.TrainState`, partitions a fresh `randperm` of the sequences in each epoch, and calls `Training.single_train_step!` with `AutoEnzyme()` and `MSELoss()`. Neither tab includes a layer whose behaviour changes between modes, so dropout and running statistics do not arise here. **Flux** leaves its weight start unseeded, whereas **Lux** starts from `Xoshiro(0)`, but its batch order is unseeded.
+Both tabs use Adam at 0.001, 50 epochs, batches of 32, mean squared error and Enzyme.jl, and both draw the split from `Xoshiro(1)`. **Flux** builds a `DataLoader` and passes `Duplicated(model)` to `Flux.train!`. **Lux** builds a `Training.TrainState`, partitions a fresh `randperm` of the sequences in each epoch, and calls `Training.single_train_step!` with `AutoEnzyme()` and `MSELoss()`. Neither tab includes a layer whose behaviour changes between modes, so dropout and running statistics do not arise here. The starting weights of **Flux** are random on each run, and those of **Lux** come from `Xoshiro(0)`, while its batch order is random on each run.
 
 ## Which Recurrent Cell Defaults Differ Between Flux and Lux
 
@@ -36,7 +36,7 @@ Replace `Name` with `NameCell` inside `Recurrence`, remove the function that sel
 
 ## How to Choose Between Flux and Lux for Recurrent Cells
 
-**Flux** has the complete catalogue and a compact idiom, which makes it the natural tab for browsing cells. **Lux** suits code that needs explicit state, such as functional composition, or several parameter sets per structure. The panel's code does not compare speed, and neither tab gives statistically different guarantees. A choice made for the sake of a framework should still be checked with **Validation Loss**. Moving between tabs changes starting weights and some defaults, so it is not a pure test of the framework.
+**Flux** has the complete catalogue and a compact idiom, which makes it the natural tab for browsing cells. **Lux** suits code that needs explicit state, such as functional composition, or several parameter sets per structure. Neither tab gives statistically different guarantees. A choice made for the sake of a framework should still be checked with **Validation Loss**. Moving between tabs changes starting weights and some defaults, so it is not a pure test of the framework.
 
 ## See Also
 
