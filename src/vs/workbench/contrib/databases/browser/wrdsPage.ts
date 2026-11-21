@@ -30,7 +30,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { WRDS_METADATA } from '../../model/browser/webviews/wrds.data.js';
-import { buildWebviewHtml, codeEditorCss, codeEditorHtml, codeEditorJs, colorizeBracketsJs, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, codeEditorCss, codeEditorHtml, codeEditorJs, colorizeBracketsJs, lineNumbersJs, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
@@ -585,6 +585,7 @@ function pageHtml(): string {
 		],
 		pageScriptJs: `
 	${colorizeBracketsJs}
+	${lineNumbersJs}
 	${codeEditorJs}
 	const TEXT = ${JSON.stringify(text)};
 	const SPINNER = ${JSON.stringify(spinnerSvg)};
@@ -886,6 +887,7 @@ function pageHtml(): string {
 			const box = document.getElementById(message.box);
 			box.innerHTML = message.html;
 			colorizeBrackets(box, '#');
+			numberCodeLines(box);
 		} else if (message.command === 'libraries') {
 			renderLibraries(message);
 		} else if (message.command === 'sql') {

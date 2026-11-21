@@ -17,6 +17,7 @@ import { INotificationService } from '../../../../platform/notification/common/n
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
+import { lineNumbersCss, lineNumbersJs } from '../../model/browser/webviews/webviewScaffold.js';
 import { IDatabaseConnectionsService } from '../common/databaseConnections.js';
 import { DATABASE_DRIVERS, DatabaseDriverId, generateConnectionCode, generateSessionConnectCode, getDatabaseDriver, IDatabaseConnectionPreset, IDatabaseConnectionProfile, validateConnectionProfile, WRDS_PRESET } from '../common/databaseDrivers.js';
 
@@ -159,6 +160,7 @@ function connectionEditorHtml(): string {
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
 		* { box-sizing: border-box; }
+		${lineNumbersCss}
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.layout { display: flex; min-height: 100vh; }
 		.drivers { width: 200px; flex-shrink: 0; border-right: 1px solid var(--vscode-widget-border); padding: 16px 0; }
@@ -221,6 +223,7 @@ function connectionEditorHtml(): string {
 	<script>
 		const vscode = acquireVsCodeApi();
 		const S = ${JSON.stringify(connectionEditorStrings())};
+		${lineNumbersJs}
 		let drivers = [];
 		let presets = [];
 		let profile;
@@ -342,6 +345,7 @@ function connectionEditorHtml(): string {
 			} else if (msg.command === 'code') {
 				document.getElementById('token-css').textContent = msg.css;
 				document.getElementById('code').innerHTML = msg.html;
+				numberCodeLines(document.getElementById('code'));
 				const problems = document.getElementById('problems');
 				problems.textContent = '';
 				msg.problems.forEach(p => problems.appendChild(el('li', { textContent: p })));

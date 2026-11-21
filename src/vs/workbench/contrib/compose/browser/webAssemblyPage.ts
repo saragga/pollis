@@ -30,7 +30,7 @@ import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
 import { folderUri } from '../../model/browser/handlers/scaffold.handler.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { WEBASSEMBLY_METADATA } from '../../model/browser/webviews/webAssembly.data.js';
-import { buildWebviewHtml, colorizeBracketsJs, nextStepIcon, openPageStepJs } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, colorizeBracketsJs, lineNumbersJs, nextStepIcon, openPageStepJs } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { findPollisWorkspace, pollisWorkspaceFolderPath } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
@@ -783,6 +783,7 @@ function pageHtml(): string {
 		});`,
 		pageScriptJs: `
 	${colorizeBracketsJs}
+	${lineNumbersJs}
 	const TEXT = ${JSON.stringify(text)};
 	const REGIONS = ${JSON.stringify(regions)};
 	const BOXES = ${JSON.stringify(CODE_BOXES)};
@@ -1087,6 +1088,7 @@ function pageHtml(): string {
 			const box = document.getElementById('javascriptCode');
 			box.innerHTML = codeHtml.javascriptCode || '';
 			colorizeBrackets(box, '#');
+			numberCodeLines(box);
 		}
 		const run = document.getElementById('timingRun');
 		run.textContent = label;
@@ -1231,6 +1233,7 @@ function pageHtml(): string {
 			if (box) {
 				box.innerHTML = message.html;
 				colorizeBrackets(box, '#');
+				numberCodeLines(box);
 			}
 		} else if (message.command === 'folder') {
 			folderInput.value = message.value;

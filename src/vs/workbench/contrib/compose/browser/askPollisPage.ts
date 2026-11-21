@@ -47,7 +47,7 @@ import { IWebviewService } from '../../webview/browser/webview.js';
 import { WebviewViewPane } from '../../webviewView/browser/webviewViewPane.js';
 import { IWebviewViewService, WebviewView } from '../../webviewView/browser/webviewViewService.js';
 import { createApiKeyWiring, IApiKeyWiring } from '../../model/browser/handlers/model.handler.js';
-import { colorizeBracketsJs, composerSendSvg, spinnerCss, spinnerSvg, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
+import { colorizeBracketsJs, composerSendSvg, lineNumbersCss, lineNumbersJs, spinnerCss, spinnerSvg, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, MODELS_INSTALLED_COMMAND_ID, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisAttachRequest, AskPollisProvider, IAskPollisAddAttachment, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisNamedIndex, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
 import { ASK_DEFAULT_STRATEGY, IAskPollisStrategiesService, askPollisStrategy, askStrategyRerank, askStrategyReranks, askStrategySearchRequest } from '../common/askPollisStrategies.js';
 import { AskAttachMessage, askAddHtml, askAttachCss, askAttachmentsHtml, askAttachScript, handleAskAttachMessage } from './askPollisAttach.js';
@@ -835,6 +835,7 @@ function pageHtml(language: string, writeIn: string): string {
 	<style id="mtk-theme"></style>
 	<style>
 		${composerVoiceCss}
+		${lineNumbersCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; padding: 0; color: var(--vscode-foreground); }
 		/* The conversation scrolls above the question, which stays at the bottom of the pane */
@@ -961,6 +962,7 @@ function pageHtml(language: string, writeIn: string): string {
 	${askMenuScript()}
 
 	${colorizeBracketsJs}
+	${lineNumbersJs}
 
 	// The code of the answers coloured as the editor colours it, by its language and text, once the answer is finished
 	const colored = new Map();
@@ -976,6 +978,7 @@ function pageHtml(language: string, writeIn: string): string {
 			if (colored.has(key)) {
 				pre.innerHTML = colored.get(key);
 				colorizeBrackets(pre, language === 'sql' ? '--' : '#');
+				numberCodeLines(pre);
 			} else if (!requested.has(key)) {
 				requested.add(key);
 				vscode.postMessage({ command: 'colorize', language, code });

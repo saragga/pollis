@@ -26,7 +26,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { SPEEDUP_METADATA } from '../../model/browser/webviews/speedUp.data.js';
-import { buildWebviewHtml, colorizeBracketsJs } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, colorizeBracketsJs, lineNumbersJs } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
@@ -462,6 +462,7 @@ function pageHtml(): string {
 		],
 		pageScriptJs: `
 	${colorizeBracketsJs}
+	${lineNumbersJs}
 	const TEXT = ${JSON.stringify(text)};
 	const EXAMPLE_FUNCTION = ${JSON.stringify(EXAMPLE_FUNCTION)};
 	const EXAMPLE_FASTER = ${JSON.stringify(EXAMPLE_FASTER)};
@@ -549,6 +550,7 @@ function pageHtml(): string {
 			const box = document.getElementById(message.box);
 			box.innerHTML = message.html;
 			colorizeBrackets(box, '#');
+			numberCodeLines(box);
 		} else if (message.command === 'sent') {
 			const status = document.getElementById(message.box + 'Status');
 			status.classList.remove('missing');

@@ -32,7 +32,7 @@ import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaff
 import { parseToml } from '../../model/browser/common/tomlPanelData.js';
 import { FORECASTINGCOMPETITIONS_METADATA } from '../../model/browser/webviews/forecastingCompetitions.data.js';
 import { sortHeadingsCss, sortHeadingsScript, sortHint } from '../../model/browser/webviews/webviewPager.js';
-import { buildWebviewHtml, codeEditorCss, codeEditorHtml, codeEditorJs, colorizeBracketsJs, ONE_BLUE_BUTTON_JS, pageNextSteps } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, codeEditorCss, codeEditorHtml, codeEditorJs, colorizeBracketsJs, lineNumbersJs, ONE_BLUE_BUTTON_JS, pageNextSteps } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { findPollisWorkspace } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
@@ -1477,6 +1477,7 @@ function pageHtml(): string {
 		pageScriptJs: `
 	${ONE_BLUE_BUTTON_JS.trim()}
 	${colorizeBracketsJs}
+	${lineNumbersJs}
 	${codeEditorJs}
 	const TEXT = ${JSON.stringify(text)};
 	const EXAMPLES = ${JSON.stringify(EXAMPLE_METHODS)};

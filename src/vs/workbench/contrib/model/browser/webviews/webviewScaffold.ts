@@ -355,10 +355,10 @@ export interface WebviewParts {
 /**
  * A code box to type in, coloured as the editor colours its language: a transparent text box `id` over a copy of its
  * text, `id + 'Colors'`, which the page colours with what `tokenizeToString` gives, the two scrolled together.
- * `codeEditorHtml` writes the two, `codeEditorCss` styles them, and `codeEditorJs` (which needs `colorizeBracketsJs`)
- * gives the page's script `showEditorText(id)`, the text uncoloured until its colours come, and
- * `showEditorColors(id, message, commentStart)`, which colours it from a message of `html`, the theme's `css` and the
- * `text` coloured, dropped when the text has changed since.
+ * `codeEditorHtml` writes the two, `codeEditorCss` styles them, and `codeEditorJs` (which needs `colorizeBracketsJs`
+ * and `lineNumbersJs`) gives the page's script `showEditorText(id)`, the text uncoloured until its colours come and
+ * its lines numbered, and `showEditorColors(id, message, commentStart)`, which colours it from a message of `html`,
+ * the theme's `css` and the `text` coloured, dropped when the text has changed since.
  */
 export function codeEditorHtml(id: string, rows: number): string {
 	return `<div class="code-editor-box">
@@ -388,6 +388,7 @@ export const codeEditorJs = `function syncEditorScroll(id) {
 			area.addEventListener('scroll', () => syncEditorScroll(id));
 		}
 		document.getElementById(id + 'Colors').textContent = area.value + '\\n';
+		numberTextArea(area, document.getElementById(id + 'Colors'));
 		syncEditorScroll(id);
 	}
 	function showEditorColors(id, message, commentStart) {
@@ -456,6 +457,107 @@ function colorizeBrackets(root, commentStart) {
 		node.parentNode.replaceChild(frag, node);
 	});
 }`;
+
+/**
+ * The script functions of the line numbers of code, as the editor shows them, which `lineNumbersCss` styles:
+ * `numberCodeLines(box)` numbers the code of two or more lines a box shows coloured by `tokenizeToString`, after
+ * `colorizeBrackets`, in a gutter that stays on the left when the box scrolls sideways; `numberTextArea(area, mirror)`
+ * numbers the lines of a code box to type in, and follows its text, scrolling and size from then on, with `mirror`,
+ * the coloured copy of a `codeEditorHtml` box, kept in line with it. The numbers cannot be selected or copied with the code.
+ */
+export const lineNumbersJs = `function lineNumbersText(count) {
+	var numbers = [];
+	for (var i = 1; i <= count; i++) { numbers.push(i); }
+	return numbers.join('\\n');
+}
+// The lines a box shows: one more than its line breaks, less an empty last line, which is not drawn
+function tokenizedLineCount(source) {
+	var count = 1, last = '';
+	source.childNodes.forEach(function(node) {
+		if (node.nodeName === 'BR') { count++; last = ''; } else { last += node.textContent; }
+	});
+	return count > 1 && last === '' ? count - 1 : count;
+}
+function numberCodeLines(box) {
+	var old = box.querySelector(':scope > .code-numbered');
+	if (old) {
+		var kept = old.querySelector(':scope > .code-lines');
+		while (kept.firstChild) { box.insertBefore(kept.firstChild, old); }
+		old.remove();
+	}
+	box.classList.remove('has-line-numbers');
+	var source = box.querySelector('.monaco-tokenized-source');
+	var count = source ? tokenizedLineCount(source) : 0;
+	if (count < 2) { return; }
+	// The gutter takes the box's left padding, and covers the code scrolled under it with the box's own colour, up to
+	// 12px after its line
+	var style = getComputedStyle(box);
+	var page = getComputedStyle(document.body).backgroundColor;
+	var under = page && page !== 'rgba(0, 0, 0, 0)' && page !== 'transparent' ? page : 'var(--vscode-editor-background)';
+	var line = 'var(--vscode-widget-border, var(--vscode-panel-border))';
+	var gutter = document.createElement('div');
+	gutter.className = 'line-gutter';
+	gutter.setAttribute('aria-hidden', 'true');
+	gutter.textContent = lineNumbersText(count);
+	gutter.style.paddingLeft = style.paddingLeft;
+	gutter.style.background = 'linear-gradient(to left, transparent 12px, ' + line + ' 12px, ' + line + ' 13px, transparent 13px), '
+		+ 'linear-gradient(' + style.backgroundColor + ', ' + style.backgroundColor + '), ' + under;
+	var lines = document.createElement('div');
+	lines.className = 'code-lines';
+	while (box.firstChild) { lines.appendChild(box.firstChild); }
+	var numbered = document.createElement('div');
+	numbered.className = 'code-numbered';
+	numbered.append(gutter, lines);
+	box.appendChild(numbered);
+	box.classList.add('has-line-numbers');
+}
+function numberTextArea(area, mirror) {
+	var gutter = document.getElementById(area.id + 'Lines');
+	if (!gutter) {
+		gutter = document.createElement('div');
+		gutter.id = area.id + 'Lines';
+		gutter.className = 'line-gutter line-gutter-input';
+		gutter.setAttribute('aria-hidden', 'true');
+		area.parentElement.insertBefore(gutter, area);
+		area.addEventListener('scroll', function() { gutter.scrollTop = area.scrollTop; });
+		area.addEventListener('input', function() { numberTextArea(area, mirror); });
+		new ResizeObserver(function() { numberTextArea(area, mirror); }).observe(area);
+	}
+	var count = area.value.split('\\n').length;
+	if (gutter.dataset.count !== String(count)) {
+		gutter.textContent = lineNumbersText(count);
+		gutter.dataset.count = String(count);
+	}
+	// Laid out only once the box is shown
+	if (!area.offsetHeight) { return; }
+	var style = getComputedStyle(area);
+	if (!area.dataset.codePadding) { area.dataset.codePadding = style.paddingLeft; }
+	var padding = area.dataset.codePadding;
+	var digits = String(count).length + 'ch';
+	gutter.style.fontFamily = style.fontFamily;
+	gutter.style.fontSize = style.fontSize;
+	gutter.style.lineHeight = style.lineHeight;
+	gutter.style.tabSize = style.tabSize;
+	gutter.style.paddingTop = style.paddingTop;
+	gutter.style.paddingBottom = style.paddingBottom;
+	gutter.style.paddingLeft = padding;
+	gutter.style.width = digits;
+	// The text starts after the gutter (its padding, numbers, 8px and separator) and the box's own padding
+	var start = 'calc(' + padding + ' + ' + digits + ' + 9px + ' + padding + ')';
+	area.style.paddingLeft = start;
+	if (mirror) { mirror.style.paddingLeft = start; }
+	gutter.style.top = (area.offsetTop + area.clientTop) + 'px';
+	gutter.style.left = (area.offsetLeft + area.clientLeft) + 'px';
+	gutter.style.height = 'calc(' + area.clientHeight + 'px - ' + style.paddingTop + ' - ' + style.paddingBottom + ')';
+	gutter.scrollTop = area.scrollTop;
+}`;
+
+/** The styles of `lineNumbersJs`: the editor's line number colour, right-aligned, with a thin line after them. */
+export const lineNumbersCss = `.has-line-numbers { padding-left: 0 !important; }
+		.code-numbered { display: flex; align-items: flex-start; width: max-content; min-width: 100%; }
+		.code-lines { flex: none; }
+		.line-gutter { flex: none; position: sticky; left: 0; z-index: 1; padding-right: 21px; text-align: right; white-space: pre; color: var(--vscode-editorLineNumber-foreground); user-select: none; -webkit-user-select: none; }
+		.line-gutter-input { position: absolute; z-index: 2; box-sizing: content-box; padding-right: 8px; overflow: hidden; pointer-events: none; background: var(--vscode-input-background); border-right: 1px solid var(--vscode-widget-border, var(--vscode-panel-border)); }`;
 
 /** The spinner of every page of Pollis: the two curved arrows of the sync icon, turning; its CSS is `spinnerCss`. */
 export const spinnerSvg = '<svg class="spin" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5A5.5 5.5 0 0 1 12.8 5"/><path d="M13 2.5v2.7h-2.7"/><path d="M13.5 9.5A5.5 5.5 0 0 1 3.2 11"/><path d="M3 13.5v-2.7h2.7"/></svg>';
@@ -659,6 +761,7 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		   Example Code panes have no self-indenting child, so indent their bodies here to match. */
 		#sec-table .section-body, #sec-code .section-body { padding-left: 22px; }
 		${poweredByCss}
+		${lineNumbersCss}
 		.pkg-check { color: var(--vscode-charts-green); font-weight: 700; }
 		.pkg-install { color: var(--vscode-textLink-foreground); cursor: pointer; font-size: 12px; }
 		.pkg-install:hover { text-decoration: underline; }
@@ -1191,6 +1294,7 @@ ${noExampleCode ? '' : `		if (!document.querySelector('#sec-code .scaffold-input
 			ta.value = code;
 			ta.style.height = 'auto';
 			ta.style.height = (ta.scrollHeight + 2) + 'px';
+			numberTextArea(ta);
 			ta.focus();
 			ta.setSelectionRange(0, 0);
 		}
@@ -1712,6 +1816,7 @@ ${noExampleCode ? '' : `		document.getElementById('btn-copy').addEventListener('
 		})();
 
 		${colorizeBracketsJs}
+		${lineNumbersJs}
 
 		function renderPackageStatus(statuses, env) {
 			var el = document.getElementById('package-status');
@@ -1768,7 +1873,7 @@ ${noExampleCode ? '' : `		document.getElementById('btn-copy').addEventListener('
 			if (msg.command === 'colorizedCode') {
 				document.getElementById('mtk-theme').textContent = msg.css || '';
 				var box = document.getElementById(msg.target === 'panel' ? 'panel-code' : 'code-preview');
-				if (box) { box.innerHTML = msg.html || ''; colorizeBrackets(box); }
+				if (box) { box.innerHTML = msg.html || ''; colorizeBrackets(box); numberCodeLines(box); }
 			}
 			if (msg.command === 'customExamples') {
 				customExamples = msg.examples || {};
