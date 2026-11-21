@@ -16,7 +16,7 @@ Nelder-Mead has **no general convergence theory**. McKinnon (1998) gave a smooth
 On the default objective, whose minimum lies at a corner, Nelder-Mead usually gets close but can slow down near the kinks, since the simplex must shrink to fit the corner. The **Convergence Check**'s final poll shows whether it stopped at a stationary point.
 
 ## In This Panel
-The panel uses Optim.jl's NelderMead() with its adaptive parameters (Gao and Han, 2012), which scale the reflection, expansion and contraction with the dimension, and its default initial simplex around x0. **Max Iterations** limits the iterations; the **Initial Step** does not apply.
+The panel uses Optim.jl's `NelderMead()` with its adaptive parameters (Gao and Han, 2012), which scale the reflection, expansion and contraction with the dimension, and its default initial simplex around x0. **Max Iterations** limits the iterations; the **Initial Step** does not apply.
 
 ## See Also
 - [Pattern Search](pattern-search.md) · [MADS](mads.md) · [Decision Guide](decision-guide.md)
