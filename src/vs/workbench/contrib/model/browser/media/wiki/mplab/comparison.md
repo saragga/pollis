@@ -2,7 +2,7 @@
 
 ## The Counts of Compare the Methods
 **Compare the Methods** runs Uno's four presets and Ipopt on the same problem, from the same start, and reports for each:
-- **status**: first_order for a KKT point found within the tolerances, max_iter when the iteration limit was reached first, and other values for failures;
+- **status**: `first_order` for a KKT point found within the tolerances, `max_iter` when the iteration limit was reached first, and other values for failures;
 - **objective**: the objective at the point returned;
 - **iterations**: the outer iterations of the method;
 - **subproblems**: the quadratic or linear subproblems, or Newton systems, solved, which can exceed the iterations when steps are rejected or the method enters feasibility restoration;

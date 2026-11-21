@@ -28,7 +28,7 @@ The four tabs differ in these ingredients only. An override changes one ingredie
 Uno has no trust-region interior-point method: with **Interior Point** as the Inequality Handling, the Globalization Mechanism must be **Line Search**. Uno does not report such a combination as an error but stops the Julia session, so the code of every tab checks the ingredients first, with a function, `supported`, and stops with a message instead. **Hessian Models** and **Globalization Strategies** skip the combinations it rejects and mark them as rejected by Uno.
 
 ## Combinations That Run but Rarely Converge
-A **Zero** Hessian removes the curvature from the subproblem, and a linear subproblem has nothing to bound its step but a trust region ([Nocedal and Wright (2006)](#ref-NW2006a)). With a Zero Hessian, a line search or an interior-point method usually runs to the iteration limit, and the status is max_iter rather than first_order; sequential linear programming works with a trust region, as in the Filter SLP tab.
+A **Zero** Hessian removes the curvature from the subproblem, and a linear subproblem has nothing to bound its step but a trust region ([Nocedal and Wright (2006)](#ref-NW2006a)). With a Zero Hessian, a line search or an interior-point method usually runs to the iteration limit, and the status is `max_iter` rather than `first_order`; sequential linear programming works with a trust region, as in the Filter SLP tab.
 
 ## References
 
