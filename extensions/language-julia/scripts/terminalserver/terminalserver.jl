@@ -58,7 +58,8 @@ let
             break
         end
     end
-    VSCodeServer.toggle_plot_pane_notification(nothing, (;enable="USE_PLOTPANE=true" in args))
+    # POLLIS: the plot pane is always on; Plots: Show Charts In says where its charts go
+    VSCodeServer.toggle_plot_pane_notification(nothing, (;enable=true))
     VSCodeServer.toggle_progress_notification(nothing, (;enable="USE_PROGRESS=true" in args))
 
     @debug "settings done" time=round(Int, time()*10)

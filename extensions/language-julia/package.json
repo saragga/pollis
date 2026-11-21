@@ -198,16 +198,6 @@
                 "title": "Plots: Show First Plot"
             },
             {
-                "command": "language-julia.plotpane-enable",
-                "title": "Plots: Enable Plot Pane",
-                "icon": "$(circle-large-outline)"
-            },
-            {
-                "command": "language-julia.plotpane-disable",
-                "title": "Plots: Disable Plot Pane",
-                "icon": "$(pass-filled)"
-            },
-            {
                 "command": "language-julia.plotpane-last",
                 "title": "Plots: Show Last Plot"
             },
@@ -469,16 +459,6 @@
                     "when": "julia.plotpaneFocus",
                     "command": "language-julia.plotpane-previous",
                     "group": "navigation@-3"
-                },
-                {
-                    "when": "julia.plotpaneFocus && config.julia.usePlotPane",
-                    "command": "language-julia.plotpane-disable",
-                    "group": "1-julia@0"
-                },
-                {
-                    "when": "julia.plotpaneFocus && !config.julia.usePlotPane",
-                    "command": "language-julia.plotpane-enable",
-                    "group": "1-julia@0"
                 },
                 {
                     "when": "julia.plotpaneFocus",
@@ -828,21 +808,52 @@
                     "type": "integer",
                     "default": 50,
                     "minimum": 1,
-                    "description": "How many plots the Plots tab keeps. When a new plot would pass this number, the oldest is removed."
+                    "description": "How many plots the Plots tab keeps, and how many pages of charts Pollis keeps when Plots: Show Charts In is Browser Page or External Viewer. When a new plot would pass this number, the oldest is removed."
+                },
+                "pollis.plots.showChartsIn": {
+                    "type": "string",
+                    "enum": [
+                        "plotsTab",
+                        "separateWindow",
+                        "browserPage",
+                        "externalViewer"
+                    ],
+                    "enumItemLabels": [
+                        "Plots Tab",
+                        "Separate Window",
+                        "Browser Page",
+                        "External Viewer"
+                    ],
+                    "enumDescriptions": [
+                        "Each chart in the Plots tab, which draws one chart at a time and keeps the others, with the Plot Navigator and the commands to page through them and save them.",
+                        "The Plots tab in a window of its own, which can go on another screen.",
+                        "Each chart on a page of its own in Pollis' browser, so that charts can be side by side. Heavier on memory, and without the Plots tab's commands.",
+                        "Each chart on a page of its own in the program of Plots: External Viewer, a web browser. Without the Plots tab's commands; a chart is saved from the browser."
+                    ],
+                    "default": "plotsTab",
+                    "description": "Where a chart shown in the Julia REPL appears. Notebooks draw charts in the cell's output."
+                },
+                "pollis.plots.externalViewer": {
+                    "type": "string",
+                    "default": "",
+                    "markdownDescription": "The program that opens charts and maps when `#pollis.plots.showChartsIn#` or `#pollis.plots.showMapsIn#` is External Viewer: a web browser, since a chart is a web page. Empty for the system's default browser; else, on macOS, the name of the application, such as `Firefox`, `Google Chrome` or `Safari`, and elsewhere its command or path."
                 },
                 "pollis.plots.showMapsIn": {
                     "type": "string",
                     "enum": [
                         "browserPage",
-                        "plotsTab"
+                        "plotsTab",
+                        "externalViewer"
                     ],
                     "enumItemLabels": [
                         "Browser Page",
-                        "Plots Tab"
+                        "Plots Tab",
+                        "External Viewer"
                     ],
                     "enumDescriptions": [
                         "Each map on a page of its own in Pollis' browser, one tab for each map title.",
-                        "Each map in the Plots tab, which draws one plot at a time: lighter on memory, but maps are no longer side by side."
+                        "Each map in the Plots tab, which draws one plot at a time: lighter on memory, but maps are no longer side by side. The tab is in a window of its own when Plots: Show Charts In is Separate Window.",
+                        "Each map on its page in the program of Plots: External Viewer, a web browser."
                     ],
                     "default": "browserPage",
                     "description": "Where a map of Pollis.webmap or Pollis.streetview shown in the Julia REPL appears. Notebooks draw maps in the cell's output."
@@ -919,11 +930,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Automatically start the Julia REPL when Pollis starts, so it is ready to use immediately. Disable for a faster startup."
-                },
-                "julia.usePlotPane": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Display plots within VS Code. Might require a restart of the Julia process."
                 },
                 "julia.useCodeLens": {
                     "type": "boolean",

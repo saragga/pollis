@@ -141,7 +141,7 @@ On 21 November 2026, 31 panels draw maps this way: 21 in Smart Regions and 10 in
 \midrule
 The Julia REPL, as with \ui{Julia REPL} below a panel's code & The \ui{Plots} tab, which keeps the latest 50 charts:
   \ui{Plots: Show Previous Plot}, \ui{Plots: Save Plot} and the other commands of the tab, and the \ui{Plot
-  Navigator} & A page in Pollis's browser, named after the map's title: a map shown again with the same title replaces
+  Navigator}. Or the \ui{Plots} tab in a window of its own, or a page of each chart (\S\ref{sec:memory}) & A page in Pollis's browser, named after the map's title: a map shown again with the same title replaces
   it, others open beside it. Or the \ui{Plots} tab (\S\ref{sec:memory})\\
 A notebook, as with \ui{Notebook} & The cell's output & The cell's output, drawn by the renderer \ui{Pollis Maps}\\
 A Pluto notebook, as with \ui{Pluto} & The cell's output & The cell's output, MapLibre GL JS loaded from jsDelivr at
@@ -160,31 +160,43 @@ Charts and maps shown from the Julia REPL do not cost the same memory.
 \toprule
 & \textbf{Where it goes} & \textbf{Memory}\\
 \midrule
-Charts & The \ui{Plots} tab & Light: the tab is one page and draws one chart at a time; the others are kept only as
+Charts & The \ui{Plots} tab, alone or in a window of its own & Light: the tab is one page and draws one chart at a time; the others are kept only as
   their HTML until you page back to them\\
 Maps & A page in Pollis's browser, one for each map title & Heavier: each map stays open as a page of its own, with
   MapLibre GL JS, WebGL and the tiles it has fetched, and maps with other titles add pages\\
+Charts or maps & A page of each in Pollis's browser or in an external viewer & Heavier, in Pollis's browser: each
+  page keeps its own library and chart; in an external viewer, the memory is that program's\\
 \bottomrule
 \end{tabularx}
 \end{center}
 The \ui{Plot Navigator} is not a place a plot can go: it is the list of what the \ui{Plots} tab holds, with a
 thumbnail of each, so where it sits makes no difference to memory. The \ui{Plots} tab draws maps as well as charts, so
-when memory is short the choice is between pages in the browser and the \ui{Plots} tab. Two settings of Pollis, under
-\ui{Plots}, make it.
+when memory is short the choice is between pages and the \ui{Plots} tab. Settings of Pollis, under \ui{Plots}, make
+it, each applying from the next chart or map, without starting the REPL again.
 \begin{itemize}
+  \item \ui{Plots: Show Charts In} (\file{pollis.plots.showChartsIn}). \ui{Plots Tab}, the default, draws each chart
+    in the \ui{Plots} tab. \ui{Separate Window} puts the \ui{Plots} tab in a window of its own, which can go on
+    another screen, at the same memory. \ui{Browser Page} opens each chart on a page of its own in Pollis's browser,
+    so that charts can be side by side. \ui{External Viewer} opens each chart's page in the program of \ui{Plots:
+    External Viewer}. A page has none of the commands of the \ui{Plots} tab: a chart is saved from the page.
   \item \ui{Plots: Show Maps In} (\file{pollis.plots.showMapsIn}). \ui{Browser Page}, the default, opens each map on
     its own page, so that maps can be side by side. \ui{Plots Tab} draws each map in the \ui{Plots} tab, which shows one
-    plot at a time, so that ten maps cost about what one does; maps are then no longer side by side. The setting
-    applies from the next map, without starting the REPL again. If the \ui{Plots} tab is turned off, maps go to their
-    pages.
+    plot at a time, so that ten maps cost about what one does; maps are then no longer side by side. \ui{External
+    Viewer} opens each map's page in the program of \ui{Plots: External Viewer}.
+  \item \ui{Plots: External Viewer} (\file{pollis.plots.externalViewer}): the program of \ui{External Viewer}, a web
+    browser, since a chart or a map is a web page. Empty, the default, is the system's default browser; on macOS it
+    is otherwise the name of an application, such as Firefox, Google Chrome or Safari, and elsewhere a command or a
+    path.
   \item \ui{Plots: Keep Latest} (\file{pollis.plots.keepLatest}), 50 by default: how many plots the \ui{Plots} tab
     keeps; when a new plot would pass it, the oldest is removed from the tab and from the \ui{Plot Navigator}. A chart of
-    ECharts is small there, as the tab takes out its copy of the library, but a PNG or GIF image can be megabytes.
+    ECharts is small there, as the tab takes out its copy of the library, but a PNG or GIF image can be megabytes. It
+    is also how many pages of charts Pollis keeps, in a folder of the session, for \ui{Browser Page} and
+    \ui{External Viewer}.
 \end{itemize}
 \textbf{How a map reaches one or the other.} When the REPL shows a map, \file{Pollis.jl} writes the map's page and sends
 Pollis both the page and the map's JSON, of the type \file{application/vnd.pollis.map+json}, with the notification
-\file{pollis/map}. Pollis reads \ui{Plots: Show Maps In} and opens the page in its browser, or draws the JSON in the
-\ui{Plots} tab. Notebooks and Pluto notebooks draw every map in the cell's output, whatever the setting.
+\file{pollis/map}. Pollis reads \ui{Plots: Show Maps In} and opens the page in its browser or in the external viewer,
+or draws the JSON in the \ui{Plots} tab. Notebooks and Pluto notebooks draw every map in the cell's output, whatever the setting.
 
 \section{When ECharts is not enough}\label{sec:beyond}
 Some pictures need a library made for them, and the panels that use one open a page of their own in Pollis's browser.
