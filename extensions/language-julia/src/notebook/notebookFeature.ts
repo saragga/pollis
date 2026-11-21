@@ -131,7 +131,8 @@ export class JuliaNotebookFeature {
 
     private async loadControllers() {
         console.log('initalizing notebook feature')
-        this._outputChannel = vscode.window.createOutputChannel('Julia Notebook Kernels')
+        // POLLIS: one channel, also when the controllers are loaded again after Julia was not found
+        this._outputChannel ??= vscode.window.createOutputChannel('Julia Notebook Kernels')
 
         let juliaVersions
         try {
@@ -436,6 +437,7 @@ export class JuliaNotebookFeature {
         this.kernels.forEach((i) => i.dispose())
         this.disposables.forEach((i) => i.dispose())
         this._controllers.forEach((_, i) => i.dispose())
-        this._outputChannel.dispose()
+        // POLLIS: the channel is made when the first Julia notebook opens, so a session without one has none
+        this._outputChannel?.dispose()
     }
 }
