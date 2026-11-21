@@ -14,7 +14,7 @@ The tabs, inputs, functions and actions of Find Allocations at a glance.
 
 | Input | Default | Meaning |
 |---|---|---|
-| **Function** | rolling_mean | The function whose allocations are found, by name; the default takes the mean of each window of a series, copying each window and growing its result |
+| **Function** | `rolling_mean` | The function whose allocations are found, by name; the default takes the mean of each window of a series, copying each window and growing its result |
 | **Arguments** | x, 20 | The arguments of the call, as written in it; the default is a simulated series of 10 000 values and windows of 20 values |
 | **Sample Rate** | 1 | The share of the allocations recorded, from 0 to 1, **By Line** and **By Type** only |
 
