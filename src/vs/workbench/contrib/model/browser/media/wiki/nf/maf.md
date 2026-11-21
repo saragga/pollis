@@ -23,7 +23,6 @@ The network follows MADE ([Germain, Gregor, Murray and Larochelle (2015)](#ref-G
 | **num_flows** | Autoregressive steps | 8 |
 | **hidden_size** | Width of each masked hidden layer | 128 |
 | **num_layers** | Hidden tanh layers in each masked network | 2 |
-| **dropout** | Not used by the masked network | 0.0 |
 
 **num_bins** does not apply to this tab.
 

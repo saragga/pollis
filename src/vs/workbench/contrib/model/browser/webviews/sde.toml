@@ -202,7 +202,7 @@ models = ["add", "mul"]
 
 [[inputs.options]]
 value = "SRA1"
-label = "SRA1 (Fixed Step, Weak 2)"
+label = "SRA1 (Adaptive, Strong 3/2)"
 models = ["add"]
 
 [[inputs.options]]
@@ -212,7 +212,7 @@ models = ["add"]
 
 [[inputs.options]]
 value = "RKMil"
-label = "RKMil (Fixed Step, Strong 1)"
+label = "RKMil (Adaptive, Strong 1)"
 models = ["mul"]
 
 [[inputs]]
@@ -230,7 +230,7 @@ default = "10.0"
 [[inputs]]
 id = "dt"
 label = "Step size dt"
-tooltip = "Fixed time step used by the selected solver. Smaller values improve accuracy at higher compute cost. Not needed for adaptive solvers."
+tooltip = "Time step of EM, and the first step of SRA1 and RKMil, which then adapt it. Smaller values improve accuracy at higher compute cost. LambaEM, SOSRA2 and SRIW1 choose every step themselves."
 default = "0.01"
 when = "solver!=LambaEM|SOSRA2|SRIW1"
 

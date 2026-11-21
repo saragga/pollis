@@ -23,7 +23,7 @@ The Normalising Flows panel fits a multivariate density to a table by maximum li
 | Networks per step | Two, s and t | One masked network | One |
 | Hidden activation | tanh | tanh | relu |
 | Between steps | The halves swap roles | The variable order reverses | The halves swap roles |
-| **dropout** | Before each network's output | Not used by the masked network | Before the network's output |
+| **dropout** | Before each network's output | Not on this tab: the masked network has no dropout layer | Before the network's output |
 | **num_bins** | Not used | Not used | Segments K, default 8 |
 | Parameters at the defaults with ten variables | 286,800 | 164,000, masked weights included | 256,920 |
 

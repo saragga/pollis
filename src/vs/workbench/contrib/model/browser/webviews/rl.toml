@@ -366,7 +366,7 @@ default = "64"
 [[inputs]]
 id = "outputsize"
 label = "output_size"
-tooltip = "Dimension of the prediction produced by the readout layer. Use 1 for scalar regression or the number of classes for classification."
+tooltip = "Number of numeric targets the readout layer predicts for each sequence, each fitted by mean squared error. Use 1 for a single target."
 default = "1"
 
 [[inputs]]
@@ -391,7 +391,7 @@ code = '''
 {{?cell=WMCLSTM}}# WMCLSTM: Working-memory-connected LSTM that augments the cell with an external memory read.
 {{?cell=TLSTM}}# TLSTM: Typed LSTM variant from the unified RecurrentLayers formulation.
 {{?cell=MGU}}# MGU: Minimal Gated Unit: a single forget gate, the lightest gated recurrent cell.
-{{?cell=LiGRU}}# LiGRU: Light Gated Recurrent Unit: drops the reset gate and uses ReLU + batch norm.
+{{?cell=LiGRU}}# LiGRU: Light Gated Recurrent Unit: drops the reset gate and uses a ReLU candidate.
 {{?cell=LightRU}}# LightRU: Light Recurrent Unit with a single gate and a simplified candidate update.
 {{?cell=UGRNN}}# UGRNN: Update-Gate RNN: a GRU-like cell with only an update gate.
 {{?cell=MinimalRNN}}# MinimalRNN: Minimal RNN: an encoded input combined with a single update gate.
@@ -417,7 +417,7 @@ code = '''
 {{?cell=GatedAntisymmetricRNN}}# GatedAntisymmetricRNN: Antisymmetric RNN with an added gate controlling the stable dynamics.
 {{?cell=CFN}}# CFN: Chaos-Free Network: simple gated dynamics with provably non-chaotic behaviour.
 {{?cell=FastRNN}}# FastRNN: FastRNN: a residual connection with two scalars for cheap, stable training.
-{{?cell=FastGRNN}}# FastGRNN: FastGRNN: gated extension of FastRNN with low-rank, quantised weights.
+{{?cell=FastGRNN}}# FastGRNN: FastGRNN: gated extension of FastRNN with a learned gate.
 {{?cell=BR}}# BR: Bistable Recurrent cell whose neurons settle into two stable states.
 {{?cell=NBR}}# NBR: Recurrently-connected Bistable Recurrent cell for long-term memory.
 {{?cell=MiRU1}}# MiRU1: Minimal Recurrent Unit variant #1 with a single lightweight gate.
@@ -426,6 +426,7 @@ using Flux, RecurrentLayers, Enzyme, Random
 
 input_size  = {{inputsize}}  # input features per time step
 hidden_size = {{hiddensize}}  # recurrent state width
+{{?cell=IntersectionRNN}}hidden_size = input_size  # IntersectionRNN needs a state as wide as the input
 output_size = {{outputsize}}  # prediction dimension
 
 # {{xvar}}: Float32 array (input_size, T, n_sequences); {{yvar}}: (output_size, n_sequences)
@@ -468,7 +469,7 @@ code = '''
 {{?cell=WMCLSTM}}# WMCLSTM: Working-memory-connected LSTM that augments the cell with an external memory read.
 {{?cell=TLSTM}}# TLSTM: Typed LSTM variant from the unified RecurrentLayers formulation.
 {{?cell=MGU}}# MGU: Minimal Gated Unit: a single forget gate, the lightest gated recurrent cell.
-{{?cell=LiGRU}}# LiGRU: Light Gated Recurrent Unit: drops the reset gate and uses ReLU + batch norm.
+{{?cell=LiGRU}}# LiGRU: Light Gated Recurrent Unit: drops the reset gate and uses a ReLU candidate.
 {{?cell=LightRU}}# LightRU: Light Recurrent Unit with a single gate and a simplified candidate update.
 {{?cell=UGRNN}}# UGRNN: Update-Gate RNN: a GRU-like cell with only an update gate.
 {{?cell=MinimalRNN}}# MinimalRNN: Minimal RNN: an encoded input combined with a single update gate.
@@ -494,7 +495,7 @@ code = '''
 {{?cell=GatedAntisymmetricRNN}}# GatedAntisymmetricRNN: Antisymmetric RNN with an added gate controlling the stable dynamics.
 {{?cell=CFN}}# CFN: Chaos-Free Network: simple gated dynamics with provably non-chaotic behaviour.
 {{?cell=FastRNN}}# FastRNN: FastRNN: a residual connection with two scalars for cheap, stable training.
-{{?cell=FastGRNN}}# FastGRNN: FastGRNN: gated extension of FastRNN with low-rank, quantised weights.
+{{?cell=FastGRNN}}# FastGRNN: FastGRNN: gated extension of FastRNN with a learned gate.
 {{?cell=BR}}# BR: Bistable Recurrent cell whose neurons settle into two stable states.
 {{?cell=NBR}}# NBR: Recurrently-connected Bistable Recurrent cell for long-term memory.
 {{?cell=MiRU1}}# MiRU1: Minimal Recurrent Unit variant #1 with a single lightweight gate.

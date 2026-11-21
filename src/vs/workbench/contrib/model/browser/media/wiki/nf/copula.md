@@ -33,7 +33,7 @@ In Julia, that is `logdensity(model, data) .- vec(sum(logpdf.(Normal(), data); d
 
 ## How to Score New Points Under the Copula Target
 
-Under **Copula c(u)**, the flow is fitted on normal scores, so `X_test` and `X_new` go onto the same scale before **Held-Out Log-Likelihood** or **Density of New Points**. Each new value goes through the training margin of its variable: its position among the sorted training values, converted to a value in (0, 1), then the probit function. Values outside the training range need a rule of their own.
+Under **Copula c(u)**, the flow is fitted on normal scores, so **Held-Out Log-Likelihood** and **Density of New Points** put `X_test` and `X_new` through `scores`, which the code of each tab defines. Each new value goes through the training margin of its variable: its position among the sorted values of **Input data**, as a rank r, becomes u = (r − 0.5) / n, then the probit function. A value below or above the training range takes the extreme rank, so its score is that of the smallest or largest training value.
 
 ## What Limits a Copula Fitted by a Flow
 

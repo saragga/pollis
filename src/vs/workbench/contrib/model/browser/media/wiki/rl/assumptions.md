@@ -12,7 +12,7 @@ The panel calls `Name(input_size => hidden_size)` with no other argument. Time s
 
 ## What IntersectionRNN Requires in the Recurrent Layers Panel
 
-**IntersectionRNN** needs **input_size** equal to **hidden_size**, as its output is a gated mix of the input and a transformed state. The package stops with an `ArgumentError` when the two differ, so **hidden_size** is set to the value of **input_size** for this cell. That changes the capacity available, so a comparison with other cells needs them run at the same width. The requirement concerns **Flux** only, because **Lux** does not offer this cell.
+**IntersectionRNN** needs **input_size** equal to **hidden_size**, as its output is a gated mix of the input and a transformed state. The package stops with an `ArgumentError` when the two differ, so the code sets **hidden_size** to the value of **input_size** for this cell. That changes the capacity available, so a comparison with other cells needs them run at the same width. The requirement concerns **Flux** only, because **Lux** does not offer this cell.
 
 ## What the Random Hold-Out in Recurrent Layers Assumes
 

@@ -278,6 +278,7 @@ id = "dropout"
 label = "dropout"
 tooltip = "Dropout probability applied inside the conditioner networks. Regularises deep conditioners. Set to 0 to disable. Typical range: 0.0-0.2."
 default = "0.0"
+models = ["realnvp", "nsf"]
 
 [[codeBranches]]
 model = "realnvp"
@@ -304,6 +305,11 @@ num_layers  = {{num-layers}}  # conditioner network depth
 {{?target=copula}} pit(x) = (sortperm(sortperm(x)) .- 0.5) ./ length(x)  # empirical ranks mapped into (0, 1)
 {{?target=copula}} U = mapslices(pit, {{xvar}}; dims=2)  # u_i = F_i(x_i), one row per variable
 {{?target=copula}} data = Float32.(quantile.(Normal(), U))  # probit scale: the flow now fits the copula
+{{?target=copula}} function scores(Xn)  # new points, D x m, through the training margins of {{xvar}}, then the probit step
+{{?target=copula}}     n_train = size({{xvar}}, 2)
+{{?target=copula}}     u(i, x) = clamp((searchsortedfirst(sort({{xvar}}[i, :]), x) - 0.5) / n_train, 0.5 / n_train, 1 - 0.5 / n_train)  # beyond the training range: the extreme ranks
+{{?target=copula}}     Float32.(quantile.(Normal(), [u(i, Xn[i, j]) for i in axes(Xn, 1), j in axes(Xn, 2)]))
+{{?target=copula}} end
 
 d1 = div(input_dim, 2)
 d2 = input_dim - d1  # split dimensions for coupling
@@ -378,6 +384,11 @@ num_layers  = {{num-layers}}  # conditioner network depth
 {{?target=copula}} pit(x) = (sortperm(sortperm(x)) .- 0.5) ./ length(x)  # empirical ranks mapped into (0, 1)
 {{?target=copula}} U = mapslices(pit, {{xvar}}; dims=2)  # u_i = F_i(x_i), one row per variable
 {{?target=copula}} data = Float32.(quantile.(Normal(), U))  # probit scale: the flow now fits the copula
+{{?target=copula}} function scores(Xn)  # new points, D x m, through the training margins of {{xvar}}, then the probit step
+{{?target=copula}}     n_train = size({{xvar}}, 2)
+{{?target=copula}}     u(i, x) = clamp((searchsortedfirst(sort({{xvar}}[i, :]), x) - 0.5) / n_train, 0.5 / n_train, 1 - 0.5 / n_train)  # beyond the training range: the extreme ranks
+{{?target=copula}}     Float32.(quantile.(Normal(), [u(i, Xn[i, j]) for i in axes(Xn, 1), j in axes(Xn, 2)]))
+{{?target=copula}} end
 
 struct MaskedDense  # dense layer whose weights are multiplied by a fixed 0/1 mask
     W; b; M; act
@@ -457,6 +468,11 @@ B           = 5f0  # splines act on [-B, B], identity outside
 {{?target=copula}} pit(x) = (sortperm(sortperm(x)) .- 0.5) ./ length(x)  # empirical ranks mapped into (0, 1)
 {{?target=copula}} U = mapslices(pit, {{xvar}}; dims=2)  # u_i = F_i(x_i), one row per variable
 {{?target=copula}} data = Float32.(quantile.(Normal(), U))  # probit scale: the flow now fits the copula
+{{?target=copula}} function scores(Xn)  # new points, D x m, through the training margins of {{xvar}}, then the probit step
+{{?target=copula}}     n_train = size({{xvar}}, 2)
+{{?target=copula}}     u(i, x) = clamp((searchsortedfirst(sort({{xvar}}[i, :]), x) - 0.5) / n_train, 0.5 / n_train, 1 - 0.5 / n_train)  # beyond the training range: the extreme ranks
+{{?target=copula}}     Float32.(quantile.(Normal(), [u(i, Xn[i, j]) for i in axes(Xn, 1), j in axes(Xn, 2)]))
+{{?target=copula}} end
 
 d1 = div(input_dim, 2)
 d2 = input_dim - d1  # split dimensions for coupling
@@ -564,8 +580,9 @@ id = "holdout"
 label = "Held-Out Log-Likelihood"
 desc = "Mean log-likelihood on training and held-out samples; a large gap signals overfitting"
 code = '''
-X_test = Float32.(X_test)  # held-out samples, D x m, prepared the same way as data
-(train = -loss(model, data), test = -loss(model, X_test))
+{{?target=density}} test_data = Float32.(X_test)  # held-out samples, D x m, prepared the same way as data
+{{?target=copula}} test_data = scores(X_test)  # held-out samples, D x m, on the normal-score scale of data
+(train = -loss(model, data), test = -loss(model, test_data))
 '''
 
 [[actionGroups]]
@@ -577,7 +594,8 @@ id = "density-new"
 label = "Density of New Points"
 desc = "Exact log-density log p(x) of new observations under the fitted flow"
 code = '''
-logp = logdensity(model, Float32.(X_new))  # X_new: D x m, one point per column
+{{?target=density}} logp = logdensity(model, Float32.(X_new))  # X_new: D x m, one point per column
+{{?target=copula}} logp = logdensity(model, scores(X_new))  # X_new: D x m, on the normal-score scale of data
 '''
 
 [[actionGroups.actions]]
