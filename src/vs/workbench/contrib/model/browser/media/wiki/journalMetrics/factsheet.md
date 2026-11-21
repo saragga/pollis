@@ -8,7 +8,7 @@ The **Journal Metrics** page lists the sources of journal levels and metrics in 
 | **Built in** | Norwegian Register (levels since 2004), OpenAlex (citedness, h-index, open access) |
 | **Imported** | SCImago (SJR), CWTS (SNIP), ABDC Journal Quality List, Scopus (CiteScore), Journal Citation Reports (Impact Factor) |
 | **Files read** | CSV or Excel (.xlsx) exports of the five imported sources |
-| **Used by** | The tags and Journals filter of the RSS Feeds page and the welcome page; the metrics, journal_metrics and norwegian_levels views of PollisJournals |
+| **Used by** | The tags and Journals filter of the RSS Feeds page and the welcome page; the `metrics`, `journal_metrics` and `norwegian_levels` views of PollisJournals |
 | **Kept** | On your computer only, never shared |
 | **Menu** | Explore > RSS > Journal Metrics; Databases view > PollisJournals |
 

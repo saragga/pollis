@@ -22,7 +22,7 @@ The metrics you import stay on your computer: the licences of these sources let 
 ## Where the Metrics Appear: Tags, the Journals Filter and SQL
 - **Tags**: each item of a journal on the RSS Feeds page and on the welcome page has a tag with the journal's Norwegian level, OpenAlex's 2-year mean citedness and, once imported, its SJR or Impact Factor quartile. The pointer on the tag shows every value, with its source and year.
 - **Journals filter**: on the RSS Feeds page, Academic, Leading and Open Access from the start; SJR Q1, SJR Q1-Q2 and SNIP Above 1 once SCImago or CWTS are imported.
-- **SQL**: the metrics and journal_metrics views of PollisJournals hold every row imported, and norwegian_levels every level since 2004. Query them in a duckdb> terminal, from Databases > New DuckDB Terminal.
+- **SQL**: the `metrics` and `journal_metrics` views of PollisJournals hold every row imported, and `norwegian_levels` every level since 2004. Query them in a `duckdb>` terminal, from Databases > New DuckDB Terminal.
 
 ## See Also
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [The Metrics and What They Mean](metrics.md)
