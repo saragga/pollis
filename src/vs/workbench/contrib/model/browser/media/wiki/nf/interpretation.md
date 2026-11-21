@@ -8,11 +8,11 @@ A fitted flow is a density function and little else. Its value at a point can be
 
 ## How to Read a Mean Log-Likelihood Difference Between Flows
 
-A difference of d in mean log-likelihood means that one model's density is higher by a factor of exp(d) in the geometric mean over the sample. On training data, such a difference favours the model with more parameters. **Held-Out Log-Likelihood** and **vs Multivariate Gaussian** give no standard error. Repeating the fit gives a rough idea of the noise, and a bootstrap of the point-wise values from `logdensity` gives another for one fixed model.
+A difference of d in mean log-likelihood means that one model's density is higher by a factor of exp(d) in the geometric mean over the sample. On training data, such a difference favours the model with more parameters. **Held-Out Log-Likelihood** and **vs Multivariate Gaussian** return point values. Repeating the fit gives a rough idea of the noise, and a bootstrap of the point-wise values from `logdensity` gives another for one fixed model.
 
 ## How to Read Lowest-Density Samples
 
-**Lowest-Density Samples** lists the ten training columns with the smallest log-density. It returns ten whether or not any of them is odd, and it needs at least ten samples. The ranking changes with the scaling of the variables, since density depends on the coordinates. Log-density is an imperfect signal even on new data: for images, flow models and others can give higher likelihood to another data set ([Nalisnick, Matsukawa, Teh, Gorur and Lakshminarayanan (2018)](#ref-NMTGL2018a)).
+**Lowest-Density Samples** lists the ten training columns with the smallest log-density. The ten are the least likely columns under the fitted flow, candidates to inspect rather than confirmed anomalies. The ranking changes with the scaling of the variables, since density depends on the coordinates. Log-density is an imperfect signal even on new data: for images, flow models and others can give higher likelihood to another data set ([Nalisnick, Matsukawa, Teh, Gorur and Lakshminarayanan (2018)](#ref-NMTGL2018a)).
 
 ## How to Read a Density Slice
 

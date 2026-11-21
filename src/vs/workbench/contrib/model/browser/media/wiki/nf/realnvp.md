@@ -10,7 +10,7 @@ Each step splits a vector x into two halves, x_a of length div(D, 2) and x_b wit
 - y_b = x_b · exp(s(x_a)) + t(x_a)
 - log |det J| = sum over i of s_i(x_a)
 
-Separate multilayer networks give s and t. The Jacobian is triangular, so the determinant needs no matrix computation, and neither network has to be inverted. Even-numbered steps swap the roles of the halves. The inverse exists in closed form, x_b = (y_b − t(y_a)) · exp(−s(y_a)), but the panel's code does not include it.
+Separate multilayer networks give s and t. The Jacobian is triangular, so the determinant needs no matrix computation, and neither network has to be inverted. Even-numbered steps swap the roles of the halves. The inverse exists in closed form, x_b = (y_b − t(y_a)) · exp(−s(y_a)).
 
 ## Which Inputs the RealNVP Tab Takes
 
@@ -22,19 +22,19 @@ Separate multilayer networks give s and t. The Jacobian is triangular, so the de
 | **num_layers** | Hidden tanh layers in each network | 2 |
 | **dropout** | Probability of the one dropout layer before each network's output | 0.0 |
 
-**num_bins** does not apply to this tab. The output of s has no bound, so log-scales can grow large.
+**num_bins** does not apply to this tab.
 
-## How the RealNVP Tab Differs from the Published Model
+## How the RealNVP Tab Relates to the Published Model
 
-The published RealNVP targets images, with checkerboard and channel masks, a multi-scale architecture, residual networks and batch normalisation. The tab has none of these. It splits by row position, uses plain feed-forward networks, and applies no normalisation between steps. With a fixed split, variables in one half affect each other only across several steps. Results reported for the published model therefore do not carry over directly to this tab.
+The published RealNVP targets images, with checkerboard and channel masks, a multi-scale architecture, residual networks and batch normalisation. For a vector of variables, the tab splits by row position, uses feed-forward networks for s and t, and passes the output of one step straight to the next. With a fixed split, variables in one half affect each other across several steps, as the halves swap roles.
 
 ## What Affine Coupling Does Well
 
 One pass of each network gives the density for a whole batch, and the inverse also takes one pass, so both directions can run in parallel across dimensions. This symmetry is the reason to prefer coupling over autoregressive steps when sampling matters. The log-determinant is a plain sum of network outputs, which keeps **Per-Step Log-Determinant** easy to read. The tab vectorises over the batch, whereas **Neural Spline** loops over samples.
 
-## Where the RealNVP Tab Misleads
+## What Limits an Affine Coupling Layer
 
-An affine map given x_a only shifts and scales x_b, so each conditional within a step keeps its shape, and multimodal or sharply bounded densities take many steps. Unbounded log-scales can produce a non-finite loss on unscaled data, which ends training. Row order in **Input data** matters, so a reordering may change the fit. A **dropout** above 0 can leave later evaluations random, which `Flux.testmode!(model)` prevents, and a high training likelihood is easily reached with so many parameters.
+An affine map given x_a only shifts and scales x_b, so each conditional within a step keeps its shape, and multimodal or sharply bounded densities take many steps. The log-scales s have no bound, so data far from unit scale can drive the loss to a non-finite value. The split follows row position in **Input data**, so a reordering of the rows may change the fit. With many parameters, a high training likelihood is easily reached, and **Held-Out Log-Likelihood** shows how much of it carries over to new data.
 
 ## What to Compare RealNVP With
 

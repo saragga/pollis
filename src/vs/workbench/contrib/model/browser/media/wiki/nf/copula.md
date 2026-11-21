@@ -21,11 +21,11 @@ Rank-based pseudo-observations are the usual route to a copula with unknown marg
 
 ## What the Log-Density Means Under the Copula Target
 
-`logdensity(model, data)` returns log p(z) on the normal-score scale, and not log c(u). Neither the code nor any Next Step converts it. By the change of variables, with phi the standard normal density:
+`logdensity(model, data)` returns log p(z) on the normal-score scale. The copula density follows by back-transformation, as in the probit approach of [Geenens, Charpentier and Paindaveine (2017)](#ref-GCP2017a), with phi the standard normal density:
 
 log c(u) = log p(z) − sum over i of log phi(z_i)
 
-In Julia, that is `logdensity(model, data) .- vec(sum(logpdf.(Normal(), data); dims=1))`. The result is a true copula density only if the fitted margins of p are standard normal, which nothing in the loss imposes. Under independence, log c(u) is 0 everywhere.
+In Julia, that is `logdensity(model, data) .- vec(sum(logpdf.(Normal(), data); dims=1))`. The result is a copula density when the fitted margins of p are standard normal. Under independence, log c(u) is 0 everywhere.
 
 ## How the Next Steps Read Under the Copula Target
 
@@ -33,15 +33,15 @@ In Julia, that is `logdensity(model, data) .- vec(sum(logpdf.(Normal(), data); d
 
 ## How to Score New Points Under the Copula Target
 
-**Held-Out Log-Likelihood** and **Density of New Points** evaluate `X_test` and `X_new` as given, with no rank or probit step, so the two numbers from **Held-Out Log-Likelihood** lie on different scales. First map each new value through the training margin of its variable: find its position among the sorted training values, convert that to a value in (0, 1), and apply the probit function. Values outside the training range need a rule of their own. The panel keeps no margins.
+Under **Copula c(u)**, the flow is fitted on normal scores, so `X_test` and `X_new` go onto the same scale before **Held-Out Log-Likelihood** or **Density of New Points**. Each new value goes through the training margin of its variable: its position among the sorted training values, converted to a value in (0, 1), then the probit function. Values outside the training range need a rule of their own.
 
-## Where a Copula Fitted by a Flow Misleads
+## What Limits a Copula Fitted by a Flow
 
-`sortperm` gives tied values distinct ranks by position, so rounded or discrete data gain differences that were never observed. Scores are limited by n, the largest being Phi^(−1)(1 − 1 / (2n)), so dependence beyond the most extreme ranks can only be extrapolated. No output reflects the error of the ranks themselves. With so many parameters, a small sample can yield a detailed copula that is only noise.
+`sortperm` gives tied values distinct ranks by position, so rounded or discrete data gain differences that were never observed. Scores are limited by n, the largest being Phi^(−1)(1 − 1 / (2n)), so dependence beyond the most extreme ranks can only be extrapolated. The ranks are themselves estimates of the margins, with their own sampling error. With so many parameters, a small sample can yield a detailed copula that is only noise.
 
 ## What to Compare a Flow Copula With
 
-The Gaussian copula baseline through **vs Multivariate Gaussian** comes first. Parametric families, such as Student t or Archimedean copulas, use far fewer parameters and report named quantities such as tail dependence. A flow adds value when dependence has a shape these families miss and the sample is large. Modelling both the margins and the copula with flows is another design, which this panel does not offer ([Wiese, Knobloch and Korn (2019)](#ref-WKK2019a)).
+The Gaussian copula baseline through **vs Multivariate Gaussian** comes first. Parametric families, such as Student t or Archimedean copulas, use far fewer parameters and report named quantities such as tail dependence. A flow adds value when dependence has a shape these families miss and the sample is large. Modelling both the margins and the copula with flows is another design ([Wiese, Knobloch and Korn (2019)](#ref-WKK2019a)).
 
 ## References
 

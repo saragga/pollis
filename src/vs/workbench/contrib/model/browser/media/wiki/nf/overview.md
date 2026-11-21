@@ -20,7 +20,7 @@ The first term rewards landing near the origin of the latent space. The second t
 
 ## How the Copula Target Changes What a Flow Fits
 
-**Target** applies to all three tabs. **Joint density p(x)** passes **Input data** to the flow as given. **Copula c(u)** first replaces every variable by its empirical ranks, mapped into (0, 1), and then by normal scores through the probit function. Margins are thereby removed, and what remains for the flow is the dependence between variables. The flow's log-density is then a density on the normal-score scale. Reaching the copula density takes one further term, which the panel's code does not add.
+**Target** applies to all three tabs. **Joint density p(x)** passes **Input data** to the flow as given. **Copula c(u)** first replaces every variable by its empirical ranks, mapped into (0, 1), and then by normal scores through the probit function. Margins are thereby removed, and what remains for the flow is the dependence between variables. The flow's log-density is then a density on the normal-score scale, and the copula density follows from it by one further term, set out in [Copula Estimation](copula.md).
 
 ## A Common Workflow in the Normalising Flows Panel
 

@@ -12,7 +12,7 @@ The log-determinant is the sum of the logs of the derivatives of those splines. 
 
 ## How the Neural Spline Tab Builds Each Spline
 
-One network outputs 3K − 1 raw numbers per transformed variable: K widths, K heights and K − 1 interior derivatives. `Bijectors.RationalQuadraticSpline(widths, heights, derivatives, B)` turns them into a valid spline. Softmax gives positive widths and heights that span the box, and a softplus gives positive derivatives. `B` is fixed at 5, and the boundary derivatives are 1. Outside [-B, B] the map is the identity, with zero log-determinant. The code sets no minimum bin width.
+One network outputs 3K − 1 raw numbers per transformed variable: K widths, K heights and K − 1 interior derivatives. `Bijectors.RationalQuadraticSpline(widths, heights, derivatives, B)` turns them into a valid spline. Softmax gives positive widths and heights that span the box, and a softplus gives positive derivatives. `B` is fixed at 5, and the boundary derivatives are 1. Outside [-B, B] the map is the identity, with zero log-determinant.
 
 ## Which Inputs the Neural Spline Tab Takes
 
@@ -25,19 +25,19 @@ One network outputs 3K − 1 raw numbers per transformed variable: K widths, K h
 | **num_layers** | Hidden relu layers of that network | 2 |
 | **dropout** | Probability of the one dropout layer before the network's output | 0.0 |
 
-The published model also places invertible linear layers between couplings. This tab only swaps the halves, so it mixes variables less.
+The published model also places invertible linear layers between couplings, where the tab swaps the halves between steps.
 
 ## What Rational-Quadratic Splines Do Well
 
 One spline can bend several times, so a step can produce multimodal or sharply bounded conditionals that an affine step cannot. For such coupling flows, the authors of Neural Spline Flows report density estimation on a par with the best autoregressive flows, while keeping a closed-form inverse. In this tab, **num_bins** gives direct control over the flexibility of each step, which **RealNVP** and **MAF** lack. Fewer steps may then suffice.
 
-## Where the Neural Spline Tab Misleads
+## What Limits a Rational-Quadratic Spline Flow
 
-The spline box of [-5, 5] is a real limit. Values beyond it pass through a step unchanged and add nothing to the log-determinant, so unscaled data leave the flow little to do, and only the normal base shapes the far tails. Bins can become very narrow and give spikes in the density, which **Held-Out Log-Likelihood** may expose. More **num_bins** add outputs and, with few observations, favour overfitting. The code builds splines in a Julia loop over samples, where the other tabs use matrix passes.
+The splines act on [-5, 5]. Values beyond that box pass through a step unchanged and add nothing to the log-determinant, so data far from unit scale leave the flow little to do, and only the normal base shapes the far tails. Bins can become very narrow and give spikes in the density, which **Held-Out Log-Likelihood** may expose. More **num_bins** add outputs and, with few observations, favour overfitting.
 
 ## What to Compare a Neural Spline Flow With
 
-Compare on **Held-Out Log-Likelihood** with **RealNVP**, which has the same coupling structure, and repeat each fit, since no seed is set. A gain worth keeping is larger than the spread across repeats. **Data vs Latent Space** can show whether the latent cloud is rounder than under the affine tab. Read the result against **vs Multivariate Gaussian** as well, since the spline's extra outputs raise the number of parameters.
+Compare on **Held-Out Log-Likelihood** with **RealNVP**, which has the same coupling structure, and repeat each fit, since training starts from random weights. A gain worth keeping is larger than the spread across repeats. **Data vs Latent Space** can show whether the latent cloud is rounder than under the affine tab. Read the result against **vs Multivariate Gaussian** as well, since the spline's extra outputs raise the number of parameters.
 
 ## References
 

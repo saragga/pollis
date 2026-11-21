@@ -23,25 +23,25 @@ The network follows MADE ([Germain, Gregor, Murray and Larochelle (2015)](#ref-G
 | **num_flows** | Autoregressive steps | 8 |
 | **hidden_size** | Width of each masked hidden layer | 128 |
 | **num_layers** | Hidden tanh layers in each masked network | 2 |
-| **dropout** | Shown, but has no effect: this tab has no dropout layer | 0.0 |
+| **dropout** | Not used by the masked network | 0.0 |
 
 **num_bins** does not apply to this tab.
 
-## How the MAF Tab Differs from the Published Model
+## How the MAF Tab Relates to the Published Model
 
-The authors of MAF add batch normalisation after each autoregressive layer, and report that it reduces training time and increases stability. The tab has no such layer. It also shares one set of degrees among all hidden layers, and it does not offer the variant with a mixture of Gaussians as its base. Published results for MAF may therefore not hold for this tab.
+The authors of MAF add batch normalisation after each autoregressive layer, and report that it reduces training time and increases stability. They also describe a variant whose base is a mixture of Gaussians. The tab stacks the autoregressive steps directly on a standard normal base, and its masked networks share one set of degrees among all hidden layers. The order of the variables in step 1 is that of the rows of **Input data**.
 
 ## What Masked Autoregressive Steps Do Well
 
 Every variable can depend on all earlier ones within one step, and a coupling layer is the special case that leaves half of the variables unchanged. Reversing the order brings dependence in both directions across the stack. A density still takes one network pass per step for a whole batch, as in the coupling tabs. For density estimation with no plan to sample, that combination is the reason to choose this tab.
 
-## Where the MAF Tab Misleads
+## What Limits a Masked Autoregressive Flow
 
-Inverting a step takes D sequential passes, since x_i needs x_1 to x_(i−1), so sampling is slow for large D, and the panel's code has no inverse at all. Each conditional stays Gaussian within a step, and complex shapes take depth. Only the given order and its reverse occur, so reordering the rows of **Input data** can change the fit. Differences between runs after changing **dropout** are only random variation.
+Inverting a step takes D sequential passes, since x_i needs x_1 to x_(i−1), so sampling is slow for large D. Each conditional stays Gaussian within a step, and complex shapes take depth. Only the given order and its reverse occur, so reordering the rows of **Input data** can change the fit. Training starts from random weights, so repeated fits show how much of a difference between settings is noise.
 
 ## What to Compare MAF With
 
-Compare first with **vs Multivariate Gaussian**, and then with **RealNVP** at a similar number of parameters on **Held-Out Log-Likelihood**. **Neural Spline** may do better on sharply shaped densities. For sampling, the inverse autoregressive flow reverses the costs, with fast sampling and slow density evaluation at new points, but the panel does not include it ([Kingma, Salimans, Jozefowicz, Chen, Sutskever and Welling (2016)](#ref-KSJCS...2016a)).
+Compare first with **vs Multivariate Gaussian**, and then with **RealNVP** at a similar number of parameters on **Held-Out Log-Likelihood**. **Neural Spline** may do better on sharply shaped densities. For sampling, the inverse autoregressive flow reverses the costs, with fast sampling and slow density evaluation at new points ([Kingma, Salimans, Jozefowicz, Chen, Sutskever and Welling (2016)](#ref-KSJCS...2016a)). Repeating each fit shows whether a difference exceeds the spread from random starting weights.
 
 ## References
 

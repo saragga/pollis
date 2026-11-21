@@ -16,15 +16,15 @@ The loss treats samples as independent draws from one distribution, and the `Dat
 
 ## What Scale the Normalising Flow Tabs Expect
 
-With **Joint density p(x)**, custom **Input data** reach the flow unscaled, and the fixed learning rate of 0.001 suits values near unit scale. Large values slow training or drive it to a non-finite loss, which stops `Flux.train!` with a `DomainError`. **Neural Spline** is more exposed, since its splines act only on [-5, 5]. Standardise with the training mean and standard deviation, and treat held-out data the same way.
+With **Joint density p(x)**, **Input data** reach the flow as given, and the learning rate of 0.001 suits values near unit scale. Large values slow training or drive it to a non-finite loss, which stops `Flux.train!` with a `DomainError`. **Neural Spline** is more exposed, since its splines act only on [-5, 5]. Standardise with the training mean and standard deviation, and treat held-out data the same way.
 
 ## Why Sample Size Limits a Normalising Flow
 
-The default inputs give hundreds of thousands of parameters for ten variables, so a small sample can be memorised. The training code has no weight penalty, early stopping or validation split to guard against that. A growing distance between train and test in **Held-Out Log-Likelihood** is the sign. Reduce **hidden_size** or **num_flows** when it appears, or fall back on a Gaussian density.
+The default inputs give hundreds of thousands of parameters for ten variables, so a small sample can be memorised. Weight penalties, early stopping on a validation split and smaller networks are the usual guards against it. A growing distance between train and test in **Held-Out Log-Likelihood** is the sign. Reduce **hidden_size** or **num_flows** when it appears, or fall back on a Gaussian density.
 
 ## How Variable Order and Random Starts Affect a Normalising Flow
 
-Autoregressive models are sensitive to the order of the variables, as [Papamakarios, Pavlakou and Murray (2017)](#ref-PPM2017a) note. The coupling splits of this panel also follow row position in **Input data** with no shuffling, so reordering the rows can change the result. The likelihood is non-convex, no seed is set, and training ends after 100 epochs whether or not it has converged. Repeating a fit shows how far a conclusion depends on these choices.
+Autoregressive models are sensitive to the order of the variables, as [Papamakarios, Pavlakou and Murray (2017)](#ref-PPM2017a) note. The coupling splits of this panel also follow row position in **Input data** with no shuffling, so reordering the rows can change the result. The likelihood is non-convex, training starts from random weights, and it runs for a fixed 100 epochs. Repeating a fit shows how far a conclusion depends on these choices.
 
 ## References
 
