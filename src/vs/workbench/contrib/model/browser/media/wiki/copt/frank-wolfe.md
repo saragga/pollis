@@ -16,7 +16,7 @@ The quantity grad f(x)'(x - v) is an upper bound on f(x) - f*, for convex f: the
 Convergence is O(1/k) in the objective, slow for high accuracy, and the iterates zigzag when the solution lies on a face of the set. Away-step and pairwise variants in FrankWolfe.jl reduce the zigzag on polytopes.
 
 ## In This Panel
-The panel calls FrankWolfe.frank_wolfe with an adaptive line search. Its LMO minimises the linear function over the box and the constraints by a small SLSQP problem, **exact only when the set is convex**. It starts at the extreme point of the set opposite the centre. The **Solution Path** records every iterate.
+The panel calls `FrankWolfe.frank_wolfe` with an adaptive line search. Its LMO minimises the linear function over the box and the constraints by a small SLSQP problem, **exact only when the set is convex**. It starts at the extreme point of the set opposite the centre. The **Solution Path** records every iterate.
 
 ## See Also
 - [Gradient Projection](gradient-projection.md) · [SLSQP](slsqp.md) · [Decision Guide](decision-guide.md)
