@@ -15,9 +15,9 @@ The steps, inputs, diagnoses, macros and files of Speed Up a Function at a glanc
 
 | Input | Step | Default | Meaning |
 |---|---|---|---|
-| **Function** | The Function | slow_var | The function to speed up, by name; a name of a module, `MyModule.f`, is allowed |
+| **Function** | The Function | `slow_var` | The function to speed up, by name; a name of a module, `MyModule.f`, is allowed |
 | **Arguments** | The Function | x | The arguments of the call, as written in it, on one line |
-| **Faster Version** | Change | fast_var | The name of the changed version, other than the function's |
+| **Faster Version** | Change | `fast_var` | The name of the changed version, other than the function's |
 
 The **Run** button of a step is off while the names are not Julia names, and the Run buttons of **Change** and **Compare** and Speed Up with Agent are off while the faster version has no name of its own.
 
