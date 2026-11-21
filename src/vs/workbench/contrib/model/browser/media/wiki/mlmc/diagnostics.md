@@ -4,7 +4,7 @@ A small estimated RMSE says only that the estimator believes its own error model
 
 ## How to Check That Multilevel Corrections Lose Variance
 
-**Variance Decay** prints Var[Q_l - Q_(l-1)] for each level, its ratio to the previous level, and the fitted beta next to the theoretical one. A steady ratio near 2^beta is what a good coupling gives. Ratios close to 1 mean that fine levels stay expensive: look for a coupling error in `sample_fn`. On **MLQMC**, the variance shown is over the points of a shift, so it does not reflect the gain of the lattice.
+**Variance Decay** prints Var[Q_l - Q_(l-1)] for each level, its ratio to the previous level, and the fitted beta next to the theoretical one. A steady ratio near 2^beta is what a good coupling gives. Ratios close to 1 mean that fine levels stay expensive: look for a coupling error in `sample_fn`. On **MLQMC**, the variance is that of the points within a shift, and the gain of the lattice shows in the spread across shifts.
 
 ## How to Check the Weak Convergence of Multilevel Corrections
 
@@ -16,7 +16,7 @@ A small estimated RMSE says only that the estimator believes its own error model
 
 ## Why a Multilevel Run Stopped at Its Finest Level
 
-**Levels Used** lists |E[Q_l - Q_(l-1)]| and the samples per level, then L, the bias estimate, the mean squared error and tol^2. Its text always places the sign <= between the last two, so compare the numbers rather than trust the sign. A warning appears when L has reached **Max Level**, as the bias may then exceed its share of the tolerance, and the remedy is a larger **Max Level**.
+**Levels Used** lists |E[Q_l - Q_(l-1)]| and the samples per level, then L, the bias estimate, the mean squared error and tol^2. Comparing the mean squared error with tol^2 shows whether the error budget was met. A warning appears when L has reached **Max Level**, as the bias may then exceed its share of the tolerance, and the remedy is a larger **Max Level**.
 
 ## How to Test Whether the Multilevel Error Budget Holds
 
@@ -24,7 +24,7 @@ A small estimated RMSE says only that the estimator believes its own error model
 
 ## How to Measure the Saving over Single-Level Monte Carlo
 
-**Multilevel vs Single Level** runs plain sampling at the same finest level and tolerance, and prints both costs, both errors and their ratio. The package's single-level run always gives half of tol^2 to the variance, while the multilevel run may give it up to 0.99 of tol^2. The printed ratio can therefore favour the multilevel side by up to a factor of about 2, and **Cost vs Tolerance** and **Complexity Check** carry the same caveat.
+**Multilevel vs Single Level** runs plain sampling at the same finest level and tolerance, and prints both costs, both errors and their ratio. The two estimators divide tol^2 between variance and bias in their own ways, so a ratio at one tolerance is best read beside **Cost vs Tolerance** and **Complexity Check**, which follow both across four tolerances. A multilevel cost well under the single-level cost at every tolerance is the saving the method promises.
 
 ## How to Test the Sensitivity of a Multilevel Run to Max Level
 
@@ -32,7 +32,7 @@ A small estimated RMSE says only that the estimator believes its own error model
 
 ## How to See the Random Spread of a Multilevel Estimate
 
-The Next Steps of the panel offer no repeated-run check, and a single run hides the spread of its own error. Change **Seed**, run a few times, and compare the estimates with the estimated RMSE. A spread much wider than the estimated RMSE means that the variance estimate is not to be trusted, which can happen when fine levels hold very few samples.
+A single run hides the spread of its own error, since the estimate, the estimated RMSE and the samples per level all come from one set of random draws. Change **Seed**, run a few times, and compare the estimates with the estimated RMSE. A spread much wider than the estimated RMSE means that the variance estimate is not to be trusted, which can happen when fine levels hold very few samples.
 
 ## See Also
 

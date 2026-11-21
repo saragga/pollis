@@ -16,11 +16,11 @@ The run prints the estimate and the exact answer, the error, the estimated RMSE 
 
 ## What the Fitted Rates of a Multilevel Run Mean
 
-**Rates** prints alpha, beta and gamma next to the theory for the chosen problem. The fits use levels 1 to L, so a run needs at least three levels to give a rate, and a rate from three or four noisy points is rough. A gamma of exactly 1 is not a measurement: it comes from the cost model in the code. Beta on **MLQMC** is a rate for independent points, and says nothing about the gain from the lattice.
+**Rates** prints alpha, beta and gamma next to the theory for the chosen problem. The fits use levels 1 to L, so a run needs at least three levels to give a rate, and a rate from three or four noisy points is rough. Gamma comes from the cost model in the code, 2^l, which gives 1. On **MLQMC**, beta describes the points within a shift, and the gain of the lattice appears in the spread across shifts.
 
 ## How to Read the Multilevel Bias Estimate
 
-**Mean Decay** and **Confidence Interval** print a bias estimate, and the label in **Mean Decay** writes it as |E[Q - Q_L]|. The value in fact comes from the package's extrapolation of the next correction, |E[Q_(L+1) - Q_L]|. With regular decay the full remainder is larger, by a factor of about 2 when alpha = 1 and 4/3 when alpha = 2. Reading the printed figure as the whole bias therefore understates it.
+**Mean Decay** and **Confidence Interval** print the package's bias estimate, the part of the error that comes from stopping at level L. The bias is the sum of the corrections beyond L, so the package estimates it from the decay of the last corrections. Steady ratios in **Mean Decay** make that estimate dependable, and erratic ratios on the finest levels make it rough. With the exact answers of the test problems, |estimate - exact| sets the bias estimate and the sampling error together against the truth.
 
 ## How to Read the Multilevel Confidence Interval
 
@@ -28,7 +28,7 @@ The run prints the estimate and the exact answer, the error, the estimated RMSE 
 
 ## How to Read the Cost Forecast and Cost Curves of the Multilevel Panel
 
-**Cost Forecast** applies the complexity theorem to the measured rates and predicts the cost of a tolerance ten times smaller. Rates within 0.25 of each other count as equal, so a small error in beta can change the regime. **Cost vs Tolerance** plots measured cost against tolerance, with a dashed line of slope tol^-2. On **MLQMC**, the forecast uses the rates of independent sampling and tends to overstate the growth.
+**Cost Forecast** applies the complexity theorem to the measured rates and predicts the cost of a tolerance ten times smaller. Rates within 0.25 of each other count as equal, so a small error in beta can change the regime. **Cost vs Tolerance** plots measured cost against tolerance, with a dashed line of slope tol^-2. On **MLQMC**, the rates of the theorem are those of independent sampling, and the lattice rule usually needs fewer points than they imply.
 
 ## See Also
 

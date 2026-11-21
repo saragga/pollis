@@ -37,9 +37,9 @@ The midpoint rule explains the first row: its error for each X is O(h^2), and so
 
 **Cost Forecast** picks a regime from the measured rates, treating rates within 0.25 as equal, and multiplies the current cost for a tolerance ten times smaller. The factor is 100 for beta > gamma, about 100 times a squared log ratio for beta = gamma, and 10^(2 + (gamma - beta)/alpha) for beta < gamma. **Complexity Check** prints tol^2 times cost at four tolerances, for both methods. Under beta > gamma, the multilevel column should stay roughly constant. Under beta = gamma, it should grow like (log tol)^2. The single-level column should grow like tol^(-gamma/alpha).
 
-## Where the Multilevel Complexity Theorem Misleads
+## What Limits the Multilevel Complexity Theorem
 
-The theorem gives rates and hides constants, so a method with the better rate can cost more at a loose tolerance. Its bounds hold for an estimator using the right number of levels and an idealised allocation, while the package estimates these from samples. Its gamma in the panel is the cost model and not a measurement. On **MLQMC**, the theorem does not describe the lattice rule: the fitted beta belongs to independent points, so the regime named by **Cost Forecast** and the figures from **Complexity Check** can overstate the growth in cost.
+The theorem gives rates and hides constants, so a method with the better rate can cost more at a loose tolerance. Its bounds hold for an estimator using the right number of levels and an idealised allocation, while the package estimates these from samples. Its gamma in the panel is that of the cost model, 2^l. The theorem's rates are stated for independent samples, which the **MLMC** tab draws; on **MLQMC**, the lattice rule makes the error fall faster with the number of points, so the cost grows more slowly than the regime of **Cost Forecast** suggests.
 
 ## What to Compare the Complexity Theorem With
 

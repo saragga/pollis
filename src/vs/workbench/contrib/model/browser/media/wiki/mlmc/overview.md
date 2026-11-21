@@ -22,9 +22,9 @@ Each term is estimated by its own independent set of samples. Within one sample,
 
 **MLQMC** keeps the same levels and the same `sample_fn`, and replaces the independent samples with a rank-1 lattice rule under **n Shifts** random shifts. [Giles and Waterhouse (2009)](#ref-GW2009a) introduced lattice points on the levels of a path simulation. The mean over the points of one shift gives one estimate per shift, and the spread of those estimates gives the error bar. On smooth problems the error per level falls faster than the N^(-1/2) of independent sampling. The analysis of [Kuo, Scheichl, Schwab, Sloan and Ullmann (2017)](#ref-KSSSU2017a) gives conditions for this gain on lognormal diffusion problems.
 
-## What the Multilevel Monte Carlo Panel Does Not Do
+## How to Use the Multilevel Panel for a Problem of Your Own
 
-The panel has no input for a user's own model or data. Its two problems exist to show the method where the answer is known, and **Relative Tolerance** is scaled by that known answer. A problem of your own means rewriting `sample_fn`, `distributions`, the cost model and the scale of the tolerance in the code. The cost model does not measure the time of the code: **Cost per Level** compares the two. The panel applies no Milstein scheme, antithetic coupling or multi-index levels.
+The two test problems of **Problem** have known answers, so each run can be judged against the truth, and **Relative Tolerance** is scaled by that answer. A problem of your own goes into `sample_fn`, with its `distributions`, its cost model and an absolute tolerance in the call to `run`. The cost model counts grid points or time steps, and **Cost per Level** sets it against the measured time. Milstein schemes, antithetic coupling and multi-index levels refine the method further, as the survey of [Giles (2015)](#ref-Gil2015a) describes.
 
 ## A Common Workflow for Multilevel Monte Carlo
 

@@ -7,7 +7,7 @@ Multilevel Monte Carlo writes an expected value as a sum of corrections between 
 | Item | Detail |
 |---|---|
 | Purpose | Estimate an expected value to a target root mean squared error (RMSE), and measure the rates that decide how much the levels save |
-| Julia stack | MultilevelEstimators.jl for the estimator, SpecialFunctions.jl for the exact answer of **Random Integral**, Plots.jl for the figures |
+| Julia stack | MultilevelEstimators.jl for the estimator, SpecialFunctions.jl for the exact answers of both problems, Plots.jl for the figures |
 | Tabs | **MLMC** and **MLQMC** |
 | Input shape | No data: **Problem** picks a built-in test problem, and a problem of your own means editing `sample_fn` in the code |
 | Printed results | Estimate, exact answer, error, estimated RMSE, tolerance, levels, samples per level, total cost |

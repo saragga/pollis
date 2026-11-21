@@ -29,7 +29,7 @@ Keep **Max Level** high enough to be unused: a run that stops at L = **Max Level
 
 ## How Multilevel Monte Carlo Compares with Other Variance Reduction Methods
 
-Control variates and importance sampling reduce variance at one fixed grid, and leave the bias unchanged, so they work with the multilevel idea rather than against it. A better discretisation raises beta: the Milstein scheme, not offered in the panel, is the usual step for path simulation, and it can move a problem to the cheap regime. Plain quasi-Monte Carlo at one fine level needs the integrand to be smooth in a very high dimension, while **MLQMC** spreads the work across levels.
+Control variates and importance sampling reduce variance at one fixed grid, and leave the bias unchanged, so they work with the multilevel idea rather than against it. A better discretisation raises beta: the Milstein scheme is the usual step for path simulation, and it can move a problem to the cheap regime. Plain quasi-Monte Carlo at one fine level needs the integrand to be smooth in a very high dimension, while **MLQMC** spreads the work across levels.
 
 ## See Also
 

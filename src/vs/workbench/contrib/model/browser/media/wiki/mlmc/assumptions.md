@@ -12,15 +12,15 @@ The theory needs |E[Q_l - Q_(l-1)]| and Var[Q_l - Q_(l-1)] to fall geometrically
 
 ## Why the Multilevel Bias Estimate Relies on Extrapolation
 
-The exact bias is unknown in general, so the package fits a line to log2 |E[Q_l - Q_(l-1)]| over the last three levels and reads off the size of the next correction. A noisy last level moves this estimate, and an estimate that is too small stops the run too early. The panel prints the exact answer, which a real application would lack, so the true error can be compared with the tolerance.
+The exact bias is unknown in general, so the package estimates it from the decay of |E[Q_l - Q_(l-1)]| on the finest levels. A noisy last level moves this estimate, and an estimate that is too small stops the run too early. The panel prints the exact answer, which a real application would lack, so the true error can be compared with the tolerance.
 
-## How the Cost Model of the Multilevel Panel Can Mislead
+## How the Cost Model Relates to the Run Time per Level
 
 `cost(level) = 2.0^level[1]` fixes the cost of one sample, both for the allocation and for the printed total, so gamma equals 1 by construction. Real time per sample may differ, especially on coarse levels where the overhead of parallel evaluation outweighs the work. **Cost per Level** plots the model against the measured time. A wide gap on fine levels makes the allocation less than optimal, though the estimate itself remains valid.
 
 ## What the MLQMC Tab Assumes About Smoothness
 
-Lattice rules gain over random sampling when the integrand is smooth and its variation is concentrated in a few coordinates. **Random Integral** has one smooth input and suits this well. **GBM Call Option** has a kink in the payoff, and it feeds Brownian increments to the lattice in time order, with no Brownian bridge or principal component ordering, so every coordinate matters about equally on a fine level. Running **Multilevel vs Single Level** on both tabs shows what the lattice actually saved.
+Lattice rules gain over random sampling when the integrand is smooth and its variation is concentrated in a few coordinates. **Random Integral** has one smooth input and suits this well. **GBM Call Option** has a kink in the payoff, and it feeds Brownian increments to the lattice in time order, so every coordinate matters about equally on a fine level. Running **Multilevel vs Single Level** on both tabs shows what the lattice actually saved.
 
 ## See Also
 
