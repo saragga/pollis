@@ -497,25 +497,28 @@ ${JULIA_TO_JSON}
 	# The rows of a specification, checked: a NamedTuple of columns as long as y, with y the outcome and d the variable
 	# whose effect is estimated
 	function rows_of(spec)
-		rows = specification_data(spec)
+		local rows = specification_data(spec)
 		(rows isa NamedTuple && haskey(rows, :y) && haskey(rows, :d)) || error("specification_data must return a NamedTuple of columns with y and d")
 		all(column -> column isa AbstractVector && length(column) == length(rows.y), values(rows)) || error("every column of specification_data must be a vector as long as y")
 		return rows
 	end
-	# The estimate and standard error of a specification on rows, checked
+	# The estimate and standard error of a specification on rows, checked. The names a nested function assigns are
+	# declared local, else they are those of the let block, shared by every thread
 	function fit(rows, spec)
+		local b, se
 		b, se = estimate(rows, spec)
 		(isfinite(b) && isfinite(se) && se > 0) || error("estimate gave $b with standard error $se")
 		return Float64(b), Float64(se)
 	end
 	# Every specification once, over the threads of Julia; a failure is kept with its message
 	function run_all()
-		results = Vector{Dict{String, Any}}(undef, K)
-		done = Threads.Atomic{Int}(0)
+		local results = Vector{Dict{String, Any}}(undef, K)
+		local done = Threads.Atomic{Int}(0)
 		Threads.@threads for k in 1:K
-			entry = Dict{String, Any}("choices" => specs[k])
+			local entry = Dict{String, Any}("choices" => specs[k])
 			try
-				rows = rows_of(specs[k])
+				local rows = rows_of(specs[k])
+				local b, se
 				b, se = fit(rows, specs[k])
 				entry["estimate"] = b
 				entry["std_error"] = se
@@ -524,7 +527,7 @@ ${JULIA_TO_JSON}
 				entry["error"] = sprint(showerror, err)
 			end
 			results[k] = entry
-			finished = Threads.atomic_add!(done, 1) + 1
+			local finished = Threads.atomic_add!(done, 1) + 1
 			finished % max(1, div(K, 10)) == 0 && println("  $finished of $K specifications")
 		end
 		return results
@@ -548,32 +551,32 @@ ${JULIA_TO_JSON}
 		println("The test under the null: the $K specifications on $draws resamples, on $(Threads.nthreads()) threads")
 		observed = run_all()
 		any(entry -> haskey(entry, "error"), observed) && error("Some specifications fail: run the curve, and fix specification.jl")
-		b = [entry["estimate"] for entry in observed]
-		se = [entry["std_error"] for entry in observed]
+		b_observed = [entry["estimate"] for entry in observed]
+		se_observed = [entry["std_error"] for entry in observed]
 		# The dominant direction is the sign of the median estimate; the statistics are taken in it
-		direction = Statistics.median(b) >= 0 ? 1.0 : -1.0
+		direction = Statistics.median(b_observed) >= 0 ? 1.0 : -1.0
 		statistics(b, se) = (median = direction * Statistics.median(b), share = Statistics.mean(direction .* b ./ se .> 1.96), stouffer = direction * sum(b ./ se) / sqrt(length(b)))
-		actual = statistics(b, se)
+		actual = statistics(b_observed, se_observed)
 		B = fill(NaN, K, draws)
 		S = fill(NaN, K, draws)
 		done = Threads.Atomic{Int}(0)
 		Threads.@threads for k in 1:K
-			rows = rows_of(specs[k])
+			local rows = rows_of(specs[k])
 			# The outcome with the specification's own estimate taken out, so that its effect is zero
-			y0 = rows.y .- b[k] .* rows.d
+			local y0 = rows.y .- b_observed[k] .* rows.d
 			# Resampled within the treated and the untreated when d is 0 or 1, so that both groups keep their sizes
-			groups = all(v -> v == 0 || v == 1, rows.d) ? filter(!isempty, [findall(==(1), rows.d), findall(==(0), rows.d)]) : [collect(eachindex(rows.y))]
+			local groups = all(v -> v == 0 || v == 1, rows.d) ? filter(!isempty, [findall(==(1), rows.d), findall(==(0), rows.d)]) : [collect(eachindex(rows.y))]
 			for r in 1:draws
 				# The same draw for every specification on the same rows: the seed and the draw's number make it
-				rng = Random.Xoshiro(seed + r)
-				index = reduce(vcat, [rand(rng, group, length(group)) for group in groups])
-				drawn = merge(map(column -> column[index], rows), (y = y0[index],))
+				local rng = Random.Xoshiro(seed + r)
+				local index = reduce(vcat, [rand(rng, group, length(group)) for group in groups])
+				local drawn = merge(map(column -> column[index], rows), (y = y0[index],))
 				try
 					B[k, r], S[k, r] = fit(drawn, specs[k])
 				catch
 				end
 			end
-			finished = Threads.atomic_add!(done, 1) + 1
+			local finished = Threads.atomic_add!(done, 1) + 1
 			finished % max(1, div(K, 10)) == 0 && println("  $finished of $K specifications")
 		end
 		# A draw counts when every specification ran on it
