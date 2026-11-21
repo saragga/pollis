@@ -56,7 +56,7 @@ export async function plutoNotebookFile(fileService: IFileService, environmentSe
 /** The cell of a Pluto notebook that loads Pollis.jl, as `Pollis`, from the file the Pluto server names. */
 const PLUTO_POLLIS_CELL = `# Pollis.jl, from the Julia extension of the Pollis that started this Pluto server
 Pollis = let file = get(ENV, "POLLIS_JL", "")
-	isfile(file) || error("Pollis.jl is not found: open the notebook from Pollis, with Send to Pluto or New File > Pluto Notebook")
+	isfile(file) || error("Pollis.jl is not found: open the notebook from Pollis, with the Pluto button below a panel's code or New File > Pluto Notebook")
 	Base.include(Module(:PollisHost), file)
 end`;
 
@@ -236,7 +236,7 @@ function openInPlutoBrowser(commandService: ICommandService, base: string, secre
 /**
  * Registers the Pluto integration commands:
  *  - `pollis.action.sendToPluto` — write the given code as a fresh one-cell Pluto notebook and
- *    open it in the internal browser (used by the webviews' "Send to Pluto" button).
+ *    open it in the internal browser (used by the webviews' "Pluto" button).
  *  - `pollis.action.newPlutoNotebook` — open a brand-new empty Pluto notebook (New File entry).
  * Both ensure/reuse a single Pluto server. A uniquely-named notebook file is written each time,
  * so no pre-existing Pluto notebook is ever overwritten.

@@ -29,7 +29,7 @@ f = Fred()
 get_data(f, "GDPC1")
 ```
 
-For **Send to Editor / Notebook**, the FRED key is *not* injected (those files persist to disk). Set it yourself in that session, e.g. by running the REPL once or adding `ENV["FRED_API_KEY"] = "..."` locally.
+For **Editor** and **Notebook**, the FRED key is *not* injected (those files persist to disk). Set it yourself in that session, e.g. by running the REPL once or adding `ENV["FRED_API_KEY"] = "..."` locally.
 
 ## Setting It Manually (Alternative)
 

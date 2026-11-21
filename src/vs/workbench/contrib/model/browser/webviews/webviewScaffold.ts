@@ -344,7 +344,7 @@ export interface WebviewParts {
 	/**
 	 * Queries of Pollis's databases, in a group of their own at the end of Next Steps, Query in SQL, with the database
 	 * codicon: each opens its SQL in the panel on the right, with Copy, DuckDB REPL (runs it in the duckdb> terminal,
-	 * where the databases are attached by their names) and Send to Editor. Optional in every style; a Classical panel
+	 * where the databases are attached by their names) and Editor. Optional in every style; a Classical panel
 	 * declares them in its TOML as the action group `sql`.
 	 */
 	readonly sqlSteps?: readonly IScaffoldSqlStep[];
@@ -461,54 +461,53 @@ function colorizeBrackets(root, commentStart) {
 /**
  * The script functions of the line numbers of code, as the editor shows them, which `lineNumbersCss` styles:
  * `numberCodeLines(box)` numbers the code of two or more lines a box shows coloured by `tokenizeToString`, after
- * `colorizeBrackets`, in a gutter that stays on the left when the box scrolls sideways; `numberTextArea(area, mirror)`
- * numbers the lines of a code box to type in, and follows its text, scrolling and size from then on, with `mirror`,
- * the coloured copy of a `codeEditorHtml` box, kept in line with it. The numbers cannot be selected or copied with the code.
+ * `colorizeBrackets`, a row for each line, its number on the left even when the box scrolls sideways, and level with
+ * the line when the box wraps long lines (the class `code-wrap` on the box); `numberTextArea(area, mirror)` numbers the
+ * lines of a code box to type in, and follows its text, scrolling and size from then on, with `mirror`, the coloured
+ * copy of a `codeEditorHtml` box, kept in line with it. The numbers cannot be selected or copied with the code.
  */
 export const lineNumbersJs = `function lineNumbersText(count) {
 	var numbers = [];
 	for (var i = 1; i <= count; i++) { numbers.push(i); }
 	return numbers.join('\\n');
 }
-// The lines a box shows: one more than its line breaks, less an empty last line, which is not drawn
-function tokenizedLineCount(source) {
-	var count = 1, last = '';
-	source.childNodes.forEach(function(node) {
-		if (node.nodeName === 'BR') { count++; last = ''; } else { last += node.textContent; }
-	});
-	return count > 1 && last === '' ? count - 1 : count;
-}
 function numberCodeLines(box) {
-	var old = box.querySelector(':scope > .code-numbered');
-	if (old) {
-		var kept = old.querySelector(':scope > .code-lines');
-		while (kept.firstChild) { box.insertBefore(kept.firstChild, old); }
-		old.remove();
-	}
-	box.classList.remove('has-line-numbers');
 	var source = box.querySelector('.monaco-tokenized-source');
-	var count = source ? tokenizedLineCount(source) : 0;
-	if (count < 2) { return; }
-	// The gutter takes the box's left padding, and covers the code scrolled under it with the box's own colour, up to
-	// 12px after its line
+	if (!source || source.classList.contains('code-numbered')) { return; }
+	box.classList.remove('has-line-numbers');
+	// The tokens of each line, split at the line breaks; an empty last line is not drawn
+	var lines = [[]];
+	source.childNodes.forEach(function(node) {
+		if (node.nodeName === 'BR') { lines.push([]); } else { lines[lines.length - 1].push(node); }
+	});
+	var last = lines[lines.length - 1];
+	if (lines.length > 1 && !last.some(function(node) { return node.textContent; })) { lines.pop(); }
+	if (lines.length < 2) { return; }
+	// The numbers take the box's left padding, and cover the code scrolled under them with the box's own colour, up
+	// to 12px after their line
 	var style = getComputedStyle(box);
 	var page = getComputedStyle(document.body).backgroundColor;
 	var under = page && page !== 'rgba(0, 0, 0, 0)' && page !== 'transparent' ? page : 'var(--vscode-editor-background)';
-	var line = 'var(--vscode-widget-border, var(--vscode-panel-border))';
-	var gutter = document.createElement('div');
-	gutter.className = 'line-gutter';
-	gutter.setAttribute('aria-hidden', 'true');
-	gutter.textContent = lineNumbersText(count);
-	gutter.style.paddingLeft = style.paddingLeft;
-	gutter.style.background = 'linear-gradient(to left, transparent 12px, ' + line + ' 12px, ' + line + ' 13px, transparent 13px), '
+	var rule = 'var(--vscode-widget-border, var(--vscode-panel-border))';
+	var background = 'linear-gradient(to left, transparent 12px, ' + rule + ' 12px, ' + rule + ' 13px, transparent 13px), '
 		+ 'linear-gradient(' + style.backgroundColor + ', ' + style.backgroundColor + '), ' + under;
-	var lines = document.createElement('div');
-	lines.className = 'code-lines';
-	while (box.firstChild) { lines.appendChild(box.firstChild); }
-	var numbered = document.createElement('div');
-	numbered.className = 'code-numbered';
-	numbered.append(gutter, lines);
-	box.appendChild(numbered);
+	source.textContent = '';
+	lines.forEach(function(nodes, i) {
+		var number = document.createElement('div');
+		number.className = 'line-number';
+		number.setAttribute('aria-hidden', 'true');
+		// As generated content, which is never selected or copied
+		number.dataset.line = String(i + 1);
+		number.style.paddingLeft = style.paddingLeft;
+		number.style.background = background;
+		var text = document.createElement('div');
+		text.className = 'code-text';
+		nodes.forEach(function(node) { text.appendChild(node); });
+		// An empty line keeps its line when selected and copied
+		if (!text.textContent) { text.appendChild(document.createElement('br')); }
+		source.append(number, text);
+	});
+	source.classList.add('code-numbered');
 	box.classList.add('has-line-numbers');
 }
 function numberTextArea(area, mirror) {
@@ -516,7 +515,7 @@ function numberTextArea(area, mirror) {
 	if (!gutter) {
 		gutter = document.createElement('div');
 		gutter.id = area.id + 'Lines';
-		gutter.className = 'line-gutter line-gutter-input';
+		gutter.className = 'line-gutter-input';
 		gutter.setAttribute('aria-hidden', 'true');
 		area.parentElement.insertBefore(gutter, area);
 		area.addEventListener('scroll', function() { gutter.scrollTop = area.scrollTop; });
@@ -552,12 +551,17 @@ function numberTextArea(area, mirror) {
 	gutter.scrollTop = area.scrollTop;
 }`;
 
-/** The styles of `lineNumbersJs`: the editor's line number colour, right-aligned, with a thin line after them. */
+/**
+ * The styles of `lineNumbersJs`: the editor's line number colour, right-aligned, with a thin line after them; and
+ * the code of a box with the class `code-wrap` wrapped at its width.
+ */
 export const lineNumbersCss = `.has-line-numbers { padding-left: 0 !important; }
-		.code-numbered { display: flex; align-items: flex-start; width: max-content; min-width: 100%; }
-		.code-lines { flex: none; }
-		.line-gutter { flex: none; position: sticky; left: 0; z-index: 1; padding-right: 21px; text-align: right; white-space: pre; color: var(--vscode-editorLineNumber-foreground); user-select: none; -webkit-user-select: none; }
-		.line-gutter-input { position: absolute; z-index: 2; box-sizing: content-box; padding-right: 8px; overflow: hidden; pointer-events: none; background: var(--vscode-input-background); border-right: 1px solid var(--vscode-widget-border, var(--vscode-panel-border)); }`;
+		.monaco-tokenized-source.code-numbered { display: grid; grid-template-columns: auto 1fr; width: max-content; min-width: 100%; }
+		.line-number::before { content: attr(data-line); }
+		.line-number { position: sticky; left: 0; z-index: 1; padding-right: 21px; text-align: right; color: var(--vscode-editorLineNumber-foreground); user-select: none; -webkit-user-select: none; }
+		.code-wrap .monaco-tokenized-source, .code-wrap .code-line { white-space: pre-wrap !important; overflow-wrap: anywhere; }
+		.code-wrap .monaco-tokenized-source.code-numbered { width: auto; grid-template-columns: auto minmax(0, 1fr); }
+		.line-gutter-input { position: absolute; z-index: 2; box-sizing: content-box; padding-right: 8px; overflow: hidden; white-space: pre; text-align: right; color: var(--vscode-editorLineNumber-foreground); pointer-events: none; user-select: none; -webkit-user-select: none; background: var(--vscode-input-background); border-right: 1px solid var(--vscode-widget-border, var(--vscode-panel-border)); }`;
 
 /** The spinner of every page of Pollis: the two curved arrows of the sync icon, turning; its CSS is `spinnerCss`. */
 export const spinnerSvg = '<svg class="spin" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5A5.5 5.5 0 0 1 12.8 5"/><path d="M13 2.5v2.7h-2.7"/><path d="M13.5 9.5A5.5 5.5 0 0 1 3.2 11"/><path d="M3 13.5v-2.7h2.7"/></svg>';
@@ -865,6 +869,9 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.code-action-btn:disabled { opacity: 0.35; cursor: default; }
 		.code-action-btn.primary { background: var(--vscode-button-background); color: var(--vscode-button-foreground); opacity: 1; }
 		.code-action-btn.primary:hover { background: var(--vscode-button-hoverBackground); }
+		/* Wrap, on: ticked */
+		.wrap-btn[aria-pressed="true"] { opacity: 1; }
+		.wrap-btn[aria-pressed="true"]::before { content: '✓ '; }
 		/* Editable Example Code (main box and Next Steps panel): the box swaps for a textarea while editing; a saved example is marked Customised. */
 		.code-edit-wrap { position: relative; display: none; }
 		#sec-code.editing .code-edit-wrap, #right-panel.editing .code-edit-wrap { display: block; }
@@ -973,6 +980,7 @@ ${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${
 			<div class="code-btn-bar code-btn-bar-bottom code-btn-bar-split" id="main-btn-bar">
 				<span class="code-btn-group">
 					<button class="code-action-btn" id="btn-edit-code" title="Edit this example and keep your version">Edit</button>
+					<button class="code-action-btn wrap-btn" id="btn-wrap-code" aria-pressed="false" title="Wrap long lines at the width of the box">Wrap</button>
 					<button class="code-action-btn" id="btn-restore-code" title="Move your version to the Trash and bring back the original example" hidden>Restore Default</button>
 					<button class="code-action-btn primary" id="btn-save-code" hidden>Save</button>
 					<button class="code-action-btn" id="btn-cancel-code" hidden>Cancel</button>${parts.interactiveLabelHtml ? '\n\t\t\t\t\t' + parts.interactiveLabelHtml : ''}
@@ -980,9 +988,9 @@ ${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${
 				<span class="code-btn-group">
 					<button class="code-action-btn" id="btn-copy">Copy</button>
 					<button class="code-action-btn" id="btn-julia-repl">Julia REPL</button>
-					<button class="code-action-btn" id="btn-new-file">Send to Editor</button>
-					<button class="code-action-btn" id="btn-notebook">Send to Notebook</button>
-					<button class="code-action-btn" id="btn-pluto">Send to Pluto</button>
+					<button class="code-action-btn" id="btn-new-file" title="Send the code to a new file in the editor">Editor</button>
+					<button class="code-action-btn" id="btn-notebook" title="Send the code to a notebook">Notebook</button>
+					<button class="code-action-btn" id="btn-pluto" title="Send the code to a Pluto notebook">Pluto</button>
 				</span>
 			</div>
 		</div>
@@ -1279,6 +1287,7 @@ ${noExampleCode ? '' : `		if (!document.querySelector('#sec-code .scaffold-input
 			resetRestoreButton();
 			document.getElementById('sec-code').classList.toggle('editing', on);
 			document.getElementById('btn-edit-code').hidden = on;
+			document.getElementById('btn-wrap-code').hidden = on;
 			document.getElementById('btn-save-code').hidden = !on;
 			document.getElementById('btn-cancel-code').hidden = !on;
 			updateCustomState();
@@ -1297,6 +1306,22 @@ ${noExampleCode ? '' : `		if (!document.querySelector('#sec-code .scaffold-input
 			numberTextArea(ta);
 			ta.focus();
 			ta.setSelectionRange(0, 0);
+		}
+
+		// Long lines of Example Code and of the Next Steps' code wrapped at the width of the box, or scrolled sideways; the
+		// choice is kept for every panel
+		var wrapCode = false;
+		function setCodeWrap(on, keep) {
+			wrapCode = on;
+			['code-preview', 'panel-code'].forEach(function(id) {
+				var box = document.getElementById(id);
+				if (box) { box.classList.toggle('code-wrap', on); }
+			});
+			['btn-wrap-code', 'btn-panel-wrap'].forEach(function(id) {
+				var button = document.getElementById(id);
+				if (button) { button.setAttribute('aria-pressed', String(on)); }
+			});
+			if (keep) { vscode.postMessage({ command: 'codeWrap', value: on }); }
 		}
 
 		// Tab indents with 4 spaces instead of leaving the box; the box grows as lines are added.
@@ -1343,6 +1368,7 @@ ${noExampleCode ? '' : `		document.getElementById('btn-edit-code').addEventListe
 			updateCodePreview();
 		});
 		wireCodeEdit(document.getElementById('code-edit'));
+		document.getElementById('btn-wrap-code').addEventListener('click', function() { setCodeWrap(!wrapCode, true); });
 `}
 		var lastBuiltInModel = '${parts.defaultModel ?? ''}';
 		function setModel(model) {
@@ -1539,7 +1565,7 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 		function renderRightCode(action, actions, title) {
 			panelAction = action;
 			panelNav = { actions: actions, title: title };
-			// A query (language sql) is not edited here, Send to Editor is for that, and runs in the duckdb> terminal
+			// A query (language sql) is not edited here, Editor is for that, and runs in the duckdb> terminal
 			var sql = action.language === 'sql';
 			rightPanel.innerHTML =
 				'<div class="panel-header">'
@@ -1557,6 +1583,7 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 				+ '<div class="code-btn-bar code-btn-bar-bottom code-btn-bar-split" id="panel-btn-bar">'
 				+ '<span class="code-btn-group">'
 				+ '<button class="code-action-btn" id="btn-panel-edit" title="Edit this example and keep your version"' + (sql ? ' hidden' : '') + '>Edit</button>'
+				+ '<button class="code-action-btn wrap-btn" id="btn-panel-wrap" aria-pressed="false" title="Wrap long lines at the width of the box">Wrap</button>'
 				+ '<button class="code-action-btn" id="btn-panel-restore" title="Move your version to the Trash and bring back the original example" hidden>Restore Default</button>'
 				+ '<button class="code-action-btn primary" id="btn-panel-save" hidden>Save</button>'
 				+ '<button class="code-action-btn" id="btn-panel-cancel" hidden>Cancel</button>'
@@ -1565,11 +1592,11 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 				+ '<button class="code-action-btn" data-act="copy">Copy</button>'
 				+ (sql
 					? '<button class="code-action-btn" data-act="duckdbRepl" title="Run the query in the duckdb&gt; terminal, where Pollis&#39;s databases are attached by their names">DuckDB REPL</button>'
-					+ '<button class="code-action-btn" data-act="newFile" title="Open the query in a new SQL file, to change it before running it">Send to Editor</button>'
+					+ '<button class="code-action-btn" data-act="newFile" title="Open the query in a new SQL file, to change it before running it">Editor</button>'
 					: '<button class="code-action-btn" data-act="juliaRepl">Julia REPL</button>'
-					+ '<button class="code-action-btn" data-act="newFile">Send to Editor</button>'
-					+ '<button class="code-action-btn" data-act="notebook">Send to Notebook</button>'
-					+ '<button class="code-action-btn" data-act="pluto">Send to Pluto</button>')
+					+ '<button class="code-action-btn" data-act="newFile" title="Send the code to a new file in the editor">Editor</button>'
+					+ '<button class="code-action-btn" data-act="notebook" title="Send the code to a notebook">Notebook</button>'
+					+ '<button class="code-action-btn" data-act="pluto" title="Send the code to a Pluto notebook">Pluto</button>')
 				+ '</span>'
 				+ '</div>'
 				+ '</div>'
@@ -1591,6 +1618,8 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 			document.getElementById('btn-panel-back').addEventListener('click', function() { renderRightList(actions, title); });
 			document.getElementById('btn-panel-close').addEventListener('click', hideRightPanel);
 			wireCodeEdit(document.getElementById('panel-edit'));
+			setCodeWrap(wrapCode);
+			document.getElementById('btn-panel-wrap').addEventListener('click', function() { setCodeWrap(!wrapCode, true); });
 			document.getElementById('btn-panel-edit').addEventListener('click', function() { setPanelEditing(true); });
 			document.getElementById('btn-panel-cancel').addEventListener('click', function() { setPanelEditing(false); });
 			document.getElementById('btn-panel-save').addEventListener('click', function() {
@@ -1683,6 +1712,7 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 			document.getElementById('btn-panel-back').disabled = on;
 			document.getElementById('btn-panel-close').disabled = on;
 			document.getElementById('btn-panel-edit').hidden = on;
+			document.getElementById('btn-panel-wrap').hidden = on;
 			document.getElementById('btn-panel-save').hidden = !on;
 			document.getElementById('btn-panel-cancel').hidden = !on;
 			rightPanel.querySelectorAll('#panel-btn-bar [data-act]').forEach(function(b) { b.disabled = on; });
@@ -1895,6 +1925,7 @@ ${noExampleCode ? '' : `		document.getElementById('btn-copy').addEventListener('
 				}
 			}
 			if (msg.command === 'setModel') { setModel(msg.model); }
+			if (msg.command === 'codeWrap') { setCodeWrap(msg.value === true); }
 			if (msg.command === 'setInputValue') {
 				var field = document.getElementById('in-' + msg.input);
 				if (field) { field.value = msg.value; onInputsChanged(); }

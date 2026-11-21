@@ -28,7 +28,7 @@ using AlphaVantage
 time_series_daily("AAPL")
 ```
 
-For **Send to Editor / Notebook**, the Alpha Vantage key is *not* injected (those files persist to disk). Set it yourself in that session, e.g. by running the REPL once or adding `ENV["ALPHA_VANTAGE_API_KEY"] = "..."` locally.
+For **Editor** and **Notebook**, the Alpha Vantage key is *not* injected (those files persist to disk). Set it yourself in that session, e.g. by running the REPL once or adding `ENV["ALPHA_VANTAGE_API_KEY"] = "..."` locally.
 
 ## Setting It Manually (Alternative)
 

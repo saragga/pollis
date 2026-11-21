@@ -157,9 +157,9 @@
  },
  {
   "source": "The Pollis Guide, page 4, Inside a Panel › Run the example",
-  "context": "The buttons below the code send it where you want it:\n• Julia REPL runs it in the Julia REPL, starting it if needed.\n• Send to Notebook opens it in a new Jupyter notebook, with the Julia kernel.\n• Send to Pluto opens it in a new Pluto notebook, in Pollis’s browser.\n• Send to Editor opens it in a new, unsaved Julia file, and Copy copies it. Code sent to the Julia REPL or to a notebook starts with the line that installs any missing package.",
+  "context": "The buttons below the code send it where you want it:\n• Julia REPL runs it in the Julia REPL, starting it if needed.\n• Notebook opens it in a new Jupyter notebook, with the Julia kernel.\n• Pluto opens it in a new Pluto notebook, in Pollis’s browser.\n• Editor opens it in a new, unsaved Julia file, and Copy copies it. Code sent to the Julia REPL or to a notebook starts with the line that installs any missing package.",
   "question": "What are the ways to run the example code of a panel?",
-  "answer": "Julia REPL runs it in the Julia REPL; Send to Notebook opens it in a Jupyter notebook with the Julia kernel; Send to Pluto in a Pluto notebook; Send to Editor in an unsaved Julia file; and Copy copies it."
+  "answer": "Julia REPL runs it in the Julia REPL; Notebook opens it in a Jupyter notebook with the Julia kernel; Pluto in a Pluto notebook; Editor in an unsaved Julia file; and Copy copies it."
  },
  {
   "source": "The Pollis Guide, page 5, Inside a Panel › Add a tab of your own",

@@ -32,7 +32,7 @@ import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKerne
 import { hasKey } from '../../../../../base/common/types.js';
 import { ADD_ALERT_COMMAND_ID } from '../../../monitor/browser/alertsPage.js';
 import { localize } from '../../../../../nls.js';
-import { IStorageService } from '../../../../../platform/storage/common/storage.js';
+import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
 import { handlePanelAskMessage, PanelAskMessage } from '../../../compose/browser/askPollisAttach.js';
 import { getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from '../../../compose/browser/composerVoice.js';
 import { IFileDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
@@ -45,6 +45,9 @@ export function folderUri(path: string, home: URI): URI {
 	const value = path.trim();
 	return !value || value === '~' ? home : value.startsWith('~/') ? joinPath(home, value.slice(2)) : URI.file(value);
 }
+
+/** Whether the panels wrap the long lines of their code, the same for every panel. */
+const CODE_WRAP_KEY = 'pollis.panels.codeWrap';
 
 /** Messages a scaffold panel sends that are not handled by the shared wirings of model.handler.ts. */
 type ScaffoldWebviewMessage =
@@ -61,7 +64,8 @@ type ScaffoldWebviewMessage =
 	| { command: 'clearApiKey' }
 	| PanelAskMessage
 	| { command: 'voiceLanguage'; value: string }
-	| { command: 'voiceWriteIn'; value: string };
+	| { command: 'voiceWriteIn'; value: string }
+	| { command: 'codeWrap'; value: boolean };
 
 /**
  * Handle the messages of a panel built on the shared scaffold (see scaffoldParts.ts): Learn More,
@@ -161,6 +165,7 @@ export function registerScaffoldWebviewHandlers(
 		// The languages spoken and written of Ask Pollis beside the title, which the HTML is made without
 		webviewInput.webview.postMessage({ command: 'voiceLanguage', value: getVoiceLanguage(storageService) });
 		webviewInput.webview.postMessage({ command: 'voiceWriteIn', value: getVoiceWriteIn(storageService) });
+		webviewInput.webview.postMessage({ command: 'codeWrap', value: storageService.getBoolean(CODE_WRAP_KEY, StorageScope.PROFILE, false) });
 		void pkgStatus.postStatus();
 		void apiKey?.postStatus();
 		void postFolderDefaults();
@@ -283,6 +288,9 @@ export function registerScaffoldWebviewHandlers(
 				break;
 			case 'voiceWriteIn':
 				setVoiceWriteIn(storageService, msg.value);
+				break;
+			case 'codeWrap':
+				storageService.store(CODE_WRAP_KEY, msg.value === true, StorageScope.PROFILE, StorageTarget.USER);
 				break;
 		}
 	}));

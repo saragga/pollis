@@ -17,7 +17,7 @@ import { ILanguageService } from '../../../../editor/common/languages/language.j
 /**
  * Makes Julia the default kernel for Jupyter notebooks in Pollis: whenever a notebook opens
  * with no kernel already selected, auto-select the Julia kernel (same helper used by the
- * webview "Send to Notebook" action). An explicit prior selection is left untouched.
+ * webview "Notebook" action). An explicit prior selection is left untouched.
  */
 class JuliaDefaultNotebookKernel extends Disposable implements IWorkbenchContribution {
 
