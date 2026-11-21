@@ -14,7 +14,7 @@ The tabs, inputs, macros and actions of Check Type Stability at a glance.
 
 | Input | Default | Meaning |
 |---|---|---|
-| **Function** | share_above | The function to check, by name; the default gives the share of the values of a vector above a threshold, read from a global variable that is not const, and returns nothing for an empty vector |
+| **Function** | `share_above` | The function to check, by name; the default gives the share of the values of a vector above a threshold, read from a global variable that is not const, and returns nothing for an empty vector |
 | **Arguments** | x | The arguments of the call, as written in it; the checks infer for the types of their values |
 
 With a function of your own, **Stability Check** prints the type inferred for the result, which `@stable` checks, and says where to put `@stable`: before the definition of the function, which is then run again.
