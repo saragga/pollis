@@ -94,7 +94,7 @@ class PlotNavigatorProvider implements vscode.WebviewViewProvider {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <title>Julia Plots</title>
+                <title>Plots</title>
                 <link href=${plotterStylesheet} rel="stylesheet" type="text/css">
             </head>
             <body style="padding: 10px 1em 1em 1em">
@@ -184,7 +184,7 @@ function getPlotPaneContent(webview: vscode.Webview) {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>Julia Plots</title>
+            <title>Plots</title>
             <style>
             body {
                 width: 100vw;
@@ -308,7 +308,7 @@ export function showPlotPane(lazy = false) {
 }
 
 function makeTitle() {
-    let plotTitle = 'Julia Plots'
+    let plotTitle = 'Plots'
     if (vscode.workspace.getConfiguration('julia').get('usePlotPane')) {
         plotTitle += g_plots.length > 0 ? ` (${g_currentPlotIndex + 1}/${g_plots.length})` : ' (0/0)'
     } else {
@@ -463,7 +463,7 @@ function wrapHtml(el: string) {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>Julia Plots</title>
+            <title>Plots</title>
             <style>
             ${plotElementStyle}
             </style>

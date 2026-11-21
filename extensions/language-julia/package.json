@@ -167,7 +167,7 @@
             },
             {
                 "command": "language-julia.show-plot-navigator",
-                "title": "Julia: Show Plot Navigator"
+                "title": "Plots: Show Plot Navigator"
             },
             {
                 "command": "language-julia.browse-back-documentation",
@@ -181,39 +181,39 @@
             },
             {
                 "command": "language-julia.show-plotpane",
-                "title": "Julia: Show Plot"
+                "title": "Plots: Show Plot"
             },
             {
                 "command": "language-julia.plotpane-next",
-                "title": "Julia: Show Next Plot",
+                "title": "Plots: Show Next Plot",
                 "icon": "$(arrow-right)"
             },
             {
                 "command": "language-julia.plotpane-previous",
-                "title": "Julia: Show Previous Plot",
+                "title": "Plots: Show Previous Plot",
                 "icon": "$(arrow-left)"
             },
             {
                 "command": "language-julia.plotpane-first",
-                "title": "Julia: Show First Plot"
+                "title": "Plots: Show First Plot"
             },
             {
                 "command": "language-julia.plotpane-enable",
-                "title": "Julia: Enable Plot Pane",
+                "title": "Plots: Enable Plot Pane",
                 "icon": "$(circle-large-outline)"
             },
             {
                 "command": "language-julia.plotpane-disable",
-                "title": "Julia: Disable Plot Pane",
+                "title": "Plots: Disable Plot Pane",
                 "icon": "$(pass-filled)"
             },
             {
                 "command": "language-julia.plotpane-last",
-                "title": "Julia: Show Last Plot"
+                "title": "Plots: Show Last Plot"
             },
             {
                 "command": "language-julia.plotpane-delete",
-                "title": "Julia: Delete plot",
+                "title": "Plots: Delete Plot",
                 "icon": "$(trash)"
             },
             {
@@ -224,12 +224,12 @@
             },
             {
                 "command": "language-julia.save-plot",
-                "title": "Julia: Save Plot",
+                "title": "Plots: Save Plot",
                 "icon": "$(save)"
             },
             {
                 "command": "language-julia.plotpane-delete-all",
-                "title": "Julia: Delete All Plots"
+                "title": "Plots: Delete All Plots"
             },
             {
                 "command": "language-julia.moveCellUp",
