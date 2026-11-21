@@ -14,8 +14,8 @@ For univariate distributions, the **right-tail ratio** (q99 - q50) / (q75 - q50)
 
 ## Samplers Compared
 **Samplers Compared** times 100,000 draws three ways:
-- **rand(rng, d, n)**, the standard call;
-- **rand(rng, sampler(d), n)**, with a sampler precomputed once, faster when the set-up is costly (Categorical, Binomial with large n) and many draws come from the same distribution;
+- `rand(rng, d, n)`, the standard call;
+- `rand(rng, sampler(d), n)`, with a sampler precomputed once, faster when the set-up is costly (Categorical, Binomial with large n) and many draws come from the same distribution;
 - for univariate distributions, **inverse transform**, quantile(d, U) for uniform U: always valid, but usually slower, since each draw evaluates the quantile function.
 
 ## The Monte Carlo Error

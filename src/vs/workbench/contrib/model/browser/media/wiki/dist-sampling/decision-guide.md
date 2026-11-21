@@ -15,8 +15,8 @@ For a mean, the standard error is sigma / sqrt(n): to reach a precision h, take 
 
 | Situation | Method |
 |---|---|
-| Standard use | **rand(rng, d, n)** |
-| Many draws from one distribution with a costly set-up | **sampler(d)**, once, then rand from it |
+| Standard use | `rand(rng, d, n)` |
+| Many draws from one distribution with a costly set-up | `sampler(d)`, once, then `rand` from it |
 | Common random numbers across distributions, or quasi-random points | **Inverse transform**, quantile(d, U) |
 | A distribution known only up to a constant | Markov Chain Monte Carlo |
 
