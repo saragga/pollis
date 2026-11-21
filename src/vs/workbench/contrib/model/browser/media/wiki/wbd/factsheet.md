@@ -17,10 +17,10 @@ wdi(indicators, countries, startyear, endyear; extra = false)
 search_wdi("countries", field, regex)
 ```
 
-- **indicators**: one code or a vector of codes, such as `"NY.GDP.PCAP.KD"`.
-- **countries**: ISO2 or ISO3 codes, aggregate codes (`"WLD"`, `"EUU"`, `"HIC"`), or `"all"`.
-- **extra = true** adds `iso3c`, `region`, `capital`, `longitude`, `latitude`, `income`, and `lending` columns.
-- **search_wdi("countries", ...)** searches the country list by `name`, `region`, `capital`, `iso2c`, `iso3c`, `income`, or `lending`.
+- `indicators`: one code or a vector of codes, such as `"NY.GDP.PCAP.KD"`.
+- `countries`: ISO2 or ISO3 codes, aggregate codes (`"WLD"`, `"EUU"`, `"HIC"`), or `"all"`.
+- `extra = true` adds `iso3c`, `region`, `capital`, `longitude`, `latitude`, `income`, and `lending` columns.
+- `search_wdi("countries", ...)` searches the country list by `name`, `region`, `capital`, `iso2c`, `iso3c`, `income`, or `lending`.
 
 ## Shape of the Result
 
