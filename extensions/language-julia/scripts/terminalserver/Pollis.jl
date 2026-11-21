@@ -193,6 +193,63 @@ if isdefined(Main, :VSCodeServer) && isdefined(Main.VSCodeServer, :InlineDisplay
 	@eval Base.display(::Main.VSCodeServer.InlineDisplay, map::WebMap) = (mappage(map); nothing)
 end
 
+"""The versions of MapLibre GL JS and MapillaryJS in the extension's `libs`, which a Pluto notebook loads from jsDelivr."""
+const MAPLIBRE_VERSION = "5.24.0"
+const MAPILLARY_VERSION = "4.1.2"
+
+"""
+The HTML of a map of [`Pollis.webmap`](@ref) or [`Pollis.streetview`](@ref) in the output of a cell of a Pluto notebook,
+drawn as on its page, with the text of what it shows. A Pluto notebook's page cannot read the extension's files, so it
+loads MapLibre GL JS and MapillaryJS from jsDelivr, at the versions the extension bundles, as Pluto loads its own page.
+"""
+function plutomap(map::WebMap)
+	script = joinpath(EXTENSION_DIR, "dist", "pollisMapPage.js")
+	isfile(script) || error("Pollis: $(script) is missing: the Julia extension has not been built")
+	cdn(package, version, file) = "https://cdn.jsdelivr.net/npm/$(package)@$(version)/dist/$(file)"
+	street = occursin("\"streetview\":{", map.json)
+	scripts = [cdn("maplibre-gl", MAPLIBRE_VERSION, "maplibre-gl.js"); street ? [cdn("mapillary-js", MAPILLARY_VERSION, "mapillary.js")] : String[]]
+	styles = [cdn("maplibre-gl", MAPLIBRE_VERSION, "maplibre-gl.css"); street ? [cdn("mapillary-js", MAPILLARY_VERSION, "mapillary.css")] : String[]]
+	id = "pollis-map-" * string(rand(UInt64); base = 16)
+	# a </script> in the script or in a value of the map must not end the script it is in
+	safe(text) = replace(text, "</" => "<\\/")
+	return """
+$(join(("<link rel=\"stylesheet\" href=\"$(s)\">" for s in styles), "\n"))
+<div id="$(id)" style="position: relative; height: 480px;">
+<div class="pollis-map" style="position: absolute; inset: 0;"></div>
+<section aria-label="What the map shows" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;"></section>
+</div>
+<script>$(safe(read(script, String)))</script>
+<script>
+(async () => {
+	const output = document.getElementById("$(id)")
+	const load = src => (window.pollisScripts ??= {})[src] ??= new Promise((resolve, reject) => {
+		const element = document.createElement("script")
+		element.src = src
+		element.onload = resolve
+		element.onerror = () => reject(new Error("Cannot load " + src))
+		document.head.append(element)
+	})
+	try {
+		for (const src of [$(join(json_text.(scripts), ", "))]) {
+			await load(src)
+		}
+		const map = window.PollisMap.output(output.firstElementChild, output.lastElementChild, $(safe(map.json)))
+		if (typeof invalidation !== "undefined") {
+			invalidation.then(() => map.remove())
+		}
+	} catch (error) {
+		output.firstElementChild.textContent = String(error && error.message || error)
+	}
+})()
+</script>
+"""
+end
+
+# A Pluto notebook runs in a process of its own, which shows the HTML of a map in the cell's output
+if isdefined(Main, :PlutoRunner)
+	Base.show(io::IO, ::MIME"text/html", map::WebMap) = print(io, plutomap(map))
+end
+
 """
     Pollis.layer(geojson; name = "", color = nothing, column = nothing, opacity = 0.6)
 

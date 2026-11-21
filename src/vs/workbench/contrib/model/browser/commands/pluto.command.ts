@@ -53,6 +53,13 @@ export async function plutoNotebookFile(fileService: IFileService, environmentSe
 	return undefined;
 }
 
+/** The cell of a Pluto notebook that loads Pollis.jl, as `Pollis`, from the file the Pluto server names. */
+const PLUTO_POLLIS_CELL = `# Pollis.jl, from the Julia extension of the Pollis that started this Pluto server
+Pollis = let file = get(ENV, "POLLIS_JL", "")
+	isfile(file) || error("Pollis.jl is not found: open the notebook from Pollis, with Send to Pluto or New File > Pluto Notebook")
+	Base.include(Module(:PollisHost), file)
+end`;
+
 /** Wrap the code-box contents in a minimal Pluto notebook: a packages cell, then the code cell. */
 function buildPlutoNotebook(code: string): string {
 	// Macros in a cell are expanded before the cell runs, so `@formula` in the same cell as
@@ -62,6 +69,11 @@ function buildPlutoNotebook(code: string): string {
 	const imports = lines.filter(isImport);
 	const body = lines.filter(line => !isImport(line)).join('\n').trim();
 	const cells: string[] = [];
+	// Pluto runs a notebook in a process of its own, which has not loaded Pollis.jl: code that uses Pollis gets a cell
+	// that loads it from the Julia extension, whose path the Pluto server Pollis starts passes on as POLLIS_JL
+	if (/\bPollis\./.test(code)) {
+		cells.push(PLUTO_POLLIS_CELL);
+	}
 	if (imports.length > 0) {
 		cells.push(imports.length === 1 ? imports[0] : `begin\n${imports.join('\n')}\nend`);
 	}
@@ -109,6 +121,8 @@ _session.options.server.host = "127.0.0.1"
 _session.options.server.port = _port
 _session.options.server.launch_browser = false
 _session.options.server.auto_reload_from_file = true
+# Pollis.jl of this REPL, which the notebooks' processes, started from this one, load as Pollis
+isdefined(Main, :Pollis) && (ENV["POLLIS_JL"] = joinpath(Main.Pollis.EXTENSION_DIR, "scripts", "terminalserver", "Pollis.jl"))
 open(raw"${portFile}", "w") do io
 	print(io, _port)
 end

@@ -1,15 +1,18 @@
 /// <reference lib="dom" />
 // Pollis: a map of Pollis.webmap, or a viewer of Pollis.streetview, on a page of its own, which Pollis.jl writes and
-// opens in Pollis' browser. The page loads MapLibre GL JS (and MapillaryJS for a viewer) from the extension's libs, and
-// this script, which draws the map with drawPollisMap, as notebook outputs do, and writes what the map shows as text,
-// for screen readers and for agents that read the page.
+// opens in Pollis' browser, or in the output of a cell of a Pluto notebook. The page loads MapLibre GL JS (and
+// MapillaryJS for a viewer), and this script, which draws the map with drawPollisMap, as notebook outputs do, and writes
+// what the map shows as text, for screen readers and for agents that read the page.
 import { drawPollisMap, MAP_CSS, MAP_STYLES } from './pollisMap'
 
 declare global {
     interface Window {
         maplibregl?: unknown
         mapillary?: unknown
-        PollisMap?: { draw(holder: HTMLElement, text: HTMLElement, spec: unknown): { remove(): void } }
+        PollisMap?: {
+            draw(holder: HTMLElement, text: HTMLElement, spec: unknown): { remove(): void }
+            output(holder: HTMLElement, text: HTMLElement, spec: unknown): { remove(): void }
+        }
     }
 }
 
@@ -78,12 +81,14 @@ function describe(spec: MapSpec): string[] {
     return lines
 }
 
-/** Draws the map of `spec` in `holder`, and writes what it shows into `text`. */
-function draw(holder: HTMLElement, text: HTMLElement, spec: MapSpec): { remove(): void } {
-    const style = document.createElement('style')
-    style.textContent = MAP_CSS
-    document.head.append(style)
-    document.title = spec.title || (spec.streetview ? 'Street-Level Viewer' : 'Map')
+/** Draws the map of `spec` in `holder`, and writes what it shows into `text`, under a heading of its title. */
+function output(holder: HTMLElement, text: HTMLElement, spec: MapSpec): { remove(): void } {
+    if (!document.getElementById('pollis-map-css')) {
+        const style = document.createElement('style')
+        style.id = 'pollis-map-css'
+        style.textContent = MAP_CSS
+        document.head.append(style)
+    }
     const list = document.createElement('ul')
     for (const line of describe(spec)) {
         const item = document.createElement('li')
@@ -91,9 +96,15 @@ function draw(holder: HTMLElement, text: HTMLElement, spec: MapSpec): { remove()
         list.append(item)
     }
     const heading = document.createElement('h1')
-    heading.textContent = document.title
+    heading.textContent = spec.title || (spec.streetview ? 'Street-Level Viewer' : 'Map')
     text.replaceChildren(heading, list)
     return drawPollisMap(window.maplibregl, holder, spec, MAP_STYLES, window.mapillary)
 }
 
-window.PollisMap = { draw }
+/** Draws the map of `spec` on a page of its own, which takes the map's title. */
+function draw(holder: HTMLElement, text: HTMLElement, spec: MapSpec): { remove(): void } {
+    document.title = spec.title || (spec.streetview ? 'Street-Level Viewer' : 'Map')
+    return output(holder, text, spec)
+}
+
+window.PollisMap = { draw, output }
