@@ -38,6 +38,7 @@ const GROUPS = [
 		("workflows/workflow_compilation_lab.tex", "pollis-drilldown-compilation-lab.pdf"),
 		("workflows/workflow_simulation_games.tex", "pollis-drilldown-simulation-games.pdf"),
 		("workflows/workflow_prediction_challenges.tex", "pollis-drilldown-prediction-challenges.pdf"),
+		("workflows/workflow_plotting.tex", "pollis-drilldown-plotting.pdf"),
 	],
 ]
 const DOCUMENTS = [name for group in GROUPS for (_, name) in group if !isempty(name)]

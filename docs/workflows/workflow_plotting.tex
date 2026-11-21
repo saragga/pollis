@@ -1,0 +1,212 @@
+% Pollis drill-down: Plotting, charts and maps drawn by Pollis: why they are drawn in JavaScript, the libraries for
+% charts, maps, street-level imagery and 3D, the Julia packages that describe them, where each appears, and what is
+% still to come (21 November 2026). For users who want the detail, and for whoever maintains Pollis.
+% Compile with: latexmk -pdf workflow_plotting.tex
+\input{workflow_style}
+
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{listings}
+
+\fancyhf{}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: Plotting}
+\fancyfoot[R]{\footnotesize\color{soft}\thepage}
+
+\titleformat{\section}{\color{navy}\large\bfseries}{\color{deepamber}\thesection}{0.6em}{}
+\titleformat{\subsection}{\color{navy}\normalsize\bfseries}{\color{deepamber}\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+\setlength{\parskip}{4pt}
+
+\lstset{basicstyle=\ttfamily\footnotesize, columns=fullflexible, keepspaces=true, breaklines=true,
+  backgroundcolor=\color{pale}, frame=leftline, rulecolor=\color{amber}, framerule=2pt, xleftmargin=6pt,
+  framexleftmargin=6pt, aboveskip=4pt, belowskip=4pt, upquote=true, tabsize=2}
+
+\usepackage{xurl}
+\newcommand{\file}[1]{{\small\nolinkurl{#1}}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcommand{\ui}[1]{\textbf{#1}}
+% Code with spaces in it, which \file would run together
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+\begin{document}
+
+\workflowhead[Drill-Down]{Plotting}
+  {Charts and maps drawn by Pollis}
+  {Julia computes and describes; a JavaScript library in Pollis draws. Which library draws what, which Julia package
+   describes it, where each chart and map appears, and what is still to come.}
+
+\begin{nbox}
+{\color{amber}\bfseries Drill-down.}\enspace
+The charts are drawn by JavaScript in Pollis's own tab, so they appear without waiting for a Julia plotting package to
+compile. ECharts covers the everyday charts, MapLibre covers the maps, and specialised JavaScript apps cover 3D and
+city models.
+
+This drill-down is for anyone who wants to know how a chart made in Julia reaches the screen, and for whoever
+maintains Pollis. It describes the state of 21 November 2026, early in the work: the direction is set, and
+\S\ref{sec:next} lists what is still to come.
+\end{nbox}
+
+\tableofcontents
+
+\section{Why Pollis draws charts in JavaScript}\label{sec:why}
+A Julia plotting package, such as Plots.jl, \dcite{CSRBB2023a}{Christ, Schwabeneder, Rackauckas, Borregaard and Breloff
+(2023)}, or Makie.jl, \dcite{DK2021a}{Danisch and Krumbiegel (2021)}, draws the chart in Julia, and has to be compiled
+before its first chart: on a computer where it has not been used, the first chart can take minutes. Pollis splits the
+work in two.
+\begin{itemize}
+  \item \textbf{Julia computes and describes.} The code of a panel computes the numbers and writes what to draw: the
+    kind of chart, its data, axes, colours and labels, as JSON, a short text.
+  \item \textbf{JavaScript draws.} A library that Pollis ships, already loaded, reads the description and draws the
+    chart in the tab, the notebook cell or the page.
+\end{itemize}
+The charts drawn this way are also interactive: a value shows when the pointer is over it, a series hides when its
+name in the legend is clicked, and a chart that asks for them has zoom and a button that saves it as an image. Each kind of picture has the library
+made for it (\S\ref{sec:libraries}).
+
+\section{Three kinds of picture, their libraries}\label{sec:libraries}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.2\linewidth}p{0.3\linewidth}L@{}}
+\toprule
+\textbf{Picture} & \textbf{Library} & \textbf{Described in Julia by}\\
+\midrule
+Charts & Apache ECharts 6.0.0, \dcite{LMSSZ...2018a}{Li and 7 coauthors (2018)} & ECharts.jl for now; PollisECharts.jl
+  (\S\ref{sec:charts})\\
+Maps & MapLibre GL JS 5.24.0, \dcite{MLC2026a}{MapLibre Contributors (2026)}, on the vector tiles of OpenFreeMap,
+  \dcite{Ero2026a}{Ero (2026)} & \file{Pollis.webmap} and \file{Pollis.layer}, of Pollis.jl (\S\ref{sec:maps})\\
+Street-level imagery & MapillaryJS 4.1.2, \dcite{Map2023a}{Mapillary (2023)} & \file{Pollis.streetview}
+  (\S\ref{sec:beyond})\\
+Photorealistic 3D cities & The Maps JavaScript API, \dcite{Goo2026a}{Google (2026a)}, with its 3D maps,
+  \dcite{Goo2026b}{Google (2026b)} & The Google Maps panel of Smart Regions (\S\ref{sec:beyond})\\
+\bottomrule
+\end{tabularx}
+\end{center}
+ECharts, MapLibre GL JS and MapillaryJS are bundled with Pollis, in the folder \file{libs} of the Julia extension, so
+they draw without the internet; the base maps of MapLibre and the Google maps need it.
+
+\section{Charts: ECharts}\label{sec:charts}
+ECharts describes a chart as one JSON object, its \emph{option}: the series to draw and how, the axes, the legend,
+the tooltip. It draws line, bar and scatter charts, box plots, heat maps, candlesticks, Sankey diagrams, trees,
+graphs, calendars, radar and parallel coordinates, among others, on a canvas or as SVG.
+
+\subsection{PollisECharts.jl}
+The package that Pollis's charts are to be written with is \textbf{PollisECharts.jl}, a light package of Pollis's
+own.
+\begin{itemize}
+  \item It depends only on JSON and Tables.jl: a table goes in, the option of the chart comes out.
+  \item The chart is shown as its option alone, under a type of its own, as the maps of \file{Pollis.webmap} are
+    (\S\ref{sec:maps}). Pollis draws it with the one copy of ECharts it ships, in the \ui{Plots} tab, in notebook cells
+    and on pages, so a chart carries no copy of the library.
+  \item It installs and loads in seconds, with no web server and no Node.js.
+\end{itemize}
+PollisECharts.jl is not written yet.
+
+\subsection{ECharts.jl, for now}
+Until then, the panels draw their charts with ECharts.jl 0.9, \dcite{Zwi2026a}{Zwitch (2026)}, a Julia package for
+ECharts 6 with a function for each kind of chart (\file{line}, \file{bar}, \file{scatter}, \file{box},
+\file{heatmap}, \file{sankey}, \file{candlestick} and many more). It serves the charts of Pollis well, but it is
+heavier than Pollis needs, which is why it is a short-term choice:
+\begin{itemize}
+  \item it brings in HTTP.jl, for live charts that a small web server updates; NodeJS.jl, a copy of Node.js, to write
+    a chart as an SVG file; and KernelDensity.jl, with FFTW, for density charts;
+  \item the HTML of each chart carries its own copy of ECharts, about 1.1~MB. In the \ui{Plots} tab, Pollis takes the
+    copy out and loads its own, of the same version, once; in notebook and Pluto cells, each chart keeps its copy.
+\end{itemize}
+On 21 November 2026, 27 panels of Pollis and its toolboxes draw with ECharts.jl.
+
+\section{Maps: MapLibre}\label{sec:maps}
+A map is written with functions of Pollis.jl, the module of Pollis's own Julia session.
+\begin{lstlisting}
+m = Pollis.webmap(Pollis.layer("districts.geojson"; name = "Districts"); style = "positron", title = "Districts")
+\end{lstlisting}
+\begin{itemize}
+  \item \code{Pollis.webmap(layers...; style, center, zoom, title)}: a map with layers on an OpenStreetMap base map,
+    drawn in the order given.
+  \item \code{Pollis.layer(geojson; name, color, column, opacity)}: GeoJSON features, from a file or a text, in one
+    colour or coloured by a column;
+    \file{Pollis.tiles}: a layer of raster tiles, such as an image or a model's output.
+  \item \file{Pollis.streetview}: a street-level viewer of Mapillary, alone or beside a map.
+\end{itemize}
+The map is shown as JSON of the type \file{application/vnd.pollis.map+json}, which Pollis draws with MapLibre GL JS.
+On 21 November 2026, 31 panels draw maps this way: 21 in Smart Regions and 10 in Spatial Econometrics.
+
+\section{Where a chart or a map appears}\label{sec:where}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.2\linewidth}LL@{}}
+\toprule
+\textbf{Code run in} & \textbf{A chart} & \textbf{A map}\\
+\midrule
+The Julia REPL, as with \ui{Julia REPL} below a panel's code & The \ui{Plots} tab, which keeps every chart: \ui{Plots: Show
+  Previous Plot}, \ui{Plots: Save Plot} and the other commands of the tab, and the \ui{Plot Navigator} & A page in
+  Pollis's browser, named after the map's title: a map shown again with the same title replaces it, others open
+  beside it\\
+A notebook, as with \ui{Notebook} & The cell's output & The cell's output, drawn by the renderer \ui{Pollis Maps}\\
+A Pluto notebook, as with \ui{Pluto} & The cell's output & The cell's output, MapLibre GL JS loaded from jsDelivr at
+  the version Pollis ships\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The \ui{Plots} tab also draws pictures of other kinds that a Julia package shows: PNG, SVG and GIF images, Vega and
+Vega-Lite charts, and Plotly charts.
+
+\section{When ECharts is not enough}\label{sec:beyond}
+Some pictures need a library made for them, and the panels that use one open a page of their own in Pollis's browser.
+\begin{itemize}
+  \item \textbf{Maps}, drawn by MapLibre GL JS (\S\ref{sec:maps}).
+  \item \textbf{Street-level imagery}, the panels of Mapillary in Smart Regions: MapillaryJS, through
+    \file{Pollis.streetview}.
+  \item \textbf{Photorealistic 3D cities}, the Google Maps panel of Smart Regions: the Maps JavaScript API with its 3D
+    maps, with the user's own key. Its terms allow the 3D tiles to be looked at only, not analysed, extracted or kept
+    offline.
+  \item \textbf{Point clouds, 3D city models and large layers}: deck.gl is the library meant for them; Pollis does not
+    draw them yet.
+  \item \textbf{3D charts}, such as surfaces and 3D scatter plots: echarts-gl, an extension of ECharts, which Pollis
+    does not ship yet.
+\end{itemize}
+
+\section{Still to come}\label{sec:next}
+\begin{itemize}
+  \item \textbf{PollisECharts.jl}, written and registered, and the panels moved to it from ECharts.jl.
+  \item \textbf{The panels that still draw in Julia}: on 21 November 2026, 168 panels of Pollis and its toolboxes
+    draw with Plots.jl or StatsPlots.jl, and 3 with Makie.jl. Each is to move to ECharts.
+  \item \textbf{What ECharts does not draw}: contour plots with labelled levels, mathematics in labels, and still images,
+    SVG or PDF, for the reports Pollis writes in LaTeX.
+  \item \textbf{3D}: deck.gl for point clouds and city models, echarts-gl for 3D charts.
+\end{itemize}
+
+\section{Where things are}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.5\linewidth}L@{}}
+\toprule
+\textbf{File} & \textbf{Role}\\
+\midrule
+\file{extensions/language-julia/src/interactive/plots.ts} & The \ui{Plots} tab: each kind of picture it draws, and
+  ECharts.jl's charts drawn with the tab's own copy of ECharts\\
+\file{extensions/language-julia/libs/echarts} & ECharts 6.0.0\\
+\file{extensions/language-julia/libs/maplibre}, \file{.../libs/mapillary} & MapLibre GL JS 5.24.0, MapillaryJS 4.1.2\\
+\file{extensions/language-julia/scripts/terminalserver/Pollis.jl} & \file{Pollis.webmap}, \file{Pollis.layer},
+  \file{Pollis.tiles}, \file{Pollis.streetview}, and the pages of the maps\\
+\file{extensions/language-julia/src/interactive/pollisMap.ts} & The drawing of a map, shared by its page and notebook
+  cells\\
+\file{extensions/language-julia/src/interactive/pollisMapPage.ts} & The page of a map in Pollis's browser\\
+\file{extensions/language-julia/package.json} & The commands of the \ui{Plots} tab and the renderer \ui{Pollis Maps}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\references
+\dref{CSRBB2023a}{Christ, S., Schwabeneder, D., Rackauckas, C., Borregaard, M.\,K. and Breloff, T. (2023). Plots.jl -- A User Extendable Plotting API for the Julia Programming Language. \emph{Journal of Open Research Software} 11, 5. \ddoi{10.5334/jors.431}}
+\dref{DK2021a}{Danisch, S. and Krumbiegel, J. (2021). Makie.jl: Flexible high-performance data visualization for Julia. \emph{Journal of Open Source Software} 6(65), 3349. \ddoi{10.21105/joss.03349}}
+\dref{Ero2026a}{Ero, Z. (2026). OpenFreeMap: Free and Open-Source Map Hosting with OpenStreetMap Data. \url{https://github.com/hyperknot/openfreemap}}
+\dref{Goo2026a}{Google (2026a). Maps JavaScript API Documentation. \url{https://developers.google.com/maps/documentation/javascript}}
+\dref{Goo2026b}{Google (2026b). 3D Maps in Maps JavaScript. \url{https://developers.google.com/maps/documentation/javascript/3d/overview}}
+\dref{LMSSZ...2018a}{Li, D., Mei, H., Shen, Y., Su, S., Zhang, W., Wang, J., Zu, M. and Chen, W. (2018). ECharts: A Declarative Framework for Rapid Construction of Web-Based Visualization. \emph{Visual Informatics} 2(2), 136--146. \ddoi{10.1016/j.visinf.2018.04.011}}
+\dref{MLC2026a}{MapLibre Contributors (2026). MapLibre GL JS: Interactive Vector Tile Maps in the Browser. \url{https://github.com/maplibre/maplibre-gl-js}}
+\dref{Map2023a}{Mapillary (2023). MapillaryJS: Interactive, Extendable Street Imagery Map Experiences in the Browser. \url{https://github.com/mapillary/mapillary-js}}
+\dref{Zwi2026a}{Zwitch, R. (2026). ECharts.jl: Julia Package for the Apache ECharts v6 Visualization Library. \url{https://github.com/randyzwitch/ECharts.jl}}
+
+\end{document}
