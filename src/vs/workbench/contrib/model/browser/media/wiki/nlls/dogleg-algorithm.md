@@ -15,7 +15,7 @@ As in Levenberg-Marquardt, the actual reduction is compared with the predicted o
 Each iteration costs one factorisation, and the path is cheap to compute, so Dogleg often needs fewer function evaluations than Levenberg-Marquardt on **well-scaled problems with small residuals**. It is less robust when J is nearly rank deficient, since the Gauss-Newton point is then unreliable, and more sensitive to parameter scaling, since the trust region is a sphere.
 
 ## In This Panel
-The panel calls LeastSquaresOptim.Dogleg() with ForwardDiff for J and tolerances of 1e-8.
+The panel calls `LeastSquaresOptim.Dogleg()` with ForwardDiff for J and tolerances of 1e-8.
 
 ## See Also
 - [LM Algorithm](lm-algorithm.md) · [Gauss-Newton](gauss-newton.md) · [Decision Guide](decision-guide.md)

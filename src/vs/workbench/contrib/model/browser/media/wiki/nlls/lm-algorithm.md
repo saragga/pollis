@@ -14,7 +14,7 @@ The damping makes J'J + lambda D positive definite even when J is rank deficient
 Marquardt's scaling by the diagonal of J'J makes the method invariant to rescaling the parameters, which matters when they differ by orders of magnitude, as an amplitude and a rate often do.
 
 ## In This Panel
-The panel calls LeastSquaresOptim.LevenbergMarquardt() with forward-mode automatic differentiation for J, and tolerances of 1e-8 on x and on f. The **Tolerance Sweep** varies them.
+The panel calls `LeastSquaresOptim.LevenbergMarquardt()` with forward-mode automatic differentiation for J, and tolerances of 1e-8 on x and on f. The **Tolerance Sweep** varies them.
 
 ## See Also
 - [Dogleg Algorithm](dogleg-algorithm.md) · [Gauss-Newton](gauss-newton.md) · [Decision Guide](decision-guide.md)
