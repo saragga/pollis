@@ -13,7 +13,7 @@ Every subset of a frequent itemset is frequent; so if an itemset is infrequent, 
 5. From each frequent itemset, form rules A => C with one item C on the right, and compute their confidence, coverage and lift.
 
 ## In RuleMiner
-`apriori(txns, min_support, min_confidence)` returns one row per rule, with columns LHS, RHS, Support, Confidence, Coverage, Lift, N and Length. RuleMiner prunes by confidence while it grows the rules, so a high min_confidence can lose strong long rules whose shorter parents are weak. The panel therefore mines every rule of the frequent itemsets with min_confidence 0 and keeps those at or above min_confidence afterwards.
+`apriori(txns, min_support, min_confidence)` returns one row per rule, with columns LHS, RHS, Support, Confidence, Coverage, Lift, N and Length. RuleMiner prunes by confidence while it grows the rules, so a high **min_confidence** can lose strong long rules whose shorter parents are weak. The panel therefore mines every rule of the frequent itemsets with **min_confidence** 0 and keeps those at or above **min_confidence** afterwards.
 
 ## Cost
 Apriori scans the data once per level and can generate many candidates when frequent items are numerous. On large or dense data, ECLAT or FP-Growth find the itemsets faster.

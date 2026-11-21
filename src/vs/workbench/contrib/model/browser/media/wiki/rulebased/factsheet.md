@@ -5,11 +5,11 @@
 | | |
 |---|---|
 | **Purpose** | Find frequent sets of items and if-then rules between them |
-| **Input** | A table in long format with columns Transaction and Item; min_support, and min_confidence for rules |
+| **Input** | A table in long format with columns Transaction and Item; **min_support**, and **min_confidence** for rules |
 | **Core package** | [RuleMiner.jl](https://github.com/JaredSchwartz/RuleMiner.jl) |
 | **Algorithms** | Apriori (Agrawal and Srikant 1994), ECLAT (Zaki and others 1997), FP-Growth (Han, Pei and Yin 2000), FP-Close and FP-Max (Grahne and Zhu 2005) |
 | **Output** | Itemsets with Support, N and Length; rules with LHS, RHS, Support, Confidence, Coverage, Lift, N and Length |
-| **Key choices** | min_support; min_confidence; all, closed or maximal itemsets |
+| **Key choices** | **min_support**; **min_confidence**; all, closed or maximal itemsets |
 
 ## Measures
 

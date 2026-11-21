@@ -20,7 +20,7 @@ Lift of A => C equals lift of C => A: it measures association, not direction. Co
 **Recommend Items** takes the rules whose LHS is contained in a basket and whose RHS is not, and ranks their RHS items by confidence. This is the simplest rule-based recommender. It gives nothing for a basket that no rule's LHS fits, and it favours common items; ranking by lift instead favours items specific to the basket.
 
 ## Reporting
-State the transaction unit, the number of transactions and items, min_support, min_confidence, the algorithm, and how many itemsets or rules were found. For each rule reported, give support (or N), confidence and lift.
+State the transaction unit, the number of transactions and items, **min_support**, **min_confidence**, the algorithm, and how many itemsets or rules were found. For each rule reported, give support (or N), confidence and lift.
 
 ## See Also
 - [Association Rules](association-rules.md) · [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md)
