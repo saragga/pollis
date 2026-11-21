@@ -1,4 +1,5 @@
 import esbuild from 'esbuild'
+import { cpSync } from 'node:fs'
 
 const production = process.argv.includes('--production')
 const watch = process.argv.includes('--watch')
@@ -69,6 +70,11 @@ async function main() {
         logLevel: 'warning',
         plugins: [esbuildProblemMatcherPlugin],
     })
+    // Pollis: a notebook's page loads files only from the folder of a renderer's entry point, so the libraries the map
+    // renderer loads, with their licences, are copied beside it, into dist/libs
+    for (const lib of ['maplibre', 'mapillary']) {
+        cpSync(`libs/${lib}`, `dist/libs/${lib}`, { recursive: true })
+    }
     for (const context of [ctx, rendererCtx, pageCtx]) {
         if (watch) {
             await context.watch()

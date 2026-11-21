@@ -1,7 +1,8 @@
 /// <reference lib="dom" />
 // Pollis: the notebook renderer of maps of Pollis.webmap (application/vnd.pollis.map+json). It loads MapLibre GL JS from
-// the extension's libs/maplibre the first time a map is shown, and MapillaryJS from libs/mapillary the first time a
-// street-level viewer of Pollis.streetview is, and draws each map with drawPollisMap, as the plot pane does.
+// dist/libs/maplibre the first time a map is shown, and MapillaryJS from dist/libs/mapillary the first time a
+// street-level viewer of Pollis.streetview is, and draws each map with drawPollisMap. The build copies both beside the
+// renderer, as a notebook's page loads files only from the folder of a renderer's entry point.
 import { drawPollisMap, MAP_CSS, MAP_STYLES } from '../interactive/pollisMap.js'
 
 /** An output of a notebook cell, as the renderer API gives it: only what the renderer uses. */
@@ -25,7 +26,7 @@ let loading: Promise<void> | undefined
 /** Loads MapLibre GL JS, its stylesheet and the maps' own styles into the notebook's page, once. */
 function loadMapLibre(): Promise<void> {
     loading ??= new Promise<void>((resolve, reject) => {
-        const lib = new URL('../libs/maplibre/', import.meta.url)
+        const lib = new URL('./libs/maplibre/', import.meta.url)
         const css = document.createElement('link')
         css.rel = 'stylesheet'
         css.href = new URL('maplibre-gl.css', lib).href
@@ -45,7 +46,7 @@ let loadingMapillary: Promise<void> | undefined
 /** Loads MapillaryJS and its stylesheet into the notebook's page, once. */
 function loadMapillary(): Promise<void> {
     loadingMapillary ??= new Promise<void>((resolve, reject) => {
-        const lib = new URL('../libs/mapillary/', import.meta.url)
+        const lib = new URL('./libs/mapillary/', import.meta.url)
         const css = document.createElement('link')
         css.rel = 'stylesheet'
         css.href = new URL('mapillary.css', lib).href
