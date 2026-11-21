@@ -28,7 +28,7 @@ Brent's method looks for one local minimum, so it can miss another if Q(rho) has
 
 ## What to Compare the Beach-MacKinnon Estimator With
 
-**Prais-Winsten (Iterated)** uses the same transform but a moment formula for rho, and the two can drift apart at high rho, where the term in log(1 − rho²) gains weight. **Hildreth-Lu** gives an outside check on the objective for the case of several minima, despite its different treatment of the first row. In **All AR(1) Estimators**, a **Beach-MacKinnon** rho close to these others supports the result. **jarque_bera_p** in **Is AR(1) Enough?** reports whether normality looks tenable for the innovations.
+**Prais-Winsten (Iterated)** uses the same transform but a moment formula for rho, and the two can drift apart at high rho, where the term in log(1 − rho²) gains weight. **Hildreth-Lu** gives an outside check on the objective for the case of several minima, despite its different treatment of the first row. In **All AR(1) Estimators**, a **Beach-MacKinnon** rho close to these others supports the result. `jarque_bera_p` in **Is AR(1) Enough?** reports whether normality looks tenable for the innovations.
 
 ## References
 

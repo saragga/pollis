@@ -4,7 +4,7 @@ Some checks here run before the correction and ask whether one is needed. Others
 
 ## How to Test for Serial Correlation Before Correcting a Regression
 
-**Serial Correlation Tests** works on OLS residuals. The statistic of [Durbin and Watson (1950)](#ref-DW1950a) is close to 2 under no autocorrelation, and `HypothesisTests.jl` gives a two-sided p-value, by an exact algorithm up to 100 observations and a normal approximation above that. The tests of [Breusch (1978)](#ref-Bre1978a) and [Godfrey (1978)](#ref-God1978a) are reported at lags 1 and 4. Small p-values support a correction. The **reading** column reports only which side of 2 the statistic lies on, and prints a direction even when **dw_p** is large, so read the p-value first. Use the Breusch-Godfrey columns when X includes lagged y, as Durbin-Watson is not valid then.
+**Serial Correlation Tests** works on OLS residuals. The statistic of [Durbin and Watson (1950)](#ref-DW1950a) is close to 2 under no autocorrelation, and `HypothesisTests.jl` gives a two-sided p-value, by an exact algorithm up to 100 observations and a normal approximation above that. The tests of [Breusch (1978)](#ref-Bre1978a) and [Godfrey (1978)](#ref-God1978a) are reported at lags 1 and 4. Small p-values support a correction. The **reading** column reports only which side of 2 the statistic lies on, and prints a direction even when `dw_p` is large, so read the p-value first. Use the Breusch-Godfrey columns when X includes lagged y, as Durbin-Watson is not valid then.
 
 ## How to Read the Correlograms of an AR(1) Regression
 
@@ -12,11 +12,11 @@ Some checks here run before the correction and ask whether one is needed. Others
 
 ## How to Check Whether AR(1) Removed the Dependence
 
-**Is AR(1) Enough?** computes v_t = e_t − rho e_(t−1) and applies the test of [Ljung and Box (1978)](#ref-LB1978a) over 10 lags. A large **ljung_box_innovations_p** means no dependence was detected, which is weaker than showing that none exists. A small value calls for a richer error model or a change of specification. The test runs without a degrees-of-freedom adjustment for the estimated rho, which makes it somewhat conservative. The same Next Step adds **jarque_bera_p**, using the normality test of [Jarque and Bera (1987)](#ref-JB1987a) on the innovations. A small value matters most for **Beach-MacKinnon** and for short samples.
+**Is AR(1) Enough?** computes v_t = e_t − rho e_(t−1) and applies the test of [Ljung and Box (1978)](#ref-LB1978a) over 10 lags. A large `ljung_box_innovations_p` means no dependence was detected, which is weaker than showing that none exists. A small value calls for a richer error model or a change of specification. The test runs without a degrees-of-freedom adjustment for the estimated rho, which makes it somewhat conservative. The same Next Step adds `jarque_bera_p`, using the normality test of [Jarque and Bera (1987)](#ref-JB1987a) on the innovations. A small value matters most for **Beach-MacKinnon** and for short samples.
 
 ## How to Check for Heteroskedasticity in an AR(1) Regression
 
-**harvey_heteroskedasticity_p** in **Is AR(1) Enough?** reports a test for exponential heteroskedasticity. The test uses OLS residuals with X as the variance drivers, so it is computed before the correction and strong autocorrelation can affect its size. A small value suggests moving to **Linear Models with Heteroskedasticity + AR(1)**. For a view of the corrected model, read the innovation series in **Residuals over Time**: clusters of large values or a widening band point to a changing variance that this check may miss. The panel offers no variance test on the innovations, so a user who needs one can regress v_t squared on the suspected drivers.
+`harvey_heteroskedasticity_p` in **Is AR(1) Enough?** reports a test for exponential heteroskedasticity. The test uses OLS residuals with X as the variance drivers, so it is computed before the correction and strong autocorrelation can affect its size. A small value suggests moving to **Linear Models with Heteroskedasticity + AR(1)**. For a view of the corrected model, read the innovation series in **Residuals over Time**: clusters of large values or a widening band point to a changing variance that this check may miss. The panel offers no variance test on the innovations, so a user who needs one can regress v_t squared on the suspected drivers.
 
 ## How to Read Residuals over Time After an AR(1) Fit
 

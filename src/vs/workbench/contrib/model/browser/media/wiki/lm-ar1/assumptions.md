@@ -4,7 +4,7 @@ Each estimator in the panel replaces the assumption of uncorrelated errors with 
 
 ## Why AR(1) Regression Requires Strictly Exogenous Regressors
 
-Quasi-differencing mixes x_t with x_(t−1), and rho itself is computed from regression residuals, so the regressors must be uncorrelated with the errors at all leads and lags. A lagged dependent variable in **Regressors (X)** breaks this condition. OLS is then inconsistent when errors are autocorrelated, the first-stage residuals are contaminated, and every tab inherits the problem. Feedback from y to future x has a similar effect. The panel offers no test of exogeneity, so the argument has to come from how the data arise. For a regression with lags of y, read **breusch_godfrey_lag1_p** rather than **dw_p**, and consider a dynamic specification instead of this correction ([Greene (2018)](#ref-Gre2018a)).
+Quasi-differencing mixes x_t with x_(t−1), and rho itself is computed from regression residuals, so the regressors must be uncorrelated with the errors at all leads and lags. A lagged dependent variable in **Regressors (X)** breaks this condition. OLS is then inconsistent when errors are autocorrelated, the first-stage residuals are contaminated, and every tab inherits the problem. Feedback from y to future x has a similar effect. The panel offers no test of exogeneity, so the argument has to come from how the data arise. For a regression with lags of y, read `breusch_godfrey_lag1_p` rather than `dw_p`, and consider a dynamic specification instead of this correction ([Greene (2018)](#ref-Gre2018a)).
 
 ## Why the AR(1) Form of the Errors Has to Be Right
 
@@ -16,11 +16,11 @@ The model needs the absolute value of rho to be less than one. A nearly non-stat
 
 ## What Happens Under Non-Constant Innovation Variance in AR(1) Regression
 
-The tabs assume that v_t has one variance throughout. Under heteroskedastic innovations the coefficients remain unbiased if the regressors are exogenous, but the standard errors from the transformed regression are unreliable and efficiency is lost. Look for periods of wide and narrow spread in **Residuals over Time**. The **harvey_heteroskedasticity_p** column in **Is AR(1) Enough?** gives a formal check, computed on OLS residuals before any correction. When the variance does change, the panel **Linear Models with Heteroskedasticity + AR(1)** handles both features together.
+The tabs assume that v_t has one variance throughout. Under heteroskedastic innovations the coefficients remain unbiased if the regressors are exogenous, but the standard errors from the transformed regression are unreliable and efficiency is lost. Look for periods of wide and narrow spread in **Residuals over Time**. The `harvey_heteroskedasticity_p` column in **Is AR(1) Enough?** gives a formal check, computed on OLS residuals before any correction. When the variance does change, the panel **Linear Models with Heteroskedasticity + AR(1)** handles both features together.
 
 ## Whether Normal Errors Are Needed for AR(1) Regression
 
-Normality is part of the likelihood behind **Beach-MacKinnon**. The Prais-Winsten and **Hildreth-Lu** tabs do not need it in large samples, while their t and p values rest on approximate distributions in small ones. With non-normal errors, **Beach-MacKinnon** still gives a usable fit, though its likelihood is then a working approximation. **jarque_bera_p** in **Is AR(1) Enough?** tests the innovations. Heavy tails or a few outliers can distort rho, because a single large residual enters the sum of cross-products twice, so inspect **Residuals over Time** as well.
+Normality is part of the likelihood behind **Beach-MacKinnon**. The Prais-Winsten and **Hildreth-Lu** tabs do not need it in large samples, while their t and p values rest on approximate distributions in small ones. With non-normal errors, **Beach-MacKinnon** still gives a usable fit, though its likelihood is then a working approximation. `jarque_bera_p` in **Is AR(1) Enough?** tests the innovations. Heavy tails or a few outliers can distort rho, because a single large residual enters the sum of cross-products twice, so inspect **Residuals over Time** as well.
 
 ## Why Observations Must Be Equally Spaced for AR(1) Regression
 
