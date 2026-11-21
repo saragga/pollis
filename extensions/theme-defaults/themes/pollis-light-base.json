@@ -1,6 +1,6 @@
 {
 	"$schema": "vscode://schemas/color-theme",
-	"name": "Pollis Light Base",
+	"name": "Pollis 2026 Light Base",
 	"include": "./light_vs.json",
 	"type": "light",
 	"colors": {

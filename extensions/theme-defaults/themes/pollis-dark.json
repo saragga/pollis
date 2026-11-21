@@ -1,6 +1,6 @@
 {
 	"$schema": "vscode://schemas/color-theme",
-	"name": "Pollis Dark",
+	"name": "Pollis 2026 Dark",
 	"include": "./pollis-dark-base.json",
 	"type": "dark",
 	"colors": {

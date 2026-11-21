@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 82" fill="none">
+	<rect width="280" height="82" rx="4" fill="#121314"/>
+	<rect width="22" height="82" fill="#191A1B"/>
+	<rect x="0" y="5" width="2" height="12" fill="#F2B446"/>
+	<rect x="5" y="5" width="12" height="12" rx="2" fill="#bfbfbf"/>
+	<rect x="5" y="21" width="12" height="12" rx="2" fill="#bfbfbf" opacity="0.4"/>
+	<circle cx="16" cy="31" r="3.5" fill="#F2B446"/>
+	<rect x="5" y="37" width="12" height="12" rx="2" fill="#bfbfbf" opacity="0.4"/>
+	<rect x="22" y="0" width="258" height="18" fill="#191A1B"/>
+	<line x1="22" y1="18" x2="280" y2="18" stroke="#858889" stroke-opacity="0.25"/>
+	<rect x="22" y="0" width="44" height="18" fill="#121314"/>
+	<line x1="22" y1="0.75" x2="66" y2="0.75" stroke="#F2B446" stroke-width="1.5"/>
+	<text x="30" y="12" font-family="monospace" font-size="7" fill="#bfbfbf">index.jl</text>
+	<text x="74" y="12" font-family="monospace" font-size="7" fill="#8C8C8C" opacity="0.5">app.jl</text>
+	<text x="28" y="32" font-family="monospace" font-size="9"><tspan fill="#569CD6">function </tspan><tspan fill="#D4D4D4">greet()</tspan></text>
+	<text x="28" y="45" font-family="monospace" font-size="9"><tspan fill="#D4D4D4">  </tspan><tspan fill="#6A9955"># hello</tspan></text>
+	<text x="28" y="58" font-family="monospace" font-size="9"><tspan fill="#D4D4D4">  </tspan><tspan fill="#569CD6">return </tspan><tspan fill="#CE9178">"Hi"</tspan></text>
+	<text x="28" y="71" font-family="monospace" font-size="9" fill="#569CD6">end</text>
+</svg>

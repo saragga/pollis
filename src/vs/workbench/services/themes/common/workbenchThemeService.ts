@@ -39,8 +39,8 @@ export enum ThemeSettings {
 }
 
 export namespace ThemeSettingDefaults {
-	export const COLOR_THEME_DARK = 'Pollis Dark';
-	export const COLOR_THEME_LIGHT = 'Pollis Light';
+	export const COLOR_THEME_DARK = 'Pollis 2026 Dark';
+	export const COLOR_THEME_LIGHT = 'Pollis 2026 Light';
 	export const COLOR_THEME_HC_DARK = 'Default High Contrast';
 	export const COLOR_THEME_HC_LIGHT = 'Default High Contrast Light';
 

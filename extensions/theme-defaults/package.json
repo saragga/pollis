@@ -14,16 +14,28 @@
   "contributes": {
     "themes": [
       {
-        "id": "Pollis Dark",
+        "id": "Pollis 2026 Dark",
         "label": "%pollisDarkThemeLabel%",
         "uiTheme": "vs-dark",
         "path": "./themes/pollis-dark.json"
       },
       {
-        "id": "Pollis Light",
+        "id": "Pollis 2026 Light",
         "label": "%pollisLightThemeLabel%",
         "uiTheme": "vs",
         "path": "./themes/pollis-light.json"
+      },
+      {
+        "id": "Pollis Dark",
+        "label": "%pollisVsDarkThemeLabel%",
+        "uiTheme": "vs-dark",
+        "path": "./themes/pollis-vs-dark.json"
+      },
+      {
+        "id": "Pollis Light",
+        "label": "%pollisVsLightThemeLabel%",
+        "uiTheme": "vs",
+        "path": "./themes/pollis-vs-light.json"
       },
       {
         "id": "Light 2026",

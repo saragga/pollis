@@ -1,0 +1,16 @@
+{
+	"$schema": "vscode://schemas/color-theme",
+	"name": "Pollis Light",
+	"include": "./light_vs.json",
+	"type": "light",
+	"colors": {
+		"badge.background": "#F2B446",
+		"badge.foreground": "#1C3A5E",
+		"activityBarBadge.background": "#F2B446",
+		"activityBarBadge.foreground": "#1C3A5E",
+		"activityBar.activeBorder": "#D9902A",
+		"activityBarTop.activeBorder": "#D9902A",
+		"tab.activeBorderTop": "#D9902A",
+		"panelTitle.activeBorder": "#D9902A"
+	}
+}

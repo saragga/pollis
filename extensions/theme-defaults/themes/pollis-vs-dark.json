@@ -1,0 +1,16 @@
+{
+	"$schema": "vscode://schemas/color-theme",
+	"name": "Pollis Dark",
+	"include": "./dark_vs.json",
+	"type": "dark",
+	"colors": {
+		"badge.background": "#F2B446",
+		"badge.foreground": "#1C3A5E",
+		"activityBarBadge.background": "#F2B446",
+		"activityBarBadge.foreground": "#1C3A5E",
+		"activityBar.activeBorder": "#F2B446",
+		"activityBarTop.activeBorder": "#F2B446",
+		"tab.activeBorderTop": "#F2B446",
+		"panelTitle.activeBorder": "#F2B446"
+	}
+}
