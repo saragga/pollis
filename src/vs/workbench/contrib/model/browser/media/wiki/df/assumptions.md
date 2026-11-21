@@ -10,7 +10,7 @@ Not every family can meet every target:
 - **Beta** and **Uniform** need the mean inside their support and a variance small enough for it.
 - **NegativeBinomial** needs a variance larger than the mean; **Binomial**, smaller.
 - **TDist** needs a variance above 1, its minimum as the degrees of freedom grow.
-dist_exists returns false for an infeasible combination; Discover lists the families that are feasible.
+`dist_exists` returns false for an infeasible combination; Discover lists the families that are feasible.
 
 ## Exact Matching
 The parameters are solved so that the targets hold exactly, not approximately: there is no notion of error or uncertainty. If the targets are themselves uncertain, as estimates or expert guesses are, the **Sensitivity to the Targets** shows how far the parameters move when each target changes by 10%.
