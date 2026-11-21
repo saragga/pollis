@@ -7,7 +7,7 @@ The **Second-Order Cone** model is a norm-constrained regression:
 
     minimise   ||A x - b||_2   subject to   ||x||_2 <= radius.
 
-It is written with an **epigraph** variable t: minimise t subject to [t; A x - b] in SecondOrderCone() and [r; x] in SecondOrderCone(), where r is fixed at the **Norm Radius** so that the sweep can change it.
+It is written with an **epigraph** variable t: minimise t subject to [t; A x - b] in `SecondOrderCone()` and [r; x] in `SecondOrderCone()`, where r is fixed at the **Norm Radius** so that the sweep can change it.
 
 ## Relation to Ridge Regression
 Constraining ||x|| <= radius is the constrained form of **ridge regression**: for every radius there is a ridge penalty giving the same solution. When the radius exceeds the norm of the ordinary least-squares coefficients, the constraint is inactive and the solution is OLS; below, it shrinks the coefficients. **vs Baseline** reports OLS's residual norm and coefficient norm beside the constrained fit.

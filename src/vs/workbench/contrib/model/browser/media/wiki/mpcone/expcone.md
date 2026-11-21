@@ -7,7 +7,7 @@ The **Exponential Cone** model finds the **maximum-entropy distribution** on the
 
     maximise   - sum x_i log x_i   subject to   sum x_i = 1,   sum i x_i = mu,   x >= 0.
 
-Each entropy term is written with a variable u_i and the cone constraint [u_i; x_i; 1] in MOI.ExponentialCone(), which says x_i exp(u_i / x_i) <= 1, that is, u_i <= -x_i log x_i. Maximising sum(u) then maximises the entropy.
+Each entropy term is written with a variable u_i and the cone constraint [u_i; x_i; 1] in `MOI.ExponentialCone()`, which says x_i exp(u_i / x_i) <= 1, that is, u_i <= -x_i log x_i. Maximising sum(u) then maximises the entropy.
 
 ## The Solution
 Maximum entropy under a mean constraint gives a **Gibbs distribution**, x_i proportional to exp(lambda i), where lambda is the dual variable of the mean constraint. With the **Target Mean** at the centre (n + 1) / 2, the solution is uniform; below it, the probabilities decrease geometrically with i; above it, they increase. The **Solution Profile** plots them with the mean marked.

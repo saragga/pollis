@@ -7,7 +7,7 @@ The **Power Cone** model is a **p-norm regression**:
 
     minimise   sum |A x - b|_i ^ p.
 
-For each residual r_i a variable e_i is added with [e_i; 1; r_i] in MOI.PowerCone(1/p), which says e_i^(1/p) >= |r_i|, that is, e_i >= |r_i|^p; the objective is sum(e). The **p** input sets the exponent.
+For each residual r_i a variable e_i is added with [e_i; 1; r_i] in `MOI.PowerCone(1/p)`, which says e_i^(1/p) >= |r_i|, that is, e_i >= |r_i|^p; the objective is sum(e). The **p** input sets the exponent.
 
 ## Between Least Squares and Least Absolute Deviations
 - **p = 2** is **least squares**: efficient under Gaussian errors, sensitive to outliers.

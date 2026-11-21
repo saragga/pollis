@@ -25,7 +25,7 @@ The dual variable of a constraint is the sensitivity of the optimal value to its
 When the primal is infeasible, the dual has a ray that proves it (Farkas' lemma); when the objective is unbounded, the primal has one. Conic solvers return these rays instead of failing silently: the status INFEASIBLE or DUAL_INFEASIBLE comes with a certificate.
 
 ## Sign Conventions
-JuMP's dual() follows the conic convention; shadow_price() gives the change in the objective for a relaxation, with the sign that makes sense for the problem's sense. **Dual Variables** uses shadow_price, **Sensitivity Analysis** dual.
+JuMP's `dual()` follows the conic convention; `shadow_price()` gives the change in the objective for a relaxation, with the sign that makes sense for the problem's sense. **Dual Variables** uses `shadow_price`, **Sensitivity Analysis** `dual`.
 
 ## See Also
 - [Interior Point](ipm.md) · [Interpretation](interpretation.md) · [Assumptions](assumptions.md)
