@@ -95,7 +95,7 @@ detail = "models high-dimensional similarities with Gaussian kernels and low-dim
 
 [[bullets]]
 text = "UMAP"
-detail = "constructs a fuzzy topological representation of the high-dimensional graph then minimises cross-entropy to a low-dimensional analogue; faster and better at preserving global structure than t-SNE (UMAP.jl)"
+detail = "constructs a fuzzy topological representation of the high-dimensional graph then minimises cross-entropy to a low-dimensional analogue; approximate neighbour search for larger samples, and a fitted model that places new points (UMAP.jl)"
 
 [[decisionRows]]
 task = "t-SNE"

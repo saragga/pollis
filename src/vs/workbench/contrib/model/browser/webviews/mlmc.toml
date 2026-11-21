@@ -480,7 +480,7 @@ for l in 1:L
     println(rpad(l, 7), rpad(round(m; sigdigits = 4), 21), l > 1 ? round(abs(h[:dE][Level(l-1)]) / m; sigdigits = 3) : "")
 end
 println("alpha estimate: ", round(alpha; sigdigits = 3), "   theory: ", theory.alpha)
-println("Bias estimate |E[Q - Q_L]|: ", round(h[:bias]; sigdigits = 3), "   actual |E[Q_L] - exact| is unknown, but |estimate - exact| = ", round(abs(h[:mean] - exact); sigdigits = 3))
+println("Bias estimate: ", round(h[:bias]; sigdigits = 3), "   actual |E[Q_L] - exact| is unknown, but |estimate - exact| = ", round(abs(h[:mean] - exact); sigdigits = 3))
 '''
 
 [[actionGroups]]
@@ -520,6 +520,7 @@ end
 println("Measured rates: alpha = ", round(alpha; sigdigits = 3), ", beta = ", round(beta; sigdigits = 3), ", gamma = ", round(gamma; sigdigits = 3))
 println("Regime: ", regime)
 println("A 10x smaller tolerance should cost about ", round(factor; sigdigits = 2), " times the current ", round(Int, work), " units")
+{{?model=mlqmc}}println("These rates and regimes are those of independent sampling; the lattice rule usually needs fewer points, so the forecast is an upper guide")
 '''
 
 [[actionGroups.actions]]
@@ -531,7 +532,7 @@ println("Level  |E[Q_l - Q_(l-1)]|   samples")
 for l in 0:L
     println(rpad(l, 7), rpad(round(abs(h[:dE][Level(l)]); sigdigits = 4), 21), evals[l+1])
 end
-println("Stopped at L = ", L, ": bias estimate ", round(h[:bias]; sigdigits = 3), ", MSE ", round(h[:mse]; sigdigits = 3), " <= tol^2 = ", round(h[:tol]^2; sigdigits = 3))
+println("Stopped at L = ", L, ": bias estimate ", round(h[:bias]; sigdigits = 3), ", MSE ", round(h[:mse]; sigdigits = 3), h[:mse] <= h[:tol]^2 ? " <= " : " > ", "tol^2 = ", round(h[:tol]^2; sigdigits = 3))
 L == {{maxlevel}} && println("L reached Max Level, so the bias may still exceed its share of the tolerance: raise Max Level.")
 '''
 
@@ -697,4 +698,5 @@ end
 println(theory.beta > theory.gamma ? "Theory (beta > gamma): the multilevel column stays roughly constant." :
     "Theory (beta = gamma): the multilevel column grows like log(tol)^2.")
 println("The single-level column grows like tol^(-gamma / alpha), because finer levels are needed as tol shrinks.")
+{{?model=mlqmc}}println("The theory is that of independent sampling; with the lattice rule, both columns usually grow more slowly.")
 '''
