@@ -14,7 +14,7 @@ The tabs, inputs, functions and actions of Find Where the Time Goes at a glance.
 
 | Input | Default | Meaning |
 |---|---|---|
-| **Function** | bootstrap_median | The function to profile, by name; the default estimates the standard error of the median of a sample by the bootstrap |
+| **Function** | `bootstrap_median` | The function to profile, by name; the default estimates the standard error of the median of a sample by the bootstrap |
 | **Arguments** | x, 10000 | The arguments of the call, as written in it; the default is a simulated sample of 1 000 values and 10 000 resamples |
 | **Repeats** | 5 | How many times the call runs within the profile |
 | **Format** | Tree | Tree or Flat, **Text Report** only |
