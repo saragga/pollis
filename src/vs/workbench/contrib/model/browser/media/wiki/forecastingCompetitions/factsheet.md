@@ -50,8 +50,8 @@ Each run has its own folder in `~/.pollis/competitions/runs`. A run of tabular o
 | Kind of dataset | Run | Beside the method | Measures |
 |---|---|---|---|
 | Series | All, all of one frequency, or a sample | The eight benchmarks of PollisCompetitions.Benchmarks (Naive, sNaive, Naive2, SES, Holt, Damped, Theta, Com), computed on the same series; a benchmark is left out when a series is too short for it | sMAPE, MASE and OWA, over the series run, or over those of the frequency chosen |
-| Tabular | All the published splits, or the first repeat | The published runs of the dataset's benchmark, means over all its splits | rmse (Continuous, Count), roc_auc (Binary) or log_loss (Multiclass), a mean over the splits run |
-| Survival | All the published splits, or the first repeat | The published runs of the dataset's benchmark, means over all its splits | harrell_c, uno_c, isbs, isbs_erv, isll, isll_erv, dcalib and alpha_calib, means over the splits run |
+| Tabular | All the published splits, or the first repeat | The published runs of the dataset's benchmark, means over all its splits | `rmse` (Continuous, Count), `roc_auc` (Binary) or `log_loss` (Multiclass), a mean over the splits run |
+| Survival | All the published splits, or the first repeat | The published runs of the dataset's benchmark, means over all its splits | `harrell_c`, `uno_c`, `isbs`, `isbs_erv`, `isll`, `isll_erv`, `dcalib` and `alpha_calib`, means over the splits run |
 
 ## What Does Score Models Need?
 

@@ -8,10 +8,10 @@ The Response Type of the dataset, in the Dataset Catalog, decides its measure, a
 
 | Response Type | The method gives, for each test row | Measure | Best |
 |---|---|---|---|
-| Continuous | A number | rmse | Lower |
-| Count | A number | rmse | Lower |
-| Binary | The probability of the second class, the classes sorted | roc_auc | Higher |
-| Multiclass | A probability for each class | log_loss | Lower |
+| Continuous | A number | `rmse` | Lower |
+| Count | A number | `rmse` | Lower |
+| Binary | The probability of the second class, the classes sorted | `roc_auc` | Higher |
+| Multiclass | A probability for each class | `log_loss` | Lower |
 
 A dataset whose Response Type is Ordered has no measure yet, and the column Model Scoring of Manage Challenge Datasets says Not Yet for it.
 
@@ -21,7 +21,7 @@ The root mean squared error is the square root of the mean, over the test rows, 
 
 ## What Is the Area Under the ROC Curve?
 
-The area under the ROC curve (roc_auc) of a binary target is the probability that a row of the second class, drawn at random, gets a higher probability from the method than a row of the first class, drawn at random [(Hanley and McNeil, 1982)](#ref-HM1982a). A method that ranks the rows at random has an area of 0.5, and one that ranks every row of the second class above every row of the first has an area of 1. PollisCompetitions.jl computes it from the ranks of the probabilities, a tie counting one half, and its values are those of scikit-learn [(Pedregosa and 18 coauthors, 2011)](#ref-PVGMT...2011a) on the same predictions.
+The area under the ROC curve (`roc_auc`) of a binary target is the probability that a row of the second class, drawn at random, gets a higher probability from the method than a row of the first class, drawn at random [(Hanley and McNeil, 1982)](#ref-HM1982a). A method that ranks the rows at random has an area of 0.5, and one that ranks every row of the second class above every row of the first has an area of 1. PollisCompetitions.jl computes it from the ranks of the probabilities, a tie counting one half, and its values are those of scikit-learn [(Pedregosa and 18 coauthors, 2011)](#ref-PVGMT...2011a) on the same predictions.
 
 ## What Is the Log Loss?
 
@@ -33,14 +33,14 @@ A survival dataset is scored by the eight measures of the Low-Dimensional Surviv
 
 | Measure | What it scores | Best |
 |---|---|---|
-| harrell_c | Discrimination: Harrell's C | Higher |
-| uno_c | Discrimination: Uno's C | Higher |
-| isbs | The integrated survival Brier score | Lower |
-| isbs_erv | The integrated survival Brier score, as explained residual variation | Higher |
-| isll | The integrated survival log loss | Lower |
-| isll_erv | The integrated survival log loss, as explained residual variation | Higher |
-| dcalib | Calibration: D-calibration | Lower |
-| alpha_calib | Calibration: alpha-calibration | Nearest 1 |
+| `harrell_c` | Discrimination: Harrell's C | Higher |
+| `uno_c` | Discrimination: Uno's C | Higher |
+| `isbs` | The integrated survival Brier score | Lower |
+| `isbs_erv` | The integrated survival Brier score, as explained residual variation | Higher |
+| `isll` | The integrated survival log loss | Lower |
+| `isll_erv` | The integrated survival log loss, as explained residual variation | Higher |
+| `dcalib` | Calibration: D-calibration | Lower |
+| `alpha_calib` | Calibration: alpha-calibration | Nearest 1 |
 
 PollisCompetitions.jl's survival measures give the published scores of the benchmark's Kaplan-Meier [(Kaplan and Meier, 1958)](#ref-KM1958a) and Nelson-Aalen [(Aalen, 1978)](#ref-Aal1978a) estimates on every split of its 34 datasets.
 
