@@ -19,7 +19,7 @@ The **alternating direction method of multipliers** (ADMM) is Douglas-Rachford a
 F(x_k) need not decrease at every iteration, though in practice it usually does after the first ones. The **Descent Check** counts the increases.
 
 ## In ProximalAlgorithms.jl
-**Compare with ProximalAlgorithms** runs ProximalAlgorithms.DouglasRachford with the same step, gamma = step, on LeastSquares(A, b) and the penalty, as a check of the panel's hand-written loop.
+**Compare with ProximalAlgorithms** runs `ProximalAlgorithms.DouglasRachford` with the same step, `gamma = step`, on `LeastSquares(A, b)` and the penalty, as a check of the panel's hand-written loop.
 
 ## See Also
 - [Chambolle-Pock](chambolle-pock.md) · [Proximal Point](proximal-point.md) · [Decision Guide](decision-guide.md)
