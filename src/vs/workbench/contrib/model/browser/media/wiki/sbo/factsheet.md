@@ -29,7 +29,7 @@ The response surface uses only the Gaussian candidates; the other two use both s
 | Input | Default | Meaning |
 |---|---|---|
 | **Dimension (n)** | 2 | Number of decision variables, at least 2 |
-| **Objective f(x)** | Rosenbrock function | Julia expression in the vector x; minimum 0 at x = ones(n) |
+| **Objective f(x)** | Rosenbrock function | Julia expression in the vector x; minimum 0 at `x = ones(n)` |
 | **Lower Bounds**, **Upper Bounds** | fill(−2.0, n), fill(2.0, n) | The search box |
 | **Initial Samples** | 10 | Points of the Latin-hypercube design |
 | **Evaluations** | 40 | Surrogate-guided evaluations after the design |
