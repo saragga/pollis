@@ -12,6 +12,8 @@
 		"activityBarTop.activeBorder": "#F2B446",
 		"activityBar.background": "#173F63",
 		"activityBar.border": "#173F63",
+		"activityBar.foreground": "#FFFFFF",
+		"activityBar.inactiveForeground": "#FFFFFFB3",
 		"tab.activeBorderTop": "#F2B446",
 		"panelTitle.activeBorder": "#F2B446",
 		"statusBar.background": "#007ACC",
