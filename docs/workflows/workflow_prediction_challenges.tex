@@ -73,7 +73,8 @@ Scores with & \textendash & \file{PC.score}, \file{PC.benchmarks}, \file{PC.step
 The fourth page, Model Zoo, reads \file{metadata/models.toml}, \file{metadata/benchmarks.toml} and
 \file{metadata/datasets.toml} of the installed package each time it opens, and writes nothing: a row for each model,
 with the benchmarks and competitions that scored it (the words before the colon of the \file{split_protocol} of its
-runs), its datasets, and its \file{julia_package} and \file{julia_checked}.
+runs), its datasets, and its \file{julia_package} and \file{julia_checked}. \S\ref{sec:modelzoo} says where the
+models are in Julia, and which of them ModelZoo.jl has.
 
 Pollis keeps one setting of its own: the datasets ticked Active, in the profile's storage
 (\file{pollis.manageCompetitionDatasets.active}), which Score Models lists in its step 1.
@@ -233,6 +234,7 @@ adds the curated collections as \file{[[collections]]} (id, name, year, url, des
 \file{papers}).
 
 \subsection{The Model Catalog: metadata/models.toml}
+\label{sec:modelcatalog}
 
 \begin{lstlisting}
 [[models]]
@@ -335,6 +337,129 @@ A dataset of \sig{format = "tabular"} is Ready when \file{info.toml} gives \file
 and \file{[tables]} \file{data}, and its \file{response_type} in the Dataset Catalog has a measure: \file{rmse} for
 Continuous and Count, \file{roc_auc} for Binary, \file{log_loss} for Multiclass; Ordered has none yet. A survival
 dataset is Ready when \file{info.toml} also gives \file{event}, and is scored by the eight survival measures.
+
+\section{The Model Zoo and ModelZoo.jl}
+\label{sec:modelzoo}
+
+The Model Catalog lists every model that a benchmark or a competition of the package scored: 301 in
+PollisCompetitions.jl 0.2.15. Its field \file{julia_package} says where each is in Julia, by the rules of
+\S\ref{sec:modelcatalog}, and \file{julia_checked} which of them have been run on the benchmark's splits and give its
+published scores. The Model Zoo page shows both, model by model; this section gives the totals, and the models that
+ModelZoo.jl writes in Julia because no registered package has them.
+
+\subsection{Where the 301 models are in Julia}
+
+\begin{center}\footnotesize
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.22\linewidth}rrL@{}}
+\toprule
+\textbf{Where} & \textbf{Models} & \textbf{Checked} & \textbf{Packages}\\
+\midrule
+A registered Julia package & 38 & 3 & XGBoost and Durbyn (6 each), StateSpaceModels (5), LightGBM, DecisionTree,
+  NearestNeighborModels, MLJLinearModels and Survival (3 each), GLMNet and SurvivalModels (2 each), GLM and LIBSVM (1
+  each). Checked: Survival's Kaplan-Meier, Nelson-Aalen and Cox models\\
+PollisCompetitions.jl & 17 & 0 & The forecasting benchmarks of its module Benchmarks, where a competition ran the same
+  method\\
+ModelZoo.jl & 9 & 5 & Cox GAM; ExtraTrees and APLR, 3 configurations each; Flex, tuned on 2 measures\\
+Not yet in Julia & 237 & \textendash & Neural Network (72), Foundation Model (48), Tree-based (31), Statistical (27),
+  Baseline (18), Hybrid (17), Fuzzy System (13), Kernel Methods (7), Other (4)\\
+\midrule
+All & 301 & 8 & \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+A model counts as checked only on the benchmark's own splits, with the model's own settings: a package with the same
+estimator can still give other scores, through its defaults, the preparation of the data or its random numbers. A
+foundation model needs the weights its authors trained, which no port of its code gives.
+
+\subsection{Which models ModelZoo.jl writes}
+
+ModelZoo.jl (\file{github.com/Trumpingtons/ModelZoo.jl}, MIT) holds the models of the Model Catalog that no registered
+Julia package has, and the measures by which Score Models scores tabular and survival datasets. A model is written
+into it when:
+
+\begin{itemize}\setlength{\itemsep}{1pt}
+\item no registered Julia package has its estimator, written in Julia or bound to the compiled library the original
+  runs;
+\item its benchmark publishes scores that can check it: scores on splits that PollisCompetitions.jl has, of a
+  configuration whose settings are known. A model tuned by a search the benchmark did not publish (Bayesian
+  optimisation, or the cross-validation of its own package) was fitted with settings that are not known, so its
+  published scores cannot check a port;
+\item it needs no pretrained weights. Families with heavy dependencies, such as neural networks, are to come as
+  package extensions, which load only with the package they need, so that the core stays light.
+\end{itemize}
+
+The rules are the same for every model, whichever benchmark or competition scored it. Each model is written from its
+papers and the documented behaviour of the software the benchmark ran, never translated line by line from a package
+under another licence; where the documentation leaves behaviour out, the source of a package under the MIT licence is
+read for it. Its test checks that it is the benchmark's model, on a few datasets the test chooses by a stated rule: it
+fits the model on every split of those datasets and compares its scores with the published ones, split by split or as
+means over the splits.
+
+\subsection{The models of ModelZoo.jl 0.1.2}
+
+\textbf{Cox GAM} (\sig{CoxGAM}), the GAM of the Low-Dimensional Survival Benchmark
+\dcite{BZBBW...2026a}{(Burk, Zobolas, Bischl, Bender, Wright and Sonabend, 2026)}, which fitted mgcv's \sig{gam} with
+the Cox family. It is Cox's proportional hazards model with a thin plate regression spline
+\dcite{Woo2003a}{(Wood, 2003)} of dimension 10 for each numeric covariate with 10 or more distinct values, and the other covariates linear. The coefficients maximize the
+partial likelihood, with Breslow's handling of ties, penalized by the wiggliness of the splines; the smoothing
+parameters minimize the REML criterion of \dcite{WPS2016a}{Wood, Pya and Säfken (2016)} by Newton's method
+\dcite{Woo2011a}{(Wood, 2011)}, from three starts, keeping the lowest minimum. \sig{linear_predictor} and \sig{survival} give the log relative risk and the
+survival of new rows. Checked on 15 of the 34 survival datasets: the means over the splits of the eight measures are
+within a relative $10^{-3}$ of the published ones ($5\times10^{-2}$ for D-calibration). On the other datasets a test row
+has a level of a factor that no training row has (the benchmark imputes it at random), a smooth covariate has more than
+2000 distinct values (mgcv builds its spline on 2000 drawn at random), or, on splits of 9 datasets listed in the test,
+mgcv stopped at smoothing parameters whose REML criterion is higher than at those \sig{CoxGAM} reaches.
+
+\textbf{ExtraTrees} (\sig{ExtraTrees}, \sig{BaggedExtraTrees}), TabArena's ExtraTrees
+\dcite{EPTHD...2025a}{(Erickson and 6 coauthors, 2025)} in its default, tuned, and tuned and ensembled configurations.
+Forests of extremely randomized trees \dcite{GEW2006a}{(Geurts, Ernst and Wehenkel, 2006)} with scikit-learn's settings
+as AutoGluon fits them: 300 trees, each on a bootstrap sample of the rows, grown until its leaves are pure or it has
+15000 leaves, each node split at the best of random splits of $\sqrt{p}$ covariates for classes and all $p$ for
+numbers; a row whose value is missing goes to a side drawn at random. \sig{BaggedExtraTrees} averages 8 forests, each
+fitted without one of 8 folds of the rows, as TabArena's default configuration. Checked, for the default, on the
+smallest dataset of each Response Type among those TabArena scored the model on whose covariates are all numbers with
+none missing: blood\_transfusion (Binary, ROC AUC), qsar\_fish\_toxicity (Continuous, RMSE) and maternal\_health\_risk
+(Multiclass, log loss). Every one of their 30 splits is fitted and scored, and the mean of the differences from
+TabArena's scores on the same splits is within 4 standard errors of 0. The trees draw other random numbers than
+scikit-learn's, so the two agree in distribution, not split by split. The tuned configurations share the estimator and
+are not checked.
+
+\textbf{APLR} (\sig{APLR}, \sig{BaggedAPLR}), TabArena's APLR in the same three configurations: automatic piecewise
+linear regression \dcite{OD2024a}{(von Ottenbreit and De Bin, 2024)} with the defaults of the Python package aplr 10.26.
+It is gradient boosting of terms that are linear effects or hinge functions of one covariate, $\max(x-s,0)$ or
+$\min(x-s,0)$, set to 0 where a hinge function of another covariate in the model is 0, an interaction of two
+covariates. Each of up to 3000 steps moves the intercept, then adds the term, among the 7 that fitted best lately,
+whose coefficient, fitted to the negative gradient by least squares and shrunk by the learning rate 0.5 (and by half for
+an interaction), reduces the squared error most; split points are searched among the boundaries of up to 300 bins of
+the covariate. Validation rows choose the number of steps, boosting stopping after 200 steps without a lower validation
+error. Numbers use the squared error loss, their predictions kept within the range of the training predictions and
+responses; classes are modelled one against the rest by the logit link. \sig{BaggedAPLR} averages 8 models, each with
+one of 8 folds of the rows as its validation rows, as TabArena's default configuration. aplr's source (MIT) was read
+for the behaviour its documentation leaves out. Checked as ExtraTrees, on the same three datasets, which the same rule
+chooses: the mean of the differences is within 4 standard errors of 0, as AutoGluon splits the rows into its folds
+with other random numbers.
+
+\textbf{Flex} (\sig{FlexibleSurvival}), the Flex of the Low-Dimensional Survival Benchmark, tuned on Harrell's C and on
+the integrated survival Brier score: the flexible parametric survival model of
+\dcite{RP2002a}{Royston and Parmar (2002)} on the proportional hazards scale. The log cumulative hazard is a natural
+cubic spline of log time, with boundary knots at the smallest and largest log event times and $k$ internal knots at
+their quantiles, as flexsurv's \sig{flexsurvspline} places them, plus a linear function of the covariates; the
+likelihood is concave in the coefficients, and Newton's method maximizes it. The benchmark tuned $k$ from 1 to 10 on
+inner splits it did not publish, so the test fits every $k$ on every outer split of the three smallest survival
+datasets without factors (wbc1, e1684 and carpenter\_fda\_data, 90 splits) and asks that each published score be that
+of one $k$. Harrell's and Uno's C are both within $10^{-6}$ of one $k$'s on 76 of the 90 splits, and the integrated
+Brier score and log loss within $10^{-3}$ on 89. On the other splits flexsurv's search stopped short of the maximum of
+the likelihood, which \sig{FlexibleSurvival} reaches; each is listed in the test, checked with flexsurv 2.3.2 on the
+same training rows. Both tuned models are checked.
+
+\subsection{Keeping the list current}
+
+ModelZoo.jl's README lists its models, and this section follows it: each release of ModelZoo.jl that adds a model
+updates the table of totals and adds the model here, with its benchmark, its method, its check and its papers. The
+release of PollisCompetitions.jl that goes with it names ModelZoo in \file{julia_package} of the models it adds, and
+sets \file{julia_checked} for those its tests check.
 
 \section{The database}
 \label{sec:database}
@@ -610,6 +735,8 @@ forecasts) or a benchmark, with \file{kind}, \file{name} and \file{scores}.
 \file{.../compose/browser/forecastingCompetitionsPage.ts} & Score Models: the runs and their scripts\\
 \file{.../compose/browser/agentForecastingPage.ts} & Agents' Forecasting Competition: the studies and their scripts\\
 \file{.../compose/browser/modelZooPage.ts} & Model Zoo: reading the Model Catalog and its runs\\
+\file{ModelZoo.jl/src/models/} & The models of ModelZoo.jl, a file each\\
+\file{ModelZoo.jl/test/runtests.jl} & Their checks against the published scores\\
 \file{.../model/browser/webviews/forecasting*.toml}, \file{agentForecasting.toml}, \file{modelZoo.toml} & The panel texts, wikis and references of the four pages\\
 \file{pollis-agents/skills/forecast-independently/SKILL.md} & The rules the agents follow\\
 \bottomrule
@@ -618,9 +745,17 @@ forecasts) or a benchmark, with \file{kind}, \file{name} and \file{scores}.
 
 \references
 \dref{AN2000a}{Assimakopoulos, V. and Nikolopoulos, K. (2000). The Theta Model: A Decomposition Approach to Forecasting. \emph{International Journal of Forecasting} 16(4), 521--530. \ddoi{10.1016/s0169-2070(00)00066-2}}
+\dref{BZBBW...2026a}{Burk, L., Zobolas, J., Bischl, B., Bender, A., Wright, M. N. and Sonabend, R. (2026). A Large-Scale Neutral Comparison Study of Survival Models on Low-Dimensional Data. \emph{Bioinformatics} 42(5), btag186. \ddoi{10.1093/bioinformatics/btag186}}
+\dref{EPTHD...2025a}{Erickson, N., Purucker, L., Tschalzev, A., Holzmüller, D., Desai, P., Salinas, D. and Hutter, F. (2025). TabArena: A Living Benchmark for Machine Learning on Tabular Data. In \emph{Advances in Neural Information Processing Systems}, 17285--17350. \ddoi{10.52202/085713-0519}}
+\dref{GEW2006a}{Geurts, P., Ernst, D. and Wehenkel, L. (2006). Extremely Randomized Trees. \emph{Machine Learning} 63(1), 3--42. \ddoi{10.1007/s10994-006-6226-1}}
 \dref{GBWHM2021a}{Godahewa, R., Bergmeir, C., Webb, G. I., Hyndman, R. J. and Montero-Manso, P. (2021). Monash Time Series Forecasting Archive. arXiv. \ddoi{10.48550/arXiv.2105.06643}}
 \dref{HK2006a}{Hyndman, R. J. and Koehler, A. B. (2006). Another Look at Measures of Forecast Accuracy. \emph{International Journal of Forecasting} 22(4), 679--688. \ddoi{10.1016/j.ijforecast.2006.03.001}}
 \dref{MSA2020a}{Makridakis, S., Spiliotis, E. and Assimakopoulos, V. (2020). The M4 Competition: 100,000 Time Series and 61 Forecasting Methods. \emph{International Journal of Forecasting} 36(1), 54--74. \ddoi{10.1016/j.ijforecast.2019.04.014}}
+\dref{OD2024a}{von Ottenbreit, M. and De Bin, R. (2024). Automatic Piecewise Linear Regression. \emph{Computational Statistics} 39(4), 1867--1907. \ddoi{10.1007/s00180-024-01475-4}}
 \dref{RM2019a}{Raasveldt, M. and Mühleisen, H. (2019). DuckDB: an Embeddable Analytical Database. In \emph{Proceedings of the 2019 International Conference on Management of Data (SIGMOD)}, 1981--1984. \ddoi{10.1145/3299869.3320212}}
+\dref{RP2002a}{Royston, P. and Parmar, M. K. B. (2002). Flexible Parametric Proportional-Hazards and Proportional-Odds Models for Censored Survival Data, with Application to Prognostic Modelling and Estimation of Treatment Effects. \emph{Statistics in Medicine} 21(15), 2175--2197. \ddoi{10.1002/sim.1203}}
+\dref{Woo2003a}{Wood, S. N. (2003). Thin Plate Regression Splines. \emph{Journal of the Royal Statistical Society Series B: Statistical Methodology} 65(1), 95--114. \ddoi{10.1111/1467-9868.00374}}
+\dref{Woo2011a}{Wood, S. N. (2011). Fast Stable Restricted Maximum Likelihood and Marginal Likelihood Estimation of Semiparametric Generalized Linear Models. \emph{Journal of the Royal Statistical Society Series B: Statistical Methodology} 73(1), 3--36. \ddoi{10.1111/j.1467-9868.2010.00749.x}}
+\dref{WPS2016a}{Wood, S. N., Pya, N. and Säfken, B. (2016). Smoothing Parameter and Model Selection for General Smooth Models. \emph{Journal of the American Statistical Association} 111(516), 1548--1563. \ddoi{10.1080/01621459.2016.1180986}}
 
 \end{document}
