@@ -133,8 +133,9 @@ class PollisToolboxIndexService extends Disposable implements IPollisToolboxInde
 		this._onDidChange.fire();
 		try {
 			// Not from the HTTP cache, which may keep a list for the five minutes GitHub allows, and so name a .vsix
-			// that the publish since has replaced
-			const context = await this.requestService.request({ type: 'GET', url: TOOLBOXES_INDEX_URL, headers: { 'Cache-Control': 'no-cache' }, callSite: 'pollisToolboxIndex.reload' }, CancellationToken.None);
+			// that the publish since has replaced. Not with a Cache-Control header either: GitHub refuses the
+			// preflight request such a header needs, and the window then cannot download the list
+			const context = await this.requestService.request({ type: 'GET', url: TOOLBOXES_INDEX_URL, disableCache: true, callSite: 'pollisToolboxIndex.reload' }, CancellationToken.None);
 			if (!isSuccess(context)) {
 				throw new Error(`HTTP ${context.res.statusCode}`);
 			}
