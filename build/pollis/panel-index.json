@@ -478,10 +478,10 @@
 		{
 			"id": "autocorr",
 			"title": "Spatial Autocorrelation",
-			"source": "toolbox:pollis-toolbox-smart-regions",
+			"source": "toolbox:pollis-toolbox-spatial-econometrics",
 			"commands": [
 				{
-					"id": "pollis.smartRegions.autocorr",
+					"id": "pollis.spatialEconometrics.autocorr",
 					"menuTitles": [
 						"Spatial Autocorrelation"
 					]
@@ -490,9 +490,9 @@
 			"portable": true,
 			"defaultModel": "global",
 			"decisionFirstColumn": "Statistic",
-			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/autocorr.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"toml": "toolboxes/pollis-toolbox-spatial-econometrics/panels/autocorr.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-spatial-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-spatial-econometrics/notebooks",
 			"wikis": [
 				"autocorr/decision-guide.md",
 				"autocorr/factsheet.md",
@@ -4598,10 +4598,10 @@
 		{
 			"id": "kriging",
 			"title": "Kriging",
-			"source": "toolbox:pollis-toolbox-smart-regions",
+			"source": "toolbox:pollis-toolbox-spatial-econometrics",
 			"commands": [
 				{
-					"id": "pollis.smartRegions.kriging",
+					"id": "pollis.spatialEconometrics.kriging",
 					"menuTitles": [
 						"Kriging"
 					]
@@ -4610,9 +4610,9 @@
 			"portable": true,
 			"defaultModel": "variogram",
 			"decisionFirstColumn": "Method",
-			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/kriging.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"toml": "toolboxes/pollis-toolbox-spatial-econometrics/panels/kriging.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-spatial-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-spatial-econometrics/notebooks",
 			"wikis": [
 				"kriging/cross-validation.md",
 				"kriging/decision-guide.md",
