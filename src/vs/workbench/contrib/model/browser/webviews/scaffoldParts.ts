@@ -163,36 +163,6 @@ ${buttons}
 	}).join('\n');
 }
 
-/**
- * Build the HTML of a Time Arrow panel from its TOML data: introduction, table, numbered steps, and Next Steps when
- * it has action groups. The script of the steps is there only when they have inputs or code, or there are Next Steps.
- */
-function buildTimeArrowHtml(panelId: string, data: IScaffoldPanelData, title: string): string {
-	const steps = data.steps ?? [];
-	const hasNextSteps = !!data.actionGroups?.length;
-	const hasCode = hasNextSteps || steps.some(step => step.inputs.length || step.code.trim() || step.actions.length);
-	return buildWebviewHtml({
-		title: htmlEsc(title),
-		omitPoweredBy: !data.packages.length,
-		...(hasNextSteps ? { actionsJs: buildActionsJs(data), ...buildNextSteps(panelId, data) } : { omitNextSteps: true }),
-		introHtml: htmlEsc(data.intro ?? ''),
-		beforeStepsHtml: buildMatrixHtml(data.matrix),
-		steps: steps.map((step, index) => ({ id: `step-${index + 1}`, title: htmlEsc(step.title), bodyHtml: buildStepBodyHtml(step, index + 1) })),
-		extraCss: hasCode ? TIME_ARROW_CSS + stepCodeCss : TIME_ARROW_CSS,
-		...(hasCode ? {
-			stepSetupJs,
-			inputsChangedJs: '\t\t\trefreshStepCode();\n',
-			extraJs: `${buildStepCodeJs(steps)}\n${stepCodeJs()}`,
-		} : {}),
-		pageScriptJs: TIME_ARROW_JS,
-	});
-}
-
-/**
- * Build the HTML of a panel on the shared scaffold from its TOML data, in the style it names. Classical, the default:
- * key points, decision table, model toggles, parameter inputs, declarative code and Next Steps. Time Arrow
- * (`style = "timeArrow"`): introduction, table, numbered steps with their inputs and code, and Next Steps, of
- * `options` only the title being used.
 /** The CSS of a Time Arrow panel drawn from its TOML, beside the CSS the Time Arrow pages share. */
 const TIME_ARROW_CSS = `${compareCss}
 		table.matrix { border-collapse: collapse; margin: 4px 0 18px 0; font-size: 12px; }
@@ -279,14 +249,44 @@ function buildStepCodeJs(steps: readonly IModelStep[]): string {
 	return `\t\tvar STEP_CODE = [\n${entries.join(',\n')}\n\t\t];`;
 }
 
+/**
+ * Build the HTML of a Time Arrow panel from its TOML data: introduction, table, numbered steps, and Next Steps when
+ * it has action groups. The script of the steps is there only when they have inputs or code, or there are Next Steps.
+ */
+function buildTimeArrowHtml(panelId: string, data: IScaffoldPanelData, title: string): string {
+	const steps = data.steps ?? [];
+	const hasNextSteps = !!data.actionGroups?.length;
+	const hasCode = hasNextSteps || steps.some(step => step.inputs.length || step.code.trim() || step.actions.length);
+	return buildWebviewHtml({
+		title: htmlEsc(title),
+		omitPoweredBy: !data.packages.length,
+		...(hasNextSteps ? { actionsJs: buildActionsJs(data), ...buildNextSteps(panelId, data) } : { omitNextSteps: true }),
+		introHtml: htmlEsc(data.intro ?? ''),
+		beforeStepsHtml: buildMatrixHtml(data.matrix),
+		steps: steps.map((step, index) => ({ id: `step-${index + 1}`, title: htmlEsc(step.title), bodyHtml: buildStepBodyHtml(step, index + 1) })),
+		extraCss: hasCode ? TIME_ARROW_CSS + stepCodeCss : TIME_ARROW_CSS,
+		...(hasCode ? {
+			stepSetupJs,
+			inputsChangedJs: '\t\t\trefreshStepCode();\n',
+			extraJs: `${buildStepCodeJs(steps)}\n${stepCodeJs()}`,
+		} : {}),
+		pageScriptJs: TIME_ARROW_JS,
+	});
+}
+
+/**
+ * Build the HTML of a panel on the shared scaffold from its TOML data, in the style it names. Classical, the default:
+ * key points, decision table, model toggles, parameter inputs, declarative code and Next Steps. Time Arrow
+ * (`style = "timeArrow"`): introduction, table, numbered steps with their inputs and code, and Next Steps, of
+ * `options` only the title being used.
  */
 export function buildScaffoldHtml(panelId: string, data: IScaffoldPanelData, options: ScaffoldPanelOptions): string {
-	const models = panelModels(data);
-	return buildWebviewHtml({
-		modelsLiteral: `[${models.map(m => `'${m.id}'`).join(', ')}]`,
 	if (data.style === 'timeArrow') {
 		return buildTimeArrowHtml(panelId, data, options.title);
 	}
+	const models = panelModels(data);
+	return buildWebviewHtml({
+		modelsLiteral: `[${models.map(m => `'${m.id}'`).join(', ')}]`,
 		togglesJs: buildTogglesHtml(models, options.defaultModel),
 		bullets: buildBulletsHtml(data),
 		decisionRows: buildDecisionRowsHtml(data),
