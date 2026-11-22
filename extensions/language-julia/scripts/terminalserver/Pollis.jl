@@ -263,16 +263,29 @@ if isdefined(Main, :PlutoRunner)
 end
 
 """
-    Pollis.layer(geojson; name = "", color = nothing, column = nothing, opacity = 0.6)
+    Pollis.layer(geojson; name = "", color = nothing, column = nothing, opacity = 0.6, years = nothing)
 
 A layer of [`Pollis.webmap`](@ref): `geojson` is a GeoJSON text or the path of a GeoJSON file, in
 longitude and latitude on WGS 84. The features are drawn in `color` (a CSS colour such as `"#e15759"`;
 by default one of the map's palette), or coloured by the property `column`: a scale for numbers, a
 colour per value for text. `opacity` is that of polygons, from 0 to 1.
+
+`years` names the two properties that give the first and last year of a feature, such as
+`("starts", "ends")`: the map then has a year slider with Play, and shows each feature in its years,
+both included. Years are whole numbers, negative for BCE, and a year left null sets no limit on that
+side; for events, name one property twice. Coloured by a column of text, such a layer colours every
+value by its text, so two values can look alike, and pointing at a feature shows its value and years.
 """
-layer(geojson::AbstractString; name::AbstractString = "", color::Union{AbstractString, Nothing} = nothing,
-	column::Union{AbstractString, Nothing} = nothing, opacity::Real = 0.6) =
-	(geojson = geojson_text(geojson), name = String(name), color = color, column = column, opacity = Float64(opacity))
+function layer(geojson::AbstractString; name::AbstractString = "", color::Union{AbstractString, Nothing} = nothing,
+		column::Union{AbstractString, Nothing} = nothing, opacity::Real = 0.6,
+		years::Union{Tuple{AbstractString, AbstractString}, Nothing} = nothing)
+	text = geojson_text(geojson)
+	# a name mistyped in years would otherwise give a map without its slider
+	for key in something(years, ())
+		occursin(json_text(key), text) || error("Pollis.layer: the GeoJSON has no property $(key), which years names.")
+	end
+	return (geojson = text, name = String(name), color = color, column = column, opacity = Float64(opacity), years = years)
+end
 
 """
     Pollis.tiles(url; name = "", opacity = 1.0, attribution = "", legend = nothing, tilesize = 256, maxzoom = 22)
@@ -299,7 +312,7 @@ function tiles(url::AbstractString; name::AbstractString = "", opacity::Real = 1
 end
 
 """
-    Pollis.webmap(layers...; style = "positron", center = nothing, zoom = nothing, title = "")
+    Pollis.webmap(layers...; style = "positron", center = nothing, zoom = nothing, title = "", year = nothing, labels = true)
 
 A web map drawn with MapLibre GL JS, on a page in Pollis' browser or in the Plots tab from the REPL (see
 [`Pollis.mappage`](@ref)), or in a notebook output: an OpenStreetMap base map, from
@@ -309,13 +322,17 @@ GeoJSON features, a [`Pollis.tiles`](@ref) of raster tiles, or a GeoJSON text or
 style. Without `center` (longitude, latitude) the map fits the GeoJSON layers; `zoom` runs from 0 (the world) to
 about 18 (a street). Clicking a feature shows its attributes.
 
+When a layer has `years`, a slider under the map moves through them, with Play, and opens on `year`, by
+default the first. `labels = false` takes the names and borders of today off the base map.
+
 ```julia
 Pollis.webmap(Pollis.layer("municipalities.geojson"; column = "population"); style = "bright")
+Pollis.webmap(Pollis.layer("states.geojson"; column = "name", years = ("starts", "ends")); year = 1500, labels = false)
 ```
 """
 function webmap(layers::Union{AbstractString, NamedTuple}...; style::AbstractString = "positron",
 		center::Union{Tuple{Real, Real}, AbstractVector{<:Real}, Nothing} = nothing, zoom::Union{Real, Nothing} = nothing,
-		title::AbstractString = "")
+		title::AbstractString = "", year::Union{Real, Nothing} = nothing, labels::Bool = true)
 	parts = [layer isa NamedTuple ? layer : Pollis.layer(layer) for layer in layers]
 	layer_json(part, index) = haskey(part, :tiles) ?
 		string("{\"name\":", json_text(isempty(part.name) ? "Layer $(index)" : part.name), ",\"tiles\":", json_text(part.tiles),
@@ -323,10 +340,13 @@ function webmap(layers::Union{AbstractString, NamedTuple}...; style::AbstractStr
 			",\"legendImage\":", json_text(part.legend), ",\"tileSize\":", json_text(part.tilesize), ",\"maxzoom\":", json_text(part.maxzoom), "}") :
 		string("{\"name\":", json_text(isempty(part.name) ? "Layer $(index)" : part.name),
 			",\"color\":", json_text(part.color), ",\"column\":", json_text(part.column),
-			",\"opacity\":", json_text(part.opacity), ",\"data\":", part.geojson, "}")
+			",\"opacity\":", json_text(part.opacity),
+			part.years === nothing ? "" : ",\"years\":[$(join(json_text.(part.years), ","))]", ",\"data\":", part.geojson, "}")
 	json_layers = join([layer_json(part, index) for (index, part) in enumerate(parts)], ",")
 	return WebMap(string("{\"style\":", json_text(style), ",\"center\":", json_text(center === nothing ? nothing : collect(Float64, center)),
-		",\"zoom\":", json_text(zoom), ",\"title\":", json_text(title), ",\"layers\":[", json_layers, "]}"))
+		",\"zoom\":", json_text(zoom), ",\"title\":", json_text(title),
+		year === nothing ? "" : string(",\"year\":", json_text(year)), labels ? "" : ",\"labels\":false",
+		",\"layers\":[", json_layers, "]}"))
 end
 
 """

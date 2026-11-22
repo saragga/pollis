@@ -23,6 +23,7 @@ interface LayerSpec {
     readonly attribution?: string
     readonly opacity?: number
     readonly column?: string | null
+    readonly years?: readonly string[]
     readonly data?: { readonly features?: ReadonlyArray<{ readonly geometry?: { readonly type?: string } | null, readonly properties?: Record<string, unknown> | null }> }
 }
 
@@ -32,6 +33,8 @@ interface MapSpec {
     readonly style?: string
     readonly center?: readonly number[] | null
     readonly zoom?: number | null
+    readonly year?: number
+    readonly labels?: boolean
     readonly layers?: readonly LayerSpec[]
     readonly streetview?: { readonly image?: string, readonly map?: boolean }
 }
@@ -45,7 +48,7 @@ function describe(spec: MapSpec): string[] {
             return lines
         }
     }
-    lines.push(`Base map: OpenStreetMap data, style ${spec.style || 'positron'}.`)
+    lines.push(`Base map: OpenStreetMap data, style ${spec.style || 'positron'}${spec.labels === false ? ', without its names and borders' : ''}.`)
     lines.push(spec.center ? `Centre: longitude ${spec.center[0]}, latitude ${spec.center[1]}, zoom ${spec.zoom ?? 'not given'}.`
         : spec.streetview ? 'The map is centred on the image the viewer shows, and follows it.'
             : spec.layers && spec.layers.length ? 'The view fits the layers.' : 'The view shows the whole world.')
@@ -76,7 +79,23 @@ function describe(spec: MapSpec): string[] {
                 ? `, coloured by ${layer.column} from ${Math.min(...numbers)} to ${Math.max(...numbers)}`
                 : `, coloured by ${layer.column}, ${new Set(values.map(String)).size} values`
         }
-        lines.push(`Layer ${name}: ${features.length} features (${counts || 'none'})${colour}.`)
+        let years = ''
+        if (layer.years) {
+            let first = Infinity, last = -Infinity
+            features.forEach(f => layer.years!.forEach(key => {
+                const year = f.properties && f.properties[key]
+                if (typeof year === 'number') {
+                    first = Math.min(first, year)
+                    last = Math.max(last, year)
+                }
+            }))
+            if (first <= last) {
+                const opens = Math.min(last, Math.max(first, spec.year ?? first))
+                const text = (year: number) => year < 0 ? `${-year} BCE` : `${year}`
+                years = `, each shown in its years by a slider, which runs from ${text(first)} to ${text(last)} and opens on ${text(opens)}`
+            }
+        }
+        lines.push(`Layer ${name}: ${features.length} features (${counts || 'none'})${colour}${years}.`)
     })
     return lines
 }
