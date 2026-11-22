@@ -4460,6 +4460,39 @@
 			]
 		},
 		{
+			"id": "histborders",
+			"title": "Historical Borders",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.histborders",
+					"menuTitles": [
+						"Historical Borders"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "cliopatria",
+			"decisionFirstColumn": "Source",
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/histborders.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [
+				"histborders/cliopatria.md",
+				"histborders/cshapes.md",
+				"histborders/decision-guide.md",
+				"histborders/diagnostics.md",
+				"histborders/factsheet.md",
+				"histborders/historical-basemaps.md",
+				"histborders/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "hmd",
 			"title": "Handle Missing Data",
 			"source": "pollis",
