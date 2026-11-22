@@ -7,10 +7,13 @@ import { MessageConnection, NotificationType } from 'vscode-jsonrpc/node'
 
 const notifyTypeBrowse = new NotificationType<{ page: string }>('pollis/browse')
 
-/** Opens `page`, a path or an http(s) link, in Pollis' browser, in the tab that shows it already if there is one. */
+/**
+ * Opens `page`, a path or an http(s) link, in Pollis' browser, in the tab that shows it already if there is one, else in a
+ * new tab after the last one, so that pages opened one after another keep their order.
+ */
 export async function browse(page: string) {
     const url = /^https?:\/\//i.test(page) ? page : vscode.Uri.file(page).toString()
-    await vscode.commands.executeCommand('workbench.action.browser.open', { url, reuseUrlFilter: url })
+    await vscode.commands.executeCommand('workbench.action.browser.open', { url, reuseUrlFilter: url, atEnd: true })
 }
 
 /** Answers the notification `pollis/browse` of a Julia process: the REPL's or a notebook kernel's. */

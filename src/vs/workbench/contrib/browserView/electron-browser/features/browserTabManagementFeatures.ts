@@ -258,6 +258,12 @@ interface IOpenBrowserOptions {
 	 * If set, a new tab uses an in-memory session that keeps nothing on disk (no cache, cookies or storage), whatever `workbench.browser.dataStorage` says.
 	 */
 	ephemeral?: boolean;
+
+	/**
+	 * POLLIS: if set, a new tab opens after the last tab of its group, in place of beside the active one, so that pages
+	 * opened one after another keep their order (Pollis.browse).
+	 */
+	atEnd?: boolean;
 }
 
 class OpenIntegratedBrowserAction extends Action2 {
@@ -283,6 +289,7 @@ class OpenIntegratedBrowserAction extends Action2 {
 
 	async run(accessor: ServicesAccessor, urlOrOptions?: string | IOpenBrowserOptions): Promise<void> {
 		const editorService = accessor.get(IEditorService);
+		const editorGroupsService = accessor.get(IEditorGroupsService);
 		const telemetryService = accessor.get(ITelemetryService);
 
 		// Parse arguments
@@ -329,7 +336,8 @@ class OpenIntegratedBrowserAction extends Action2 {
 
 		logBrowserOpen(telemetryService, options.url ? 'commandWithUrl' : 'commandWithoutUrl');
 
-		const editorPane = await editorService.openEditor({ resource, options: { viewState: { url: options.url, ephemeral: options.ephemeral } } }, group);
+		const index = options.atEnd && !options.openToSide ? editorGroupsService.activeGroup.count : undefined;
+		const editorPane = await editorService.openEditor({ resource, options: { viewState: { url: options.url, ephemeral: options.ephemeral }, index } }, group);
 
 		// Lock the group when opening to the side
 		if (options.openToSide && editorPane?.group) {
