@@ -23,10 +23,15 @@ Step 0 of every workflow, notebook and Code Example: install whichever of the na
 active environment cannot load, and do nothing when all are there.
 
 A name is a string, `"Plots"` or `"PollisDatasets"`: added by name from General or from the Pollis
-registry, which is added first when a name is in no registry reachable yet. A package in no registry
-is given with its link, `"Name" => "https://github.com/owner/Name.jl"`: added by name if a reachable
+registry, which is added and updated first when a name to install is in it or in no registry
+reachable yet, so that an install sees the latest releases of Pollis's own packages. A package in no
+registry is given with its link, `"Name" => "https://github.com/owner/Name.jl"`: added by name if a reachable
 registry has it, from the link otherwise. A name in `forks` is always added from its link, since the
 registered version may be the one present; it is re-added whenever anything is missing.
+
+The packages installed keep their versions. When that is impossible, only those from the Pollis registry
+are upgraded to make room; when that is not enough either, nothing is changed and the error says what
+conflicts and how to install all the same, with other packages upgraded.
 
 ```julia
 Pollis.packages("ARCHModels", "Plots", "PollisDatasets")
@@ -44,12 +49,100 @@ end
 
 """
 Adds each `(name, link)`: by name if a reachable registry has it and it is not a fork, from its link otherwise.
-The Pollis registry is added first when a name that is not a fork is in no registry reachable yet.
+The Pollis registry is added and updated first when a name that is not a fork is in it, or in no registry reachable
+yet: `Pkg.add` updates a registry at most once a day, so by itself it would miss the releases since.
 """
 function add(Pkg::Module, to_add, forks)
-	registered(name) = any(registry -> !isempty(Pkg.Registry.uuids_from_name(registry, name)), Pkg.Registry.reachable_registries())
-	any(((name, _),) -> !(name in forks) && !registered(name), to_add) && add_pollis_registry(Pkg)
-	Pkg.add([!(name in forks) && (isempty(link) || registered(name)) ? Pkg.PackageSpec(name = name) : Pkg.PackageSpec(url = link) for (name, link) in to_add])
+	has(registry, name) = !isempty(Pkg.Registry.uuids_from_name(registry, name))
+	registered(name) = any(registry -> has(registry, name), Pkg.Registry.reachable_registries())
+	in_pollis_registry(name) = any(registry -> registry.name == "PollisRegistry" && has(registry, name), Pkg.Registry.reachable_registries())
+	if any(((name, _),) -> !(name in forks) && (in_pollis_registry(name) || !registered(name)), to_add)
+		add_pollis_registry(Pkg)
+		Pkg.Registry.update("PollisRegistry")
+	end
+	sources = [(name, name in forks || !(isempty(link) || registered(name)) ? link : "") for (name, link) in to_add]
+	add_keeping_versions(Pkg, sources)
+end
+
+"""
+Adds each `(name, link)`, by name when the link is empty, with every installed package kept at its version: left to
+itself, `Pkg.add` upgrades packages across the environment when it cannot keep them. When they cannot all be kept,
+the installed packages of the Pollis registry alone are upgraded and the adding is tried again; when that fails too,
+the environment's files are put back as they were, and the error gives the conflict and the command that upgrades.
+"""
+function add_keeping_versions(Pkg::Module, sources)
+	conflict = resolver_conflict(Pkg) do
+		Pkg.add(kept_specs(Pkg, sources); preserve = Pkg.PRESERVE_ALL)
+	end
+	conflict === nothing && return
+	environment = Pkg.Types.EnvCache()
+	upgradable = upgradable_pollis_packages(Pkg, environment)
+	if !isempty(upgradable)
+		println(stderr, "The installed versions cannot all be kept: upgrading only the packages of PollisRegistry (", join(sort([spec.name for spec in upgradable]), ", "), ").")
+		saved = [file => read(file) for file in (environment.project_file, environment.manifest_file) if isfile(file)]
+		installed = false
+		try
+			conflict = resolver_conflict(Pkg) do
+				# Nothing is precompiled before the adding is known to work
+				withenv("JULIA_PKG_PRECOMPILE_AUTO" => "0") do
+					Pkg.update(upgradable; preserve = Pkg.PRESERVE_ALL, update_registry = false)
+					Pkg.add(kept_specs(Pkg, sources); preserve = Pkg.PRESERVE_ALL)
+				end
+			end
+			installed = conflict === nothing
+		finally
+			installed || foreach(((file, content),) -> write(file, content), saved)
+		end
+		if installed
+			Pkg.precompile([name for (name, _) in sources])
+			return
+		end
+	end
+	arguments = [isempty(link) ? "Pkg.PackageSpec(name = $(repr(name)))" : "Pkg.PackageSpec(url = $(repr(link)))" for (name, link) in sources]
+	error("""
+	Pollis did not install $(join(first.(sources), ", ")): they conflict with the installed versions, and the environment is left as it was. The conflict:
+
+	$(sprint(showerror, conflict))
+
+	To install all the same, letting Pkg change other packages' versions:
+
+	    import Pkg; Pkg.add([$(join(arguments, ", "))])
+	""")
+end
+
+"""
+The specs to add `sources` with. A name already in the manifest, as another package's dependency, is given its
+version there: named without one, it would be free to move.
+"""
+function kept_specs(Pkg::Module, sources)
+	entries = values(Pkg.Types.EnvCache().manifest.deps)
+	return map(sources) do (name, link)
+		isempty(link) || return Pkg.PackageSpec(url = link)
+		for entry in entries
+			if entry.name == name && entry.version !== nothing && entry.path === nothing && entry.repo.source === nothing
+				return Pkg.PackageSpec(name = name, version = entry.version)
+			end
+		end
+		return Pkg.PackageSpec(name = name)
+	end
+end
+
+"The packages of `environment` from the Pollis registry that can be upgraded: not pinned, and not from a folder or a link."
+function upgradable_pollis_packages(Pkg::Module, environment)
+	registries = filter(registry -> registry.name == "PollisRegistry", Pkg.Registry.reachable_registries())
+	upgradable(uuid, entry) = !entry.pinned && entry.path === nothing && entry.repo.source === nothing && any(registry -> haskey(registry, uuid), registries)
+	return [Pkg.PackageSpec(name = entry.name, uuid = uuid) for (uuid, entry) in environment.manifest.deps if upgradable(uuid, entry)]
+end
+
+"Runs `action` and returns the conflict of versions that stopped it, or `nothing`; any other error is thrown."
+function resolver_conflict(action, Pkg::Module)
+	try
+		action()
+		return nothing
+	catch err
+		err isa Pkg.Resolve.ResolverError || rethrow()
+		return err
+	end
 end
 
 """
