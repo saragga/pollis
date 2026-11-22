@@ -61,13 +61,23 @@ export async function packagesInUse(fileService: IFileService, julia: URI): Prom
 	return used;
 }
 
-/** The version in the Project.toml of the package in `root`. */
-export async function projectVersion(fileService: IFileService, root: URI): Promise<string> {
+/** A top-level string of the Project.toml of the package in `root`, `name` or `version`; empty when there is none. */
+async function projectField(fileService: IFileService, root: URI, key: 'name' | 'version'): Promise<string> {
 	try {
-		return /^version\s*=\s*"(?<version>[^"]+)"/m.exec((await fileService.readFile(joinPath(root, 'Project.toml'))).value.toString())?.groups?.version ?? '';
+		return new RegExp(`^${key}\\s*=\\s*"(?<value>[^"]+)"`, 'm').exec((await fileService.readFile(joinPath(root, 'Project.toml'))).value.toString())?.groups?.value ?? '';
 	} catch {
 		return '';
 	}
+}
+
+/** The version in the Project.toml of the package in `root`. */
+export function projectVersion(fileService: IFileService, root: URI): Promise<string> {
+	return projectField(fileService, root, 'version');
+}
+
+/** The name in the Project.toml of the package in `root`. */
+export function projectName(fileService: IFileService, root: URI): Promise<string> {
+	return projectField(fileService, root, 'name');
 }
 
 /**

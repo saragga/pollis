@@ -25,7 +25,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { compareVersions, packagesInUse, projectVersion, subfolders } from './juliaPackages.js';
+import { compareVersions, packagesInUse, projectName, projectVersion, subfolders } from './juliaPackages.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE } from './libraryPage.js';
 import { vignettesIndex } from './newMethods.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
@@ -142,13 +142,18 @@ function parseRegistryVignettes(content: string): IVignette[] {
 		.sort(byTitle);
 }
 
-/** The vignette of the package in `root`, when its vignette/Vignette.toml names its source beside it, or a PDF. */
+/**
+ * The vignette of the package in `root`, when its vignette/Vignette.toml names its source beside it, or a PDF. A
+ * Vignette.toml whose `package` is not the name in the package's Project.toml, a file copied from another package, is
+ * left out.
+ */
 async function packageVignette(fileService: IFileService, root: URI): Promise<IVignette | undefined> {
 	try {
 		const table = parseToml((await fileService.readFile(joinPath(root, 'vignette', 'Vignette.toml'))).value.toString());
-		const entry = vignette('', table);
+		const name = await projectName(fileService, root);
+		const entry = vignette(name, table);
 		const folder = joinPath(root, 'vignette');
-		if (!entry.title) {
+		if (!entry.title || !name || entry.package !== name) {
 			return undefined;
 		}
 		if (entry.source && await fileService.exists(joinPath(folder, entry.source))) {
