@@ -1036,6 +1036,40 @@
 			]
 		},
 		{
+			"id": "candidates",
+			"title": "Candidate Features",
+			"source": "toolbox:pollis-toolbox-geoprocessing",
+			"commands": [
+				{
+					"id": "pollis.geoprocessing.candidates",
+					"menuTitles": [
+						"Candidate Features"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "mounds",
+			"decisionFirstColumn": "Method",
+			"toml": "toolboxes/pollis-toolbox-geoprocessing/panels/candidates.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-geoprocessing/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-geoprocessing/notebooks",
+			"wikis": [
+				"candidates/decision-guide.md",
+				"candidates/depressions.md",
+				"candidates/diagnostics.md",
+				"candidates/factsheet.md",
+				"candidates/overview.md",
+				"candidates/template-matching.md",
+				"candidates/threshold-shape.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SmartRegions.jl",
+				"Rasters.jl",
+				"ArchGDAL.jl"
+			]
+		},
+		{
 			"id": "cca",
 			"title": "Canonical Correlation Analysis",
 			"source": "pollis",
@@ -5120,6 +5154,40 @@
 			]
 		},
 		{
+			"id": "learnedlidar",
+			"title": "Learned Detection in Lidar",
+			"source": "toolbox:pollis-toolbox-geoprocessing",
+			"commands": [
+				{
+					"id": "pollis.geoprocessing.learnedlidar",
+					"menuTitles": [
+						"Learned Detection in Lidar"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "adaf",
+			"decisionFirstColumn": "Method",
+			"toml": "toolboxes/pollis-toolbox-geoprocessing/panels/learnedlidar.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-geoprocessing/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-geoprocessing/notebooks",
+			"wikis": [
+				"learnedlidar/adaf.md",
+				"learnedlidar/decision-guide.md",
+				"learnedlidar/diagnostics.md",
+				"learnedlidar/factsheet.md",
+				"learnedlidar/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SmartRegions.jl",
+				"NNlib.jl",
+				"Pickle.jl",
+				"Rasters.jl",
+				"ArchGDAL.jl"
+			]
+		},
+		{
 			"id": "learning-and-practice.exwrite",
 			"title": "Write an Exercise",
 			"source": "toolbox:pollis-toolbox-learning-and-practice",
@@ -8379,9 +8447,8 @@
 			],
 			"notebooks": [],
 			"packages": [
-				"Geomorphometry.jl",
+				"SmartRegions.jl",
 				"Rasters.jl",
-				"Stencils.jl",
 				"ArchGDAL.jl"
 			]
 		},
