@@ -146,8 +146,10 @@ function compareJuliaEnvDesc(a: string, b: string): number {
  * Best-effort, silent check of which of the given packages are declared in the Julia environment
  * the user is most likely running. Prefers an activated project — a `Project.toml` at a workspace
  * folder root — and otherwise falls back to the shared default environment
- * (`~/.julia/environments/<newest>/Project.toml`). Returns a label of whichever environment was
- * inspected so the indicator tooltip can say so. Never runs Julia (the browser layer cannot, and so
+ * (`~/.julia/environments/<newest>/Project.toml`). The packages built into Pollis count as installed
+ * in either case: every Pollis REPL and notebook loads them from Pollis's own environment
+ * (`ENVIRONMENT` in Pollis.jl), so `Pollis.packages` would install none of them. Returns a label of
+ * what was inspected so the indicator tooltip can say so. Never runs Julia (the browser layer cannot, and so
  * cannot know which environment the REPL has activated); on any failure a package is reported as not
  * installed.
  */
@@ -160,31 +162,48 @@ export async function checkJuliaPackagesInstalled(
 	const deps = new Set<string>();
 	let env = '';
 	try {
+		const home = pathService.userHome({ preferLocal: true });
+		const sharedRoot = URI.joinPath(home, '.julia', 'environments');
+		const builtInRoot = URI.joinPath(home, '.pollis', 'julia', 'environments');
+		const newest = await newestJuliaEnvironment(sharedRoot, fileService);
 		const project = await readWorkspaceProject(workspaceContextService, fileService);
 		if (project) {
 			for (const n of project.deps) { deps.add(n); }
 			env = project.label;
-		} else {
-			const home = pathService.userHome({ preferLocal: true });
-			const envRoot = URI.joinPath(home, '.julia', 'environments');
-			const stat = await fileService.resolve(envRoot);
-			const newest = (stat.children ?? [])
-				.filter(c => c.isDirectory && /^v\d+\.\d+$/.test(c.name))
-				.map(c => c.name)
-				.sort(compareJuliaEnvDesc)[0];
-			if (newest) {
-				const projectUri = URI.joinPath(envRoot, newest, 'Project.toml');
-				if (await fileService.exists(projectUri)) {
-					const content = (await fileService.readFile(projectUri)).value.toString();
-					for (const n of parseProjectDeps(content)) { deps.add(n); }
-				}
-				env = `@${newest} (shared environment)`;
-			}
+		} else if (newest) {
+			for (const n of await readEnvironmentDeps(URI.joinPath(sharedRoot, newest), fileService)) { deps.add(n); }
+			env = `@${newest} (shared environment)`;
 		}
-	} catch { /* no depot / unreadable — treat every package as not installed */ }
+		// Pollis's environment is one per Julia version: that of the same Julia as the shared one
+		const version = newest ?? await newestJuliaEnvironment(builtInRoot, fileService);
+		if (version) {
+			const builtIn = await readEnvironmentDeps(URI.joinPath(builtInRoot, version), fileService);
+			if (env && packageNames.some(name => !deps.has(juliaPackageName(name)) && builtIn.has(juliaPackageName(name)))) {
+				env = localize('model.packages.withBuiltIn', "{0} or built into Pollis", env);
+			}
+			for (const n of builtIn) { deps.add(n); }
+		}
+	} catch { /* unreadable — treat what was not found as not installed */ }
 
 	const statuses = packageNames.map(displayName => ({ name: displayName, installed: JULIA_STDLIBS.has(juliaPackageName(displayName)) || deps.has(juliaPackageName(displayName)) }));
 	return { statuses, env };
+}
+
+/** The name (`vX.Y`) of the newest Julia environment in `root`, or `undefined` when there is none. */
+async function newestJuliaEnvironment(root: URI, fileService: IFileService): Promise<string | undefined> {
+	if (!await fileService.exists(root)) { return undefined; }
+	const stat = await fileService.resolve(root);
+	return (stat.children ?? [])
+		.filter(c => c.isDirectory && /^v\d+\.\d+$/.test(c.name))
+		.map(c => c.name)
+		.sort(compareJuliaEnvDesc)[0];
+}
+
+/** The dependencies declared by the `Project.toml` of the environment in `folder`, none when it has no such file. */
+async function readEnvironmentDeps(folder: URI, fileService: IFileService): Promise<Set<string>> {
+	const projectUri = URI.joinPath(folder, 'Project.toml');
+	if (!await fileService.exists(projectUri)) { return new Set<string>(); }
+	return parseProjectDeps((await fileService.readFile(projectUri)).value.toString());
 }
 
 /**
@@ -342,8 +361,9 @@ export interface IPackageStatusWiring {
 	/** Handle the webview's `installPackages` message: install the missing packages, then poll to flip the icon green. */
 	handleInstall(): Promise<void>;
 	/**
-	 * The code to send to a runCode target: for an executing one (juliaRepl / notebook), the code with a
-	 * first line that installs the missing packages (see `juliaPackageCheck`); otherwise the code unchanged.
+	 * The code to send to a runCode target: for an executing one (juliaRepl / notebook), code with a `using` or
+	 * an `import` gets a first line that installs the missing packages (see `juliaPackageCheck`); otherwise
+	 * the code is unchanged.
 	 */
 	withPackageCheck(code: string, target: string | undefined): string;
 }
@@ -395,8 +415,9 @@ export function createPackageStatusWiring(
 		scheduleRecheck(0);
 	};
 	const withPackageCheck = (code: string, target: string | undefined): string => {
-		// Only the targets that actually execute code need the packages present.
-		if ((target !== 'juliaRepl' && target !== 'notebook') || !packageDisplayNames.length) { return code; }
+		// Only the targets that actually execute code need the packages present, and only for code that loads
+		// packages: before every step of a panel, the line would look like installing them again.
+		if ((target !== 'juliaRepl' && target !== 'notebook') || !packageDisplayNames.length || !/\b(?:using|import)\b/.test(code)) { return code; }
 		// Pkg.add rewrites Project.toml when it finishes, so poll to flip the indicator green.
 		scheduleRecheck(0);
 		return juliaPackageCheck(packageDisplayNames.map(name => {
