@@ -664,7 +664,7 @@
 				{
 					"id": "pollis.smartRegions.basemaps",
 					"menuTitles": [
-						"Base Map"
+						"OpenStreetMap Base Map"
 					]
 				}
 			],
@@ -1148,6 +1148,43 @@
 			]
 		},
 		{
+			"id": "cdse",
+			"title": "Copernicus Data Space",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.cdse",
+					"menuTitles": [
+						"Copernicus Data Space"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "find",
+			"decisionFirstColumn": "Tab",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/cdse.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"cdse/authentication.md",
+				"cdse/decision-guide.md",
+				"cdse/diagnostics.md",
+				"cdse/factsheet.md",
+				"cdse/overview.md",
+				"cdse/sentinel-1.md",
+				"cdse/sentinel-2.md",
+				"cdse/stac-search.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SmartRegions.jl",
+				"DuckDB.jl",
+				"Tables.jl",
+				"Rasters.jl",
+				"ArchGDAL.jl"
+			]
+		},
+		{
 			"id": "cest",
 			"title": "Contagion Models",
 			"source": "toolbox:pollis-toolbox-epidemiology",
@@ -1266,6 +1303,41 @@
 			],
 			"packages": [
 				"DynamicalSystems.jl"
+			]
+		},
+		{
+			"id": "citymodels",
+			"title": "City Model Files",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.citymodels",
+					"menuTitles": [
+						"City Model Files"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "citygml",
+			"decisionFirstColumn": "Format",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/citymodels.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"citymodels/citygml.md",
+				"citymodels/cityjson.md",
+				"citymodels/decision-guide.md",
+				"citymodels/diagnostics.md",
+				"citymodels/factsheet.md",
+				"citymodels/levels-of-detail.md",
+				"citymodels/measuring-buildings.md",
+				"citymodels/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"EzXML.jl",
+				"DuckDB.jl",
+				"Tables.jl"
 			]
 		},
 		{
@@ -3663,6 +3735,41 @@
 			]
 		},
 		{
+			"id": "gisco",
+			"title": "Eurostat GISCO",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.gisco",
+					"menuTitles": [
+						"Eurostat GISCO"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "nuts",
+			"decisionFirstColumn": "Units",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/gisco.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"gisco/decision-guide.md",
+				"gisco/diagnostics.md",
+				"gisco/eurostat-statistics-by-region.md",
+				"gisco/factsheet.md",
+				"gisco/gisco-distribution.md",
+				"gisco/local-administrative-units.md",
+				"gisco/nuts-classification.md",
+				"gisco/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SmartRegions.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "glm",
 			"title": "Generalized Linear Models",
 			"source": "pollis",
@@ -3839,6 +3946,80 @@
 			]
 		},
 		{
+			"id": "google3d",
+			"title": "Google Photorealistic 3D Maps",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.google3d",
+					"menuTitles": [
+						"Google Photorealistic 3D Maps"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "view",
+			"decisionFirstColumn": "Tab",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/google3d.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"google3d/camera.md",
+				"google3d/decision-guide.md",
+				"google3d/diagnostics.md",
+				"google3d/factsheet.md",
+				"google3d/features3d.md",
+				"google3d/overview.md",
+				"googlemaps/decision-guide.md",
+				"googlemaps/demo-key.md",
+				"googlemaps/diagnostics.md",
+				"googlemaps/factsheet.md",
+				"googlemaps/map-types.md",
+				"googlemaps/overview.md",
+				"googlemaps/terms.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SmartRegions.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
+			"id": "googlemaps",
+			"title": "Google Maps",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.googlemaps",
+					"menuTitles": [
+						"Google Maps"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "roadmap",
+			"decisionFirstColumn": "Map",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/googlemaps.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"googlemaps/decision-guide.md",
+				"googlemaps/demo-key.md",
+				"googlemaps/diagnostics.md",
+				"googlemaps/factsheet.md",
+				"googlemaps/map-types.md",
+				"googlemaps/overview.md",
+				"googlemaps/terms.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SmartRegions.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "gp",
 			"title": "Generalized Pareto Distribution",
 			"source": "toolbox:pollis-toolbox-finance",
@@ -3913,6 +4094,83 @@
 			]
 		},
 		{
+			"id": "gravity",
+			"title": "Spatial Interaction Models",
+			"source": "toolbox:pollis-toolbox-spatial-econometrics",
+			"commands": [
+				{
+					"id": "pollis.spatialEconometrics.gravity",
+					"menuTitles": [
+						"Spatial Interaction Models"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "doubly",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-spatial-econometrics/panels/gravity.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-spatial-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-spatial-econometrics/notebooks",
+			"wikis": [
+				"gravity/attraction.md",
+				"gravity/decision-guide.md",
+				"gravity/distance-decay.md",
+				"gravity/doubly.md",
+				"gravity/factsheet.md",
+				"gravity/goodness-of-fit.md",
+				"gravity/negbin.md",
+				"gravity/overview.md",
+				"gravity/production.md",
+				"gravity/replications.md",
+				"gravity/unconstrained.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"GLFixedEffectModels.jl",
+				"SpatialEconometrics.jl",
+				"PollisDatasets.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
+			"id": "gridcalc",
+			"title": "Grid Calculations",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.gridcalc",
+					"menuTitles": [
+						"Grid Calculations"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "local",
+			"decisionFirstColumn": "Operation",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/gridcalc.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"gridcalc/decision-guide.md",
+				"gridcalc/diagnostics.md",
+				"gridcalc/factsheet.md",
+				"gridcalc/focal.md",
+				"gridcalc/local.md",
+				"gridcalc/overview.md",
+				"gridcalc/rasterizing.md",
+				"gridcalc/resampling.md",
+				"gridcalc/zonal.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"Rasters.jl",
+				"Stencils.jl",
+				"ArchGDAL.jl",
+				"DuckDB.jl"
+			]
+		},
+		{
 			"id": "gt",
 			"title": "Game Theory",
 			"source": "toolbox:pollis-toolbox-economics",
@@ -3949,6 +4207,44 @@
 			"packages": [
 				"GameTheory.jl",
 				"BaryPlots.jl"
+			]
+		},
+		{
+			"id": "gwr",
+			"title": "Geographically Weighted Regression",
+			"source": "toolbox:pollis-toolbox-spatial-econometrics",
+			"commands": [
+				{
+					"id": "pollis.spatialEconometrics.gwr",
+					"menuTitles": [
+						"Geographically Weighted Regression"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "gwrfixed",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-spatial-econometrics/panels/gwr.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-spatial-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-spatial-econometrics/notebooks",
+			"wikis": [
+				"gwr/bandwidth-selection.md",
+				"gwr/decision-guide.md",
+				"gwr/factsheet.md",
+				"gwr/gwradaptive.md",
+				"gwr/gwrfixed.md",
+				"gwr/kernels-bandwidths.md",
+				"gwr/local-inference.md",
+				"gwr/mgwr.md",
+				"gwr/overview.md",
+				"gwr/replications.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SpatialEconometrics.jl",
+				"PollisDatasets.jl",
+				"DuckDB.jl",
+				"Tables.jl"
 			]
 		},
 		{
@@ -4383,6 +4679,41 @@
 			]
 		},
 		{
+			"id": "imagery",
+			"title": "Copernicus Imagery Layers",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.imagery",
+					"menuTitles": [
+						"Copernicus Imagery Layers"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "sentinel2",
+			"decisionFirstColumn": "Layer",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/imagery.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"imagery/corine-nomenclature.md",
+				"imagery/corine.md",
+				"imagery/decision-guide.md",
+				"imagery/factsheet.md",
+				"imagery/hrl.md",
+				"imagery/map-services.md",
+				"imagery/overview.md",
+				"imagery/sentinel2.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"DuckDB.jl",
+				"ArchGDAL.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "imf",
 			"title": "IMF Data",
 			"source": "pollis",
@@ -4412,6 +4743,43 @@
 				"CSV.jl",
 				"Tables.jl",
 				"Plots.jl"
+			]
+		},
+		{
+			"id": "inspire",
+			"title": "INSPIRE Data",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.inspire",
+					"menuTitles": [
+						"INSPIRE Data"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "find",
+			"decisionFirstColumn": "Service",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/inspire.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"inspire/atom-feeds.md",
+				"inspire/data-europa-search.md",
+				"inspire/decision-guide.md",
+				"inspire/diagnostics.md",
+				"inspire/factsheet.md",
+				"inspire/ogc-api-features.md",
+				"inspire/overview.md",
+				"inspire/units-themes.md",
+				"inspire/wfs.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"DuckDB.jl",
+				"Tables.jl",
+				"EzXML.jl",
+				"ZipArchives.jl"
 			]
 		},
 		{
@@ -5429,6 +5797,41 @@
 			]
 		},
 		{
+			"id": "mapillary",
+			"title": "Mapillary Street-Level Imagery",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.mapillary",
+					"menuTitles": [
+						"Mapillary Street-Level Imagery"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "coverage",
+			"decisionFirstColumn": "Tab",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/mapillary.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"mapillary/authentication.md",
+				"mapillary/coverage-tiles.md",
+				"mapillary/decision-guide.md",
+				"mapillary/diagnostics.md",
+				"mapillary/factsheet.md",
+				"mapillary/image-search.md",
+				"mapillary/map-features.md",
+				"mapillary/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SmartRegions.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "marl",
 			"title": "Multi-Agent Reinforcement Learning",
 			"source": "pollis",
@@ -5718,6 +6121,45 @@
 			],
 			"packages": [
 				"MultilevelEstimators.jl"
+			]
+		},
+		{
+			"id": "mobility",
+			"title": "Mobility and Flows",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.mobility",
+					"menuTitles": [
+						"Mobility and Flows"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "commuting",
+			"decisionFirstColumn": "Tab",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/mobility.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"mobility/air-traffic.md",
+				"mobility/authentication.md",
+				"mobility/commuting-data.md",
+				"mobility/decision-guide.md",
+				"mobility/diagnostics.md",
+				"mobility/factsheet.md",
+				"mobility/overview.md",
+				"mobility/spatial-interaction.md",
+				"mobility/traffic-counts.md",
+				"mobility/trips-data.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"DuckDB.jl",
+				"Tables.jl",
+				"GLFixedEffectModels.jl",
+				"GLM.jl",
+				"ZipArchives.jl"
 			]
 		},
 		{
@@ -6344,6 +6786,41 @@
 			]
 		},
 		{
+			"id": "networkfiles",
+			"title": "Transport Network Files",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.networkfiles",
+					"menuTitles": [
+						"Transport Network Files"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "gtfs",
+			"decisionFirstColumn": "Format",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/networkfiles.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"networkfiles/decision-guide.md",
+				"networkfiles/diagnostics.md",
+				"networkfiles/factsheet.md",
+				"networkfiles/gtfs.md",
+				"networkfiles/osm-pbf.md",
+				"networkfiles/overview.md",
+				"networkfiles/service-frequency.md",
+				"networkfiles/street-networks.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"ZipArchives.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "nf",
 			"title": "Normalising Flows",
 			"source": "pollis",
@@ -6939,6 +7416,78 @@
 			]
 		},
 		{
+			"id": "opensky",
+			"title": "Air Traffic",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.opensky",
+					"menuTitles": [
+						"Air Traffic"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "live",
+			"decisionFirstColumn": "Tab",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/opensky.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"opensky/aircraft-tracks.md",
+				"opensky/authentication.md",
+				"opensky/credits-limits.md",
+				"opensky/decision-guide.md",
+				"opensky/factsheet.md",
+				"opensky/flights-by-airport.md",
+				"opensky/overview.md",
+				"opensky/state-vectors.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SmartRegions.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
+			"id": "opentopo",
+			"title": "OpenTopography",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.opentopo",
+					"menuTitles": [
+						"OpenTopography"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "find",
+			"decisionFirstColumn": "Tab",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/opentopo.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"opentopo/authentication.md",
+				"opentopo/catalogue.md",
+				"opentopo/decision-guide.md",
+				"opentopo/diagnostics.md",
+				"opentopo/factsheet.md",
+				"opentopo/global-dems.md",
+				"opentopo/overview.md",
+				"opentopo/usgs-3dep.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SmartRegions.jl",
+				"DuckDB.jl",
+				"Tables.jl",
+				"Rasters.jl",
+				"ArchGDAL.jl"
+			]
+		},
+		{
 			"id": "optim",
 			"title": "Local Optimisation",
 			"source": "pollis",
@@ -6971,6 +7520,75 @@
 			],
 			"packages": [
 				"Optim.jl"
+			]
+		},
+		{
+			"id": "osmdata",
+			"title": "OpenStreetMap Data",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.osmdata",
+					"menuTitles": [
+						"OpenStreetMap Data"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "overpass",
+			"decisionFirstColumn": "Source",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/osmdata.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"osmdata/decision-guide.md",
+				"osmdata/diagnostics.md",
+				"osmdata/factsheet.md",
+				"osmdata/geofabrik-downloads.md",
+				"osmdata/licence-and-attribution.md",
+				"osmdata/openstreetmap-tags.md",
+				"osmdata/overpass-api-and-overpass-ql.md",
+				"osmdata/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
+			"id": "overture",
+			"title": "Overture Maps Data",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.overture",
+					"menuTitles": [
+						"Overture Maps Data"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "places",
+			"decisionFirstColumn": "Theme",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/overture.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"overture/decision-guide.md",
+				"overture/diagnostics.md",
+				"overture/factsheet.md",
+				"overture/geoparquet-in-the-cloud.md",
+				"overture/overture-and-openstreetmap.md",
+				"overture/overview.md",
+				"overture/sources-and-licences.md",
+				"overture/themes-and-types.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SmartRegions.jl",
+				"DuckDB.jl",
+				"Tables.jl"
 			]
 		},
 		{
@@ -7233,6 +7851,42 @@
 			"packages": [
 				"PortfolioOptimisers.jl",
 				"Clarabel.jl"
+			]
+		},
+		{
+			"id": "pointclouds",
+			"title": "Point Cloud Files",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.pointclouds",
+					"menuTitles": [
+						"Point Cloud Files"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "las",
+			"decisionFirstColumn": "Format",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/pointclouds.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"pointclouds/decision-guide.md",
+				"pointclouds/diagnostics.md",
+				"pointclouds/elevation-models.md",
+				"pointclouds/factsheet.md",
+				"pointclouds/georeferencing.md",
+				"pointclouds/las.md",
+				"pointclouds/laz.md",
+				"pointclouds/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"PointClouds.jl",
+				"ArchGDAL.jl",
+				"Rasters.jl",
+				"DuckDB.jl"
 			]
 		},
 		{
@@ -7662,6 +8316,40 @@
 			]
 		},
 		{
+			"id": "rasterfiles",
+			"title": "Raster Files",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.rasterfiles",
+					"menuTitles": [
+						"Raster Files"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "geotiff",
+			"decisionFirstColumn": "Format",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/rasterfiles.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"rasterfiles/cloud-optimised-geotiff.md",
+				"rasterfiles/decision-guide.md",
+				"rasterfiles/diagnostics.md",
+				"rasterfiles/factsheet.md",
+				"rasterfiles/georeferencing.md",
+				"rasterfiles/geotiff.md",
+				"rasterfiles/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"Rasters.jl",
+				"ArchGDAL.jl",
+				"DuckDB.jl"
+			]
+		},
+		{
 			"id": "rl",
 			"title": "Recurrent Layers",
 			"source": "pollis",
@@ -7858,6 +8546,41 @@
 				"Bootstrap.jl",
 				"Plots.jl",
 				"PollisDatasets.jl"
+			]
+		},
+		{
+			"id": "routes",
+			"title": "Route and Network Analysis",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.routes",
+					"menuTitles": [
+						"Route and Network Analysis"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "route",
+			"decisionFirstColumn": "Tab",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/routes.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"routes/building-the-network.md",
+				"routes/decision-guide.md",
+				"routes/diagnostics.md",
+				"routes/factsheet.md",
+				"routes/network-measures.md",
+				"routes/overview.md",
+				"routes/service-areas.md",
+				"routes/shortest-paths.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"DuckDB.jl",
+				"Tables.jl",
+				"Graphs.jl"
 			]
 		},
 		{
@@ -8428,6 +9151,41 @@
 			]
 		},
 		{
+			"id": "shiftshare",
+			"title": "Shift-Share Designs",
+			"source": "toolbox:pollis-toolbox-spatial-econometrics",
+			"commands": [
+				{
+					"id": "pollis.spatialEconometrics.shiftshare",
+					"menuTitles": [
+						"Shift-Share Designs"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "ssiv",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-spatial-econometrics/panels/shiftshare.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-spatial-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-spatial-econometrics/notebooks",
+			"wikis": [
+				"shiftshare/factsheet.md",
+				"shiftshare/identification.md",
+				"shiftshare/inference.md",
+				"shiftshare/overview.md",
+				"shiftshare/replications.md",
+				"shiftshare/ssiv.md",
+				"shiftshare/ssreduced.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SpatialEconometrics.jl",
+				"PollisDatasets.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "si",
 			"title": "System Identification Methods",
 			"source": "pollis",
@@ -8632,6 +9390,119 @@
 			]
 		},
 		{
+			"id": "spatialreg",
+			"title": "Spatial Lag and Error Models",
+			"source": "toolbox:pollis-toolbox-spatial-econometrics",
+			"commands": [
+				{
+					"id": "pollis.spatialEconometrics.spatialreg",
+					"menuTitles": [
+						"Spatial Lag and Error Models"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "ols",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-spatial-econometrics/panels/spatialreg.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-spatial-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-spatial-econometrics/notebooks",
+			"wikis": [
+				"spatialreg/decision-guide.md",
+				"spatialreg/effects.md",
+				"spatialreg/factsheet.md",
+				"spatialreg/lm-tests.md",
+				"spatialreg/maximum-likelihood.md",
+				"spatialreg/ols.md",
+				"spatialreg/overview.md",
+				"spatialreg/replications.md",
+				"spatialreg/sar.md",
+				"spatialreg/sdm.md",
+				"spatialreg/sem.md",
+				"spatialreg/slx.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SpatialEconometrics.jl",
+				"PollisDatasets.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
+			"id": "spcausal",
+			"title": "Spatial Causal Inference",
+			"source": "toolbox:pollis-toolbox-spatial-econometrics",
+			"commands": [
+				{
+					"id": "pollis.spatialEconometrics.spcausal",
+					"menuTitles": [
+						"Spatial Causal Inference"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "spdid",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-spatial-econometrics/panels/spcausal.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-spatial-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-spatial-econometrics/notebooks",
+			"wikis": [
+				"spcausal/decision-guide.md",
+				"spcausal/factsheet.md",
+				"spcausal/inference.md",
+				"spcausal/overview.md",
+				"spcausal/replications.md",
+				"spcausal/spdid.md",
+				"spcausal/spillovers.md",
+				"spcausal/synth.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SpatialEconometrics.jl",
+				"PollisDatasets.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
+			"id": "spchoice",
+			"title": "Spatial Discrete Choice",
+			"source": "toolbox:pollis-toolbox-spatial-econometrics",
+			"commands": [
+				{
+					"id": "pollis.spatialEconometrics.spchoice",
+					"menuTitles": [
+						"Spatial Discrete Choice"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "probitgmm",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-spatial-econometrics/panels/spchoice.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-spatial-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-spatial-econometrics/notebooks",
+			"wikis": [
+				"spchoice/decision-guide.md",
+				"spchoice/effects.md",
+				"spchoice/factsheet.md",
+				"spchoice/logitesf.md",
+				"spchoice/ordered.md",
+				"spchoice/overview.md",
+				"spchoice/probitbayes.md",
+				"spchoice/probitgmm.md",
+				"spchoice/replications.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SpatialEconometrics.jl",
+				"PollisDatasets.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "speedRace",
 			"title": "Run a Speed Race",
 			"source": "pollis",
@@ -8659,6 +9530,81 @@
 				"PythonCall.jl",
 				"RCall.jl",
 				"Chairmarks.jl"
+			]
+		},
+		{
+			"id": "sppanel",
+			"title": "Spatial Panel Data",
+			"source": "toolbox:pollis-toolbox-spatial-econometrics",
+			"commands": [
+				{
+					"id": "pollis.spatialEconometrics.sppanel",
+					"menuTitles": [
+						"Spatial Panel Data"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "sarfe",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-spatial-econometrics/panels/sppanel.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-spatial-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-spatial-econometrics/notebooks",
+			"wikis": [
+				"sppanel/decision-guide.md",
+				"sppanel/dynamic-panels.md",
+				"sppanel/dynamic.md",
+				"sppanel/factsheet.md",
+				"sppanel/fixed-effects.md",
+				"sppanel/overview.md",
+				"sppanel/replications.md",
+				"sppanel/sarfe.md",
+				"sppanel/sdmfe.md",
+				"sppanel/semfe.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SpatialEconometrics.jl",
+				"PollisDatasets.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
+			"id": "spregimes",
+			"title": "Regionalisation and Spatial Regimes",
+			"source": "toolbox:pollis-toolbox-spatial-econometrics",
+			"commands": [
+				{
+					"id": "pollis.spatialEconometrics.spregimes",
+					"menuTitles": [
+						"Regionalisation and Spatial Regimes"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "skater",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-spatial-econometrics/panels/spregimes.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-spatial-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-spatial-econometrics/notebooks",
+			"wikis": [
+				"spregimes/decision-guide.md",
+				"spregimes/factsheet.md",
+				"spregimes/overview.md",
+				"spregimes/regionalisation.md",
+				"spregimes/reglag.md",
+				"spregimes/regols.md",
+				"spregimes/replications.md",
+				"spregimes/skater.md",
+				"spregimes/testing-regimes.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SpatialEconometrics.jl",
+				"PollisDatasets.jl",
+				"DuckDB.jl",
+				"Tables.jl"
 			]
 		},
 		{
@@ -8700,6 +9646,42 @@
 				"SDDP.jl",
 				"HiGHS.jl",
 				"Plots.jl"
+			]
+		},
+		{
+			"id": "sprobust",
+			"title": "Spatial Correlation Robust Inference",
+			"source": "toolbox:pollis-toolbox-spatial-econometrics",
+			"commands": [
+				{
+					"id": "pollis.spatialEconometrics.sprobust",
+					"menuTitles": [
+						"Spatial Correlation Robust Inference"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "conley",
+			"decisionFirstColumn": "Estimator",
+			"toml": "toolboxes/pollis-toolbox-spatial-econometrics/panels/sprobust.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-spatial-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-spatial-econometrics/notebooks",
+			"wikis": [
+				"sprobust/choosing-cutoff.md",
+				"sprobust/cluster.md",
+				"sprobust/conley.md",
+				"sprobust/decision-guide.md",
+				"sprobust/dk.md",
+				"sprobust/factsheet.md",
+				"sprobust/overview.md",
+				"sprobust/replications.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SpatialEconometrics.jl",
+				"PollisDatasets.jl",
+				"DuckDB.jl",
+				"Tables.jl"
 			]
 		},
 		{
@@ -8820,6 +9802,79 @@
 			"packages": [
 				"LowLevelParticleFilters.jl",
 				"PollisDatasets.jl"
+			]
+		},
+		{
+			"id": "stforecast",
+			"title": "Spatio-Temporal Forecasting",
+			"source": "toolbox:pollis-toolbox-spatial-econometrics",
+			"commands": [
+				{
+					"id": "pollis.spatialEconometrics.stforecast",
+					"menuTitles": [
+						"Spatio-Temporal Forecasting"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "star",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-spatial-econometrics/panels/stforecast.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-spatial-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-spatial-econometrics/notebooks",
+			"wikis": [
+				"stforecast/decision-guide.md",
+				"stforecast/factsheet.md",
+				"stforecast/forecasting.md",
+				"stforecast/overview.md",
+				"stforecast/panelar.md",
+				"stforecast/spvar.md",
+				"stforecast/star.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SpatialEconometrics.jl",
+				"PollisDatasets.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
+			"id": "streetview",
+			"title": "Mapillary Street-Level Viewer",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.streetview",
+					"menuTitles": [
+						"Mapillary Street-Level Viewer"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "nearest",
+			"decisionFirstColumn": "Tab",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/streetview.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"streetview/access-token.md",
+				"streetview/byid.md",
+				"streetview/decision-guide.md",
+				"streetview/diagnostics.md",
+				"streetview/factsheet.md",
+				"streetview/finding-an-image.md",
+				"streetview/mapview.md",
+				"streetview/nearest.md",
+				"streetview/overview.md",
+				"streetview/pano.md",
+				"streetview/viewer.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SmartRegions.jl",
+				"DuckDB.jl",
+				"Tables.jl"
 			]
 		},
 		{
@@ -9313,6 +10368,43 @@
 				"Distributions.jl",
 				"Measurements.jl",
 				"Plots.jl"
+			]
+		},
+		{
+			"id": "usgsee",
+			"title": "USGS EarthExplorer",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.usgsee",
+					"menuTitles": [
+						"USGS EarthExplorer"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "find",
+			"decisionFirstColumn": "Tab",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/usgsee.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"usgsee/authentication.md",
+				"usgsee/decision-guide.md",
+				"usgsee/diagnostics.md",
+				"usgsee/factsheet.md",
+				"usgsee/landsat.md",
+				"usgsee/m2m-api.md",
+				"usgsee/overview.md",
+				"usgsee/srtm.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SmartRegions.jl",
+				"DuckDB.jl",
+				"Tables.jl",
+				"Rasters.jl",
+				"ArchGDAL.jl"
 			]
 		},
 		{
