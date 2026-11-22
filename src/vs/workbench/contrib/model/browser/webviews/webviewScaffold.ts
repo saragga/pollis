@@ -464,11 +464,12 @@ function colorizeBrackets(root, commentStart) {
 
 /**
  * The script functions of the line numbers of code, as the editor shows them, which `lineNumbersCss` styles:
- * `numberCodeLines(box)` numbers the code of two or more lines a box shows coloured by `tokenizeToString`, after
+ * `numberCodeLines(box)` numbers the code a box shows coloured by `tokenizeToString`, a single line too, after
  * `colorizeBrackets`, a row for each line, its number on the left even when the box scrolls sideways, and level with
- * the line when the box wraps long lines (the class `code-wrap` on the box); `numberTextArea(area, mirror)` numbers the
- * lines of a code box to type in, and follows its text, scrolling and size from then on, with `mirror`, the coloured
- * copy of a `codeEditorHtml` box, kept in line with it. The numbers cannot be selected or copied with the code.
+ * the line when the box wraps long lines (the class `code-wrap` on the box), each then going on 4 columns right of
+ * its own start; `numberTextArea(area, mirror)` numbers the lines of a code box to type in, and follows its text,
+ * scrolling and size from then on, with `mirror`, the coloured copy of a `codeEditorHtml` box, kept in line with it.
+ * The numbers cannot be selected or copied with the code.
  */
 export const lineNumbersJs = `function lineNumbersText(count) {
 	var numbers = [];
@@ -485,8 +486,8 @@ function numberCodeLines(box) {
 		if (node.nodeName === 'BR') { lines.push([]); } else { lines[lines.length - 1].push(node); }
 	});
 	var last = lines[lines.length - 1];
-	if (lines.length > 1 && !last.some(function(node) { return node.textContent; })) { lines.pop(); }
-	if (lines.length < 2) { return; }
+	if (!last.some(function(node) { return node.textContent; })) { lines.pop(); }
+	if (!lines.length) { return; }
 	// The numbers take the box's left padding, and cover the code scrolled under them with the box's own colour, up
 	// to 12px after their line
 	var style = getComputedStyle(box);
@@ -507,6 +508,10 @@ function numberCodeLines(box) {
 		var text = document.createElement('div');
 		text.className = 'code-text';
 		nodes.forEach(function(node) { text.appendChild(node); });
+		// Where the line goes on when wrapped: 4 columns right of its start
+		var start = 0;
+		text.textContent.match(/^[ \\t]*/)[0].split('').forEach(function(space) { start += space === '\\t' ? 4 - start % 4 : 1; });
+		text.style.setProperty('--code-hang', (start + 4) + 'ch');
 		// An empty line keeps its line when selected and copied
 		if (!text.textContent) { text.appendChild(document.createElement('br')); }
 		source.append(number, text);
@@ -557,14 +562,16 @@ function numberTextArea(area, mirror) {
 
 /**
  * The styles of `lineNumbersJs`: the editor's line number colour, right-aligned, with a thin line after them; and
- * the code of a box with the class `code-wrap` wrapped at its width.
+ * the code of a box with the class `code-wrap` wrapped at its width, with a hanging indent of at most half of it, in
+ * steps of 4 columns then, which keep the tabs of the line's start in place. A tab takes 4 columns.
  */
 export const lineNumbersCss = `.has-line-numbers { padding-left: 0 !important; }
-		.monaco-tokenized-source.code-numbered { display: grid; grid-template-columns: auto 1fr; width: max-content; min-width: 100%; }
+		.monaco-tokenized-source.code-numbered { display: grid; grid-template-columns: auto 1fr; width: max-content; min-width: 100%; tab-size: 4; }
 		.line-number::before { content: attr(data-line); }
 		.line-number { position: sticky; left: 0; z-index: 1; padding-right: 21px; text-align: right; color: var(--vscode-editorLineNumber-foreground); user-select: none; -webkit-user-select: none; }
 		.code-wrap .monaco-tokenized-source, .code-wrap .code-line { white-space: pre-wrap !important; overflow-wrap: anywhere; }
-		.code-wrap .monaco-tokenized-source.code-numbered { width: auto; grid-template-columns: auto minmax(0, 1fr); }
+		.code-wrap .monaco-tokenized-source.code-numbered { width: auto; grid-template-columns: auto minmax(0, 1fr); container-type: inline-size; }
+		.code-wrap .code-text { --code-indent: min(var(--code-hang), round(down, 50cqi, 4ch)); padding-left: var(--code-indent); text-indent: calc(-1 * var(--code-indent)); }
 		.line-gutter-input { position: absolute; z-index: 2; box-sizing: content-box; padding-right: 8px; overflow: hidden; white-space: pre; text-align: right; color: var(--vscode-editorLineNumber-foreground); pointer-events: none; user-select: none; -webkit-user-select: none; background: var(--vscode-input-background); border-right: 1px solid var(--vscode-widget-border, var(--vscode-panel-border)); }`;
 
 /** The spinner of every page of Pollis: the two curved arrows of the sync icon, turning; its CSS is `spinnerCss`. */
@@ -646,7 +653,11 @@ export const panelAskCss = `.title-row { display: flex; align-items: flex-start;
 		${askAttachCss}
 		${composerVoiceCss}`;
 
-/** The question grows with its text, the arrow blue when there is one; Enter or the arrow asks it, Shift+Enter starts a line. */
+/**
+ * The question grows with its text, the arrow blue when there is one; Enter or the arrow asks it, Shift+Enter starts a line.
+ * Pointing at the pill puts the cursor in the question, and leaving it puts the cursor back, unless the pill was clicked or
+ * written in.
+ */
 export const panelAskScript = `${composerVoiceScript('panel-ask-question')}
 		(() => {
 			${askAttachScript('panel-ask-question', 'panel-ask-', '.panel-ask')}
@@ -676,8 +687,27 @@ export const panelAskScript = `${composerVoiceScript('panel-ask-question')}
 			});
 			send.addEventListener('click', ask);
 			// A click anywhere in the pill but on its buttons writes in the question
-			document.querySelector('.panel-ask').addEventListener('click', event => {
+			const pill = document.querySelector('.panel-ask');
+			pill.addEventListener('click', event => {
 				if (!event.target.closest('button, textarea, .voice-menu')) { question.focus(); }
+			});
+			// Pointing at the pill is enough to write: the cursor waits in the question, without scrolling the page
+			let focusBeforeHover = null;
+			const keepFocus = () => { focusBeforeHover = null; };
+			pill.addEventListener('pointerenter', event => {
+				if (event.buttons || (document.hasFocus() && pill.contains(document.activeElement))) { return; }
+				focusBeforeHover = document.activeElement || document.body;
+				window.focus();
+				question.focus({ preventScroll: true });
+			});
+			pill.addEventListener('pointerdown', keepFocus);
+			question.addEventListener('input', keepFocus);
+			pill.addEventListener('pointerleave', () => {
+				if (focusBeforeHover && document.activeElement === question) {
+					question.blur();
+					focusBeforeHover.focus({ preventScroll: true });
+				}
+				keepFocus();
 			});
 			// Only a cloud model is given images, and the model can change at the status bar
 			const askModel = () => vscode.postMessage({ command: 'askPollisModel' });
@@ -854,7 +884,7 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.code-preview-wrapper { position: relative; margin: 0 0 20px 0; }
 		#code-preview { border-top-left-radius: 0; border-top-right-radius: 0; }
 		.code-preview { background: var(--vscode-textCodeBlock-background); border: 1px solid var(--vscode-widget-border); border-radius: 6px; padding: 20px; padding-right: 50px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 12px; line-height: 1.6; overflow-x: auto; }
-		.code-line { color: var(--vscode-foreground); margin: 4px 0; white-space: pre; }
+		.code-line { color: var(--vscode-foreground); margin: 4px 0; white-space: pre; tab-size: 4; }
 		.code-blank { margin: 8px 0; }
 		.code-comment { color: #6A9955; font-style: italic; }
 		.hl-keyword { color: var(--vscode-symbolIcon-keywordForeground); }
