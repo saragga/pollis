@@ -20,9 +20,12 @@ const STANDARD_GROUPS = ['visualise', 'diagnose', 'predict', 'compare', 'interpr
 /** The optional action group of queries, last among the groups: Query in SQL, with the database codicon. */
 const SQL_GROUP = 'sql';
 
-/** Escape a string for safe embedding in a JS single-quoted string literal. */
+/**
+ * Escape a string for safe embedding in a JS single-quoted string literal inside a page's `<script>`: `</` becomes
+ * `<\/` and `<!--` becomes `<\!--`, so that code holding `</script>` or `<!--` cannot end or derail the script element.
+ */
 function jsEscape(s: string): string {
-	return s.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/\r?\n/g, '\\n');
+	return s.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/\r?\n/g, '\\n').replace(/<\//g, '<\\/').replace(/<!--/g, '<\\!--');
 }
 
 /** Escape HTML special characters. */
