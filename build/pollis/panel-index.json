@@ -8350,6 +8350,42 @@
 			]
 		},
 		{
+			"id": "reliefvis",
+			"title": "Relief Visualisation",
+			"source": "toolbox:pollis-toolbox-geoprocessing",
+			"commands": [
+				{
+					"id": "pollis.geoprocessing.reliefvis",
+					"menuTitles": [
+						"Relief Visualisation"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "lrm",
+			"decisionFirstColumn": "Visualisation",
+			"toml": "toolboxes/pollis-toolbox-geoprocessing/panels/reliefvis.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-geoprocessing/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-geoprocessing/notebooks",
+			"wikis": [
+				"reliefvis/decision-guide.md",
+				"reliefvis/diagnostics.md",
+				"reliefvis/factsheet.md",
+				"reliefvis/layered-image.md",
+				"reliefvis/local-relief.md",
+				"reliefvis/overview.md",
+				"reliefvis/shaded-relief.md",
+				"reliefvis/sky-view-openness.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"Geomorphometry.jl",
+				"Rasters.jl",
+				"Stencils.jl",
+				"ArchGDAL.jl"
+			]
+		},
+		{
 			"id": "rl",
 			"title": "Recurrent Layers",
 			"source": "pollis",
