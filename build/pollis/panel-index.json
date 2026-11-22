@@ -4136,10 +4136,10 @@
 		{
 			"id": "gridcalc",
 			"title": "Grid Calculations",
-			"source": "toolbox:pollis-toolbox-smart-regions",
+			"source": "toolbox:pollis-toolbox-geoprocessing",
 			"commands": [
 				{
-					"id": "pollis.smartRegions.gridcalc",
+					"id": "pollis.geoprocessing.gridcalc",
 					"menuTitles": [
 						"Grid Calculations"
 					]
@@ -4148,9 +4148,9 @@
 			"portable": true,
 			"defaultModel": "local",
 			"decisionFirstColumn": "Operation",
-			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/gridcalc.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"toml": "toolboxes/pollis-toolbox-geoprocessing/panels/gridcalc.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-geoprocessing/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-geoprocessing/notebooks",
 			"wikis": [
 				"gridcalc/decision-guide.md",
 				"gridcalc/diagnostics.md",
@@ -4776,10 +4776,9 @@
 			],
 			"notebooks": [],
 			"packages": [
+				"SmartRegions.jl",
 				"DuckDB.jl",
-				"Tables.jl",
-				"EzXML.jl",
-				"ZipArchives.jl"
+				"Tables.jl"
 			]
 		},
 		{
@@ -6155,11 +6154,11 @@
 			],
 			"notebooks": [],
 			"packages": [
+				"SmartRegions.jl",
 				"DuckDB.jl",
 				"Tables.jl",
 				"GLFixedEffectModels.jl",
-				"GLM.jl",
-				"ZipArchives.jl"
+				"GLM.jl"
 			]
 		},
 		{
@@ -7552,6 +7551,7 @@
 			],
 			"notebooks": [],
 			"packages": [
+				"SmartRegions.jl",
 				"DuckDB.jl",
 				"Tables.jl"
 			]
@@ -8578,6 +8578,7 @@
 			],
 			"notebooks": [],
 			"packages": [
+				"SmartRegions.jl",
 				"DuckDB.jl",
 				"Tables.jl",
 				"Graphs.jl"
@@ -9958,6 +9959,43 @@
 			"packages": [
 				"Symbolics.jl",
 				"SymbolicNumericIntegration.jl"
+			]
+		},
+		{
+			"id": "terrain",
+			"title": "Terrain and Elevation Analysis",
+			"source": "toolbox:pollis-toolbox-geoprocessing",
+			"commands": [
+				{
+					"id": "pollis.geoprocessing.terrain",
+					"menuTitles": [
+						"Terrain and Elevation Analysis"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "slope",
+			"decisionFirstColumn": "Measure",
+			"toml": "toolboxes/pollis-toolbox-geoprocessing/panels/terrain.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-geoprocessing/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-geoprocessing/notebooks",
+			"wikis": [
+				"terrain/curvature.md",
+				"terrain/decision-guide.md",
+				"terrain/diagnostics.md",
+				"terrain/factsheet.md",
+				"terrain/flow-wetness.md",
+				"terrain/hillshade.md",
+				"terrain/overview.md",
+				"terrain/relief.md",
+				"terrain/slope-aspect.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"Geomorphometry.jl",
+				"Rasters.jl",
+				"Stencils.jl",
+				"ArchGDAL.jl"
 			]
 		},
 		{
