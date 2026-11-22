@@ -29,6 +29,7 @@ import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
 import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createSqlStepsWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, IApiKeyProvider, sendToJuliaRepl, withExampleFirst, withStepsFirst, IStepsRunMessage } from './model.handler.js';
+import { createCodeHoverWiring } from './codeHover.js';
 import { hasKey } from '../../../../../base/common/types.js';
 import { ADD_ALERT_COMMAND_ID } from '../../../monitor/browser/alertsPage.js';
 import { FORECASTING_CATALOGUE_COMMAND_ID } from '../../../compose/browser/forecastingActive.js';
@@ -144,6 +145,7 @@ export function registerScaffoldWebviewHandlers(
 	createSqlStepsWiring(webviewInput.webview, disposables, commandService, editorService);
 	createReferenceWiring(webviewInput.webview, disposables, panelId, data.references, fileService, pathService, commandService, notificationService);
 	createVideoWiring(webviewInput.webview, disposables, panelId, data.packages, fileService, pathService, commandService, notificationService);
+	createCodeHoverWiring(webviewInput.webview, disposables, commandService);
 	// The folder inputs' defaults in the open Pollis Workspace, as programs/executables; without one, the TOML's default
 	const postFolderDefaults = async (): Promise<void> => {
 		const folderInputs = [...data.inputs ?? [], ...(data.steps ?? []).flatMap(step => step.inputs)].filter(input => input.folder);

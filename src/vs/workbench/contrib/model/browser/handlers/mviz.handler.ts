@@ -26,6 +26,7 @@ import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl, withExampleFirst } from './model.handler.js';
+import { createCodeHoverWiring } from './codeHover.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerMvizWebviewHandlers(
@@ -64,6 +65,7 @@ export function registerMvizWebviewHandlers(
 	createCustomCopyWiring(webviewInput.webview, disposables, mvizData.wikis, mvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'mviz', mvizData.references, fileService, pathService, commandService, notificationService);
 	createVideoWiring(webviewInput.webview, disposables, 'mviz', mvizData.packages, fileService, pathService, commandService, notificationService);
+	createCodeHoverWiring(webviewInput.webview, disposables, commandService);
 
 	setTimeout(() => {
 		const packages = mvizData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));

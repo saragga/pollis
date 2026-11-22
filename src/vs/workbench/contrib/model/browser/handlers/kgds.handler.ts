@@ -30,6 +30,7 @@ import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
 import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
+import { createCodeHoverWiring } from './codeHover.js';
 import { CREDENTIALS } from '../common/credentials.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
@@ -83,6 +84,7 @@ export function registerKgdsWebviewHandlers(
 	createCustomCopyWiring(webviewInput.webview, disposables, kgdsData.wikis, kgdsData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'kgds', kgdsData.references, fileService, pathService, commandService, notificationService);
 	createVideoWiring(webviewInput.webview, disposables, 'kgds', kgdsData.packages, fileService, pathService, commandService, notificationService);
+	createCodeHoverWiring(webviewInput.webview, disposables, commandService);
 	const apiKey = createApiKeyWiring(webviewInput.webview, KGDS_API_KEY, secretStorageService, quickInputService, webviewService);
 
 	setTimeout(() => {

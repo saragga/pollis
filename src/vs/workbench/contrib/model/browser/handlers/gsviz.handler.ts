@@ -26,6 +26,7 @@ import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl, withExampleFirst } from './model.handler.js';
+import { createCodeHoverWiring } from './codeHover.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerGsvizWebviewHandlers(
@@ -64,6 +65,7 @@ export function registerGsvizWebviewHandlers(
 	createCustomCopyWiring(webviewInput.webview, disposables, gsvizData.wikis, gsvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'gsviz', gsvizData.references, fileService, pathService, commandService, notificationService);
 	createVideoWiring(webviewInput.webview, disposables, 'gsviz', gsvizData.packages, fileService, pathService, commandService, notificationService);
+	createCodeHoverWiring(webviewInput.webview, disposables, commandService);
 
 	setTimeout(() => {
 		const packages = gsvizData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));

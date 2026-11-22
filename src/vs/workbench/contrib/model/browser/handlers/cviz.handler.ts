@@ -26,6 +26,7 @@ import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl, withExampleFirst } from './model.handler.js';
+import { createCodeHoverWiring } from './codeHover.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerCvizWebviewHandlers(
@@ -53,6 +54,7 @@ export function registerCvizWebviewHandlers(
 	createCustomCopyWiring(webviewInput.webview, disposables, cvizData.wikis, cvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'cviz', cvizData.references, fileService, pathService, commandService, notificationService);
 	createVideoWiring(webviewInput.webview, disposables, 'cviz', cvizData.packages, fileService, pathService, commandService, notificationService);
+	createCodeHoverWiring(webviewInput.webview, disposables, commandService);
 
 	// PROTOTYPE: colorize a plain Julia string with the editor's own tokenizer + the
 	// active colour theme, so the code box matches the editor/notebook for THIS user.

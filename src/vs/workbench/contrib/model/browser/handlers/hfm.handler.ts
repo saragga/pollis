@@ -31,6 +31,7 @@ import { IWorkspaceContextService } from '../../../../../platform/workspace/comm
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
 import { IWebviewService } from '../../../webview/browser/webview.js';
 import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
+import { createCodeHoverWiring } from './codeHover.js';
 import { CREDENTIALS } from '../common/credentials.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
@@ -64,6 +65,7 @@ export function registerHfmWebviewHandlers(
 	createCustomCopyWiring(webviewInput.webview, disposables, hfmData.wikis, hfmData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'hfm', hfmData.references, fileService, pathService, commandService, notificationService);
 	createVideoWiring(webviewInput.webview, disposables, 'hfm', hfmData.packages, fileService, pathService, commandService, notificationService);
+	createCodeHoverWiring(webviewInput.webview, disposables, commandService);
 	const apiKey = createApiKeyWiring(webviewInput.webview, HFM_API_KEY, secretStorageService, quickInputService, webviewService);
 
 	const lastCode: { [target: string]: string } = {};

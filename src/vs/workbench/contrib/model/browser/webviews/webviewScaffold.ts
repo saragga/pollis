@@ -7,6 +7,7 @@ import { localize } from '../../../../../nls.js';
 import { askAddHtml, askAttachCss, askAttachmentsHtml, askAttachScript } from '../../../compose/browser/askPollisAttach.js';
 import { composerVoiceCss, composerVoiceHtml, composerVoiceScript } from '../../../compose/browser/composerVoice.js';
 import { customTagCss, escJs, learnMoreCss, learnMoreMessagesJs, learnMorePanelsJs, learnMoreSectionHtml, learnMoreStateJs, learnMoreWiringJs, nextStepsSectionHtml, packageLinksMessageJs, pageBaseCss, poweredByCss, sectionCss, sectionDotsCss, sectionToggleJs, stepsCss, stepsHtml, IScaffoldStep } from './scaffoldShared.js';
+import { codeHoverCss, codeHoverJs } from './scaffoldCodeHover.js';
 
 /** Codicon SVGs used by Next Steps groups, keyed by codicon name (16px, theme-coloured via currentColor). */
 const NEXT_STEP_CODICONS: Readonly<Record<string, string>> = {
@@ -943,6 +944,7 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		${learnMoreCss}
 		${parts.hiddenRowCss ?? ''}
 		.code-preview .monaco-tokenized-source { white-space: pre; }
+		${codeHoverCss}
 ${parts.extraCss ?? ''}${noExampleCode ? `		${stepsCss}
 		${panelAskCss}
 ` : ''}${parts.steps ? `		${sectionDotsCss}
@@ -1639,6 +1641,7 @@ ${parts.inputsChangedJs ?? ''}			if (panelAction && !panelEditing && document.ge
 				+ '<div class="panel-run-note" id="panel-run-note" hidden></div>';
 			// The generated example is the default; a saved (customised) one replaces it.
 			var box = document.getElementById('panel-code');
+			box.dataset.language = sql ? 'sql' : 'julia';       // a query has no hover of Julia's documentation
 			currentPanelPlainCode = null;                       // so extractCode reads the freshly-built DOM
 			panelDefaultCode = extractCode('panel-code');
 			var custom = customSteps[action.id];
@@ -1883,6 +1886,7 @@ ${noExampleCode ? '' : `		document.getElementById('btn-copy').addEventListener('
 
 		${colorizeBracketsJs}
 		${lineNumbersJs}
+		${codeHoverJs}
 
 		function renderPackageStatus(statuses, env) {
 			var el = document.getElementById('package-status');

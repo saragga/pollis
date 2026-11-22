@@ -19,6 +19,7 @@ import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewW
 import { IScaffoldPanelData } from '../common/model.types.js';
 import { panelCitedKeys } from '../common/tomlPanelData.js';
 import { createCustomCopyWiring, createReferenceWiring, createSqlStepsWiring, createVideoWiring, openInBrowser, openNotebookByFile, openWikiByFile } from './model.handler.js';
+import { createCodeHoverWiring } from './codeHover.js';
 import { postLearnMoreData } from './scaffold.handler.js';
 
 /** Messages a page in the Time Arrow style sends that are not handled by the shared wirings of model.handler.ts. */
@@ -53,6 +54,7 @@ export function registerScaffoldPageHandlers(
 	createCustomCopyWiring(webviewInput.webview, disposables, data.wikis, data.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, panelId, data.references, fileService, pathService, commandService, notificationService);
 	createVideoWiring(webviewInput.webview, disposables, panelId, data.packages, fileService, pathService, commandService, notificationService);
+	createCodeHoverWiring(webviewInput.webview, disposables, commandService);
 	createSqlStepsWiring(webviewInput.webview, disposables, commandService, editorService);
 
 	setTimeout(() => {

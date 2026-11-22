@@ -28,6 +28,7 @@ import { IWorkspaceContextService } from '../../../../../platform/workspace/comm
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
 import { IWebviewService } from '../../../webview/browser/webview.js';
 import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
+import { createCodeHoverWiring } from './codeHover.js';
 import { CREDENTIALS } from '../common/credentials.js';
 
 const KGM_API_KEY = {
@@ -71,6 +72,7 @@ export function registerKgmWebviewHandlers(
 	createCustomCopyWiring(webviewInput.webview, disposables, kgmData.wikis, kgmData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'kgm', kgmData.references, fileService, pathService, commandService, notificationService);
 	createVideoWiring(webviewInput.webview, disposables, 'kgm', kgmData.packages, fileService, pathService, commandService, notificationService);
+	createCodeHoverWiring(webviewInput.webview, disposables, commandService);
 	const apiKey = createApiKeyWiring(webviewInput.webview, KGM_API_KEY, secretStorageService, quickInputService, webviewService);
 
 	const lastCode: { [target: string]: string } = {};

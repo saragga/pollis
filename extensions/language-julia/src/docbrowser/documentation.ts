@@ -3,6 +3,7 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 import { constructCommandString, onEvent, registerCommand } from '../utils'
 import * as repl from '../interactive/repl'
+import { hoverMarkdown, HoveredName, nameAt } from './hoverName'
 
 const DOC_NO_REPL_MESSAGE =
     'Documentation is looked up from the Julia REPL. Start the Julia REPL (and load the relevant packages), then search again.'
@@ -21,6 +22,82 @@ async function docOfName(name: string): Promise<string | undefined> {
     }
     const doc = (await repl.getDocFromWord(name))?.trim()
     return doc && !doc.startsWith('No documentation found') ? doc.replace(/\[([^\]]+)\]\(@ref[^)]*\)/g, '$1') : undefined
+}
+
+/** How long a hover waits for the REPL, which cannot answer while it computes. */
+const HOVER_WAIT_MS = 2000
+
+/** Whether a lookup of a hover waits in the REPL: another would queue behind it. */
+let hoverLookupWaits = false
+
+/**
+ * The documentation for a hover at `offset` of `code`, which runs after `earlier`, in the editor and in the code boxes
+ * of the panels, from the REPL already running: a hover neither starts one nor loads a package. It gives up after
+ * `HOVER_WAIT_MS`, and until the REPL has answered the hovers after it show nothing.
+ */
+async function hoverDoc(
+    code: string,
+    offset: number,
+    earlier = ''
+): Promise<(HoveredName & { markdown: string }) | undefined> {
+    if (hoverLookupWaits || !repl.isConnected()) {
+        return undefined
+    }
+    const hovered = nameAt(code, offset, earlier)
+    if (!hovered || hovered.name.match(JULIA_NAME)?.[0] !== hovered.name) {
+        return undefined
+    }
+    // Help mode evaluates what comes before the last dot: of a.b.c it gets a.b, which runs code when a is an object
+    if (hovered.name.split('.').length > 2) {
+        return undefined
+    }
+    hoverLookupWaits = true
+    const lookup = repl
+        .getDocFromWord(hovered.name)
+        // The REPL can close while it is asked
+        .catch(() => undefined)
+        .finally(() => {
+            hoverLookupWaits = false
+        })
+    let timer: NodeJS.Timeout
+    const answer = await Promise.race([
+        lookup,
+        new Promise<undefined>((resolve) => {
+            timer = setTimeout(() => resolve(undefined), HOVER_WAIT_MS)
+        }),
+    ])
+    clearTimeout(timer)
+    const markdown = answer && hoverMarkdown(answer)
+    return markdown ? { ...hovered, markdown } : undefined
+}
+
+/** The hover of Julia code in the editor, and in the code cells of a notebook, whose cells before it are its earlier code. */
+class DocumentationHoverProvider implements vscode.HoverProvider {
+    async provideHover(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.Hover | undefined> {
+        let earlier = ''
+        if (document.uri.scheme === 'vscode-notebook-cell') {
+            for (const notebook of vscode.workspace.notebookDocuments) {
+                const cells = notebook.getCells()
+                const index = cells.findIndex((cell) => cell.document === document)
+                if (index >= 0) {
+                    earlier = cells
+                        .slice(0, index)
+                        .filter((cell) => cell.document.languageId === 'julia')
+                        .map((cell) => cell.document.getText())
+                        .join('\n')
+                    break
+                }
+            }
+        }
+        const doc = await hoverDoc(document.getText(), document.offsetAt(position), earlier)
+        return (
+            doc &&
+            new vscode.Hover(
+                new vscode.MarkdownString(doc.markdown),
+                new vscode.Range(document.positionAt(doc.start), document.positionAt(doc.end))
+            )
+        )
+    }
 }
 
 function openArgs(href: string) {
@@ -92,6 +169,11 @@ export function activate(context: vscode.ExtensionContext) {
             provider.findHelp(params)
         ),
         registerCommand('language-julia.pollisDocOfName', docOfName),
+        registerCommand('language-julia.pollisHoverDoc', hoverDoc),
+        vscode.languages.registerHoverProvider('julia', new DocumentationHoverProvider()),
+        onEvent(repl.onExit, () => {
+            hoverLookupWaits = false
+        }),
         vscode.window.registerWebviewViewProvider('julia-documentation', provider)
     )
 }
