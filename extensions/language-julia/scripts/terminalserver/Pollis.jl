@@ -515,21 +515,22 @@ end
 const REPL_ID = Base.PkgId(Base.UUID("3fa0cd96-eef1-5676-8a61-b3b8758bbffb"), "REPL")
 
 """
-    Pollis.run_first(example, step)
+    Pollis.run_first(example, step; first = "the Code Example", then = "this Next Step")
 
 What a Next Step sends to the Julia REPL when the Code Example of its tab has not run there yet, or
-has changed since: run the Code Example, then the Next Step, which uses its results. Each statement
-runs in `Main` as if typed at the REPL, its value shown unless it ends with `;`. When the Code Example
-stops with an error, the error is shown and the Next Step does not run.
+has changed since: run the Code Example, then the Next Step, which uses its results. A step of a Time
+Arrow panel sends the steps before it as `example`, named by `first` (`Steps 1 to 4`), and itself as
+`step`, named by `then` (`Step 6`). Each statement runs in `Main` as if typed at the REPL, its value
+shown unless it ends with `;`. When `example` stops with an error, the error is shown and `step` does not run.
 """
-function run_first(example::AbstractString, step::AbstractString)
-	printstyled("Running the Code Example first, so that this Next Step can use its results…\n"; color = :cyan)
-	if !run_statements(example, "Code Example")
-		printstyled("The Next Step did not run, since the Code Example stopped with an error.\n"; color = :red)
+function run_first(example::AbstractString, step::AbstractString; first::AbstractString = "the Code Example", then::AbstractString = "this Next Step")
+	printstyled("Running $first first, so that $then can use the results…\n"; color = :cyan)
+	if !run_statements(example, uppercasefirst(first))
+		printstyled("$(uppercasefirst(then)) did not run, since $first stopped with an error.\n"; color = :red)
 		return nothing
 	end
-	printstyled("Running the Next Step…\n"; color = :cyan)
-	run_statements(step, "Next Step")
+	printstyled("Running $then…\n"; color = :cyan)
+	run_statements(step, uppercasefirst(then))
 	return nothing
 end
 

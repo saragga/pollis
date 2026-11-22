@@ -5166,8 +5166,6 @@
 				}
 			],
 			"portable": true,
-			"defaultModel": "adaf",
-			"decisionFirstColumn": "Method",
 			"toml": "toolboxes/pollis-toolbox-geoprocessing/panels/learnedlidar.toml",
 			"wikiRoot": "toolboxes/pollis-toolbox-geoprocessing/wiki",
 			"notebookRoot": "toolboxes/pollis-toolbox-geoprocessing/notebooks",
@@ -5180,6 +5178,7 @@
 			],
 			"notebooks": [],
 			"packages": [
+				"ArchaeologicalDetection.jl",
 				"SmartRegions.jl",
 				"NNlib.jl",
 				"Pickle.jl",

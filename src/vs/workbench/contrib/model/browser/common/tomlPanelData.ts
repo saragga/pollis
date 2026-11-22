@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // No runtime imports: the build (build/lib/toml-to-ts.ts) runs this file directly under Node.
-import type { IModelFaq, IModelFaqItem, IModelWiki, IScaffoldPanelData } from './model.types.js';
+import type { IModelAction, IModelFaq, IModelFaqItem, IModelInput, IModelWiki, IScaffoldPanelData } from './model.types.js';
 
 /** A table of a parsed TOML file. */
 export interface TomlValue {
@@ -470,5 +470,95 @@ export function tomlToPanelData(data: TomlValue): IScaffoldPanelData {
 			panel[key] = value;
 		}
 	}
+	Object.assign(panel, timeArrowData(data));
 	return panel as unknown as IScaffoldPanelData;
+}
+
+function asTable(value: unknown): TomlValue {
+	return typeof value === 'object' && value !== null && !Array.isArray(value) ? value as TomlValue : {};
+}
+
+function asTables(value: unknown): TomlValue[] {
+	return Array.isArray(value) ? value.map(asTable) : [];
+}
+
+function asText(value: unknown): string {
+	return typeof value === 'string' ? value : '';
+}
+
+function asTexts(value: unknown): string[] {
+	return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
+/** A name that can be the id of an element of the page and the name of a file, or empty. */
+function asName(value: unknown): string {
+	const name = asText(value);
+	return /^[\w-]+$/.test(name) ? name : '';
+}
+
+/** The `[[steps.inputs]]` of a step, those without a name left out. */
+function stepInputs(value: unknown): IModelInput[] {
+	return asTables(value).filter(input => asName(input.id)).map(input => {
+		const kind = input.kind === 'select' || input.kind === 'textarea' ? input.kind : undefined;
+		const initial = ['string', 'number', 'boolean'].includes(typeof input.default) ? String(input.default) : undefined;
+		return {
+			id: asName(input.id),
+			label: asText(input.label),
+			...(asText(input.tooltip) ? { tooltip: asText(input.tooltip) } : {}),
+			...(kind ? { kind } : {}),
+			...(initial === undefined ? {} : { default: initial }),
+			...(kind === 'select' ? {
+				options: asTables(input.options).map(option => ({
+					value: asText(option.value),
+					label: asText(option.label),
+					...(asText(option.when) ? { when: asText(option.when) } : {}),
+					...(option.disabled === true ? { disabled: true } : {}),
+				})),
+			} : {}),
+			...(asText(input.when) ? { when: asText(input.when) } : {}),
+			...(input.newRow === true ? { newRow: true } : {}),
+			...(asText(input.folder) ? { folder: asText(input.folder) } : {}),
+			...(input.chooseFolder === false ? { chooseFolder: false } : {}),
+		};
+	});
+}
+
+/** The `[[steps.actions]]` of a step, those without a name or code left out. */
+function stepActions(value: unknown): IModelAction[] {
+	return asTables(value).filter(action => asName(action.id) && asText(action.code).trim()).map(action => ({
+		id: asName(action.id),
+		label: asText(action.label),
+		desc: asText(action.desc),
+		code: asText(action.code),
+		...(asText(action.when) ? { when: asText(action.when) } : {}),
+	}));
+}
+
+/**
+ * What a panel has when its `[meta]` says style = "timeArrow": `intro`, the `[matrix]` before the steps, and its
+ * `[[steps]]`, each with its sections, inputs, code and actions. A TOML read while Pollis runs can be anyone's, so a
+ * value of another type is empty.
+ */
+function timeArrowData(data: TomlValue): Pick<IScaffoldPanelData, 'style' | 'intro' | 'matrix' | 'steps'> | undefined {
+	const meta = asTable(data.meta);
+	if (meta.style !== 'timeArrow') {
+		return undefined;
+	}
+	const matrix = asTable(data.matrix);
+	return {
+		style: 'timeArrow',
+		intro: asText(meta.intro),
+		matrix: { columns: asTexts(matrix.columns), rows: asTables(matrix.rows).map(row => asTexts(row.cells)) },
+		steps: asTables(data.steps).map((step, index) => ({
+			title: asText(step.title),
+			intro: asText(step.intro),
+			dataset: asText(step.dataset),
+			datasetText: asText(step.datasetText),
+			sections: asTables(step.sections).map(section => ({ heading: asText(section.heading), text: asText(section.text), items: asTexts(section.items) })),
+			id: asName(step.id) || String(index + 1),
+			inputs: stepInputs(step.inputs),
+			code: asText(step.code),
+			actions: stepActions(step.actions),
+		})),
+	};
 }

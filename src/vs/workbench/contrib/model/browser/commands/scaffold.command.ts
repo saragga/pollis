@@ -36,8 +36,6 @@ export interface IScaffoldPanel {
 	readonly html: () => string;
 	/** Credentials the panel's code needs (an API key, a contact): kept in Secret Storage and set as environment variables in the Julia REPL. */
 	readonly apiKey?: IApiKeyProvider;
-	/** The page's own messages, beside those the scaffold answers, run with the command service. */
-	readonly onMessage?: (message: unknown, commandService: ICommandService) => void;
 }
 
 /** Open a scaffold panel, optionally on a given model toggle. */
@@ -57,8 +55,7 @@ export function openScaffoldWebview(accessor: ServicesAccessor, panel: IScaffold
 
 	webviewInput.webview.setHtml(panel.html());
 
-	const commandService = accessor.get(ICommandService);
-	const handlers = registerScaffoldWebviewHandlers(
+	registerScaffoldWebviewHandlers(
 		webviewInput,
 		panel.id,
 		panel.title,
@@ -66,7 +63,7 @@ export function openScaffoldWebview(accessor: ServicesAccessor, panel: IScaffold
 		initialModel,
 		accessor.get(IOpenerService),
 		accessor.get(IEditorService),
-		commandService,
+		accessor.get(ICommandService),
 		accessor.get(INotificationService),
 		accessor.get(INotebookEditorModelResolverService),
 		accessor.get(INotebookKernelService),
@@ -83,8 +80,4 @@ export function openScaffoldWebview(accessor: ServicesAccessor, panel: IScaffold
 		accessor.get(IFileDialogService),
 		panel.apiKey,
 	);
-	const onMessage = panel.onMessage;
-	if (onMessage) {
-		handlers.add(webviewInput.webview.onMessage(e => onMessage(e.message, commandService)));
-	}
 }

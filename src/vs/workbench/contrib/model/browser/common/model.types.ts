@@ -164,6 +164,8 @@ export interface IModelInputOption {
 	readonly models?: string[];
 	/** Offer the choice only while another input matches, as `id=a|b` or `id!=a|b`. */
 	readonly when?: string;
+	/** List the choice greyed: it cannot be chosen. */
+	readonly disabled?: boolean;
 }
 
 /**
@@ -287,4 +289,47 @@ export interface IScaffoldPanelData {
 	readonly faq?: IModelFaq[];
 	/** Its curated collections, for a page that lists datasets. */
 	readonly collections?: IModelCollection[];
+	/** The style its `[meta]` names: Time Arrow. Default: Classical. */
+	readonly style?: 'timeArrow';
+	/** Time Arrow: the text in place of Key Points. */
+	readonly intro?: string;
+	/** Time Arrow: the table between the introduction and the steps. */
+	readonly matrix?: IModelMatrix;
+	/** Time Arrow: the numbered steps. */
+	readonly steps?: IModelStep[];
+}
+
+/** The table of a Time Arrow panel (`[matrix]`): its columns and the cells of each of its rows. */
+export interface IModelMatrix {
+	readonly columns: string[];
+	readonly rows: string[][];
+}
+
+/** A step of a Time Arrow panel (`[[steps]]`): a numbered pane. */
+export interface IModelStep {
+	readonly title: string;
+	readonly intro: string;
+	/** Its dataset's id in Manage Challenge Datasets. */
+	readonly dataset: string;
+	/** How the step names its dataset. */
+	readonly datasetText: string;
+	readonly sections: IModelStepSection[];
+	/** The name of the step, under which the user's version of its code is kept. */
+	readonly id: string;
+	/** The inputs of the step, which its code and that of every later one can read as `{{id}}`. */
+	readonly inputs: readonly IModelInput[];
+	/**
+	 * What the later steps need of this one. Before the code of a later step runs, so does the code of each step before
+	 * it, unless the Julia REPL has run it as it is now.
+	 */
+	readonly code: string;
+	/** Further code of the step, as looking at or saving its results: no later step runs it. */
+	readonly actions: readonly IModelAction[];
+}
+
+/** A section of a step (`[[steps.sections]]`): a heading with a text or a list of items. */
+interface IModelStepSection {
+	readonly heading: string;
+	readonly text: string;
+	readonly items: string[];
 }

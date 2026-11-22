@@ -350,6 +350,10 @@ export interface WebviewParts {
 	readonly sqlSteps?: readonly IScaffoldSqlStep[];
 	/** Extra JS appended at the end of the main script block (e.g. message handlers for custom panels). */
 	readonly extraJs?: string;
+	/** Time Arrow with code in its steps: the fields a Next Step sends with its code, in place of Example Code as `setup`. */
+	readonly stepSetupJs?: string;
+	/** Time Arrow with code in its steps: JS that runs when the value or default of an input changes. */
+	readonly inputsChangedJs?: string;
 }
 
 /**
@@ -1081,8 +1085,9 @@ ${parts.headScriptJs ?? ''}
 				Array.prototype.forEach.call(select.options, function(o) {
 					var ok = availableFor(o) && whenHolds(o);
 					o.hidden = !ok;
-					o.disabled = !ok;
-					if (ok && !first) { first = o; }
+					// A greyed choice (disabled in the TOML) is listed and never chosen
+					o.disabled = !ok || o.hasAttribute('data-disabled');
+					if (!o.disabled && !first) { first = o; }
 				});
 				var current = select.options[select.selectedIndex];
 				if (first && (!current || current.disabled)) { first.selected = true; }
@@ -1109,6 +1114,7 @@ ${parts.explore && !noExampleCode ? parts.explore.js : ''}		}
 		// ── Code preview ─────────────────────────────────────────────────────
 		function updateCodePreview() {
 			var box = document.getElementById('code-preview');
+			if (!box) { return; }   // no Example Code in Time Arrow and Minimal
 			if (isAddedTab(currentModel)) {
 				// A tab the user added shows their code, or a nudge while it is still empty.
 				var own = addedTabs[currentModel.slice(1)] || '';
@@ -1170,6 +1176,7 @@ ${noExampleCode ? '' : `		if (!document.querySelector('#sec-code .scaffold-input
 
 		function renderAddedTabs() {
 			var group = document.getElementById('model-group');
+			if (!group) { return; }
 			group.querySelectorAll('.added-tab').forEach(function(b) { b.remove(); });
 			var plus = document.getElementById('btn-add-tab');
 			addedOrder.forEach(function(name) {
@@ -1313,13 +1320,11 @@ ${noExampleCode ? '' : `		if (!document.querySelector('#sec-code .scaffold-input
 		var wrapCode = false;
 		function setCodeWrap(on, keep) {
 			wrapCode = on;
-			['code-preview', 'panel-code'].forEach(function(id) {
-				var box = document.getElementById(id);
-				if (box) { box.classList.toggle('code-wrap', on); }
+			document.querySelectorAll('#code-preview, #panel-code, .step-code .code-preview').forEach(function(box) {
+				box.classList.toggle('code-wrap', on);
 			});
-			['btn-wrap-code', 'btn-panel-wrap'].forEach(function(id) {
-				var button = document.getElementById(id);
-				if (button) { button.setAttribute('aria-pressed', String(on)); }
+			document.querySelectorAll('#btn-wrap-code, #btn-panel-wrap, .step-code .wrap-btn').forEach(function(button) {
+				button.setAttribute('aria-pressed', String(on));
 			});
 			if (keep) { vscode.postMessage({ command: 'codeWrap', value: on }); }
 		}
@@ -1396,11 +1401,11 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 		function onInputsChanged() {
 			applyInputsForModel();
 			if (!editingCode) { updateCodePreview(); }
-			if (panelAction && !panelEditing && document.getElementById('panel-code') && actionShown(panelAction)) { renderRightCode(panelAction, panelNav.actions, panelNav.title); }
+${parts.inputsChangedJs ?? ''}			if (panelAction && !panelEditing && document.getElementById('panel-code') && actionShown(panelAction)) { renderRightCode(panelAction, panelNav.actions, panelNav.title); }
 			refreshActionList();
 		}
-		var inputsBox = document.getElementById('scaffold-inputs');
-		if (inputsBox) { inputsBox.addEventListener('input', onInputsChanged); }   // fires for text inputs and selects
+		// One box of inputs, or one for each step that has some; fires for text inputs and selects
+		document.querySelectorAll('.scaffold-inputs').forEach(function(box) { box.addEventListener('input', onInputsChanged); });
 		document.querySelectorAll('.scaffold-subtabs').forEach(function(strip) {
 			strip.addEventListener('click', function(e) {
 				var btn = e.target.closest('.subtab-btn');
@@ -1440,8 +1445,9 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 			Array.prototype.forEach.call(select.options, function(o) {
 				if (o.hidden) { return; }
 				var item = document.createElement('div');
-				item.className = 'dropdown-item' + (o.selected ? ' selected' : '');
+				item.className = 'dropdown-item' + (o.selected ? ' selected' : '') + (o.disabled ? ' disabled' : '');
 				item.setAttribute('role', 'option');
+				if (o.disabled) { item.setAttribute('aria-disabled', 'true'); }
 				item.dataset.value = o.value;
 				item.textContent = o.textContent;
 				dropdown.appendChild(item);
@@ -1491,7 +1497,7 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 					if (e.key === 'Enter' || e.key === ' ' || (e.altKey && e.key === 'ArrowDown')) { e.preventDefault(); openDropdown(select); }
 					return;
 				}
-				var items = Array.prototype.slice.call(dropdown.querySelectorAll('.dropdown-item'));
+				var items = Array.prototype.slice.call(dropdown.querySelectorAll('.dropdown-item:not(.disabled)'));
 				var i = items.indexOf(dropdown.querySelector('.focused'));
 				if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
 					e.preventDefault();
@@ -1509,11 +1515,11 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 		// Choose on mousedown, before the select loses focus and closes the list
 		dropdown.addEventListener('mousedown', function(e) {
 			e.preventDefault();
-			var item = e.target.closest('.dropdown-item');
+			var item = e.target.closest('.dropdown-item:not(.disabled)');
 			if (item) { chooseDropdownItem(item); }
 		});
 		dropdown.addEventListener('mousemove', function(e) {
-			var item = e.target.closest('.dropdown-item');
+			var item = e.target.closest('.dropdown-item:not(.disabled)');
 			if (item && !item.classList.contains('focused')) { highlightDropdownItem(item); }
 		});
 		window.addEventListener('resize', function() { closeDropdown(false); });
@@ -1662,7 +1668,7 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 				} else {
 					// The Code Example of the tab goes with it, since the step uses its results: the host
 					// puts it first unless the Julia REPL session has run it as it is now ('exampleFirst').
-					vscode.postMessage({ command: 'runCode', target: act, code: code, setup: extractCode() });
+					vscode.postMessage({ command: 'runCode', target: act, code: code, ${parts.stepSetupJs ?? 'setup: extractCode()'} });
 				}
 			});
 		}

@@ -227,7 +227,7 @@ export async function sendToJuliaRepl(code: string, commandService: ICommandServ
 }
 
 /** The Code Examples the Julia REPL has run, in its current session (`language-julia.replSession`, new at each restart). */
-let replExamples = { session: 0, codes: new Set<string>() };
+let replExamples = { session: 0, codes: new Set<string>(), steps: new Map<string, readonly string[]>() };
 
 /**
  * The code to send for a `runCode` message. A Next Step sends the Code Example of its tab as `setup`,
@@ -245,8 +245,7 @@ export async function withExampleFirst(msg: { code: string; setup?: string; targ
 	}
 	// Started now, so that the session is the one the code goes to (a restart is a new session).
 	if (!await commandService.executeCommand<boolean>('language-julia.startREPL')) { return msg.code; }
-	const session = await commandService.executeCommand<number>('language-julia.replSession') ?? 0;
-	if (replExamples.session !== session) { replExamples = { session, codes: new Set() }; }
+	await followReplSession(commandService);
 	if (!msg.setup) {
 		replExamples.codes.add(msg.code);
 		return msg.code;
@@ -255,6 +254,56 @@ export async function withExampleFirst(msg: { code: string; setup?: string; targ
 	replExamples.codes.add(msg.setup);
 	webview.postMessage({ command: 'exampleFirst', target: msg.target });
 	return `Pollis.run_first(${juliaRawString(msg.setup)}, ${juliaRawString(msg.code)})`;
+}
+
+/** Forget what the Julia REPL has run when it is another session. */
+async function followReplSession(commandService: ICommandService): Promise<void> {
+	const session = await commandService.executeCommand<number>('language-julia.replSession') ?? 0;
+	if (replExamples.session !== session) { replExamples = { session, codes: new Set(), steps: new Map() }; }
+}
+
+/** A `runCode` message of a Time Arrow panel with code in its steps. */
+export interface IStepsRunMessage {
+	readonly code: string;
+	readonly target: string;
+	/** The code of each step before this one, and of an action's own step, with the number of the step. */
+	readonly before: readonly { readonly step: number; readonly code: string }[];
+	/** Whether `code` is a step's own code, which the later steps need, rather than an action or a Next Step. */
+	readonly stepCode?: boolean;
+	/** What Julia calls `code`: `Step 6`, an action's label, `this Next Step`. */
+	readonly name: string;
+	/** The box it was sent from, to say under it which steps go first. */
+	readonly box: string;
+}
+
+/**
+ * The code to send for a step of a Time Arrow panel, which uses the results of the steps before it: a new file,
+ * notebook or Pluto notebook gets all of them, then the code. The Julia REPL gets only those from the first step it
+ * has not run as it is now, so that a later input, as a threshold, does not run a slow earlier step again. A step run
+ * by itself leaves the steps after it to be run again.
+ */
+export async function withStepsFirst(msg: IStepsRunMessage, panelId: string, webview: { postMessage(message: unknown): void }, commandService: ICommandService): Promise<string> {
+	const repl = msg.target === 'juliaRepl';
+	let first = 0;
+	if (repl) {
+		if (!await commandService.executeCommand<boolean>('language-julia.startREPL')) { return msg.code; }
+		await followReplSession(commandService);
+		const ran = replExamples.steps.get(panelId) ?? [];
+		const changed = msg.before.findIndex((before, index) => ran[index] !== before.code);
+		first = changed < 0 ? msg.before.length : changed;
+		if (first < msg.before.length || msg.stepCode) {
+			replExamples.steps.set(panelId, [...msg.before.map(before => before.code), ...(msg.stepCode ? [msg.code] : [])]);
+		}
+	}
+	const steps = msg.before.slice(first);
+	if (!steps.length) { return msg.code; }
+	const from = steps[0].step;
+	const to = steps[steps.length - 1].step;
+	webview.postMessage({ command: 'stepsFirst', target: msg.target, box: msg.box, from, to });
+	const setup = steps.map(before => before.code).join('\n\n');
+	if (!repl) { return `${setup}\n\n${msg.code}`; }
+	const name = from === to ? `Step ${from}` : `Steps ${from} to ${to}`;
+	return `Pollis.run_first(${juliaRawString(setup)}, ${juliaRawString(msg.code)}; first = ${juliaRawString(name)}, then = ${juliaRawString(msg.name)})`;
 }
 
 /** `text` as a Julia `raw"..."` literal: each quote escaped, and the backslashes before it or at the end doubled. */

@@ -28,7 +28,6 @@ import { panelFaqItems, panelKeyPoints, parseToml, TomlValue, tomlToPanelData } 
 import { IApiKeyField, IApiKeyProvider } from '../../model/browser/handlers/model.handler.js';
 import { buildScaffoldHtml } from '../../model/browser/webviews/scaffoldParts.js';
 import { IAskPollisEvalItem } from '../common/askPollis.js';
-import { isTimeArrowPanel, onTimeArrowMessage, timeArrowPanelHtml } from './toolboxTimeArrow.js';
 import { IToolboxDocumentInfo, IToolboxInfo, IToolboxTextInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
 
 /** A panel of a toolbox contributed by an extension. */
@@ -513,8 +512,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					try {
 						const parsed = parseToml((await this.fileService.readFile(toml)).value.toString());
 						const data = tomlToPanelData(parsed);
-						const timeArrow = isTimeArrowPanel(parsed);
-						if (!timeArrow && !contribution.defaultModel) {
+						if (data.style !== 'timeArrow' && !contribution.defaultModel) {
 							extension.collector.error(localize('pollisToolboxes.noDefaultModel', "Panel {0} needs defaultModel, the model toggle shown first, unless its TOML says style = \"timeArrow\" in its [meta].", contribution.id));
 						}
 						const tabs = (contribution.tabs ?? []).filter(tab => {
@@ -538,10 +536,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 								title: contribution.title,
 								data,
 								apiKey: apiKey.provider,
-								html: timeArrow
-									? () => timeArrowPanelHtml(contribution.title, parsed, data.packages.length > 0)
-									: () => buildScaffoldHtml(contribution.id, data, { title: contribution.title, defaultModel: contribution.defaultModel ?? '', decisionFirstColumn: contribution.decisionFirstColumn }),
-								onMessage: timeArrow ? onTimeArrowMessage : undefined,
+								html: () => buildScaffoldHtml(contribution.id, data, { title: contribution.title, defaultModel: contribution.defaultModel ?? '', decisionFirstColumn: contribution.decisionFirstColumn }),
 							},
 						});
 					} catch (error) {

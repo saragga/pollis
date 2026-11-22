@@ -28,9 +28,10 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createSqlStepsWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, IApiKeyProvider, sendToJuliaRepl, withExampleFirst } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createSqlStepsWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, IApiKeyProvider, sendToJuliaRepl, withExampleFirst, withStepsFirst, IStepsRunMessage } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 import { ADD_ALERT_COMMAND_ID } from '../../../monitor/browser/alertsPage.js';
+import { FORECASTING_CATALOGUE_COMMAND_ID } from '../../../compose/browser/forecastingActive.js';
 import { localize } from '../../../../../nls.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
 import { handlePanelAskMessage, PanelAskMessage } from '../../../compose/browser/askPollisAttach.js';
@@ -54,7 +55,8 @@ type ScaffoldWebviewMessage =
 	| { command: 'openNotebook'; target: string }
 	| { command: 'openWiki'; target: string }
 	| { command: 'openUrl'; url: string }
-	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto' | 'duckdbRepl'; code: string; setup?: string; language?: 'sql' }
+	| { command: 'openDataset'; id: string }
+	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto' | 'duckdbRepl'; code: string; setup?: string; language?: 'sql'; before?: IStepsRunMessage['before']; stepCode?: boolean; name?: string; box?: string }
 	| { command: 'colorize'; code: string; target?: string; language?: 'sql' }
 	| { command: 'installPackages' }
 	| { command: 'addAlert'; symbol: string; kind: 'quote' | 'filings' | 'fred' | 'ecb' | 'imf' | 'worldBank' }
@@ -144,7 +146,7 @@ export function registerScaffoldWebviewHandlers(
 	createVideoWiring(webviewInput.webview, disposables, panelId, data.packages, fileService, pathService, commandService, notificationService);
 	// The folder inputs' defaults in the open Pollis Workspace, as programs/executables; without one, the TOML's default
 	const postFolderDefaults = async (): Promise<void> => {
-		const folderInputs = (data.inputs ?? []).filter(input => input.folder);
+		const folderInputs = [...data.inputs ?? [], ...(data.steps ?? []).flatMap(step => step.inputs)].filter(input => input.folder);
 		const workspace = folderInputs.length ? await findPollisWorkspace(workspaceContextService, fileService, configurationService) : undefined;
 		if (!workspace) {
 			return;
@@ -175,6 +177,12 @@ export function registerScaffoldWebviewHandlers(
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: ScaffoldWebviewMessage }) => {
 		const msg = e.message;
 		switch (msg.command) {
+			case 'openDataset':
+				// A step's dataset, in Manage Challenge Datasets; the id comes from a page, so only a string is passed on
+				if (typeof msg.id === 'string') {
+					void commandService.executeCommand(FORECASTING_CATALOGUE_COMMAND_ID, msg.id);
+				}
+				break;
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, data.notebooks, openerService, editorService, notebookKernelService, notebookEditorModelResolverService);
 				break;
@@ -186,7 +194,11 @@ export function registerScaffoldWebviewHandlers(
 				if (msg.language === 'sql') {
 					break;
 				}
-				const code = pkgStatus.withPackageCheck(await withExampleFirst(msg, webviewInput.webview, commandService), msg.target);
+				// A step of a Time Arrow panel goes after the steps before it; a Next Step of a Classical one after its Code Example
+				const ordered = msg.before
+					? await withStepsFirst({ code: msg.code, target: msg.target, before: msg.before, stepCode: msg.stepCode, name: msg.name ?? '', box: msg.box ?? '' }, panelId, webviewInput.webview, commandService)
+					: await withExampleFirst(msg, webviewInput.webview, commandService);
+				const code = pkgStatus.withPackageCheck(ordered, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
