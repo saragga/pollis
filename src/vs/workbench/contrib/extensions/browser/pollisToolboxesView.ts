@@ -375,11 +375,7 @@ export class PollisToolboxesView extends ViewPane {
 				title: update
 					? localize('pollisToolboxes.updating', "Updating the {0}...", toolbox.name)
 					: localize('pollisToolboxes.installingNamed', "Installing the {0}...", toolbox.name),
-			}, async () => {
-				const vsix = joinPath(folder, toolbox.vsix);
-				await this.download(`${TOOLBOXES_URL}/${encodeURIComponent(toolbox.vsix)}`, vsix);
-				return this.extensionsWorkbenchService.install(vsix, { installGivenVersion: true });
-			});
+			}, async () => this.extensionsWorkbenchService.install(await this.downloadVsix(toolbox, folder), { installGivenVersion: true }));
 			this.promptRuntimeAction(toolbox, extension, update);
 			if (!update && !hasOnlyGames(extension)) {
 				// The toolbox is now at the end of Extend: on this page the user can choose its panels, and where they go
@@ -402,12 +398,38 @@ export class PollisToolboxesView extends ViewPane {
 		}
 	}
 
-	private async download(url: string, target: URI): Promise<void> {
+	/**
+	 * Downloads the toolbox's .vsix to the folder and returns where it is. Each publish replaces the files of the one
+	 * before, so a .vsix that is not found means the list is older than the last publish: the list is downloaded
+	 * again, and the .vsix it now names for the toolbox is downloaded instead.
+	 */
+	private async downloadVsix(toolbox: IToolboxIndexEntry, folder: URI): Promise<URI> {
+		const vsix = joinPath(folder, toolbox.vsix);
+		const status = await this.download(`${TOOLBOXES_URL}/${encodeURIComponent(toolbox.vsix)}`, vsix, true);
+		if (status !== 404) {
+			return vsix;
+		}
+		await this.toolboxIndexService.reload();
+		const current = this.toolboxIndexService.toolboxes?.find(entry => entry.id === toolbox.id) ?? toolbox;
+		const latest = joinPath(folder, current.vsix);
+		await this.download(`${TOOLBOXES_URL}/${encodeURIComponent(current.vsix)}`, latest);
+		return latest;
+	}
+
+	/**
+	 * Downloads the file at the url to the target. With `notFoundAllowed`, a file not found returns 404 instead of
+	 * failing; any other failure throws.
+	 */
+	private async download(url: string, target: URI, notFoundAllowed?: boolean): Promise<number | undefined> {
 		const context = await this.requestService.request({ type: 'GET', url, callSite: 'pollisToolboxesView.download' }, CancellationToken.None);
+		if (notFoundAllowed && context.res.statusCode === 404) {
+			return 404;
+		}
 		if (!isSuccess(context)) {
 			throw new Error(localize('pollisToolboxes.downloadFailed', "The download of {0} failed (server returned {1}).", url, context.res.statusCode ?? '?'));
 		}
 		await this.fileService.writeFile(target, context.stream);
+		return context.res.statusCode;
 	}
 
 	/** Asks to reload the window or restart the extensions when the installed toolbox needs it to load. */

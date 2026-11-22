@@ -118,16 +118,23 @@ class PollisToolboxIndexService extends Disposable implements IPollisToolboxInde
 		this.reload();
 	}
 
-	async reload(): Promise<void> {
-		if (this._loading) {
-			return;
-		}
+	/** The download under way, which a reload asked for meanwhile waits for. */
+	private pending: Promise<void> | undefined;
+
+	reload(): Promise<void> {
+		this.pending ??= this.load().finally(() => this.pending = undefined);
+		return this.pending;
+	}
+
+	private async load(): Promise<void> {
 		this._loading = true;
 		this._loadError = undefined;
 		this.lastCheck = Date.now();
 		this._onDidChange.fire();
 		try {
-			const context = await this.requestService.request({ type: 'GET', url: TOOLBOXES_INDEX_URL, callSite: 'pollisToolboxIndex.reload' }, CancellationToken.None);
+			// Not from the HTTP cache, which may keep a list for the five minutes GitHub allows, and so name a .vsix
+			// that the publish since has replaced
+			const context = await this.requestService.request({ type: 'GET', url: TOOLBOXES_INDEX_URL, headers: { 'Cache-Control': 'no-cache' }, callSite: 'pollisToolboxIndex.reload' }, CancellationToken.None);
 			if (!isSuccess(context)) {
 				throw new Error(`HTTP ${context.res.statusCode}`);
 			}
