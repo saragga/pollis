@@ -4488,6 +4488,7 @@
 			],
 			"notebooks": [],
 			"packages": [
+				"HistoricalGeography.jl",
 				"DuckDB.jl",
 				"Tables.jl"
 			]
