@@ -1121,7 +1121,6 @@
 	margin-top: 8px;
 	border-left: 3px solid var(--vscode-editorWarning-foreground);
 	background: var(--vscode-welcomePage-tileBackground);
-	border-radius: 4px;
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-icon {
