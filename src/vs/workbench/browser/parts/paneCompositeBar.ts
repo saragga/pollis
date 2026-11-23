@@ -16,6 +16,7 @@ import { createCSSRule } from '../../../base/browser/domStylesheets.js';
 import { asCSSUrl } from '../../../base/browser/cssValue.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../platform/storage/common/storage.js';
 import { IExtensionService } from '../../services/extensions/common/extensions.js';
+import { ExtensionIdentifier } from '../../../platform/extensions/common/extensions.js';
 import { URI, UriComponents } from '../../../base/common/uri.js';
 import { ToggleCompositePinnedAction, ICompositeBarColors, IActivityHoverOptions, ToggleCompositeBadgeAction, CompositeBarAction, ICompositeBar, ICompositeBarActionItem } from './compositeBarActions.js';
 import { IViewDescriptorService, ViewContainer, IViewContainerModel, ViewContainerLocation } from '../../common/views.js';
@@ -225,6 +226,9 @@ export class PaneCompositeBar extends Disposable {
 		this._register(this.paneCompositePart.onDidPaneCompositeOpen(e => this.onDidChangeViewContainerVisibility(e.getId(), true)));
 		this._register(this.paneCompositePart.onDidPaneCompositeClose(e => this.onDidChangeViewContainerVisibility(e.getId(), false)));
 
+		// POLLIS: an extension that has started may now show its views, or none
+		this._register(this.extensionService.onDidChangeExtensionsStatus(ids => this.onDidChangeExtensionsStatus(ids)));
+
 		// Extension registration
 		this.extensionService.whenInstalledExtensionsRegistered().then(() => {
 			if (this._store.isDisposed) {
@@ -264,6 +268,30 @@ export class PaneCompositeBar extends Disposable {
 		}
 	}
 
+	private onDidChangeExtensionsStatus(ids: readonly ExtensionIdentifier[]): void {
+		for (const viewContainer of this.viewDescriptorService.getViewContainersByLocation(this.location)) {
+			if (viewContainer.extensionId && ids.some(id => ExtensionIdentifier.equals(id, viewContainer.extensionId))) {
+				this.showOrHideViewContainer(viewContainer);
+			}
+		}
+	}
+
+	/**
+	 * POLLIS: whether a view container is an extension's, in the activity bar, with views but none of them shown
+	 * because the extension has not started: many extensions show their views only once started, with a `when` clause
+	 * they make true then, as LaTeX Workshop does. Its icon shows from the moment the extension is installed and
+	 * enabled, and opening it starts the extension; once started, the container shows or hides as its views say.
+	 */
+	private waitsForItsExtension(viewContainer: ViewContainer): boolean {
+		if (this.location !== ViewContainerLocation.Sidebar || !viewContainer.extensionId) {
+			return false;
+		}
+		if (!this.viewDescriptorService.getViewContainerModel(viewContainer).allViewDescriptors.length) {
+			return false;
+		}
+		return !this.extensionService.getExtensionsStatus()[viewContainer.extensionId.value]?.activationTimes;
+	}
+
 	private onDidRegisterExtensions(): void {
 		this.hasExtensionsRegistered = true;
 
@@ -291,6 +319,13 @@ export class PaneCompositeBar extends Disposable {
 			// Update the composite bar by adding
 			this.addComposite(viewContainer);
 			this.compositeBar.activateComposite(viewContainer.id);
+
+			// POLLIS: opening the icon of an extension that has not started starts it, as opening one of its views would
+			if (this.waitsForItsExtension(viewContainer) && !this.viewDescriptorService.getViewContainerModel(viewContainer).activeViewDescriptors.length) {
+				for (const view of this.viewDescriptorService.getViewContainerModel(viewContainer).allViewDescriptors) {
+					void this.extensionService.activateByEvent(`onView:${view.id}`);
+				}
+			}
 
 			if (this.shouldBeHidden(viewContainer)) {
 				const viewContainerModel = this.viewDescriptorService.getViewContainerModel(viewContainer);
@@ -355,6 +390,7 @@ export class PaneCompositeBar extends Disposable {
 			const disposables = new DisposableStore();
 			disposables.add(viewContainerModel.onDidChangeContainerInfo(() => this.updateCompositeBarActionItem(viewContainer, viewContainerModel)));
 			disposables.add(viewContainerModel.onDidChangeActiveViewDescriptors(() => this.showOrHideViewContainer(viewContainer)));
+			disposables.add(viewContainerModel.onDidChangeAllViewDescriptors(() => this.showOrHideViewContainer(viewContainer)));
 
 			this.viewContainerDisposables.set(viewContainer.id, disposables);
 		}
@@ -433,7 +469,7 @@ export class PaneCompositeBar extends Disposable {
 
 		if (viewContainer) {
 			if (viewContainer.hideIfEmpty) {
-				if (this.viewService.isViewContainerActive(viewContainerId)) {
+				if (this.viewService.isViewContainerActive(viewContainerId) || this.waitsForItsExtension(viewContainer)) {
 					return false;
 				}
 			} else {
