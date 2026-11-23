@@ -1918,6 +1918,19 @@ ${noExampleCode ? '' : `		document.getElementById('btn-copy').addEventListener('
 			var label = msg.label || '';
 			var noun = msg.noun || 'API key';
 			var keyIcon = '<svg class="apikey-icon" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M10 1a5 5 0 0 0-4.9 6.02L1 11.12V15h3.88l.62-.62v-1.5h1.5v-1.5h1.5l.48-.48A5 5 0 1 0 10 1zm1.75 4.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg>';
+			var sep = '<span class="apikey-sep">|</span>';
+			if (msg.fields && msg.fields.length > 1) {
+				// one status per key: each set, changed or cleared by itself
+				el.innerHTML = msg.fields.map(function(f, i) {
+					return f.hasKey
+						? '<span class="apikey-ok" title="' + f.label + ' saved in VS Code Secret Storage">' + keyIcon + f.label + '</span> '
+							+ '<a class="apikey-link" data-set="' + i + '">change</a>' + sep + '<a class="apikey-link" data-clear="' + i + '">clear</a>'
+						: '<a class="apikey-link" data-set="' + i + '" title="Store your ' + f.label + ' securely in VS Code Secret Storage">' + keyIcon + 'Set ' + f.label + '</a>';
+				}).join(sep);
+				el.querySelectorAll('[data-set]').forEach(function(a) { a.addEventListener('click', function() { vscode.postMessage({ command: 'setApiKey', field: Number(a.getAttribute('data-set')) }); }); });
+				el.querySelectorAll('[data-clear]').forEach(function(a) { a.addEventListener('click', function() { vscode.postMessage({ command: 'clearApiKey', field: Number(a.getAttribute('data-clear')) }); }); });
+				return;
+			}
 			if (msg.hasKey) {
 				el.innerHTML = '<span class="apikey-ok" title="' + label + ' ' + noun + ' saved in VS Code Secret Storage">' + keyIcon + noun + '</span>'
 					+ '<span class="apikey-sep">|</span>'

@@ -436,6 +436,8 @@ export interface IApiKeyField {
 	readonly envVar: string;
 	/** Input prompt for this field, e.g. `Alpha Vantage API key` or `Kaggle username`. */
 	readonly prompt: string;
+	/** Short name on the Powered-by line, e.g. `Google Maps key`, when a provider has several fields; the prompt otherwise. */
+	readonly label?: string;
 	/** Mask the input (default true); set false for non-secret fields like a username. */
 	readonly password?: boolean;
 }
@@ -452,12 +454,12 @@ export interface IApiKeyProvider {
 
 /** Reusable wiring for the Powered-by API-key indicator: stores credentials in VS Code Secret Storage. */
 export interface IApiKeyWiring {
-	/** Post whether all fields are saved to the webview; resolves true if so. */
+	/** Post whether each field is saved to the webview; resolves true if all are. */
 	postStatus(): Promise<boolean>;
-	/** Prompt for each field (masked) and store it securely, then re-post status. */
-	handleSet(): Promise<void>;
-	/** Delete every stored field, then re-post status. */
-	handleClear(): Promise<void>;
+	/** Prompt for each field (masked), or for the field at index `field` only, and store it securely, then re-post status. */
+	handleSet(field?: number): Promise<void>;
+	/** Delete every stored field, or the field at index `field` only, then re-post status. */
+	handleClear(field?: number): Promise<void>;
 	/** For an executing `juliaRepl` run, the `ENV[...] = "...";` lines to inject (empty if none/target). */
 	replPrefix(target: string | undefined): Promise<string>;
 }
@@ -479,10 +481,12 @@ export function createApiKeyWiring(
 	const postStatus = async (): Promise<boolean> => {
 		const values = await Promise.all(provider.fields.map(f => secretStorageService.get(f.secretKey)));
 		const hasKey = values.every(v => !!v);
-		webview.postMessage({ command: 'apiKeyStatus', hasKey, label: provider.label, noun });
+		const fields = provider.fields.map((f, index) => ({ label: f.label ?? f.prompt, hasKey: !!values[index] }));
+		webview.postMessage({ command: 'apiKeyStatus', hasKey, label: provider.label, noun, fields });
 		return hasKey;
 	};
-	const handleSet = async (): Promise<void> => {
+	const chosen = (field: number | undefined): IApiKeyField[] => field === undefined ? provider.fields : provider.fields.slice(field, field + 1);
+	const handleSet = async (fieldIndex?: number): Promise<void> => {
 		// `ignoreFocusLost` keeps the prompt open while the user fetches their key from a browser or
 		// another editor, but it must not linger when the user switches to another webview. Dismiss it
 		// when a different webview gains focus (our own webview reporting `isFocused` is the prompt
@@ -491,7 +495,7 @@ export function createApiKeyWiring(
 			if (active && !webview.isFocused) { quickInputService.cancel(); }
 		});
 		try {
-			for (const field of provider.fields) {
+			for (const field of chosen(fieldIndex)) {
 				const masked = field.password !== false;
 				// Non-secret fields (e.g. a username or contact string) pre-fill the current value so the
 				// user can edit it in place. Masked secrets are never echoed back.
@@ -514,8 +518,8 @@ export function createApiKeyWiring(
 		}
 		await postStatus();
 	};
-	const handleClear = async (): Promise<void> => {
-		for (const field of provider.fields) { await secretStorageService.delete(field.secretKey); }
+	const handleClear = async (field?: number): Promise<void> => {
+		for (const f of chosen(field)) { await secretStorageService.delete(f.secretKey); }
 		await postStatus();
 	};
 	const replPrefix = async (target: string | undefined): Promise<string> => {

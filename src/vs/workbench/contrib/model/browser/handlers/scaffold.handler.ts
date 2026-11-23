@@ -63,8 +63,8 @@ type ScaffoldWebviewMessage =
 	| { command: 'addAlert'; symbol: string; kind: 'quote' | 'filings' | 'fred' | 'ecb' | 'imf' | 'worldBank' }
 	| { command: 'chooseModelFile'; input: string; kind: 'chat' | 'embedding'; value: string }
 	| { command: 'chooseFolder'; input: string; value: string }
-	| { command: 'setApiKey' }
-	| { command: 'clearApiKey' }
+	| { command: 'setApiKey'; field?: number }
+	| { command: 'clearApiKey'; field?: number }
 	| PanelAskMessage
 	| { command: 'voiceLanguage'; value: string }
 	| { command: 'voiceWriteIn'; value: string }
@@ -283,10 +283,10 @@ export function registerScaffoldWebviewHandlers(
 				break;
 			}
 			case 'setApiKey':
-				await apiKey?.handleSet();
+				await apiKey?.handleSet(typeof msg.field === 'number' ? msg.field : undefined);
 				break;
 			case 'clearApiKey':
-				await apiKey?.handleClear();
+				await apiKey?.handleClear(typeof msg.field === 'number' ? msg.field : undefined);
 				break;
 			case 'askPollis':
 			case 'askPollisModel':

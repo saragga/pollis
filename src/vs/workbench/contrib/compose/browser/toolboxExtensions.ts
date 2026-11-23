@@ -18,10 +18,12 @@ import { ExtensionIdentifier } from '../../../../platform/extensions/common/exte
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { ILogService } from '../../../../platform/log/common/log.js';
+import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
 import { ExtensionsRegistry, IExtensionPointUser } from '../../../services/extensions/common/extensionsRegistry.js';
 import { IModelNotebook, IModelPaper, IModelWiki } from '../../model/browser/common/model.types.js';
+import { POLLIS_CREDENTIAL_FIELDS } from '../../model/browser/common/credentials.js';
 import { IScaffoldPanel, openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { registerExternalFolder } from '../../model/browser/common/customCopyFileSystem.js';
 import { panelFaqItems, panelKeyPoints, parseToml, TomlValue, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
@@ -431,6 +433,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 		@IFileService private readonly fileService: IFileService,
 		@ILogService private readonly logService: ILogService,
 		@IStorageService private readonly storageService: IStorageService,
+		@ISecretStorageService private readonly secretStorageService: ISecretStorageService,
 	) {
 		super();
 		// The toolboxes are read a moment after the menu bar is built: show the menus as they were, so the menu bar does not move
@@ -496,6 +499,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 	private async load(extensions: readonly IExtensionPointUser<IToolboxContribution[]>[]): Promise<void> {
 		const generation = ++this.generation;
 		const loaded: ILoadedToolbox[] = [];
+		const moves: IKeyMove[] = [];
 		for (const extension of extensions) {
 			const location = extension.description.extensionLocation;
 			for (const toolbox of extension.value) {
@@ -523,6 +527,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 							return known;
 						});
 						const apiKey = panelApiKey(parsed, toolbox.id);
+						moves.push(...apiKey.moves);
 						for (const problem of apiKey.problems) {
 							extension.collector.error(localize('pollisToolboxes.apiKey', "The [apiKey] of panel {0}: {1}", contribution.id, problem));
 						}
@@ -604,6 +609,28 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 		this.loaded = loaded;
 		this.loadedBarrier.open();
 		this.register();
+		void this.moveKeys(moves);
+	}
+
+	/**
+	 * Moves the keys that earlier versions kept under one toolbox to the user's keys, which every panel and toolbox
+	 * share. A key the user already has is kept; the toolbox's copy goes in both cases.
+	 */
+	private async moveKeys(moves: readonly IKeyMove[]): Promise<void> {
+		for (const { from, to } of moves) {
+			try {
+				const old = await this.secretStorageService.get(from);
+				if (old === undefined) {
+					continue;
+				}
+				if (!await this.secretStorageService.get(to)) {
+					await this.secretStorageService.set(to, old);
+				}
+				await this.secretStorageService.delete(from);
+			} catch (error) {
+				this.logService.error(`Pollis toolboxes: cannot move the key ${from}`, error);
+			}
+		}
 	}
 
 	/**
@@ -736,16 +763,32 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 	}
 }
 
+/** A key that an earlier version kept under one toolbox (`from`), and the user's key it becomes (`to`). */
+interface IKeyMove {
+	readonly from: string;
+	readonly to: string;
+}
+
+/**
+ * Where the user's key for an environment variable is kept in Secret Storage: under the name Pollis's own panels
+ * use for it, or `pollis.apiKey.<envVar>`. Keys are the user's, not a panel's or a toolbox's, so every panel and
+ * toolbox that names the variable finds the same key.
+ */
+function userSecretKey(envVar: string): string {
+	return POLLIS_CREDENTIAL_FIELDS.find(field => field.envVar === envVar)?.secretKey ?? `pollis.apiKey.${envVar}`;
+}
+
 /**
  * The credentials a toolbox panel's code needs, from the `[apiKey]` table of its TOML (`label`, optional `noun`)
- * and its `[[apiKey.fields]]` (`name`, `envVar`, `prompt`, optional `password`). Each field is kept in Secret
- * Storage under `pollis.toolbox.<toolbox id>.<name>`, so the panels of one toolbox share it and a toolbox
- * cannot name the secrets of Pollis or of another toolbox.
+ * and its `[[apiKey.fields]]` (`name`, `envVar`, `prompt`, optional `label` and `password`). Each field is the
+ * user's key for its environment variable (`userSecretKey`), shared with every panel and toolbox that names it;
+ * `moves` takes the copies earlier versions kept under `pollis.toolbox.<toolbox id>.<name>` there.
  */
-function panelApiKey(parsed: TomlValue, toolboxId: string): { readonly provider?: IApiKeyProvider; readonly problems: string[] } {
+function panelApiKey(parsed: TomlValue, toolboxId: string): { readonly provider?: IApiKeyProvider; readonly problems: string[]; readonly moves: IKeyMove[] } {
+	const moves: IKeyMove[] = [];
 	const table = parsed.apiKey;
 	if (table === undefined) {
-		return { problems: [] };
+		return { problems: [], moves };
 	}
 	const problems: string[] = [];
 	const apiKey = (typeof table === 'object' && table !== null && !Array.isArray(table) ? table : {}) as TomlValue;
@@ -767,14 +810,17 @@ function panelApiKey(parsed: TomlValue, toolboxId: string): { readonly provider?
 			problems.push(localize('pollisToolboxes.apiKey.prompt', "the field {0} has no prompt.", name));
 		} else {
 			names.add(name);
-			fields.push({ secretKey: `pollis.toolbox.${toolboxId}.${name}`, envVar, prompt, password: field.password !== false });
+			const secretKey = userSecretKey(envVar);
+			const fieldLabel = typeof field.label === 'string' && field.label.trim() ? field.label.trim() : undefined;
+			fields.push({ secretKey, envVar, prompt, label: fieldLabel, password: field.password !== false });
+			moves.push({ from: `pollis.toolbox.${toolboxId}.${name}`, to: secretKey });
 		}
 	}
 	if (!fields.length) {
 		problems.push(localize('pollisToolboxes.apiKey.fields', "it has no [[apiKey.fields]] with a name, envVar and prompt."));
 	}
 	const noun = typeof apiKey.noun === 'string' && apiKey.noun.trim() ? apiKey.noun.trim() : undefined;
-	return { provider: label && fields.length && !problems.length ? { label, noun, fields } : undefined, problems };
+	return { provider: label && fields.length && !problems.length ? { label, noun, fields } : undefined, problems, moves };
 }
 
 function publishedKey(loaded: ILoadedToolbox): string {
