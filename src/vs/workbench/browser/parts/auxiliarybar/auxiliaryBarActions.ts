@@ -20,6 +20,7 @@ import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
 import { SwitchCompositeViewAction } from '../compositeBarActions.js';
 
 const maximizeIcon = registerIcon('auxiliarybar-maximize', Codicon.screenFull, localize('maximizeIcon', 'Icon to maximize the secondary side bar.'));
+const restoreIcon = registerIcon('auxiliarybar-restore', Codicon.screenNormal, localize('restoreIcon', 'Icon to restore the size of a maximized secondary side bar.'));
 const closeIcon = registerIcon('auxiliarybar-close', Codicon.close, localize('closeIcon', 'Icon to close the secondary side bar.'));
 
 const auxiliaryBarRightIcon = registerIcon('auxiliarybar-right-layout-icon', Codicon.layoutSidebarRight, localize('toggleAuxiliaryIconRight', 'Icon to toggle the secondary side bar off in its right position.'));
@@ -274,19 +275,9 @@ class ToggleMaximizedAuxiliaryBar extends Action2 {
 		super({
 			id: ToggleMaximizedAuxiliaryBar.ID,
 			title: localize2('toggleMaximizedAuxiliaryBar', 'Toggle Maximized Secondary Side Bar'),
-			tooltip: localize('maximizeAuxiliaryBarTooltip2', "Maximize Secondary Side Bar"),
 			f1: true,
 			category: Categories.View,
-			icon: maximizeIcon,
-			toggled: {
-				condition: AuxiliaryBarMaximizedContext,
-				tooltip: localize('restoreAuxiliaryBar', 'Restore Secondary Side Bar'),
-			},
-			menu: {
-				id: MenuId.AuxiliaryBarTitle,
-				group: 'navigation',
-				order: 1,
-			}
+			icon: maximizeIcon
 		});
 	}
 
@@ -297,3 +288,33 @@ class ToggleMaximizedAuxiliaryBar extends Action2 {
 	}
 }
 registerAction2(ToggleMaximizedAuxiliaryBar);
+
+// The button in the title of the secondary side bar: Maximize, or Restore Size with its own icon when it is maximized
+MenuRegistry.appendMenuItems([
+	{
+		id: MenuId.AuxiliaryBarTitle,
+		item: {
+			command: {
+				id: ToggleMaximizedAuxiliaryBar.ID,
+				title: localize('maximizeAuxiliaryBarTooltip2', "Maximize Secondary Side Bar"),
+				icon: maximizeIcon
+			},
+			group: 'navigation',
+			order: 1,
+			when: AuxiliaryBarMaximizedContext.negate()
+		}
+	},
+	{
+		id: MenuId.AuxiliaryBarTitle,
+		item: {
+			command: {
+				id: ToggleMaximizedAuxiliaryBar.ID,
+				title: localize('restoreAuxiliaryBarSize', "Restore Size"),
+				icon: restoreIcon
+			},
+			group: 'navigation',
+			order: 1,
+			when: AuxiliaryBarMaximizedContext
+		}
+	}
+]);

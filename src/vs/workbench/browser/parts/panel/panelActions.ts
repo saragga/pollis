@@ -23,6 +23,7 @@ import { KeybindingWeight } from '../../../../platform/keybinding/common/keybind
 import { SwitchCompositeViewAction } from '../compositeBarActions.js';
 
 const maximizeIcon = registerIcon('panel-maximize', Codicon.screenFull, localize('maximizeIcon', 'Icon to maximize a panel.'));
+const restoreIcon = registerIcon('panel-restore', Codicon.screenNormal, localize('restoreIcon', 'Icon to restore the size of a maximized panel.'));
 const closeIcon = registerIcon('panel-close', Codicon.close, localize('closeIcon', 'Icon to close a panel.'));
 const panelIcon = registerIcon('panel-layout-icon', Codicon.layoutPanel, localize('togglePanelOffIcon', 'Icon to toggle the panel off when it is on.'));
 const panelOffIcon = registerIcon('panel-layout-icon-off', Codicon.layoutPanelOff, localize('togglePanelOnIcon', 'Icon to toggle the panel on when it is off.'));
@@ -279,21 +280,10 @@ registerAction2(class extends Action2 {
 		super({
 			id: 'workbench.action.toggleMaximizedPanel',
 			title: localize2('toggleMaximizedPanel', 'Toggle Maximized Panel'),
-			tooltip: localize('maximizePanel', "Maximize Panel"),
 			category: Categories.View,
 			f1: true,
 			icon: maximizeIcon,
-			precondition: panelMaximizationSupportedWhen,
-			toggled: {
-				condition: PanelMaximizedContext,
-				tooltip: localize('minimizePanel', "Restore Panel")
-			},
-			menu: [{
-				id: MenuId.PanelTitle,
-				group: 'navigation',
-				order: 1,
-				when: panelMaximizationSupportedWhen
-			}]
+			precondition: panelMaximizationSupportedWhen
 		});
 	}
 	run(accessor: ServicesAccessor) {
@@ -316,6 +306,36 @@ registerAction2(class extends Action2 {
 		}
 	}
 });
+
+// The button in the panel's title: Maximize Panel, or Restore Size with its own icon when the panel is maximized
+MenuRegistry.appendMenuItems([
+	{
+		id: MenuId.PanelTitle,
+		item: {
+			command: {
+				id: 'workbench.action.toggleMaximizedPanel',
+				title: localize('maximizePanel', "Maximize Panel"),
+				icon: maximizeIcon
+			},
+			group: 'navigation',
+			order: 1,
+			when: ContextKeyExpr.and(panelMaximizationSupportedWhen, PanelMaximizedContext.negate())
+		}
+	},
+	{
+		id: MenuId.PanelTitle,
+		item: {
+			command: {
+				id: 'workbench.action.toggleMaximizedPanel',
+				title: localize('restorePanelSize', "Restore Size"),
+				icon: restoreIcon
+			},
+			group: 'navigation',
+			order: 1,
+			when: ContextKeyExpr.and(panelMaximizationSupportedWhen, PanelMaximizedContext)
+		}
+	}
+]);
 
 MenuRegistry.appendMenuItems([
 	{

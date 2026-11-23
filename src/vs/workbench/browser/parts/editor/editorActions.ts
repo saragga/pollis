@@ -1177,11 +1177,9 @@ export class ToggleMaximizeEditorGroupAction extends Action2 {
 				group: 'navigation',
 				when: EditorPartMaximizedEditorGroupContext
 			}],
-			icon: Codicon.screenFull,
-			toggled: {
-				condition: EditorPartMaximizedEditorGroupContext,
-				title: localize('unmaximizeGroup', "Unmaximize Group")
-			},
+			// The button shows only while a group is maximized, so it is always Restore Size
+			icon: Codicon.screenNormal,
+			tooltip: localize('restoreGroupSize', "Restore Size")
 		});
 	}
 

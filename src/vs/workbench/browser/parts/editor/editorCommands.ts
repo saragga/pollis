@@ -13,7 +13,7 @@ import { Codicon } from '../../../../base/common/codicons.js';
 import { EditorContextKeys } from '../../../../editor/common/editorContextKeys.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
-import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
+import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry, ICommandHandler, ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
@@ -1508,14 +1508,11 @@ function registerModalEditorCommands(): void {
 				f1: true,
 				precondition: EditorPartModalContext,
 				icon: Codicon.screenFull,
-				toggled: {
-					condition: EditorPartModalMaximizedContext,
-					title: localize('restoreModalEditorSize', "Restore Modal Editor")
-				},
 				menu: {
 					id: MenuId.ModalEditorTitle,
 					group: 'navigation',
-					order: 1
+					order: 1,
+					when: EditorPartModalMaximizedContext.negate()
 				}
 			});
 		}
@@ -1529,6 +1526,18 @@ function registerModalEditorCommands(): void {
 				}
 			}
 		}
+	});
+
+	// When the modal editor is maximized, its button is Restore Size with its own icon
+	MenuRegistry.appendMenuItem(MenuId.ModalEditorTitle, {
+		command: {
+			id: TOGGLE_MODAL_EDITOR_MAXIMIZED_COMMAND_ID,
+			title: localize('restoreModalEditorSize', "Restore Size"),
+			icon: Codicon.screenNormal
+		},
+		group: 'navigation',
+		order: 1,
+		when: EditorPartModalMaximizedContext
 	});
 
 	registerAction2(class extends Action2 {
