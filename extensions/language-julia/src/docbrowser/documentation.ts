@@ -26,14 +26,19 @@ async function docOfName(name: string): Promise<string | undefined> {
 
 /** How long a hover waits for the REPL, which cannot answer while it computes. */
 const HOVER_WAIT_MS = 2000
+/** The packages built into Pollis (PollisDB.PACKAGES), which the REPL loads for the first lookup of one of their names. */
+const BUILT_IN_PACKAGES = new Set(['DuckDB', 'DBInterface', 'Tables'])
+/** How long a hover of a name of a package built into Pollis waits: the first one waits for the REPL to load it. */
+const BUILT_IN_WAIT_MS = 30000
 
 /** Whether a lookup of a hover waits in the REPL: another would queue behind it. */
 let hoverLookupWaits = false
 
 /**
  * The documentation for a hover at `offset` of `code`, which runs after `earlier`, in the editor and in the code boxes
- * of the panels, from the REPL already running: a hover neither starts one nor loads a package. It gives up after
- * `HOVER_WAIT_MS`, and until the REPL has answered the hovers after it show nothing.
+ * of the panels, from the REPL already running: a hover neither starts one nor loads a package, except one built into
+ * Pollis. It gives up after `HOVER_WAIT_MS`, or `BUILT_IN_WAIT_MS` for a name of a package built into Pollis, and
+ * until the REPL has answered the hovers after it show nothing.
  */
 async function hoverDoc(
     code: string,
@@ -63,7 +68,10 @@ async function hoverDoc(
     const answer = await Promise.race([
         lookup,
         new Promise<undefined>((resolve) => {
-            timer = setTimeout(() => resolve(undefined), HOVER_WAIT_MS)
+            timer = setTimeout(
+                () => resolve(undefined),
+                BUILT_IN_PACKAGES.has(hovered.name.split('.')[0]) ? BUILT_IN_WAIT_MS : HOVER_WAIT_MS
+            )
         }),
     ])
     clearTimeout(timer)
