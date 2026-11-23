@@ -4494,6 +4494,42 @@
 			]
 		},
 		{
+			"id": "histpop",
+			"title": "Historical Populations",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.histpop",
+					"menuTitles": [
+						"Historical Populations"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "buringh",
+			"decisionFirstColumn": "Source",
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/histpop.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [
+				"histpop/authentication.md",
+				"histpop/decision-guide.md",
+				"histpop/diagnostics.md",
+				"histpop/european-cities.md",
+				"histpop/factsheet.md",
+				"histpop/hyde.md",
+				"histpop/overview.md",
+				"histpop/world-cities.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl",
+				"DuckDB.jl",
+				"Tables.jl",
+				"ArchGDAL.jl"
+			]
+		},
+		{
 			"id": "hmd",
 			"title": "Handle Missing Data",
 			"source": "pollis",
