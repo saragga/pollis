@@ -21,6 +21,8 @@ import { Registry } from '../../../../platform/registry/common/platform.js';
 import { Extensions as WorkbenchExtensions, IWorkbenchContributionsRegistry } from '../../../common/contributions.js';
 import { LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { IExtensionService } from '../../../services/extensions/common/extensions.js';
+import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
 
 const builtInSource = localize('Built-In', "Built-In");
 const category: ILocalizedString = localize2('Create', 'Create');
@@ -63,6 +65,7 @@ class NewFileTemplatesManager extends Disposable {
 		@ICommandService private readonly commandService: ICommandService,
 		@IKeybindingService private readonly keybindingService: IKeybindingService,
 		@IMenuService menuService: IMenuService,
+		@IExtensionService private readonly extensionService: IExtensionService,
 	) {
 		super();
 
@@ -78,7 +81,10 @@ class NewFileTemplatesManager extends Disposable {
 		for (const [groupName, group] of this.menu.getActions({ renderShortTitle: true })) {
 			for (const action of group) {
 				if (action instanceof MenuItemAction) {
-					items.push({ commandID: action.item.id, from: action.item.source?.title ?? builtInSource, title: action.label, group: groupName });
+					// POLLIS: an item of an extension that ships with Pollis, such as Jupyter Notebook, counts as Pollis' own
+					const source = action.item.source;
+					const builtIn = !source || this.extensionService.extensions.some(extension => extension.isBuiltin && ExtensionIdentifier.equals(extension.identifier, source.id));
+					items.push({ commandID: action.item.id, from: builtIn ? builtInSource : source.title, title: action.label, group: groupName });
 				}
 			}
 		}
