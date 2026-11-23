@@ -9,6 +9,7 @@
 		"activityBarBadge.background": "#F2B446",
 		"activityBarBadge.foreground": "#1C3A5E",
 		"activityBar.activeBorder": "#D9902A",
+		"activityBar.activeFocusBorder": "#D9902A",
 		"activityBarTop.activeBorder": "#D9902A",
 		"tab.activeBorderTop": "#D9902A",
 		"panelTitle.activeBorder": "#D9902A"
