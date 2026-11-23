@@ -277,13 +277,19 @@ export class PaneCompositeBar extends Disposable {
 	}
 
 	/**
-	 * POLLIS: whether a view container is an extension's, in the activity bar, with views but none of them shown
-	 * because the extension has not started: many extensions show their views only once started, with a `when` clause
-	 * they make true then, as LaTeX Workshop does. Its icon shows from the moment the extension is installed and
-	 * enabled, and opening it starts the extension; once started, the container shows or hides as its views say.
+	 * POLLIS: whether a view container is the user's installed extension's, in the activity bar, with views but none
+	 * of them shown because the extension has not started: many extensions show their views only once started, with a
+	 * `when` clause they make true then, as LaTeX Workshop does. Its icon shows from the moment the extension is
+	 * installed and enabled, and opening it starts the extension; once started, the container shows or hides as its
+	 * views say. Built-in extensions, such as Reference Search View, whose References show only with a search's
+	 * results, keep their containers as they are.
 	 */
 	private waitsForItsExtension(viewContainer: ViewContainer): boolean {
-		if (this.location !== ViewContainerLocation.Sidebar || !viewContainer.extensionId) {
+		const extensionId = viewContainer.extensionId;
+		if (this.location !== ViewContainerLocation.Sidebar || !extensionId) {
+			return false;
+		}
+		if (this.extensionService.extensions.find(extension => ExtensionIdentifier.equals(extension.identifier, extensionId))?.isBuiltin !== false) {
 			return false;
 		}
 		if (!this.viewDescriptorService.getViewContainerModel(viewContainer).allViewDescriptors.length) {
