@@ -1038,10 +1038,10 @@
 		{
 			"id": "candidates",
 			"title": "Candidate Features",
-			"source": "toolbox:pollis-toolbox-geoprocessing",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
 			"commands": [
 				{
-					"id": "pollis.geoprocessing.candidates",
+					"id": "pollis.historicalGeography.candidates",
 					"menuTitles": [
 						"Candidate Features"
 					]
@@ -1050,9 +1050,9 @@
 			"portable": true,
 			"defaultModel": "mounds",
 			"decisionFirstColumn": "Method",
-			"toml": "toolboxes/pollis-toolbox-geoprocessing/panels/candidates.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-geoprocessing/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-geoprocessing/notebooks",
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/candidates.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
 			"wikis": [
 				"candidates/decision-guide.md",
 				"candidates/depressions.md",
@@ -5189,19 +5189,19 @@
 		{
 			"id": "learnedlidar",
 			"title": "Learned Detection in Lidar",
-			"source": "toolbox:pollis-toolbox-geoprocessing",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
 			"commands": [
 				{
-					"id": "pollis.geoprocessing.learnedlidar",
+					"id": "pollis.historicalGeography.learnedlidar",
 					"menuTitles": [
 						"Learned Detection in Lidar"
 					]
 				}
 			],
 			"portable": true,
-			"toml": "toolboxes/pollis-toolbox-geoprocessing/panels/learnedlidar.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-geoprocessing/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-geoprocessing/notebooks",
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/learnedlidar.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
 			"wikis": [
 				"learnedlidar/adaf.md",
 				"learnedlidar/decision-guide.md",
@@ -8452,10 +8452,10 @@
 		{
 			"id": "reliefvis",
 			"title": "Relief Visualisation",
-			"source": "toolbox:pollis-toolbox-geoprocessing",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
 			"commands": [
 				{
-					"id": "pollis.geoprocessing.reliefvis",
+					"id": "pollis.historicalGeography.reliefvis",
 					"menuTitles": [
 						"Relief Visualisation"
 					]
@@ -8464,9 +8464,9 @@
 			"portable": true,
 			"defaultModel": "lrm",
 			"decisionFirstColumn": "Visualisation",
-			"toml": "toolboxes/pollis-toolbox-geoprocessing/panels/reliefvis.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-geoprocessing/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-geoprocessing/notebooks",
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/reliefvis.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
 			"wikis": [
 				"reliefvis/decision-guide.md",
 				"reliefvis/diagnostics.md",
