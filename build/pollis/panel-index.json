@@ -5257,6 +5257,40 @@
 			]
 		},
 		{
+			"id": "learnedsatellite",
+			"title": "Learned Detection in Satellite Images",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.learnedsatellite",
+					"menuTitles": [
+						"Learned Detection in Satellite Images"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/learnedsatellite.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [
+				"learnedsatellite/decision-guide.md",
+				"learnedsatellite/diagnostics.md",
+				"learnedsatellite/enki.md",
+				"learnedsatellite/factsheet.md",
+				"learnedsatellite/overview.md",
+				"learnedsatellite/random-forest.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"ArchaeologicalDetection.jl",
+				"DecisionTree.jl",
+				"NNlib.jl",
+				"SmartRegions.jl",
+				"Rasters.jl",
+				"ArchGDAL.jl"
+			]
+		},
+		{
 			"id": "learning-and-practice.exwrite",
 			"title": "Write an Exercise",
 			"source": "toolbox:pollis-toolbox-learning-and-practice",
@@ -7549,6 +7583,41 @@
 				"OrdinaryDiffEq.jl",
 				"NonlinearSolve.jl",
 				"ForwardDiff.jl"
+			]
+		},
+		{
+			"id": "oldmaps",
+			"title": "Old Maps",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.oldmaps",
+					"menuTitles": [
+						"Old Maps"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "france",
+			"decisionFirstColumn": "Tab",
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/oldmaps.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [
+				"oldmaps/decision-guide.md",
+				"oldmaps/diagnostics.md",
+				"oldmaps/factsheet.md",
+				"oldmaps/famous-maps.md",
+				"oldmaps/georeferenced-maps.md",
+				"oldmaps/maps-of-france.md",
+				"oldmaps/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl",
+				"DuckDB.jl",
+				"Tables.jl",
+				"ArchGDAL.jl"
 			]
 		},
 		{

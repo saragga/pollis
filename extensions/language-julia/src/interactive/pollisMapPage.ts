@@ -22,6 +22,7 @@ interface LayerSpec {
     readonly tiles?: string
     readonly attribution?: string
     readonly opacity?: number
+    readonly side?: 'left' | 'right' | null
     readonly column?: string | null
     readonly years?: readonly string[]
     readonly data?: { readonly features?: ReadonlyArray<{ readonly geometry?: { readonly type?: string } | null, readonly properties?: Record<string, unknown> | null }> }
@@ -37,6 +38,7 @@ interface MapSpec {
     readonly labels?: boolean
     readonly layers?: readonly LayerSpec[]
     readonly streetview?: { readonly image?: string, readonly map?: boolean }
+    readonly picture?: { readonly url?: string, readonly name?: string, readonly attribution?: string }
 }
 
 /** The lines of text that say what the map shows: its title, base map, view, layers and viewer. */
@@ -48,12 +50,18 @@ function describe(spec: MapSpec): string[] {
             return lines
         }
     }
+    if (spec.picture && !spec.streetview) {
+        lines.push(`On the left, an image without coordinates, which can be moved and enlarged: ${spec.picture.name || spec.picture.url}` + (spec.picture.attribution ? `; ${spec.picture.attribution}.` : '.') + ' The map stands on the right.')
+    }
+    if (!spec.streetview && (spec.layers || []).some(layer => layer.side === 'left' || layer.side === 'right')) {
+        lines.push('A line that can be dragged across the map, or moved with the arrow keys, divides it: the layers marked left show on its left, those marked right on its right, and the others on both sides.')
+    }
     lines.push(`Base map: OpenStreetMap data, style ${spec.style || 'positron'}${spec.labels === false ? ', without its names and borders' : ''}.`)
     lines.push(spec.center ? `Centre: longitude ${spec.center[0]}, latitude ${spec.center[1]}, zoom ${spec.zoom ?? 'not given'}.`
         : spec.streetview ? 'The map is centred on the image the viewer shows, and follows it.'
             : spec.layers && spec.layers.length ? 'The view fits the layers.' : 'The view shows the whole world.')
     ;(spec.layers || []).forEach((layer, index) => {
-        const name = layer.name || `Layer ${index + 1}`
+        const name = (layer.name || `Layer ${index + 1}`) + (layer.side === 'left' ? ' (left of the line)' : layer.side === 'right' ? ' (right of the line)' : '')
         if (layer.tiles) {
             let host = layer.tiles
             try {
