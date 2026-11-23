@@ -10,7 +10,7 @@ import { assertReturnsDefined } from '../../../../base/common/types.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { ILocalizedString } from '../../../../platform/action/common/action.js';
 import { Action2, IMenuService, MenuId, registerAction2, IMenu, MenuRegistry, MenuItemAction } from '../../../../platform/actions/common/actions.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { IsSessionsWindowContext } from '../../../common/contextkeys.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
@@ -20,6 +20,7 @@ import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from '../../.
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { Extensions as WorkbenchExtensions, IWorkbenchContributionsRegistry } from '../../../common/contributions.js';
 import { LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
 
 const builtInSource = localize('Built-In', "Built-In");
 const category: ILocalizedString = localize2('Create', 'Create');
@@ -119,10 +120,8 @@ class NewFileTemplatesManager extends Disposable {
 			else if (categoryPriority[a.group]) { return 1; }
 			else if (categoryPriority[b.group]) { return -1; }
 
-			if (a.from === builtInSource) { return 1; }
-			if (b.from === builtInSource) { return -1; }
-
-			return a.from.localeCompare(b.from);
+			// POLLIS: within a group, items are in the alphabetical order of their titles, wherever they come from
+			return b.title.localeCompare(a.title);
 		};
 
 		const displayCategory: Record<string, string> = {
@@ -130,11 +129,12 @@ class NewFileTemplatesManager extends Disposable {
 			'notebook': localize('notebook', "Notebook"),
 		};
 
-		const refreshQp = (entries: NewFileItem[]) => {
+		// POLLIS: `first`, the file named in the box, stays at the top, above the sorted items
+		const refreshQp = (entries: NewFileItem[], first?: NewFileItem) => {
 			const items: (((IQuickPickItem & NewFileItem) | IQuickPickSeparator))[] = [];
 			let lastSeparator: string | undefined;
-			entries
-				.sort((a, b) => -sortCategories(a, b))
+			const sorted = [...entries].sort((a, b) => -sortCategories(a, b));
+			(first ? [first, ...sorted] : sorted)
 				.forEach((entry) => {
 					const command = entry.commandID;
 					const keybinding = this.keybindingService.lookupKeybinding(command || '', this.contextKeyService);
@@ -178,7 +178,7 @@ class NewFileTemplatesManager extends Disposable {
 				group: 'file',
 				from: builtInSource,
 			};
-			refreshQp([currentTextEntry, ...entries]);
+			refreshQp(entries, currentTextEntry);
 		}));
 
 		disposables.add(qp.onDidAccept(async e => {
@@ -217,4 +217,18 @@ MenuRegistry.appendMenuItem(MenuId.NewFile, {
 		title: localize('miNewFile2', "Text File")
 	},
 	order: 1
+});
+
+// POLLIS: New File > TeX File, an untitled editor in LaTeX, offered the .tex suffix when first saved
+CommandsRegistry.registerCommand('pollis.action.newTexFile', async accessor => {
+	await accessor.get(IEditorService).openEditor({ resource: undefined, languageId: 'latex' });
+});
+
+MenuRegistry.appendMenuItem(MenuId.NewFile, {
+	group: 'file',
+	command: {
+		id: 'pollis.action.newTexFile',
+		title: localize('newTexFile', "TeX File")
+	},
+	order: 27
 });
