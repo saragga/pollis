@@ -7587,13 +7587,13 @@
 		},
 		{
 			"id": "oldmaps",
-			"title": "Old Maps",
+			"title": "Historical Maps",
 			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
 			"commands": [
 				{
 					"id": "pollis.historicalGeography.oldmaps",
 					"menuTitles": [
-						"Old Maps"
+						"Historical Maps"
 					]
 				}
 			],
