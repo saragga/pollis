@@ -9510,6 +9510,39 @@
 			]
 		},
 		{
+			"id": "sitesmonuments",
+			"title": "Sites and Monuments",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.sitesmonuments",
+					"menuTitles": [
+						"Sites and Monuments"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "pleiades",
+			"decisionFirstColumn": "Register",
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/sitesmonuments.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [
+				"sitesmonuments/ane-placemarks.md",
+				"sitesmonuments/decision-guide.md",
+				"sitesmonuments/diagnostics.md",
+				"sitesmonuments/factsheet.md",
+				"sitesmonuments/overview.md",
+				"sitesmonuments/pleiades.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"DuckDB.jl",
+				"SmartRegions.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "slm",
 			"title": "Statistical Language Model",
 			"source": "pollis",
