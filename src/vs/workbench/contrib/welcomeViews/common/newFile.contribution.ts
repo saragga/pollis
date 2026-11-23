@@ -157,7 +157,8 @@ class NewFileTemplatesManager extends Disposable {
 							}
 						] : [],
 						detail: '',
-						description: entry.from,
+						// POLLIS: only items an extension adds say where they come from; Pollis' own say nothing
+						description: entry.from === builtInSource ? undefined : entry.from,
 					});
 				});
 			qp.items = items;

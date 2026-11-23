@@ -276,8 +276,7 @@ export function registerPlutoCommands(): void {
 	});
 
 	MenuRegistry.appendMenuItem(MenuId.NewFile, {
-		// 'notebook' group sits below the separator (with Jupyter Notebook); built-in entries
-		// like this one sort above extension-contributed ones, so Pluto lands above Jupyter.
+		// 'notebook' group sits below the separator, with Jupyter Notebook, in alphabetical order
 		group: 'notebook',
 		command: {
 			id: 'pollis.action.newPlutoNotebook',
