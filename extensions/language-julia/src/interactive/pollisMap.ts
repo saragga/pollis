@@ -342,7 +342,23 @@ export function drawPollisMap(maplibregl: any, holder: MapHolder, spec: any, sty
             map.on('mouseleave', id, () => { map.getCanvas().style.cursor = '' })
         })
         if (!spec.center && bounds && !viewer) {
-            map.fitBounds(bounds, { padding: 40, maxZoom: 15, duration: 0 })
+            // a map in a tab not shown yet has no room for the layers: it fits them when the tab gives it some
+            const fit = () => {
+                const container = map.getContainer()
+                if (container.clientWidth <= 100 || container.clientHeight <= 100) {
+                    return false
+                }
+                map.fitBounds(bounds, { padding: 40, maxZoom: 15, duration: 0 })
+                return true
+            }
+            if (!fit()) {
+                const later = () => {
+                    if (fit()) {
+                        map.off('resize', later)
+                    }
+                }
+                map.on('resize', later)
+            }
         }
         if (viewer) {
             // Mapillary's vector tiles: its sequences as lines, and its images as dots from zoom 14
