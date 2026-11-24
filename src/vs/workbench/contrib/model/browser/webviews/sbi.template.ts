@@ -8,7 +8,7 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 
 export function getSbiHtml(): string {
 	return buildScaffoldHtml('sbi', SBI_METADATA.sbi, {
-		title: 'Simulation-Based Inference',
+		title: 'Parameter Estimation by Neural Networks',
 		defaultModel: 'point',
 		decisionFirstColumn: 'Estimator',
 	});

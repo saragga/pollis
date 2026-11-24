@@ -10,7 +10,7 @@ import { getSbiHtml } from '../webviews/sbi.template.js';
 export const SBI_PANEL: IScaffoldPanel = {
 	id: 'sbi',
 	viewType: 'pollis.sbi',
-	title: 'Simulation-Based Inference',
+	title: 'Parameter Estimation by Neural Networks',
 	data: SBI_METADATA.sbi,
 	html: getSbiHtml,
 };

@@ -1,8 +1,8 @@
 # Factsheet
 
-The Simulation-Based Inference panel trains a neural network to act as an estimator, using only draws from a prior and a simulator. No likelihood is written down, so it suits models that are easy to simulate and hard to evaluate.
+The Parameter Estimation by Neural Networks panel trains a neural network to act as an estimator, using only draws from a prior and a simulator. No likelihood is written down, so it suits models that are easy to simulate and hard to evaluate.
 
-## What the Simulation-Based Inference Panel Does
+## What the Parameter Estimation by Neural Networks Panel Does
 
 | Item | Description |
 |---|---|
@@ -14,7 +14,7 @@ The Simulation-Based Inference panel trains a neural network to act as an estima
 
 The default `sampler` and `simulator` describe m independent draws from Normal(mu, sigma), with `mu` from Normal(0, 1) and `sigma` from Uniform(0.1, 1). They are a template, so replace both with the model at hand.
 
-## What Each Simulation-Based Inference Tab Returns
+## What Each Tab of Parameter Estimation by Neural Networks Returns
 
 | Tab | Estimator | Loss | Result |
 |---|---|---|---|
@@ -24,7 +24,7 @@ The default `sampler` and `simulator` describe m independent draws from Normal(m
 
 Training is the costly stage in all three tabs, and later data sets of the same form need only a forward pass.
 
-## Which Inputs the Simulation-Based Inference Tabs Take
+## Which Inputs the Tabs of Parameter Estimation by Neural Networks Take
 
 | Input | Default | Effect |
 |---|---|---|
@@ -35,7 +35,7 @@ Training is the costly stage in all three tabs, and later data sets of the same 
 | **Simulations per epoch (K)** | 10000 | Prior draws and data sets simulated in every epoch |
 | **Epochs** | 200 | Passes through the simulated training set |
 
-## Which Next Steps the Simulation-Based Inference Panel Offers
+## Which Next Steps the Parameter Estimation by Neural Networks Panel Offers
 
 | Group | Next Steps |
 |---|---|

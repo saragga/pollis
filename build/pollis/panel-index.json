@@ -9237,13 +9237,13 @@
 		},
 		{
 			"id": "sbi",
-			"title": "Simulation-Based Inference",
+			"title": "Parameter Estimation by Neural Networks",
 			"source": "pollis",
 			"commands": [
 				{
 					"id": "chiara.statistics.sbi",
 					"menuTitles": [
-						"Simulation-Based Inference"
+						"Parameter Estimation by Neural Networks"
 					]
 				}
 			],

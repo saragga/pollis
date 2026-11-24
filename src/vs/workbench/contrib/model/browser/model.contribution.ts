@@ -1203,7 +1203,7 @@ MenuRegistry.appendMenuItem(NNSubmenuId, {
 // Neural Networks for Estimation
 MenuRegistry.appendMenuItem(NNSubmenuId, {
 	group: '2_nn_estimation',
-	command: { id: 'chiara.statistics.sbi', title: localize('nn.sbi', 'Simulation-Based Inference') },
+	command: { id: 'chiara.statistics.sbi', title: localize('nn.sbi', 'Parameter Estimation by Neural Networks') },
 	order: 1,
 }); // NeuralEstimators.jl — amortized Bayesian posterior inference
 

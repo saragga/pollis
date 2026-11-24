@@ -1,10 +1,10 @@
-# Simulation-Based Inference Webview Configuration
+# Parameter Estimation by Neural Networks Webview Configuration
 # This is the declarative source for the webview. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/sbi.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Simulation-Based Inference"
+title = "Parameter Estimation by Neural Networks"
 viewType = "pollis.sbi"
 defaultModel = "point"
 

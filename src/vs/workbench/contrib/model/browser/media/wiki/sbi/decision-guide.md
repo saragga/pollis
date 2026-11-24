@@ -13,7 +13,7 @@ Neural estimation pays off when simulating is cheap, the likelihood is out of re
 
 A model with a closed-form estimator rarely needs a network at all, apart from practice or as a test of training.
 
-## Which Simulation-Based Inference Tab Suits Which Need
+## Which Tab of Parameter Estimation by Neural Networks Suits Which Need
 
 | Need | Tab | Why |
 |---|---|---|

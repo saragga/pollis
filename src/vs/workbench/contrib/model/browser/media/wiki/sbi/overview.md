@@ -10,7 +10,7 @@ Approximate Bayesian computation came first. It keeps simulated parameter values
 
 A Bayes estimator minimises the expected loss over the prior and the model. That expectation can be approximated with simulation alone: draw theta from the prior, simulate Z given theta, and score the network's output against theta. Training a network on this average loss gives an approximate Bayes estimator without evaluating any likelihood, an approach set out by [Sainsbury-Dale, Zammit-Mangion and Huser (2024)](#ref-SZH2024a). The result is amortised, so the training cost is paid once and each later data set of the same form needs one forward pass.
 
-## How the Three Simulation-Based Inference Tabs Differ
+## How the Three Tabs of Parameter Estimation by Neural Networks Differ
 
 | Tab | What the network learns | Where uncertainty comes from |
 |---|---|---|

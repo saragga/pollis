@@ -23,7 +23,7 @@ Start at the defaults of **Target Acceptance** 0.65 and 500 **Adaptation Steps**
 | Accurate posterior, moderate size | MCMC in this panel | Slower, but with diagnostics to check it |
 | Very large data or many parameters | Variational inference in Turing.jl | Faster, but often understates uncertainty |
 | Only a point estimate, for quick exploration | `maximum_likelihood` or `maximum_a_posteriori` in Turing.jl | No uncertainty is reported |
-| Likelihood cannot be evaluated at all | Simulation-Based Inference panel | Needs many simulated data sets |
+| Likelihood cannot be evaluated at all | Parameter Estimation by Neural Networks panel | Needs many simulated data sets |
 
 ## When to Change the Model Instead of the Sampler
 
