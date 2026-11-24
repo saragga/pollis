@@ -1,6 +1,6 @@
-# System Identification Methods: Output Error
+# System Identification Methods: Output-Error (OE)
 
-The **OE** tab fits an output-error model, y = [B(q)/F(q)]u + e, which describes the plant without a model of the noise. The panel minimises the simulation error of a state-space model with **nf** states, using `newpem` with `focus = :simulation`.
+The **Output-Error** tab fits an output-error model, y = [B(q)/F(q)]u + e, which describes the plant without a model of the noise. The panel minimises the simulation error of a state-space model with **nf** states, using `newpem` with `focus = :simulation`.
 
 ## The output-error criterion
 
@@ -38,7 +38,7 @@ With K = 0, the one-step prediction of the model is its simulation. The descript
 
 The documentation notes that simulation tends to require accurate low-frequency properties, especially for integrating systems. **Fit Percentage** and the validation fit printed by every tab use `simulate`, whose output, the documentation states, is not affected by the noise model and Kalman gain, so every printed fit is a simulation fit.
 
-The criterion of the **OE** tab is that same simulation error, on the estimation data. **Compare Structures** prints the validation fit of the OE model beside those of ARX, ARMAX and N4SID, with the same estimation and validation data.
+The criterion of the **Output-Error** tab is that same simulation error, on the estimation data. **Compare Structures** prints the validation fit of the OE model beside those of ARX, ARMAX and N4SID, with the same estimation and validation data.
 
 [Ljung (2010)](#ref-Lju2010a) gives an example of a linear model of a nonlinear system: for the static system y(t) = u(t) + 0.01u³(t) and a certain non-Gaussian, bounded input, the linear second-order equivalent is dynamic, with a very high gain at low frequencies, and it is this linear model that an output-error method produces.
 
@@ -57,4 +57,4 @@ The tab has no **nk** input. `newpem` forces the D matrix to zero by default, `z
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [ARX / ARMAX](arx-armax.md) · [Subspace (N4SID)](n4sid.md)
+- [ARX / ARMAX](arx-armax.md) · [Subspace Methods (N4SID)](n4sid.md)

@@ -16,8 +16,8 @@ The four tabs of the panel differ in how G and H are parametrised:
 |---|---|---|---|
 | **ARX** | A(q)y = B(q)u + e | B/A | 1/A |
 | **ARMAX** | A(q)y = B(q)u + C(q)e | B/A | C/A |
-| **N4SID** | x⁺ = Ax + Bu + Ke, y = Cx + Du + e | State-space input path | Noise path through the gain K |
-| **OE** | y = [B(q)/F(q)]u + e | B/F | 1 |
+| **Subspace Methods (N4SID)** | x⁺ = Ax + Bu + Ke, y = Cx + Du + e | State-space input path | Noise path through the gain K |
+| **Output-Error (OE)** | y = [B(q)/F(q)]u + e | B/F | 1 |
 
 ## Polynomial models
 
@@ -64,4 +64,4 @@ dtr, dval = data[1:ntr], data[ntr+1:end]
 ## See Also
 
 - [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [ARX / ARMAX](arx-armax.md) · [Subspace (N4SID)](n4sid.md) · [Output Error](output-error.md)
+- [ARX / ARMAX](arx-armax.md) · [Subspace Methods (N4SID)](n4sid.md) · [Output-Error (OE)](output-error.md)

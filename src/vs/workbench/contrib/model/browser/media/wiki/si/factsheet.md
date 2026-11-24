@@ -8,8 +8,8 @@ The panel's model structures, inputs, default data and actions at a glance.
 |---|---|---|---|
 | **ARX** | A(q)y = B(q)u + e | `arx(d, na, nb; inputdelay = nk)` | Least squares, equation error minimisation, closed-form solution |
 | **ARMAX** | A(q)y = B(q)u + C(q)e | `armax(d, na, nb, nc)` | Pseudo-linear regression; `armax` is an alias for `plr` |
-| **N4SID** | x⁺ = Ax + Bu + Ke, y = Cx + Du + e | `n4sid(d, nx)` | Simplified algorithm (alg 2) of [Van Overschee and De Moor (1994)](#ref-OM1994b) |
-| **OE** | y = [B(q)/F(q)]u + e | `newpem(d, nf; focus = :simulation)` | Prediction-error method, simulation focus |
+| **Subspace Methods (N4SID)** | x⁺ = Ax + Bu + Ke, y = Cx + Du + e | `n4sid(d, nx)` | Simplified algorithm (alg 2) of [Van Overschee and De Moor (1994)](#ref-OM1994b) |
+| **Output-Error (OE)** | y = [B(q)/F(q)]u + e | `newpem(d, nf; focus = :simulation)` | Prediction-error method, simulation focus |
 
 The package is ControlSystemIdentification.jl, built on ControlSystems.jl of [Bagge Carlson, Fält, Heimerson and Troeng (2021)](#ref-CFHT2021a).
 
@@ -85,4 +85,4 @@ The ControlSystemIdentification.jl documentation describes the estimators, `idda
 ## See Also
 
 - [Overview](overview.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [ARX / ARMAX](arx-armax.md) · [Subspace (N4SID)](n4sid.md) · [Output Error](output-error.md)
+- [ARX / ARMAX](arx-armax.md) · [Subspace Methods (N4SID)](n4sid.md) · [Output-Error (OE)](output-error.md)

@@ -51,4 +51,4 @@ The simulation uses only the input: the documentation of `simulate` states that 
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [ARX / ARMAX](arx-armax.md) · [Subspace (N4SID)](n4sid.md) · [Output Error](output-error.md)
+- [ARX / ARMAX](arx-armax.md) · [Subspace Methods (N4SID)](n4sid.md) · [Output-Error (OE)](output-error.md)

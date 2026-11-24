@@ -33,7 +33,7 @@ bundled = true
 description = "Transfer-function estimation by least squares, total and weighted total least squares and pseudo-linear regression, compared by simulation and Bode plots"
 
 [[notebookSections.notebooks]]
-name = "State-Space (N4SID)"
+name = "State-Space by Prediction Error"
 file = "si/tutorial-02-statespace.ipynb"
 bundled = true
 description = "Prediction-error estimation of state-space models with newpem: measurement noise, other error metrics, regularisation and models of increasing order"
@@ -102,12 +102,12 @@ file = "si/arx-armax.md"
 bundled = true
 
 [[wikis]]
-name = "Subspace (N4SID)"
+name = "Subspace Methods (N4SID)"
 file = "si/n4sid.md"
 bundled = true
 
 [[wikis]]
-name = "Output Error"
+name = "Output-Error (OE)"
 file = "si/output-error.md"
 bundled = true
 
@@ -152,23 +152,23 @@ label = "ARMAX"
 
 [[models]]
 id = "n4sid"
-label = "N4SID"
+label = "Subspace Methods"
 
 [[models]]
 id = "oe"
-label = "OE"
+label = "Output-Error"
 
 [[bullets]]
 text = "Models from Data"
 detail = "Estimate a dynamic model of a system from measured inputs and outputs, with ControlSystemIdentification.jl"
 
 [[bullets]]
-text = "Transfer-Function Families"
-detail = "ARX, ARMAX and output-error models differ in how they describe the noise; ARX is a fast least-squares fit"
+text = "ARX, ARMAX and Output-Error Models"
+detail = "Transfer functions: autoregressive with exogenous input (ARX), autoregressive moving average with exogenous input (ARMAX) and output-error (OE) models differ in how they describe the noise; ARX is a fast least-squares fit, and an output-error model describes the plant alone"
 
 [[bullets]]
 text = "State-Space by Subspace Methods"
-detail = "N4SID estimates state-space models directly, including systems with several inputs and outputs"
+detail = "N4SID, numerical algorithms for subspace state space system identification (Van Overschee and De Moor), estimates state-space models directly, including systems with several inputs and outputs"
 
 [[bullets]]
 text = "Validation"
@@ -185,12 +185,12 @@ context = "A(q)y = B(q)u + C(q)e"
 purpose = "ARX with coloured noise model, C(q) shapes the noise spectrum independently"
 
 [[decisionRows]]
-task = "N4SID"
+task = "Subspace Methods (N4SID)"
 context = "State-space: x′ = Ax + Bu + Ke, y = Cx + Du"
 purpose = "Subspace identification of state-space models; handles MIMO systems and unknown model order"
 
 [[decisionRows]]
-task = "OE"
+task = "Output-Error (OE)"
 context = "y = [B(q)/F(q)]u + e"
 purpose = "Output-error model with no noise model, fitted by minimising the simulation error with newpem (focus = :simulation)"
 
@@ -503,7 +503,7 @@ foreach(s -> println(rpad(string(s.first), 10), " validation fit = ", round(s.se
 [[actionGroups.actions]]
 id = "compare-structures"
 label = "Compare Structures"
-desc = "ARX, ARMAX, N4SID and simulation-focused (OE) models fitted to the same estimation data, compared by validation fit and frequency response"
+desc = "ARX, ARMAX, subspace (N4SID) and output-error (OE) models fitted to the same estimation data, compared by validation fit and frequency response"
 code = '''
 using ControlSystemIdentification, ControlSystems, Plots  # SI + plotting
 
@@ -511,10 +511,10 @@ vfit(m) = modelfit(vec(output(dval)), vec(simulate(m, dval)))  # validation NRMS
 cands = [
     "ARX"   => arx(dtr, {{na}}, {{nb}}; inputdelay = {{nk}}),
     "ARMAX" => first(armax(dtr, {{na}}, {{nb}}, {{nc}})),  # delay of one sample
-    "N4SID" => n4sid(dtr, {{nx}}),
-    "OE"    => first(newpem(dtr, {{nf}}; focus = :simulation, show_trace = false)),
+    "Subspace" => n4sid(dtr, {{nx}}),
+    "Output-Error" => first(newpem(dtr, {{nf}}; focus = :simulation, show_trace = false)),
 ]
-foreach(c -> println(rpad(c.first, 7), " validation fit = ", round(vfit(c.second), digits = 2), "%"), cands)
+foreach(c -> println(rpad(c.first, 13), " validation fit = ", round(vfit(c.second), digits = 2), "%"), cands)
 bodeplot(last.(cands); label = permutedims(first.(cands)))  # compare frequency responses
 '''
 

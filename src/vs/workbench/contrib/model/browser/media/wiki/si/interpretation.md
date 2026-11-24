@@ -22,13 +22,13 @@ The zero of B(z) = z + 0.5 is at −0.5. [Söderström and Stoica (1989)](#ref-S
 
 **Bode Plot** draws the magnitude and phase of the model over frequency with `bodeplot`. **Compare Structures** overlays the Bode plots of the four structures fitted to the same estimation data, and **Parameter Uncertainty** those of the fit to all estimation data and to its two halves.
 
-The ControlSystemIdentification.jl documentation relates the focus of a fit to frequency: low frequencies matter for simulation, higher frequencies for prediction. The **OE** tab minimises the simulation error.
+The ControlSystemIdentification.jl documentation relates the focus of a fit to frequency: low frequencies matter for simulation, higher frequencies for prediction. The **Output-Error** tab minimises the simulation error.
 
 ## State-space models
 
 [Van Overschee and De Moor (1995)](#ref-OM1995a) note that the extended observability matrix is determined only up to a non-singular similarity transformation T, and the subspace problem is to find A, B, C, D and the noise covariances up to a similarity transformation.
 
-For the **N4SID** tab, the printed matrices A, B, C, D and K are one such realisation. **Transfer Function** converts the state-space models of **N4SID** and **OE** to transfer functions, which can be compared with B/A of the polynomial models.
+For the **Subspace Methods** tab, the printed matrices A, B, C, D and K are one such realisation. **Transfer Function** converts the state-space models of **Subspace Methods** and **Output-Error** to transfer functions, which can be compared with B/A of the polynomial models.
 
 ## The fit percentage
 
@@ -51,4 +51,4 @@ The Bode plots of the two halves show the spread of the frequency response over 
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md)
-- [ARX / ARMAX](arx-armax.md) · [Subspace (N4SID)](n4sid.md) · [Output Error](output-error.md)
+- [ARX / ARMAX](arx-armax.md) · [Subspace Methods (N4SID)](n4sid.md) · [Output-Error (OE)](output-error.md)

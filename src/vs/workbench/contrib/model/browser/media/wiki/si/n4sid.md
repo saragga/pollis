@@ -1,6 +1,6 @@
-# System Identification Methods: Subspace (N4SID)
+# System Identification Methods: Subspace Methods (N4SID)
 
-The **N4SID** tab estimates a state-space model with `n4sid(d, nx)`, the subspace algorithm of Van Overschee and De Moor, which determines the order, the states and the system matrices from the input-output data by projections and singular value decompositions.
+The **Subspace Methods** tab estimates a state-space model with `n4sid(d, nx)`, the subspace algorithm of Van Overschee and De Moor, which determines the order, the states and the system matrices from the input-output data by projections and singular value decompositions.
 
 ## The model
 
@@ -64,4 +64,4 @@ The tooltip of **l (horizon)** reads that larger values improve accuracy but inc
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [ARX / ARMAX](arx-armax.md) · [Output Error](output-error.md)
+- [ARX / ARMAX](arx-armax.md) · [Output-Error (OE)](output-error.md)
