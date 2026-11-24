@@ -31,13 +31,15 @@ json(text) = "\"" * escape_string(text) * "\""
 """The files of a vignette folder that make the vignette, by their paths relative to it."""
 vignette_file(path) = splitext(path)[2] in (".tex", ".bib") && !occursin('/', path) || startswith(path, "resources/")
 
-"""Copies the vignette's files from a folder of an installed package into `build`."""
+"""Copies the vignette's files from a folder of an installed package into `build`, writable: the files of an installed
+package are read-only, and `cp` keeps that, but the main file gets a line at its top (LABELS)."""
 function copy_installed(folder, build)
 	for (dir, _, files) in walkdir(folder), file in files
 		path = replace(relpath(joinpath(dir, file), folder), '\\' => '/')
 		vignette_file(path) || continue
 		mkpath(dirname(joinpath(build, path)))
 		cp(joinpath(dir, file), joinpath(build, path))
+		chmod(joinpath(build, path), 0o644)
 	end
 end
 
