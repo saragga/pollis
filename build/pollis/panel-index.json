@@ -67,6 +67,7 @@
 			"menubarNNSubmenu",
 			"menubarNewPanelsMenu",
 			"menubarOCSubmenu",
+			"menubarODESubmenu",
 			"menubarOrchestrationMenu",
 			"menubarPMSubmenu",
 			"menubarPPLSubmenu",
@@ -7493,18 +7494,18 @@
 		},
 		{
 			"id": "ode",
-			"title": "ODE Inference Methods",
+			"title": "Parameter Estimation for ODEs",
 			"source": "pollis",
 			"commands": [
 				{
 					"id": "chiara.statistics.ode",
 					"menuTitles": [
-						"ODE Inference Methods"
+						"Parameter Estimation"
 					]
 				}
 			],
 			"portable": true,
-			"defaultModel": "struct",
+			"defaultModel": "single",
 			"decisionFirstColumn": "Model",
 			"toml": "src/vs/workbench/contrib/model/browser/webviews/ode.toml",
 			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
@@ -7514,11 +7515,13 @@
 				"ode/decision-guide.md",
 				"ode/diagnostics.md",
 				"ode/factsheet.md",
-				"ode/identifiability.md",
 				"ode/interpretation.md",
 				"ode/overview.md",
 				"ode/petab-format.md",
-				"ode/profile-likelihood.md"
+				"ode/profile-likelihood.md",
+				"odeident/factsheet.md",
+				"odeident/identifiability.md",
+				"odeident/overview.md"
 			],
 			"notebooks": [
 				"ode/tutorial-01-basic-estimation.ipynb",
@@ -7528,22 +7531,85 @@
 			],
 			"packages": [
 				"PEtab.jl",
-				"StructuralIdentifiability.jl",
 				"LikelihoodProfiler.jl",
-				"AdvancedHMC.jl",
 				"Catalyst.jl",
 				"OrdinaryDiffEqRosenbrock.jl",
 				"Fides.jl",
-				"Optim.jl",
-				"OptimizationLBFGSB.jl",
-				"SciMLSensitivity.jl",
-				"Distributions.jl",
-				"Bijectors.jl",
-				"LogDensityProblems.jl",
-				"LogDensityProblemsAD.jl",
+				"Optim.jl"
+			]
+		},
+		{
+			"id": "odebayes",
+			"title": "Bayesian Inference for ODEs",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.statistics.odebayes",
+					"menuTitles": [
+						"Bayesian Inference"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "nuts",
+			"decisionFirstColumn": "Sampler",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/odebayes.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"ode/assumptions.md",
+				"ode/decision-guide.md",
+				"ode/diagnostics.md",
+				"ode/factsheet.md",
+				"ode/interpretation.md",
+				"ode/overview.md",
+				"ode/petab-format.md",
+				"ode/profile-likelihood.md",
+				"odebayes/factsheet.md",
+				"odebayes/overview.md",
+				"odebayes/sampling.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"PEtab.jl",
+				"AdvancedHMC.jl",
 				"MCMCChains.jl",
-				"StatsPlots.jl",
-				"Plots.jl"
+				"Catalyst.jl",
+				"OrdinaryDiffEqRosenbrock.jl",
+				"StatsPlots.jl"
+			]
+		},
+		{
+			"id": "odeident",
+			"title": "Structural Identifiability of ODEs",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.statistics.odeident",
+					"menuTitles": [
+						"Structural Identifiability"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "struct",
+			"decisionFirstColumn": "Question",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/odeident.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"odeident/factsheet.md",
+				"odeident/identifiability.md",
+				"odeident/overview.md"
+			],
+			"notebooks": [
+				"ode/tutorial-01-basic-estimation.ipynb",
+				"ode/tutorial-02-multistart.ipynb",
+				"ode/tutorial-03-profile-likelihood.ipynb",
+				"ode/tutorial-04-identifiability.ipynb"
+			],
+			"packages": [
+				"StructuralIdentifiability.jl"
 			]
 		},
 		{

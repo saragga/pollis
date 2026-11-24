@@ -8,8 +8,8 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 
 export function getOdeHtml(): string {
 	return buildScaffoldHtml('ode', ODE_METADATA.ode, {
-		title: 'ODE Inference Methods',
-		defaultModel: 'struct',
+		title: 'Parameter Estimation for ODEs',
+		defaultModel: 'single',
 		decisionFirstColumn: 'Model',
 	});
 }

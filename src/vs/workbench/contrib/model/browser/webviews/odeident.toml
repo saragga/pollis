@@ -1,0 +1,208 @@
+# Structural Identifiability of ODEs Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/odeident.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Structural Identifiability of ODEs"
+viewType = "pollis.odeident"
+defaultModel = "struct"
+decisionFirstColumn = "Question"
+
+[[packages]]
+name = "StructuralIdentifiability.jl"
+github = "https://github.com/SciML/StructuralIdentifiability.jl"
+
+[requires]
+packages = ["StructuralIdentifiability.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Identifiability"
+file = "ode/tutorial-04-identifiability.ipynb"
+bundled = true
+description = "Structural identifiability with StructuralIdentifiability.jl against practical identifiability from profiles"
+
+[[wikis]]
+name = "Factsheet"
+file = "odeident/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "odeident/overview.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Identifiability"
+file = "odeident/identifiability.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "DGHP2023a"
+
+[[references]]
+key = "BM2020a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "RKMBS...2009a"
+
+[[models]]
+id = "struct"
+label = "Identifiability"
+
+[[bullets]]
+text = "Identifiability First"
+detail = "Checks whether the parameters could be recovered from perfect, noise-free data on the chosen outputs, before any fitting"
+
+[[bullets]]
+text = "Global, Local or None"
+detail = "Each parameter and state is globally identifiable, locally identifiable up to finitely many values, or not identifiable"
+
+[[bullets]]
+text = "Identifiable Combinations"
+detail = "Parameters that cannot be recovered alone may enter functions that can, such as a product or a sum"
+
+[[bullets]]
+text = "The Outputs Decide"
+detail = "Changing the measured outputs, or the initial values taken as known, shows what each measurement adds"
+
+[[decisionRows]]
+task = "Global Identifiability"
+context = "Unique recovery"
+purpose = "assess_identifiability labels every parameter and state globally, locally or not identifiable, with the initial values known"
+
+[[decisionRows]]
+task = "Local Identifiability"
+context = "Fast local check"
+purpose = "assess_local_identifiability, for one experiment or for several, with every initial value unknown"
+
+[[decisionRows]]
+task = "Identifiable Combinations"
+context = "Recoverable functions"
+purpose = "find_identifiable_functions lists the functions of the parameters that can be recovered"
+
+[[decisionRows]]
+task = "Reparametrisation"
+context = "Identifiable model"
+purpose = "reparametrize_global rewrites the model in new variables that are all identifiable"
+
+[[inputs]]
+id = "struct-observed"
+label = "Observed Outputs"
+tooltip = "Which quantities are measured. The Parameter Estimation for ODEs and Bayesian Inference for ODEs panels measure both S + E and P."
+kind = "select"
+default = "both"
+
+[[inputs.options]]
+value = "both"
+label = "S + E and P"
+
+[[inputs.options]]
+value = "p"
+label = "P Only"
+
+[[inputs.options]]
+value = "se"
+label = "S + E Only"
+
+[[codeBranches]]
+model = "struct"
+code = '''
+using StructuralIdentifiability
+
+# Michaelis-Menten kinetics, S + E <-> SE -> P + E, with c3 = 3 substituted because it is known in the estimation panels
+ode = @ODEmodel(
+    S'(t) = -c1 * S(t) * E(t) + c2 * SE(t),
+    E'(t) = -c1 * S(t) * E(t) + (c2 + 3) * SE(t),
+    SE'(t) = c1 * S(t) * E(t) - (c2 + 3) * SE(t),
+    P'(t) = 3 * SE(t),
+{{?struct-observed=both|se}}    y1(t) = S(t) + E(t),
+{{?struct-observed=both|p}}    y2(t) = P(t),
+)
+
+# E, SE and P start at known values (50, 0, 0); only S(0) = S0 is unknown, as in the estimation panels
+known = [E, SE, P]
+for (f, status) in assess_identifiability(ode; known_ic = known)  # :globally, :locally or :nonidentifiable
+    println(f, " => ", status)
+end
+println("Identifiable combinations: ", find_identifiable_functions(ode; known_ic = known))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "local-identifiability"
+label = "Local Identifiability"
+desc = "The faster local check of every parameter and state, with every initial value unknown"
+code = '''
+local_se = assess_local_identifiability(ode)  # takes no known_ic: every initial value is unknown
+for (f, ok) in local_se
+    println(rpad(string(f), 6), ok ? "locally identifiable" : "not identifiable")
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "known-initial-values"
+label = "Known and Unknown Initial Values"
+desc = "Global identifiability with E, SE and P starting at known values, and with every initial value unknown"
+code = '''
+println("E, SE and P start at known values:")
+for (f, status) in assess_identifiability(ode; known_ic = known)  # parameters and initial values
+    println("  ", rpad(string(f), 7), status)
+end
+println("No initial value is known:")
+for (f, status) in assess_identifiability(ode)  # parameters and states
+    println("  ", rpad(string(f), 7), status)
+end
+'''
+
+[[actionGroups.actions]]
+id = "experiments"
+label = "One and Several Experiments"
+desc = "Local identifiability of the parameters from one experiment and from several, with the number of experiments needed"
+code = '''
+one = assess_local_identifiability(ode; type = :SE)  # one experiment: parameters and states
+several, n_experiments = assess_local_identifiability(ode; type = :ME)  # several experiments: parameters only
+for p in ode.parameters
+    println(rpad(string(p), 6), "one experiment: ", one[p], ", several: ", several[p])
+end
+println("Experiments needed for the second result: ", n_experiments)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "reparametrisation"
+label = "Reparametrisation"
+desc = "The model rewritten in new variables that are all globally identifiable, with every initial value unknown"
+code = '''
+rep = reparametrize_global(ode)  # takes no known_ic: every initial value is unknown
+println(rep.new_ode)
+for (v, meaning) in rep.new_vars
+    println(v, " = ", meaning)
+end
+isempty(rep.implicit_relations) || println("Relations among the new variables: ", rep.implicit_relations)
+'''

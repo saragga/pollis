@@ -10,7 +10,7 @@ import { getOdeHtml } from '../webviews/ode.template.js';
 export const ODE_PANEL: IScaffoldPanel = {
 	id: 'ode',
 	viewType: 'pollis.ode',
-	title: 'ODE Inference Methods',
+	title: 'Parameter Estimation for ODEs',
 	data: ODE_METADATA.ode,
 	html: getOdeHtml,
 };

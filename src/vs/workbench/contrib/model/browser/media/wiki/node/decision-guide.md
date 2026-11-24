@@ -40,7 +40,7 @@ The panel trains with Adam alone. The DiffEqFlux.jl tutorial on neural ODEs foll
 
 | Goal | Panel |
 |---|---|
-| Parameters of an ODE whose form is known, with identifiability and uncertainty | **ODE Inference Methods** |
+| Parameters of an ODE whose form is known, with identifiability and uncertainty | **Parameter Estimation for ODEs** |
 | Linear input–output models such as ARX, ARMAX and N4SID | **System Identification Methods** |
 | Lyapunov exponents, fractal dimensions and recurrence of observed data | **Chaos Characterisation** |
 | Sequence models such as LSTM and GRU | **Recurrent Neural Networks** |

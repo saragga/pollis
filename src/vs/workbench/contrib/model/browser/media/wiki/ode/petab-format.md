@@ -1,4 +1,4 @@
-# ODE Inference Methods: PEtab Format
+# Parameter Estimation for ODEs: PEtab Format
 
 PEtab is a standard format for parameter estimation problems with ODE models. The panel builds its problem in Julia with PEtab.jl, and also reads a problem written in the standard format.
 
@@ -42,11 +42,11 @@ E, SE and P start at 50, 0 and 0, S at the unknown S0, and c3 = 3 is known. Two 
 
 By default, PEtab.jl gives every `PEtabParameter` the bounds [10⁻³, 10³] and estimates it on a log10 scale; its documentation notes that these defaults typically improve estimation. [Raue, Schilling, Bachmann, Matteson, Schelker, Kaschek, Hug, Kreutz, Harms, Theis, Klingmüller and Timmer (2013)](#ref-RSBMS...2013a) likewise recommend a log scale for parameters that are non-negative by definition. The estimates come back on the estimation scale, as `log10_c1` and so on, and the panel's `linear()` maps them back.
 
-**Bayesian Inference** gives each parameter a prior, which PEtab.jl evaluates on the linear scale: log-normal priors on c1, c2 and σ, and `LogNormal(4.5, 0.5)` on S0, whose median is about 90. Without a prior, the default is a uniform distribution over the bounds.
+Bayesian Inference for ODEs gives each parameter a prior, which PEtab.jl evaluates on the linear scale: log-normal priors on c1, c2 and σ, and `LogNormal(4.5, 0.5)` on S0, whose median is about 90. Without a prior, the default is a uniform distribution over the bounds.
 
 ## A problem of one's own
 
-**PEtab YAML (Optional)** takes the path of a problem in the standard format, which `PEtabModel(yaml)` then imports in place of the built-in one. Priors for **Bayesian Inference** then come from its parameter table.
+**PEtab YAML (Optional)** takes the path of a problem in the standard format, which `PEtabModel(yaml)` then imports in place of the built-in one. Priors for Bayesian Inference for ODEs then come from its parameter table.
 
 As the tooltip of the input states, the comparisons with true values and the prediction under a new condition apply to the built-in problem only: **Parameter Values** prints true values only for it, and **New Condition** stops with an error for an imported problem, since it changes E(0), a species of the built-in model. Catalyst.jl, by [Loman, Ma, Ilin, Gowda, Korsbo, Yewale, Rackauckas and Isaacson (2023)](#ref-LMIGK...2023a), and ModelingToolkit, by [Ma, Gowda, Anantharaman, Laughman, Shah and Rackauckas (2021)](#ref-MGALS...2021a), provide the symbolic model systems on which PEtab.jl builds.
 
@@ -65,4 +65,4 @@ As the tooltip of the input states, the comparisons with true values and the pre
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [Profile Likelihood](profile-likelihood.md) · [Identifiability](identifiability.md)
+- [Profile Likelihood](profile-likelihood.md) · [Identifiability](../odeident/identifiability.md)

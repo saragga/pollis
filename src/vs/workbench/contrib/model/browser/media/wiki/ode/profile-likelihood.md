@@ -1,4 +1,4 @@
-# ODE Inference Methods: Profile Likelihood
+# Parameter Estimation for ODEs: Profile Likelihood
 
 **Profile Likelihood** turns a fitted model into confidence intervals and a verdict on practical identifiability, by following how the best attainable fit worsens as one parameter is moved away from its estimate.
 
@@ -53,4 +53,4 @@ For every parameter, the panel prints the interval on the linear scale, with "op
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [PEtab Format](petab-format.md) · [Identifiability](identifiability.md)
+- [PEtab Format](petab-format.md) · [Identifiability](../odeident/identifiability.md)

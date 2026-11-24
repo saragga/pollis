@@ -101,6 +101,8 @@ import { CTPF_PANEL } from './commands/ctpf.command.js';
 import { SREG_PANEL } from './commands/sreg.command.js';
 import { SI_PANEL } from './commands/si.command.js';
 import { ODE_PANEL } from './commands/ode.command.js';
+import { ODEIDENT_PANEL } from './commands/odeident.command.js';
+import { ODEBAYES_PANEL } from './commands/odebayes.command.js';
 import { LP_PANEL } from './commands/lp.command.js';
 import { QP_PANEL } from './commands/qp.command.js';
 import { MPNLP_PANEL } from './commands/mpnlp.command.js';
@@ -245,6 +247,8 @@ CommandsRegistry.registerCommand('chiara.statistics.tsf', accessor => TSF_OPEN(a
 CommandsRegistry.registerCommand('chiara.statistics.si', accessor => openScaffoldWebview(accessor, SI_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.ode', accessor => openScaffoldWebview(accessor, ODE_PANEL));
+CommandsRegistry.registerCommand('chiara.statistics.odeident', accessor => openScaffoldWebview(accessor, ODEIDENT_PANEL));
+CommandsRegistry.registerCommand('chiara.statistics.odebayes', accessor => openScaffoldWebview(accessor, ODEBAYES_PANEL));
 
 CommandsRegistry.registerCommand('chiara.mp.lp', accessor => openScaffoldWebview(accessor, LP_PANEL));
 
@@ -366,6 +370,7 @@ const DistSubmenuId = new MenuId('menubarDistSubmenu');   // Distributions
 const CopulaSubmenuId = new MenuId('menubarCopulaSubmenu'); // Copulas
 const BASubmenuId = new MenuId('menubarBASubmenu');     // Bayesian Analysis
 const NDSubmenuId = new MenuId('menubarNDSubmenu');     // Nonlinear Dynamics
+const ODESubmenuId = new MenuId('menubarODESubmenu');   // ODE Inference Methods
 const NLPSubmenuId = new MenuId('menubarNLPSubmenu'); // Natural Language Processing
 const DocRepSubmenuId = new MenuId('menubarDocRepSubmenu'); // Document Representation
 const TopicModelsSubmenuId = new MenuId('menubarTopicModelsSubmenu'); // Topic & Semantic Models
@@ -858,9 +863,32 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '5_time_series',
-	command: { id: 'chiara.statistics.ode', title: localize('showStatistics.ode', 'ODE Inference Methods') },
+	submenu: ODESubmenuId,
+	title: localize('showStatistics.ode', 'ODE Inference Methods'),
 	order: 4,
-}); // PEtab.jl, StructuralIdentifiability.jl
+}); // StructuralIdentifiability.jl, PEtab.jl, AdvancedHMC.jl
+
+// ============================================
+// SUBMENU: ODE INFERENCE METHODS
+// ============================================
+
+MenuRegistry.appendMenuItem(ODESubmenuId, {
+	group: '1_ode',
+	command: { id: 'chiara.statistics.odeident', title: localize('ode.ident', 'Structural Identifiability') },
+	order: 1,
+}); // StructuralIdentifiability.jl
+
+MenuRegistry.appendMenuItem(ODESubmenuId, {
+	group: '1_ode',
+	command: { id: 'chiara.statistics.ode', title: localize('ode.estimation', 'Parameter Estimation') },
+	order: 2,
+}); // PEtab.jl, LikelihoodProfiler.jl
+
+MenuRegistry.appendMenuItem(ODESubmenuId, {
+	group: '1_ode',
+	command: { id: 'chiara.statistics.odebayes', title: localize('ode.bayes', 'Bayesian Inference') },
+	order: 3,
+}); // PEtab.jl, AdvancedHMC.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '5_time_series',

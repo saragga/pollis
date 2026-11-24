@@ -1,0 +1,347 @@
+# Bayesian Inference for ODEs Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/odebayes.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Bayesian Inference for ODEs"
+viewType = "pollis.odebayes"
+defaultModel = "nuts"
+decisionFirstColumn = "Sampler"
+
+[[packages]]
+name = "PEtab.jl"
+github = "https://github.com/sebapersson/PEtab.jl"
+
+[[packages]]
+name = "AdvancedHMC.jl"
+github = "https://github.com/TuringLang/AdvancedHMC.jl"
+
+[[packages]]
+name = "MCMCChains.jl"
+github = "https://github.com/TuringLang/MCMCChains.jl"
+
+[[packages]]
+name = "Catalyst.jl"
+github = "https://github.com/SciML/Catalyst.jl"
+
+[[packages]]
+name = "OrdinaryDiffEqRosenbrock.jl"
+github = "https://github.com/SciML/OrdinaryDiffEq.jl/tree/master/lib/OrdinaryDiffEqRosenbrock"
+
+[[packages]]
+name = "StatsPlots.jl"
+github = "https://github.com/JuliaPlots/StatsPlots.jl"
+
+[requires]
+packages = ["PEtab.jl", "AdvancedHMC.jl", "MCMCChains.jl", "Catalyst.jl", "OrdinaryDiffEqRosenbrock.jl", "Distributions.jl", "Bijectors.jl", "LogDensityProblems.jl", "LogDensityProblemsAD.jl", "SciMLSensitivity.jl", "StatsPlots.jl", "Plots.jl"]
+
+[[wikis]]
+name = "Factsheet"
+file = "odebayes/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "odebayes/overview.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Sampling"
+file = "odebayes/sampling.md"
+bundled = true
+
+[[wikis]]
+name = "PEtab Format"
+file = "ode/petab-format.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "PFGLO...2025a"
+
+[[references]]
+key = "LMIGK...2023a"
+
+[[references]]
+key = "MGALS...2021a"
+
+[[references]]
+key = "XGTTT...2020a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "SSBCD...2021a"
+
+[[references]]
+key = "RSBMS...2013a"
+
+[[references]]
+key = "HG2014a"
+
+[[references]]
+key = "VGSCB2021a"
+
+[[models]]
+id = "nuts"
+label = "NUTS"
+
+[[models]]
+id = "hmc"
+label = "HMC"
+
+[[bullets]]
+text = "Posterior from Priors and Data"
+detail = "The parameters of an ODE model get a posterior distribution from their priors and the time-course data, with PEtab.jl"
+
+[[bullets]]
+text = "NUTS"
+detail = "The No-U-Turn sampler sets its own path length and adapts its step size towards a target acceptance rate"
+
+[[bullets]]
+text = "HMC"
+detail = "Hamiltonian Monte Carlo with a fixed step size and a fixed number of leapfrog steps"
+
+[[bullets]]
+text = "Convergence First"
+detail = "R-hat and the effective sample size of several chains decide whether the draws can be used"
+
+[[decisionRows]]
+task = "NUTS"
+context = "Adaptive path length"
+purpose = "No-U-Turn sampler of AdvancedHMC.jl, with its step size adapted towards Target Acceptance; the usual choice"
+
+[[decisionRows]]
+task = "HMC"
+context = "Fixed path length"
+purpose = "Hamiltonian Monte Carlo with Step Size and Leapfrog Steps set by hand"
+
+[[inputs]]
+id = "path"
+label = "PEtab YAML (Optional)"
+tooltip = "Path to a problem in the PEtab standard format (YAML plus SBML model and tables), whose parameter table gives the priors. Leave empty to use the Michaelis-Menten problem built in the code. Prediction and true-value comparisons apply to the built-in problem only."
+default = ""
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Random seed for the simulated measurements, the starting points and the sampler."
+default = "1"
+
+[[inputs]]
+id = "gradient"
+label = "Gradient Method"
+tooltip = "How PEtab.jl computes the gradient of the log-posterior. ForwardDiff is usually fastest for small models; adjoint sensitivities scale best to large models and need SciMLSensitivity."
+kind = "select"
+default = "ForwardDiff"
+
+[[inputs.options]]
+value = "ForwardDiff"
+label = "ForwardDiff"
+
+[[inputs.options]]
+value = "ForwardEquations"
+label = "Forward Sensitivities"
+
+[[inputs.options]]
+value = "Adjoint"
+label = "Adjoint"
+
+[[inputs]]
+id = "target-acceptance"
+label = "Target Acceptance"
+tooltip = "Target acceptance rate for the NUTS step-size adaptation. 0.8 is Stan's default; higher values take smaller steps."
+default = "0.8"
+models = ["nuts"]
+
+[[inputs]]
+id = "step-size"
+label = "Step Size"
+tooltip = "Step size of each leapfrog step of HMC."
+default = "0.05"
+models = ["hmc"]
+
+[[inputs]]
+id = "leapfrog"
+label = "Leapfrog Steps"
+tooltip = "Number of leapfrog steps of each HMC proposal."
+default = "10"
+models = ["hmc"]
+
+[[inputs]]
+id = "nsamples"
+label = "n Samples"
+tooltip = "Draws kept per chain, after 500 adaptation draws that are discarded."
+default = "1000"
+
+[[inputs]]
+id = "nchains"
+label = "n Chains"
+tooltip = "Number of chains, each started from a draw from the prior. Several chains are needed for R-hat."
+default = "4"
+
+[[codeBranches]]
+model = "*"
+code = '''
+using PEtab, Catalyst, OrdinaryDiffEqRosenbrock, Distributions, Random
+using AdvancedHMC, Bijectors, LogDensityProblems, LogDensityProblemsAD, MCMCChains
+{{?gradient=Adjoint}}using SciMLSensitivity  # must be loaded before the problem is built
+using PEtab: DataFrame  # PEtab takes the measurement table as a DataFrame
+
+rng = Xoshiro({{seed}})
+
+# Michaelis-Menten kinetics, S + E <-> SE -> P + E (the PEtab.jl tutorial model); c3 = 3 is known
+rn = @reaction_network begin
+    @parameters S0 c3=3.0
+    @species begin
+        S(t) = S0
+        E(t) = 50.0
+        SE(t) = 0.0
+        P(t) = 0.0
+    end
+    @observables begin
+        obs1 ~ S + E
+        obs2 ~ P
+    end
+    c1, S + E --> SE
+    c2, SE --> S + E
+    c3, SE --> P + E
+end
+
+# Simulated data at the true values; noise sd 3 on S + E (known) and sigma = 1 on P (estimated)
+x_true = (c1 = 1.0, c2 = 10.0, S0 = 100.0, sigma = 1.0)
+oprob = ODEProblem(rn, [:E => 50.0, :SE => 0.0, :P => 0.0], (0.0, 10.0), [:c1 => x_true.c1, :c2 => x_true.c2, :S0 => x_true.S0])
+sol = solve(oprob, Rodas5P(); saveat = 0:0.5:10.0)
+measurements = vcat(
+    DataFrame(obs_id = "obs_SE", time = sol.t, measurement = sol[:S] .+ sol[:E] .+ 3.0 .* randn(rng, length(sol.t))),
+    DataFrame(obs_id = "obs_P", time = sol.t, measurement = sol[:P] .+ x_true.sigma .* randn(rng, length(sol.t))),
+)
+observables = [PEtabObservable(:obs_SE, :obs1, 3.0), PEtabObservable(:obs_P, :obs2, :sigma)]
+# Priors act on the linear scale: weak log-normal priors on the rates and the noise, a prior median of 90 for S0
+pest = [
+    PEtabParameter(:c1; prior = LogNormal(0.0, 2.0)),
+    PEtabParameter(:c2; prior = LogNormal(0.0, 2.0)),
+    PEtabParameter(:S0; prior = LogNormal(4.5, 0.5)),
+    PEtabParameter(:sigma; prior = LogNormal(0.0, 1.0)),
+]
+
+yaml = "{{path}}"  # a PEtab standard-format problem (priors from its parameter table) replaces the built-in one
+model = isempty(yaml) ? PEtabModel(rn, observables, measurements, pest) : PEtabModel(yaml)
+petab_prob = PEtabODEProblem(model; gradient_method = :{{gradient}})
+target = PEtabLogDensity(petab_prob)  # log-posterior on an unconstrained scale
+pname(k) = replace(string(k), r"^log(10|2)?_" => "")  # parameter name without its scale prefix
+
+{{?model=nuts}}sampler = NUTS({{target-acceptance}})
+{{?model=hmc}}sampler = HMC({{step-size}}, {{leapfrog}})  # step size, leapfrog steps
+chains = map(1:{{nchains}}) do _
+    x0 = get_startguesses(rng, petab_prob, 1)  # start drawn from the prior
+    x_inf = target.inference_info.bijectors(to_prior_scale(x0, target))  # the sampler starts on the inference scale
+    draws = sample(rng, target, sampler, {{nsamples}}; n_adapts = 500, discard_initial = 500, initial_params = x_inf, progress = false)
+    to_chains(draws, target)  # back on the prior (linear) scale
+end
+chain = chainscat(chains...)
+
+println(summarystats(chain))  # posterior mean, sd, effective sample size and R-hat
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "obs-vs-sim"
+label = "Observed vs. Simulated"
+desc = "Measurements against the observables simulated at the posterior medians (first simulation condition)"
+code = '''
+using Plots, Statistics
+
+x_med = [median(chain[Symbol(pname(k))]) for k in keys(petab_prob.xnominal_transformed)]  # posterior medians, linear scale
+x_fit = copy(petab_prob.xnominal_transformed)
+for (i, k) in enumerate(keys(x_fit))
+    x_fit[k] = startswith(string(k), "log10_") ? log10(x_med[i]) : startswith(string(k), "log2_") ? log2(x_med[i]) : startswith(string(k), "log_") ? log(x_med[i]) : x_med[i]
+end
+plot(x_fit, petab_prob; linewidth = 2.0)  # PEtab's model-fit recipe at the posterior medians
+'''
+
+[[actionGroups.actions]]
+id = "traces"
+label = "Trace Plots"
+desc = "The draws of every chain and their densities, parameter by parameter"
+code = '''
+using StatsPlots
+
+plot(chain)  # the chains should overlap, with no trend and no chain stuck apart
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "posterior-correlation"
+label = "Posterior Correlation"
+desc = "Correlations between the parameters in the posterior draws"
+code = '''
+using Statistics
+
+pnames = names(chain, :parameters)
+C = cor(Array(chain[pnames]))  # strong posterior correlation flags combinations the data pin down only jointly
+foreach(i -> println(rpad(string(pnames[i]), 8), round.(C[i, :]; digits = 2)), eachindex(pnames))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "new-condition"
+label = "New Condition"
+desc = "Product formation with half the enzyme (E(0) = 25), predicted from 200 posterior draws"
+code = '''
+using Plots, OrdinaryDiffEqRosenbrock, Statistics
+
+isempty(yaml) || error("New Condition halves E(0) of the built-in Michaelis-Menten problem; adapt it to the species of your own model")
+draws = Array(chain[[:c1, :c2, :S0]])[rand(rng, 1:size(chain, 1) * size(chain, 3), 200), :]  # 200 posterior draws
+P_new = map(eachrow(draws)) do d
+    s = solve(ODEProblem(rn, [:E => 25.0, :SE => 0.0, :P => 0.0], (0.0, 10.0), [:c1 => d[1], :c2 => d[2], :S0 => d[3]]), Rodas5P(); saveat = 0:0.1:10.0)
+    s[:P]
+end
+Pm = reduce(hcat, P_new)
+q = mapslices(row -> quantile(row, [0.05, 0.5, 0.95]), Pm; dims = 2)
+plot(0:0.1:10.0, q[:, 2]; ribbon = (q[:, 2] .- q[:, 1], q[:, 3] .- q[:, 2]), label = "E(0) = 25, median and 90% band", xlabel = "Time", ylabel = "P")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "credible-intervals"
+label = "Credible Intervals"
+desc = "95% equal-tailed credible intervals of the parameters"
+code = '''
+println(quantile(chain; q = [0.025, 0.5, 0.975]))  # on the linear scale of the priors
+'''
+
+[[actionGroups.actions]]
+id = "parameter-values"
+label = "Parameter Values"
+desc = "Posterior means on the linear scale against the values that simulated the data"
+code = '''
+using Statistics
+
+truth = isempty(yaml) ? x_true : (;)  # true values exist only for the built-in problem
+for p in names(chain, :parameters)
+    println(rpad(string(p), 8), "posterior mean ", round(mean(chain[p]); sigdigits = 4), ", sd ", round(std(chain[p]); sigdigits = 3), haskey(truth, p) ? string(", true ", truth[p]) : "")
+end
+'''

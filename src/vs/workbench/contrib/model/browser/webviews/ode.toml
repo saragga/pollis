@@ -1,28 +1,21 @@
-# ODE Inference Methods Webview Configuration
+# Parameter Estimation for ODEs Webview Configuration
 # This is the declarative source for the webview. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/ode.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "ODE Inference Methods"
+title = "Parameter Estimation for ODEs"
 viewType = "pollis.ode"
-defaultModel = "struct"
+defaultModel = "single"
+decisionFirstColumn = "Model"
 
 [[packages]]
 name = "PEtab.jl"
 github = "https://github.com/sebapersson/PEtab.jl"
 
 [[packages]]
-name = "StructuralIdentifiability.jl"
-github = "https://github.com/SciML/StructuralIdentifiability.jl"
-
-[[packages]]
 name = "LikelihoodProfiler.jl"
 github = "https://github.com/insysbio/LikelihoodProfiler.jl"
-
-[[packages]]
-name = "AdvancedHMC.jl"
-github = "https://github.com/TuringLang/AdvancedHMC.jl"
 
 [[packages]]
 name = "Catalyst.jl"
@@ -40,44 +33,8 @@ github = "https://github.com/fides-dev/Fides.jl"
 name = "Optim.jl"
 github = "https://github.com/JuliaNLSolvers/Optim.jl"
 
-[[packages]]
-name = "OptimizationLBFGSB.jl"
-github = "https://github.com/SciML/Optimization.jl/tree/master/lib/OptimizationLBFGSB"
-
-[[packages]]
-name = "SciMLSensitivity.jl"
-github = "https://github.com/SciML/SciMLSensitivity.jl"
-
-[[packages]]
-name = "Distributions.jl"
-github = "https://github.com/JuliaStats/Distributions.jl"
-
-[[packages]]
-name = "Bijectors.jl"
-github = "https://github.com/TuringLang/Bijectors.jl"
-
-[[packages]]
-name = "LogDensityProblems.jl"
-github = "https://github.com/tpapp/LogDensityProblems.jl"
-
-[[packages]]
-name = "LogDensityProblemsAD.jl"
-github = "https://github.com/tpapp/LogDensityProblemsAD.jl"
-
-[[packages]]
-name = "MCMCChains.jl"
-github = "https://github.com/TuringLang/MCMCChains.jl"
-
-[[packages]]
-name = "StatsPlots.jl"
-github = "https://github.com/JuliaPlots/StatsPlots.jl"
-
-[[packages]]
-name = "Plots.jl"
-github = "https://github.com/JuliaPlots/Plots.jl"
-
 [requires]
-packages = ["PEtab.jl", "StructuralIdentifiability.jl", "LikelihoodProfiler.jl", "AdvancedHMC.jl", "Catalyst.jl", "OrdinaryDiffEqRosenbrock.jl", "Distributions.jl", "Fides.jl", "Optim.jl", "OptimizationLBFGSB.jl", "SciMLSensitivity.jl", "Bijectors.jl", "LogDensityProblems.jl", "LogDensityProblemsAD.jl", "MCMCChains.jl", "StatsPlots.jl", "Plots.jl"]
+packages = ["PEtab.jl", "LikelihoodProfiler.jl", "Catalyst.jl", "OrdinaryDiffEqRosenbrock.jl", "Fides.jl", "Optim.jl", "OptimizationLBFGSB.jl", "SciMLSensitivity.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -152,7 +109,7 @@ bundled = true
 
 [[wikis]]
 name = "Identifiability"
-file = "ode/identifiability.md"
+file = "odeident/identifiability.md"
 bundled = true
 
 [[references]]
@@ -173,9 +130,6 @@ key = "LMIGK...2023a"
 
 [[references]]
 key = "BM2020a"
-
-[[references]]
-key = "XGTTT...2020a"
 
 [[references]]
 separator = true
@@ -203,16 +157,6 @@ key = "VFWHB2019a"
 [[references]]
 key = "FS2022a"
 
-[[references]]
-key = "HG2014a"
-
-[[references]]
-key = "VGSCB2021a"
-
-[[models]]
-id = "struct"
-label = "Structural Identifiability"
-
 [[models]]
 id = "single"
 label = "Single-Start"
@@ -225,14 +169,6 @@ label = "Multi-Start"
 id = "profile"
 label = "Profile Likelihood"
 
-[[models]]
-id = "bayes"
-label = "Bayesian Inference"
-
-[[bullets]]
-text = "Identifiability First"
-detail = "Structural identifiability checks whether the parameters could be recovered from perfect data on the chosen outputs, before any fitting"
-
 [[bullets]]
 text = "Fitting by Optimisation"
 detail = "Maximum likelihood from one start or many; the waterfall plot shows whether the best fit is found repeatedly"
@@ -242,13 +178,12 @@ text = "Uncertainty"
 detail = "Profile likelihoods give confidence intervals, which may be asymmetric or open-ended, and show practical identifiability"
 
 [[bullets]]
-text = "Bayesian Inference"
-detail = "Posterior distributions from priors and the data, sampled with NUTS or HMC"
+text = "Identifiability Before and After"
+detail = "Structural Identifiability of ODEs checks before any fitting what perfect data could recover; the Fisher information and the profiles show what these data pin down"
 
-[[decisionRows]]
-task = "Structural Identifiability"
-context = "Recoverability check"
-purpose = "Check that the parameters can be recovered from perfect, noise-free data on the chosen outputs, before fitting anything"
+[[bullets]]
+text = "Your Own Problem"
+detail = "A problem written in the PEtab format, an SBML model and tables linked by a YAML file, replaces the built-in Michaelis-Menten problem"
 
 [[decisionRows]]
 task = "Single-Start"
@@ -265,44 +200,17 @@ task = "Profile Likelihood"
 context = "CIs + identifiability"
 purpose = "Practical identifiability and likelihood-based confidence intervals, which may be asymmetric or open-ended"
 
-[[decisionRows]]
-task = "Bayesian Inference"
-context = "Full posterior"
-purpose = "Posterior distribution with priors, sampled by NUTS or HMC; credible intervals and parameter correlations"
-
-[[inputs]]
-id = "struct-observed"
-label = "Observed Outputs"
-tooltip = "Which quantities are measured. The estimation models measure both S + E and P."
-kind = "select"
-default = "both"
-models = ["struct"]
-
-[[inputs.options]]
-value = "both"
-label = "S + E and P"
-
-[[inputs.options]]
-value = "p"
-label = "P Only"
-
-[[inputs.options]]
-value = "se"
-label = "S + E Only"
-
 [[inputs]]
 id = "path"
 label = "PEtab YAML (Optional)"
 tooltip = "Path to a problem in the PEtab standard format (YAML plus SBML model and tables). Leave empty to use the Michaelis-Menten problem built in the code. Prediction and true-value comparisons apply to the built-in problem only."
 default = ""
-models = ["single", "multi", "profile", "bayes"]
 
 [[inputs]]
 id = "seed"
 label = "Seed"
-tooltip = "Random seed for the simulated measurements, the start points and the sampler."
+tooltip = "Random seed for the simulated measurements and the start points."
 default = "1"
-models = ["single", "multi", "profile", "bayes"]
 
 [[inputs]]
 id = "optimizer"
@@ -310,7 +218,6 @@ label = "Optimizer"
 tooltip = "Local optimizer passed to calibrate. PEtab.jl recommends Optim.IPNewton() with the exact Hessian for small models (under 10 ODEs and under 20 estimated parameters), Fides.CustomHessian() with a Gauss-Newton Hessian for medium-sized ones, and (L)BFGS methods such as Fides.BFGS() for large ones. Optim.LBFGS() is also supported."
 kind = "select"
 default = "Optim.IPNewton()"
-models = ["single", "multi", "profile"]
 
 [[inputs.options]]
 value = "Fides.CustomHessian()"
@@ -334,7 +241,6 @@ label = "Gradient Method"
 tooltip = "How PEtab.jl computes the gradient of the negative log-likelihood. ForwardDiff is usually fastest for small models; adjoint sensitivities scale best to large models and need SciMLSensitivity."
 kind = "select"
 default = "ForwardDiff"
-models = ["single", "multi", "profile", "bayes"]
 
 [[inputs.options]]
 value = "ForwardDiff"
@@ -361,67 +267,6 @@ label = "Confidence Level"
 tooltip = "Level of the profile-likelihood confidence intervals. The threshold on the negative log-likelihood is half the chi-square(1) quantile."
 default = "0.95"
 models = ["profile"]
-
-[[inputs]]
-id = "sampler"
-label = "Sampler"
-tooltip = "AdvancedHMC sampler. NUTS adapts its path length and step size; HMC uses a fixed step size of 0.05 and 10 leapfrog steps."
-kind = "select"
-default = "NUTS"
-models = ["bayes"]
-
-[[inputs.options]]
-value = "NUTS"
-label = "NUTS"
-
-[[inputs.options]]
-value = "HMC"
-label = "HMC"
-
-[[inputs]]
-id = "target-acceptance"
-label = "Target Acceptance"
-tooltip = "Target acceptance rate for the NUTS step-size adaptation. 0.8 is Stan's default; higher values take smaller steps."
-default = "0.8"
-when = "sampler=NUTS"
-models = ["bayes"]
-
-[[inputs]]
-id = "nsamples"
-label = "n Samples"
-tooltip = "Draws kept per chain, after 500 adaptation draws that are discarded."
-default = "1000"
-models = ["bayes"]
-
-[[inputs]]
-id = "nchains"
-label = "n Chains"
-tooltip = "Number of chains, each started from a draw from the prior. Several chains are needed for R-hat."
-default = "4"
-models = ["bayes"]
-
-[[codeBranches]]
-model = "struct"
-code = '''
-using StructuralIdentifiability
-
-# Michaelis-Menten kinetics, S + E <-> SE -> P + E, with c3 = 3 substituted because it is known in the estimation models
-ode = @ODEmodel(
-    S'(t) = -c1 * S(t) * E(t) + c2 * SE(t),
-    E'(t) = -c1 * S(t) * E(t) + (c2 + 3) * SE(t),
-    SE'(t) = c1 * S(t) * E(t) - (c2 + 3) * SE(t),
-    P'(t) = 3 * SE(t),
-{{?struct-observed=both|se}}    y1(t) = S(t) + E(t),
-{{?struct-observed=both|p}}    y2(t) = P(t),
-)
-
-# E, SE and P start at known values (50, 0, 0); only S(0) = S0 is unknown, as in the estimation models
-known = [E, SE, P]
-for (f, status) in assess_identifiability(ode; known_ic = known)  # :globally, :locally or :nonidentifiable
-    println(f, " => ", status)
-end
-println("Identifiable combinations: ", find_identifiable_functions(ode; known_ic = known))
-'''
 
 [[codeBranches]]
 model = "single"
@@ -592,70 +437,6 @@ for (k, pc) in zip(profile_labels(pl_sol), pl_sol.profiles)
 end
 '''
 
-[[codeBranches]]
-model = "bayes"
-code = '''
-using PEtab, Catalyst, OrdinaryDiffEqRosenbrock, Distributions, Random
-using AdvancedHMC, Bijectors, LogDensityProblems, LogDensityProblemsAD, MCMCChains
-{{?gradient=Adjoint}}using SciMLSensitivity  # must be loaded before the problem is built
-using PEtab: DataFrame  # PEtab takes the measurement table as a DataFrame
-
-rng = Xoshiro({{seed}})
-
-# Michaelis-Menten kinetics, S + E <-> SE -> P + E (the PEtab.jl tutorial model); c3 = 3 is known
-rn = @reaction_network begin
-    @parameters S0 c3=3.0
-    @species begin
-        S(t) = S0
-        E(t) = 50.0
-        SE(t) = 0.0
-        P(t) = 0.0
-    end
-    @observables begin
-        obs1 ~ S + E
-        obs2 ~ P
-    end
-    c1, S + E --> SE
-    c2, SE --> S + E
-    c3, SE --> P + E
-end
-
-# Simulated data at the true values; noise sd 3 on S + E (known) and sigma = 1 on P (estimated)
-x_true = (c1 = 1.0, c2 = 10.0, S0 = 100.0, sigma = 1.0)
-oprob = ODEProblem(rn, [:E => 50.0, :SE => 0.0, :P => 0.0], (0.0, 10.0), [:c1 => x_true.c1, :c2 => x_true.c2, :S0 => x_true.S0])
-sol = solve(oprob, Rodas5P(); saveat = 0:0.5:10.0)
-measurements = vcat(
-    DataFrame(obs_id = "obs_SE", time = sol.t, measurement = sol[:S] .+ sol[:E] .+ 3.0 .* randn(rng, length(sol.t))),
-    DataFrame(obs_id = "obs_P", time = sol.t, measurement = sol[:P] .+ x_true.sigma .* randn(rng, length(sol.t))),
-)
-observables = [PEtabObservable(:obs_SE, :obs1, 3.0), PEtabObservable(:obs_P, :obs2, :sigma)]
-# Priors act on the linear scale: weak log-normal priors on the rates and the noise, a prior median of 90 for S0
-pest = [
-    PEtabParameter(:c1; prior = LogNormal(0.0, 2.0)),
-    PEtabParameter(:c2; prior = LogNormal(0.0, 2.0)),
-    PEtabParameter(:S0; prior = LogNormal(4.5, 0.5)),
-    PEtabParameter(:sigma; prior = LogNormal(0.0, 1.0)),
-]
-
-yaml = "{{path}}"  # a PEtab standard-format problem (priors from its parameter table) replaces the built-in one
-model = isempty(yaml) ? PEtabModel(rn, observables, measurements, pest) : PEtabModel(yaml)
-petab_prob = PEtabODEProblem(model; gradient_method = :{{gradient}})
-target = PEtabLogDensity(petab_prob)  # log-posterior on an unconstrained scale
-pname(k) = replace(string(k), r"^log(10|2)?_" => "")  # parameter name without its scale prefix
-
-{{?sampler=NUTS}}sampler = NUTS({{target-acceptance}})
-{{?sampler=HMC}}sampler = HMC(0.05, 10)  # step size 0.05, 10 leapfrog steps
-chains = map(1:{{nchains}}) do _
-    x0 = get_startguesses(rng, petab_prob, 1)  # start drawn from the prior
-    x_inf = target.inference_info.bijectors(to_prior_scale(x0, target))  # the sampler starts on the inference scale
-    draws = sample(rng, target, sampler, {{nsamples}}; n_adapts = 500, discard_initial = 500, initial_params = x_inf, progress = false)
-    to_chains(draws, target)  # back on the prior (linear) scale
-end
-chain = chainscat(chains...)
-
-println(summarystats(chain))  # posterior mean, sd, effective sample size and R-hat
-'''
-
 [[actionGroups]]
 id = "visualise"
 label = "Visualise"
@@ -667,14 +448,7 @@ desc = "Measurements against the fitted observables (first simulation condition)
 code = '''
 using Plots, Statistics
 
-{{?model=single|multi|profile}}plot(res, petab_prob; linewidth = 2.0)  # PEtab's model-fit recipe at the best parameters
-{{?model=bayes}}x_med = [median(chain[Symbol(pname(k))]) for k in keys(petab_prob.xnominal_transformed)]  # posterior medians, linear scale
-{{?model=bayes}}x_fit = copy(petab_prob.xnominal_transformed)
-{{?model=bayes}}for (i, k) in enumerate(keys(x_fit))
-{{?model=bayes}}    x_fit[k] = startswith(string(k), "log10_") ? log10(x_med[i]) : startswith(string(k), "log2_") ? log2(x_med[i]) : startswith(string(k), "log_") ? log(x_med[i]) : x_med[i]
-{{?model=bayes}}end
-{{?model=bayes}}plot(x_fit, petab_prob; linewidth = 2.0)  # fit at the posterior medians
-{{?model=struct}}println("Structural identifiability uses no data: choose an estimation model to compare the fit with the measurements")
+plot(res, petab_prob; linewidth = 2.0)  # PEtab's model-fit recipe at the best parameters
 '''
 
 [[actionGroups.actions]]
@@ -687,9 +461,7 @@ using Plots
 {{?model=multi|profile}}plot(res; plot_type = :waterfall)  # a long flat first step: the best minimum is found repeatedly
 {{?model=multi|profile}}fmins = sort(filter(isfinite, [r.fmin for r in res.runs]))
 {{?model=multi|profile}}println(count(<=(fmins[1] + 0.1), fmins), " of ", length(fmins), " finished starts within 0.1 of the best; ", length(res.runs) - length(fmins), " failed")
-{{?model=single}}println("A waterfall needs many starts: use the Multi-Start model")
-{{?model=bayes}}plot(chain)  # for the sampler, look at the trace plots instead: chains should overlap
-{{?model=struct}}println("No optimisation in the structural model: use the Multi-Start model")
+{{?model=single}}println("A waterfall needs many starts: use the Multi-Start tab")
 '''
 
 [[actionGroups.actions]]
@@ -700,8 +472,7 @@ code = '''
 using Plots
 
 {{?model=profile}}plot(pl_sol)  # a profile that stays below the threshold on one side is practically non-identifiable there
-{{?model=single|multi|bayes}}println("Profiles are computed by the Profile Likelihood model")
-{{?model=struct}}println("Structural identifiability is exact and needs no profiles; the Profile Likelihood model gives the practical counterpart")
+{{?model=single|multi}}println("Profiles are computed by the Profile Likelihood tab")
 '''
 
 [[actionGroups]]
@@ -715,18 +486,16 @@ desc = "Standardised residuals (measurement - simulation) / sigma at the best fi
 code = '''
 using Plots, Statistics
 
-{{?model=single|multi|profile}}r = petab_prob.residuals(res.xmin)  # standardised by the noise sigma of each observable
-{{?model=single|multi|profile}}println("Standardised residuals: mean ", round(mean(r); digits = 3), ", sd ", round(std(r); digits = 3))
-{{?model=single|multi|profile}}println("Mean near 0 and sd near 1 if the model and its noise model fit; for an estimated sigma, sd near 1 holds by construction")
-{{?model=single|multi|profile}}plot(res, petab_prob; plot_type = :standardized_residuals)
-{{?model=bayes}}println("Residuals belong to a point estimate: use the Multi-Start model, or Observed vs. Simulated for the posterior-median fit")
-{{?model=struct}}println("The structural model has no data and no residuals: use an estimation model")
+r = petab_prob.residuals(res.xmin)  # standardised by the noise sigma of each observable
+println("Standardised residuals: mean ", round(mean(r); digits = 3), ", sd ", round(std(r); digits = 3))
+println("Mean near 0 and sd near 1 if the model and its noise model fit; for an estimated sigma, sd near 1 holds by construction")
+plot(res, petab_prob; plot_type = :standardized_residuals)
 '''
 
 [[actionGroups.actions]]
 id = "identifiability"
 label = "Identifiability"
-desc = "Practical identifiability: Fisher information, profiles or posterior correlation"
+desc = "Practical identifiability: the Fisher information at the best fit, or the profiles"
 code = '''
 using LinearAlgebra, Statistics
 
@@ -737,10 +506,6 @@ using LinearAlgebra, Statistics
 {{?model=profile}}for (k, rc) in zip(profile_labels(pl_sol), retcodes(pl_sol))
 {{?model=profile}}    println(pname(k), ": ", rc.left == :Identifiable && rc.right == :Identifiable ? "identifiable" : "not identifiable on at least one side", " (", rc.left, ", ", rc.right, ")")
 {{?model=profile}}end
-{{?model=bayes}}pnames = names(chain, :parameters)
-{{?model=bayes}}C = cor(Array(chain[pnames]))  # strong posterior correlation flags combinations the data pin down only jointly
-{{?model=bayes}}foreach(i -> println(rpad(string(pnames[i]), 8), round.(C[i, :]; digits = 2)), eachindex(pnames))
-{{?model=struct}}println("The main code already gives structural identifiability; change Observed Outputs and rerun to see how the outputs decide it. Practical identifiability needs data: use the Profile Likelihood model")
 '''
 
 [[actionGroups]]
@@ -754,10 +519,8 @@ desc = "All state trajectories at the fitted parameters"
 code = '''
 using Plots
 
-{{?model=single|multi|profile}}sol_fit = get_odesol(res, petab_prob)  # solved with the problem's own ODE solver
-{{?model=single|multi|profile}}plot(sol_fit; xlabel = "Time", ylabel = "Amount")
-{{?model=bayes}}println("Use Observed vs. Simulated for the posterior-median fit, or New Condition for posterior predictions")
-{{?model=struct}}println("The structural model has no parameter values: use an estimation model")
+sol_fit = get_odesol(res, petab_prob)  # solved with the problem's own ODE solver
+plot(sol_fit; xlabel = "Time", ylabel = "Amount")
 '''
 
 [[actionGroups.actions]]
@@ -767,21 +530,12 @@ desc = "Product formation with half the enzyme (E(0) = 25), predicted from the f
 code = '''
 using Plots, OrdinaryDiffEqRosenbrock, Statistics
 
-{{?model!=struct}}isempty(yaml) || error("New Condition halves E(0) of the built-in Michaelis-Menten problem; adapt it to the species of your own model")
-{{?model=single|multi|profile}}oprob_fit, cbs = get_odeproblem(res, petab_prob)  # the fitted problem for the measured condition
-{{?model=single|multi|profile}}sol_fit = solve(oprob_fit, Rodas5P(); callback = cbs, saveat = 0:0.1:10.0)
-{{?model=single|multi|profile}}sol_new = solve(remake(oprob_fit; u0 = [:E => 25.0]), Rodas5P(); callback = cbs, saveat = 0:0.1:10.0)
-{{?model=single|multi|profile}}plot(sol_fit.t, sol_fit[:P]; label = "E(0) = 50 (measured)", xlabel = "Time", ylabel = "P")
-{{?model=single|multi|profile}}plot!(sol_new.t, sol_new[:P]; label = "E(0) = 25 (predicted)", linestyle = :dash)
-{{?model=bayes}}draws = Array(chain[[:c1, :c2, :S0]])[rand(rng, 1:size(chain, 1) * size(chain, 3), 200), :]  # 200 posterior draws
-{{?model=bayes}}P_new = map(eachrow(draws)) do d
-{{?model=bayes}}    s = solve(ODEProblem(rn, [:E => 25.0, :SE => 0.0, :P => 0.0], (0.0, 10.0), [:c1 => d[1], :c2 => d[2], :S0 => d[3]]), Rodas5P(); saveat = 0:0.1:10.0)
-{{?model=bayes}}    s[:P]
-{{?model=bayes}}end
-{{?model=bayes}}Pm = reduce(hcat, P_new)
-{{?model=bayes}}q = mapslices(row -> quantile(row, [0.05, 0.5, 0.95]), Pm; dims = 2)
-{{?model=bayes}}plot(0:0.1:10.0, q[:, 2]; ribbon = (q[:, 2] .- q[:, 1], q[:, 3] .- q[:, 2]), label = "E(0) = 25, median and 90% band", xlabel = "Time", ylabel = "P")
-{{?model=struct}}println("Prediction needs fitted parameters: use an estimation model")
+isempty(yaml) || error("New Condition halves E(0) of the built-in Michaelis-Menten problem; adapt it to the species of your own model")
+oprob_fit, cbs = get_odeproblem(res, petab_prob)  # the fitted problem for the measured condition
+sol_fit = solve(oprob_fit, Rodas5P(); callback = cbs, saveat = 0:0.1:10.0)
+sol_new = solve(remake(oprob_fit; u0 = [:E => 25.0]), Rodas5P(); callback = cbs, saveat = 0:0.1:10.0)
+plot(sol_fit.t, sol_fit[:P]; label = "E(0) = 50 (measured)", xlabel = "Time", ylabel = "P")
+plot!(sol_new.t, sol_new[:P]; label = "E(0) = 25 (predicted)", linestyle = :dash)
 '''
 
 [[actionGroups]]
@@ -797,16 +551,14 @@ using Statistics
 
 {{?model=single}}nstarts = 20
 {{?model=multi|profile}}nstarts = {{nstarts}}
-{{?model=single|multi|profile}}runs = map(["Fides (Exact Hessian)" => Fides.CustomHessian(), "Fides (BFGS)" => Fides.BFGS(), "Optim IPNewton" => Optim.IPNewton(), "Optim LBFGS" => Optim.LBFGS()]) do (name, alg)
-{{?model=single|multi|profile}}    name => calibrate_multistart(Xoshiro({{seed}}), petab_prob, alg, nstarts)  # same seed, so the same starts for every optimiser
-{{?model=single|multi|profile}}end
-{{?model=single|multi|profile}}fbest = minimum(last(r).fmin for r in runs)
-{{?model=single|multi|profile}}for (name, ms) in runs
-{{?model=single|multi|profile}}    hits = count(r -> r.fmin <= fbest + 0.1, ms.runs)
-{{?model=single|multi|profile}}    println(rpad(name, 24), "best ", round(ms.fmin; digits = 3), ", reach best ", hits, "/", nstarts, ", median time ", round(median(r.runtime for r in ms.runs); sigdigits = 3), " s")
-{{?model=single|multi|profile}}end
-{{?model=bayes}}println("The sampler targets the posterior, not a minimum: use the Multi-Start model to compare optimisers")
-{{?model=struct}}println("The structural model does no optimisation: use an estimation model")
+runs = map(["Fides (Exact Hessian)" => Fides.CustomHessian(), "Fides (BFGS)" => Fides.BFGS(), "Optim IPNewton" => Optim.IPNewton(), "Optim LBFGS" => Optim.LBFGS()]) do (name, alg)
+    name => calibrate_multistart(Xoshiro({{seed}}), petab_prob, alg, nstarts)  # same seed, so the same starts for every optimiser
+end
+fbest = minimum(last(r).fmin for r in runs)
+for (name, ms) in runs
+    hits = count(r -> r.fmin <= fbest + 0.1, ms.runs)
+    println(rpad(name, 24), "best ", round(ms.fmin; digits = 3), ", reach best ", hits, "/", nstarts, ", median time ", round(median(r.runtime for r in ms.runs); sigdigits = 3), " s")
+end
 '''
 
 [[actionGroups.actions]]
@@ -816,15 +568,14 @@ desc = "ForwardDiff, forward sensitivities and adjoint gradients: agreement and 
 code = '''
 using SciMLSensitivity, Random  # needed for the adjoint gradient
 
-{{?model!=struct}}x = get_startguesses(Xoshiro(1), petab_prob, 1)  # a point away from the optimum, where the gradient is not near zero
-{{?model!=struct}}probs = [m => PEtabODEProblem(model; gradient_method = m) for m in (:ForwardDiff, :ForwardEquations, :Adjoint)]
-{{?model!=struct}}g_ref = last(probs[1]).grad(x)
-{{?model!=struct}}for (m, p) in probs
-{{?model!=struct}}    g = p.grad(x)  # first call compiles
-{{?model!=struct}}    t = minimum(@elapsed(p.grad(x)) for _ in 1:5)
-{{?model!=struct}}    println(rpad(string(m), 18), "max relative difference from ForwardDiff ", round(maximum(abs.(g .- g_ref) ./ max.(abs.(g_ref), 1e-8)); sigdigits = 2), ", time ", round(1e3 * t; sigdigits = 3), " ms")
-{{?model!=struct}}end
-{{?model=struct}}println("The structural model has no likelihood to differentiate: use an estimation model")
+x = get_startguesses(Xoshiro(1), petab_prob, 1)  # a point away from the optimum, where the gradient is not near zero
+probs = [m => PEtabODEProblem(model; gradient_method = m) for m in (:ForwardDiff, :ForwardEquations, :Adjoint)]
+g_ref = last(probs[1]).grad(x)
+for (m, p) in probs
+    g = p.grad(x)  # first call compiles
+    t = minimum(@elapsed(p.grad(x)) for _ in 1:5)
+    println(rpad(string(m), 18), "max relative difference from ForwardDiff ", round(maximum(abs.(g .- g_ref) ./ max.(abs.(g_ref), 1e-8)); sigdigits = 2), ", time ", round(1e3 * t; sigdigits = 3), " ms")
+end
 '''
 
 [[actionGroups]]
@@ -834,7 +585,7 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "ci-profile"
 label = "Confidence Intervals"
-desc = "Profile-likelihood, Wald (Fisher information) or posterior intervals"
+desc = "Profile-likelihood or Wald (Fisher information) intervals"
 code = '''
 using LinearAlgebra, Statistics
 
@@ -844,10 +595,8 @@ using LinearAlgebra, Statistics
 {{?model=profile}}end
 {{?model=single|multi}}se = sqrt.(diag(inv(petab_prob.FIM(res.xmin))))  # Wald standard errors on the log10 scale
 {{?model=single|multi}}for (i, k) in enumerate(keys(res.xmin))
-{{?model=single|multi}}    println(pname(k), " Wald 95% CI: [", round(linear(k, res.xmin[k] - 1.96 * se[i]); sigdigits = 4), ", ", round(linear(k, res.xmin[k] + 1.96 * se[i]); sigdigits = 4), "] (symmetric on the log scale; compare the Profile Likelihood model)")
+{{?model=single|multi}}    println(pname(k), " Wald 95% CI: [", round(linear(k, res.xmin[k] - 1.96 * se[i]); sigdigits = 4), ", ", round(linear(k, res.xmin[k] + 1.96 * se[i]); sigdigits = 4), "] (symmetric on the log scale; compare the Profile Likelihood tab)")
 {{?model=single|multi}}end
-{{?model=bayes}}println(quantile(chain; q = [0.025, 0.5, 0.975]))  # 95% equal-tailed credible intervals
-{{?model=struct}}println("Intervals need data: use the Profile Likelihood model")
 '''
 
 [[actionGroups.actions]]
@@ -857,13 +606,9 @@ desc = "Estimates on the linear scale against the values that simulated the data
 code = '''
 using Statistics
 
-{{?model!=struct}}truth = isempty(yaml) ? x_true : (;)  # true values exist only for the built-in problem
-{{?model=single|multi|profile}}for k in keys(res.xmin)
-{{?model=single|multi|profile}}    p = Symbol(pname(k))
-{{?model=single|multi|profile}}    println(rpad(string(p), 8), "estimate ", round(linear(k, res.xmin[k]); sigdigits = 4), haskey(truth, p) ? string(", true ", truth[p]) : "")
-{{?model=single|multi|profile}}end
-{{?model=bayes}}for p in names(chain, :parameters)
-{{?model=bayes}}    println(rpad(string(p), 8), "posterior mean ", round(mean(chain[p]); sigdigits = 4), ", sd ", round(std(chain[p]); sigdigits = 3), haskey(truth, p) ? string(", true ", truth[p]) : "")
-{{?model=bayes}}end
-{{?model=struct}}println("The structural model estimates nothing: use an estimation model")
+truth = isempty(yaml) ? x_true : (;)  # true values exist only for the built-in problem
+for k in keys(res.xmin)
+    p = Symbol(pname(k))
+    println(rpad(string(p), 8), "estimate ", round(linear(k, res.xmin[k]); sigdigits = 4), haskey(truth, p) ? string(", true ", truth[p]) : "")
+end
 '''
