@@ -1,10 +1,10 @@
-# Neural ODEs for System Identification Webview Configuration
+# Neural ODEs and Universal Differential Equations Webview Configuration
 # This is the declarative source for the webview. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/node.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Neural ODEs for System Identification"
+title = "Neural ODEs and Universal Differential Equations"
 viewType = "pollis.node"
 defaultModel = "node"
 

@@ -1,4 +1,4 @@
-# Neural ODEs for System Identification: Decision Guide
+# Neural ODEs and Universal Differential Equations: Decision Guide
 
 Which model fits the data and what is known about the system, which action answers a question, how to set the inputs, and when another panel of Pollis is the better place to start.
 

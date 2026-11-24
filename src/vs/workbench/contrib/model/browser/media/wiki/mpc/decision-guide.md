@@ -46,7 +46,7 @@ A common starting point is a sample time that resolves the fastest dynamics of i
 |---|---|
 | No constraints, linear plant, a fixed gain is enough | **Linear Optimal Control** |
 | No model yet, only input and output data | **System Identification Methods** |
-| A dynamic model to be learned with neural networks | **Neural ODEs for System Identification** |
+| A dynamic model to be learned with neural networks | **Neural ODEs and Universal Differential Equations** |
 | Discrete states and actions with known probabilities | **Single-Agent Decision Processes** |
 | A sequential problem to solve offline over a grid | **Dynamic Programming** |
 

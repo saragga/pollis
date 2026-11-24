@@ -1,4 +1,4 @@
-# Neural ODEs for System Identification: Diagnostics
+# Neural ODEs and Universal Differential Equations: Diagnostics
 
 How to judge a fit: the fitted against the observed trajectory, the convergence of the loss, the structure of the residuals, the error on a held-out horizon, and the sensitivity to the initial condition.
 

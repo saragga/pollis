@@ -1,6 +1,6 @@
-# Neural ODEs for System Identification: Overview
+# Neural ODEs and Universal Differential Equations: Overview
 
-**Neural ODEs for System Identification** learns the continuous-time dynamics of a system from an observed trajectory, with a neural network as the right-hand side of an ordinary differential equation, through DiffEqFlux.jl and the SciML ecosystem.
+**Neural ODEs and Universal Differential Equations** learns the continuous-time dynamics of a system from an observed trajectory, with a neural network as the right-hand side of an ordinary differential equation, through DiffEqFlux.jl and the SciML ecosystem.
 
 ## System identification with ODEs
 

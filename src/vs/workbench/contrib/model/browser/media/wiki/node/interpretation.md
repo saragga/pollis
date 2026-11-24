@@ -1,4 +1,4 @@
-# Neural ODEs for System Identification: Interpretation
+# Neural ODEs and Universal Differential Equations: Interpretation
 
 How to read what the fitted model says about the system: simulations from new starting points and beyond the data, the comparison with a linear ODE, the learned vector field, the estimated rates of the UDE, and the Lyapunov estimate.
 

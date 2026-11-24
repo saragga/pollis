@@ -10,7 +10,7 @@ import { getNodeHtml } from '../webviews/node.template.js';
 export const NODE_PANEL: IScaffoldPanel = {
 	id: 'node',
 	viewType: 'pollis.node',
-	title: 'Neural ODEs for System Identification',
+	title: 'Neural ODEs and Universal Differential Equations',
 	data: NODE_METADATA.node,
 	html: getNodeHtml,
 };

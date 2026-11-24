@@ -866,7 +866,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	submenu: ODESubmenuId,
 	title: localize('showStatistics.ode', 'ODE Inference Methods'),
 	order: 4,
-}); // StructuralIdentifiability.jl, PEtab.jl, AdvancedHMC.jl
+}); // StructuralIdentifiability.jl, PEtab.jl, AdvancedHMC.jl, DiffEqFlux.jl
 
 // ============================================
 // SUBMENU: ODE INFERENCE METHODS
@@ -889,6 +889,12 @@ MenuRegistry.appendMenuItem(ODESubmenuId, {
 	command: { id: 'chiara.statistics.odebayes', title: localize('ode.bayes', 'Bayesian Inference') },
 	order: 3,
 }); // PEtab.jl, AdvancedHMC.jl
+
+MenuRegistry.appendMenuItem(ODESubmenuId, {
+	group: '2_ode_neural',
+	command: { id: 'chiara.statistics.nn.node', title: localize('nn.node', 'Neural ODEs and Universal Differential Equations') },
+	order: 1,
+}); // DiffEqFlux.jl, Lux.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '5_time_series',
@@ -1200,12 +1206,6 @@ MenuRegistry.appendMenuItem(NNSubmenuId, {
 	command: { id: 'chiara.statistics.sbi', title: localize('nn.sbi', 'Simulation-Based Inference') },
 	order: 1,
 }); // NeuralEstimators.jl — amortized Bayesian posterior inference
-
-MenuRegistry.appendMenuItem(NNSubmenuId, {
-	group: '2_nn_estimation',
-	command: { id: 'chiara.statistics.nn.node', title: localize('nn.node', 'Neural ODEs for System Identification') },
-	order: 2,
-}); // DiffEqFlux.jl
 
 
 // ============================================

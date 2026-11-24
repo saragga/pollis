@@ -1,4 +1,4 @@
-# Neural ODEs for System Identification: Training
+# Neural ODEs and Universal Differential Equations: Training
 
 How the panel fits the network to the data: the loss, the gradient by adjoint sensitivity, the Adam optimiser, and the solver tolerances.
 

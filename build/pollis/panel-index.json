@@ -7323,13 +7323,13 @@
 		},
 		{
 			"id": "node",
-			"title": "Neural ODEs for System Identification",
+			"title": "Neural ODEs and Universal Differential Equations",
 			"source": "pollis",
 			"commands": [
 				{
 					"id": "chiara.statistics.nn.node",
 					"menuTitles": [
-						"Neural ODEs for System Identification"
+						"Neural ODEs and Universal Differential Equations"
 					]
 				}
 			],

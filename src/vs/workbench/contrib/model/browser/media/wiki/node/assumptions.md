@@ -1,4 +1,4 @@
-# Neural ODEs for System Identification: Assumptions
+# Neural ODEs and Universal Differential Equations: Assumptions
 
 What the three models take for granted: autonomous dynamics, a fully observed state, a known initial condition at the first observation time, smooth vector fields, a squared-error fit, and, for the UDE, a known part of the physics.
 

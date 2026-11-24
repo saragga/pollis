@@ -1,4 +1,4 @@
-# Neural ODEs for System Identification: Architecture
+# Neural ODEs and Universal Differential Equations: Architecture
 
 How the three models build their vector fields: a network that is the whole right-hand side of the ODE, the same network in a larger state space, and known terms with a network for what is missing.
 

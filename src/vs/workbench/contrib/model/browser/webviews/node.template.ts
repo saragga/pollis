@@ -8,7 +8,7 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 
 export function getNodeHtml(): string {
 	return buildScaffoldHtml('node', NODE_METADATA.node, {
-		title: 'Neural ODEs for System Identification',
+		title: 'Neural ODEs and Universal Differential Equations',
 		defaultModel: 'node',
 		decisionFirstColumn: 'Model',
 	});

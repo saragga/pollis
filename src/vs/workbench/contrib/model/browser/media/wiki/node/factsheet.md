@@ -1,4 +1,4 @@
-# Neural ODEs for System Identification: Factsheet
+# Neural ODEs and Universal Differential Equations: Factsheet
 
 The panel's models, inputs, software and results at a glance.
 
