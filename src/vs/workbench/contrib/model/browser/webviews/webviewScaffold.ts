@@ -53,6 +53,8 @@ const NEXT_STEP_GROUP_CODICONS: Readonly<Record<string, string>> = {
 	interpret: 'lightbulb-sparkle',
 	replicate: 'verified',
 	export: 'export',
+	/** Advanced Methods: specialised methods of a tab, beyond its standard Next Steps (e.g. Krylov.jl's saddle-point, adjoint and block methods). */
+	advanced: 'layers',
 	prices: 'graph-line',
 	returns: 'pulse',
 	fundamentals: 'briefcase',
@@ -1574,6 +1576,7 @@ ${parts.inputsChangedJs ?? ''}			if (panelAction && !panelEditing && document.ge
 
 		// Re-list the open Next Steps group after a model or input change; an example no longer listed falls back to the list.
 		function refreshActionList() {
+			if (typeof refreshStepGroups === 'function') { refreshStepGroups(); }   // a TOML panel's own groups: hide those with nothing to offer
 			if (!listNav || panelEditing || currentPanelId !== listNav.panelId) { return; }
 			if (!panelAction || !actionShown(panelAction)) { renderRightList(listNav.actions, listNav.title); }
 		}

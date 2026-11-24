@@ -99,9 +99,12 @@ function buildNextSteps(panelId: string, data: IScaffoldPanelData): Pick<Webview
 		return {};
 	}
 	const btnId = (id: string) => `btn-${panelId}-${id}`;
+	// A group none of whose actions the current tab and inputs offer is hidden, as a group made for one tab (e.g. Advanced Methods) would open empty on the others
+	const groupButtons = groups.map(g => `['${btnId(g.id)}', ${actionsVar(g.id)}]`).join(', ');
 	return {
 		nextStepsHtml: groups.map(g => `\t\t\t\t\t<li><button class="list-btn panel-toggle" id="${btnId(g.id)}">${nextStepIcon(g.id)}${htmlEsc(g.label)}</button></li>`).join('\n'),
-		nextStepsWiringJs: groups.map(g => `\t\tdocument.getElementById('${btnId(g.id)}').addEventListener('click', function() { showRightPanel(${actionsVar(g.id)}, '${jsEscape(g.label)}', '${btnId(g.id)}'); });`).join('\n'),
+		nextStepsWiringJs: groups.map(g => `\t\tdocument.getElementById('${btnId(g.id)}').addEventListener('click', function() { showRightPanel(${actionsVar(g.id)}, '${jsEscape(g.label)}', '${btnId(g.id)}'); });`).join('\n')
+			+ `\n\t\tfunction refreshStepGroups() { [${groupButtons}].forEach(function(g) { var none = !g[1].some(actionShown); document.getElementById(g[0]).parentElement.hidden = none; if (none && currentPanelId === g[0]) { hideRightPanel(); } }); }\n\t\trefreshStepGroups();`,
 	};
 }
 
