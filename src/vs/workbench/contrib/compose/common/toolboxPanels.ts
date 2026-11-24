@@ -89,6 +89,26 @@ export interface IToolboxTextInfo {
 	readonly changes?: string;
 }
 
+/** A topic of a toolbox's topic maps, such as At War: a menu item of its toolbox, which opens the Topic Maps page on it. */
+export interface IToolboxTopicInfo {
+	/** Its id: lower-case letters, digits and hyphens. Toolboxes that give the same id share the topic. */
+	readonly id: string;
+	readonly title: string;
+	/** What its maps show, in a sentence, under the page's title. */
+	readonly description: string;
+}
+
+/**
+ * The topic maps of a toolbox: maps of a work under a topic, such as the battles of the Greco-Persian Wars (At War) or
+ * the places Herodotus names (Places), each drawn by the Julia code of its row in the toolbox's maps file.
+ */
+export interface IToolboxTopicMapsInfo {
+	/** The maps file: [[maps]] tables, one per map. */
+	readonly file: URI;
+	/** Its topics, in the order of its menu. */
+	readonly topics: readonly IToolboxTopicInfo[];
+}
+
 /** A place in the menus: a menu, and the group and order in it that set the position. */
 export interface IToolboxPlace {
 	/** A menu id, or {@link TOOLBOX_MENU} for a panel in its toolbox's own menu. */
@@ -123,6 +143,8 @@ export interface IToolboxInfo {
 	readonly games: readonly URI[];
 	/** Its forecasting datasets file, which Manage Challenge Datasets lists, if it has one. */
 	readonly forecastingDatasets: URI | undefined;
+	/** Its topic maps, which the Topic Maps page lists, if it has them. */
+	readonly topicMaps: IToolboxTopicMapsInfo | undefined;
 	/** The default places: the toolbox's menu at the end of Extend, with every panel in. */
 	readonly defaultPlacement: IToolboxPlacement;
 	/** The places the toolbox is in: the ones the user published, else the default ones. */
