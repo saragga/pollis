@@ -5477,6 +5477,7 @@
 				"linalg/factorisations.md",
 				"linalg/factsheet.md",
 				"linalg/interpretation.md",
+				"linalg/iterative-methods.md",
 				"linalg/least-squares.md",
 				"linalg/linear-systems.md",
 				"linalg/overview.md",
@@ -5487,10 +5488,14 @@
 				"linalg/tutorial-02-factorisations.ipynb",
 				"linalg/tutorial-03-eigenvalues.ipynb",
 				"linalg/tutorial-04-svd.ipynb",
-				"linalg/tutorial-05-least-squares.ipynb"
+				"linalg/tutorial-05-least-squares.ipynb",
+				"linalg/tutorial-06-iterative-methods.ipynb"
 			],
 			"packages": [
-				"LinearAlgebra.jl"
+				"LinearAlgebra.jl",
+				"Krylov.jl",
+				"AlgebraicMultigrid.jl",
+				"MLDataDevices.jl"
 			]
 		},
 		{
