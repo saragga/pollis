@@ -74,7 +74,7 @@ type ScaffoldWebviewMessage =
  * Handle the messages of a panel built on the shared scaffold (see scaffoldParts.ts): Learn More,
  * running code, theme colourising, package status, editable examples, wikis, notebooks, references
  * and videos, and Ask Pollis beside the title. `panelId` names the panel's folder under ~/.pollis (saved examples,
- * references, videos); a question asked there is answered from the wikis titled `panelTitle` first. `apiKey`, when given, adds the Powered-by credentials indicator and sets them in the Julia REPL.
+ * references, videos); a question asked there is answered from the wikis titled `panelTitle` first. `apiKey`, when given, fills the Credentials line below Powered by and sets the credentials in the Julia REPL.
  */
 /** Sends what Powered by and Learn More show: the links of the packages, and the references, notebooks, wikis and FAQ there are. */
 export function postLearnMoreData(webview: { postMessage(message: unknown): void }, data: IScaffoldPanelData): void {

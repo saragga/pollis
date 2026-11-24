@@ -12,7 +12,7 @@ import { IEditorService } from '../../../../services/editor/common/editorService
 import { IQuickInputService, IQuickPickSeparator } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IModelPackage, IModelPaper, IModelNotebook, IModelWiki, IModelVideo, IModelReference } from '../common/model.types.js';
 import { URI } from '../../../../../base/common/uri.js';
-import { isWindows } from '../../../../../base/common/platform.js';
+import { isMacintosh, isWindows } from '../../../../../base/common/platform.js';
 import { DisposableStore } from '../../../../../base/common/lifecycle.js';
 import { disposableTimeout } from '../../../../../base/common/async.js';
 import { Event } from '../../../../../base/common/event.js';
@@ -436,7 +436,7 @@ export interface IApiKeyField {
 	readonly envVar: string;
 	/** Input prompt for this field, e.g. `Alpha Vantage API key` or `Kaggle username`. */
 	readonly prompt: string;
-	/** Short name on the Powered-by line, e.g. `Google Maps key`, when a provider has several fields; the prompt otherwise. */
+	/** The field's own name on the Credentials line, e.g. `Google Maps key`: when every field of a provider has one, each is a service of its own. */
 	readonly label?: string;
 	/** Mask the input (default true); set false for non-secret fields like a username. */
 	readonly password?: boolean;
@@ -452,7 +452,7 @@ export interface IApiKeyProvider {
 	readonly fields: IApiKeyField[];
 }
 
-/** Reusable wiring for the Powered-by API-key indicator: stores credentials in VS Code Secret Storage. */
+/** Reusable wiring for the Credentials line below Powered by: stores credentials in VS Code Secret Storage. */
 export interface IApiKeyWiring {
 	/** Post whether each field is saved to the webview; resolves true if all are. */
 	postStatus(): Promise<boolean>;
@@ -462,6 +462,63 @@ export interface IApiKeyWiring {
 	handleClear(field?: number): Promise<void>;
 	/** For an executing `juliaRepl` run, the `ENV[...] = "...";` lines to inject (empty if none/target). */
 	replPrefix(target: string | undefined): Promise<string>;
+}
+
+/** One name on the Credentials line of a page: a service, set, changed and cleared as a whole. */
+interface ICredentialEntry {
+	/** The service's name, e.g. `FRED`, `Kaggle`, `Google Maps key`. */
+	readonly name: string;
+	/** The provider's field this entry stands for, or undefined when it stands for all of them. */
+	readonly field: number | undefined;
+	/** Whether every field of the entry is stored. */
+	readonly hasKey: boolean;
+	/** What the entry needs, whether it is set, where it is saved and how it is protected. */
+	readonly tooltip: string;
+}
+
+/** Where Secret Storage keeps a credential on this system, and how it is protected. */
+function credentialStorageText(storageType: ISecretStorageService['type']): string {
+	if (storageType === 'in-memory') {
+		return localize('pollis.credentials.inMemory', "Kept in memory only, since this system offers no encrypted storage: it is lost when Pollis closes.");
+	}
+	if (isMacintosh) {
+		return localize('pollis.credentials.mac', "Saved in Pollis's secret storage, in the state database of its user data folder, encrypted with a key kept in the macOS Keychain.");
+	}
+	if (isWindows) {
+		return localize('pollis.credentials.windows', "Saved in Pollis's secret storage, in the state database of its user data folder, encrypted with Windows Data Protection for your Windows account.");
+	}
+	return localize('pollis.credentials.linux', "Saved in Pollis's secret storage, in the state database of its user data folder, encrypted with a key kept in the system keyring (GNOME Keyring or KWallet).");
+}
+
+/**
+ * The names of a provider on the Credentials line: one for each field when every field has its own
+ * `label` (separate services, e.g. a Google Maps key and an ArcGIS key), otherwise one for the
+ * provider (one service needing several fields, e.g. a Kaggle username and key).
+ */
+function credentialEntries(provider: IApiKeyProvider, stored: readonly boolean[], storageType: ISecretStorageService['type']): ICredentialEntry[] {
+	const storage = credentialStorageText(storageType);
+	const tooltip = (name: string, indexes: readonly number[]): string => {
+		const hasKey = indexes.every(index => stored[index]);
+		const lines = [hasKey
+			? localize('pollis.credentials.set', "{0}: set. Change replaces it; clear deletes it.", name)
+			: localize('pollis.credentials.notSet', "{0}: not set. Click to enter it.", name)];
+		for (const index of indexes) {
+			const field = provider.fields[index];
+			lines.push(stored[index]
+				? localize('pollis.credentials.fieldSet', "Needs {0}: set, read by Julia as ENV[\"{1}\"].", field.prompt, field.envVar)
+				: localize('pollis.credentials.fieldNotSet', "Needs {0}: not set, read by Julia as ENV[\"{1}\"].", field.prompt, field.envVar));
+		}
+		lines.push(storage, localize('pollis.credentials.repl', "Pollis sets it in the Julia REPL when the page's code runs there; the code itself never contains it."));
+		return lines.join('\n');
+	};
+	const all = provider.fields.map((_, index) => index);
+	if (provider.fields.length > 1 && provider.fields.every(f => f.label)) {
+		return provider.fields.map((f, index) => {
+			const name = f.label ?? provider.label;
+			return { name, field: index, hasKey: stored[index], tooltip: tooltip(name, [index]) };
+		});
+	}
+	return [{ name: provider.label, field: undefined, hasKey: all.every(index => stored[index]), tooltip: tooltip(provider.label, all) }];
 }
 
 /**
@@ -482,7 +539,12 @@ export function createApiKeyWiring(
 		const values = await Promise.all(provider.fields.map(f => secretStorageService.get(f.secretKey)));
 		const hasKey = values.every(v => !!v);
 		const fields = provider.fields.map((f, index) => ({ label: f.label ?? f.prompt, hasKey: !!values[index] }));
-		webview.postMessage({ command: 'apiKeyStatus', hasKey, label: provider.label, noun, fields });
+		const entries = credentialEntries(provider, values.map(v => !!v), secretStorageService.type);
+		webview.postMessage({
+			command: 'apiKeyStatus', hasKey, label: provider.label, noun, fields, entries,
+			change: localize('pollis.credentials.change', "change"),
+			clear: localize('pollis.credentials.clear', "clear"),
+		});
 		return hasKey;
 	};
 	const chosen = (field: number | undefined): IApiKeyField[] => field === undefined ? provider.fields : provider.fields.slice(field, field + 1);

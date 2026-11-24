@@ -18,7 +18,7 @@ import { INotebookKernelService } from '../../../notebook/common/notebookKernelS
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IScaffoldPanelData } from '../common/model.types.js';
 import { panelCitedKeys } from '../common/tomlPanelData.js';
-import { createCustomCopyWiring, createReferenceWiring, createSqlStepsWiring, createVideoWiring, openInBrowser, openNotebookByFile, openWikiByFile } from './model.handler.js';
+import { createCustomCopyWiring, createReferenceWiring, createSqlStepsWiring, createVideoWiring, IApiKeyWiring, openInBrowser, openNotebookByFile, openWikiByFile } from './model.handler.js';
 import { createCodeHoverWiring } from './codeHover.js';
 import { postLearnMoreData } from './scaffold.handler.js';
 
@@ -29,11 +29,15 @@ type ScaffoldPageMessage =
 	| { command: 'openUrl'; url: string }
 	| PanelAskMessage
 	| { command: 'voiceLanguage'; value: string }
-	| { command: 'voiceWriteIn'; value: string };
+	| { command: 'voiceWriteIn'; value: string }
+	| { command: 'setApiKey'; field?: number }
+	| { command: 'clearApiKey'; field?: number };
 
 /**
  * What a page in the Time Arrow style of the scaffold has of a panel's handler: its Ask Pollis, Powered by, Learn
  * More and the queries of its Next Steps (`sqlSteps`). The page's own messages stay with the page. The store is disposed with the webview.
+ * `apiKey`, made by `createApiKeyWiring` for a page whose code needs credentials, fills its Credentials line; the page
+ * prepends its `replPrefix` to the code it sends to the Julia REPL.
  */
 export function registerScaffoldPageHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -49,6 +53,7 @@ export function registerScaffoldPageHandlers(
 	fileService: IFileService,
 	pathService: IPathService,
 	storageService: IStorageService,
+	apiKey?: IApiKeyWiring,
 ): DisposableStore {
 	const disposables = new DisposableStore();
 	createCustomCopyWiring(webviewInput.webview, disposables, data.wikis, data.notebooks, fileService, pathService, editorService, commandService, notificationService);
@@ -62,6 +67,7 @@ export function registerScaffoldPageHandlers(
 		// The languages spoken and written of Ask Pollis beside the title, which the HTML is made without
 		webviewInput.webview.postMessage({ command: 'voiceLanguage', value: getVoiceLanguage(storageService) });
 		webviewInput.webview.postMessage({ command: 'voiceWriteIn', value: getVoiceWriteIn(storageService) });
+		void apiKey?.postStatus();
 	}, 0);
 
 	disposables.add(webviewInput.webview.onDidDispose(() => disposables.dispose()));
@@ -91,6 +97,12 @@ export function registerScaffoldPageHandlers(
 				break;
 			case 'voiceWriteIn':
 				setVoiceWriteIn(storageService, msg.value);
+				break;
+			case 'setApiKey':
+				await apiKey?.handleSet(typeof msg.field === 'number' ? msg.field : undefined);
+				break;
+			case 'clearApiKey':
+				await apiKey?.handleClear(typeof msg.field === 'number' ? msg.field : undefined);
 				break;
 		}
 	}));

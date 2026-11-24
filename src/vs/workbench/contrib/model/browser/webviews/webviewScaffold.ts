@@ -809,7 +809,9 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.pkg-install:hover { text-decoration: underline; }
 		.pkg-install svg { width: 13px; height: 13px; vertical-align: -2px; margin-right: 2px; }
 		.pkg-installing { color: var(--vscode-descriptionForeground); font-style: italic; font-size: 12px; }
-		.api-key-status { margin-left: auto; padding-left: 12px; font-size: 12px; }
+		.powered-by:has(+ .credentials:not([hidden])) { margin-bottom: 4px; }
+		.credentials { margin: 0 0 16px 0; line-height: 1.4; display: flex; align-items: baseline; flex-wrap: wrap; }
+		.credentials[hidden] { display: none; }
 		.apikey-ok { color: var(--vscode-charts-green); }
 		.apikey-link { color: var(--vscode-textLink-foreground); cursor: pointer; }
 		.apikey-link:hover { text-decoration: underline; }
@@ -960,7 +962,8 @@ ${parts.extraCss ?? ''}${noExampleCode ? `		${stepsCss}
 		<div class="title-row">
 			<div class="title-column">
 				<h1>${parts.title}</h1>
-				<div class="powered-by"${parts.omitPoweredBy ? ' style="display: none;"' : ''}>Powered by:&nbsp;<span id="package-links"></span><span class="package-status" id="package-status"></span><span class="api-key-status" id="api-key-status"></span></div>
+				<div class="powered-by"${parts.omitPoweredBy ? ' style="display: none;"' : ''}>Powered by:&nbsp;<span id="package-links"></span><span class="package-status" id="package-status"></span></div>
+				<div class="credentials" id="credentials-line" hidden>Credentials:&nbsp;<span id="api-key-status"></span></div>
 			</div>
 			${panelAskHtml()}
 		</div>
@@ -1917,36 +1920,41 @@ ${noExampleCode ? '' : `		document.getElementById('btn-copy').addEventListener('
 		}
 
 		function renderApiKeyStatus(msg) {
+			// The Credentials line below Powered by: one name for each service; a name set is green, followed by change | clear
+			var line = document.getElementById('credentials-line');
 			var el = document.getElementById('api-key-status');
-			if (!el) { return; }
-			var label = msg.label || '';
-			var noun = msg.noun || 'API key';
+			if (!line || !el || !msg.entries || !msg.entries.length) { return; }
 			var keyIcon = '<svg class="apikey-icon" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M10 1a5 5 0 0 0-4.9 6.02L1 11.12V15h3.88l.62-.62v-1.5h1.5v-1.5h1.5l.48-.48A5 5 0 1 0 10 1zm1.75 4.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg>';
-			var sep = '<span class="apikey-sep">|</span>';
-			if (msg.fields && msg.fields.length > 1) {
-				// one status per key: each set, changed or cleared by itself
-				el.innerHTML = msg.fields.map(function(f, i) {
-					return f.hasKey
-						? '<span class="apikey-ok" title="' + f.label + ' saved in VS Code Secret Storage">' + keyIcon + f.label + '</span> '
-							+ '<a class="apikey-link" data-set="' + i + '">change</a>' + sep + '<a class="apikey-link" data-clear="' + i + '">clear</a>'
-						: '<a class="apikey-link" data-set="' + i + '" title="Store your ' + f.label + ' securely in VS Code Secret Storage">' + keyIcon + 'Set ' + f.label + '</a>';
-				}).join(sep);
-				el.querySelectorAll('[data-set]').forEach(function(a) { a.addEventListener('click', function() { vscode.postMessage({ command: 'setApiKey', field: Number(a.getAttribute('data-set')) }); }); });
-				el.querySelectorAll('[data-clear]').forEach(function(a) { a.addEventListener('click', function() { vscode.postMessage({ command: 'clearApiKey', field: Number(a.getAttribute('data-clear')) }); }); });
-				return;
+			function separator(text) {
+				var span = document.createElement('span');
+				span.className = 'apikey-sep';
+				span.textContent = text;
+				return span;
 			}
-			if (msg.hasKey) {
-				el.innerHTML = '<span class="apikey-ok" title="' + label + ' ' + noun + ' saved in VS Code Secret Storage">' + keyIcon + noun + '</span>'
-					+ '<span class="apikey-sep">|</span>'
-					+ '<a class="apikey-link" id="apikey-change">change</a>'
-					+ '<span class="apikey-sep">|</span>'
-					+ '<a class="apikey-link" id="apikey-clear">clear</a>';
-				document.getElementById('apikey-change').addEventListener('click', function() { vscode.postMessage({ command: 'setApiKey' }); });
-				document.getElementById('apikey-clear').addEventListener('click', function() { vscode.postMessage({ command: 'clearApiKey' }); });
-			} else {
-				el.innerHTML = '<a class="apikey-link" id="apikey-set" title="Store your ' + label + ' ' + noun + ' securely in VS Code Secret Storage">' + keyIcon + 'Set ' + noun + '</a>';
-				document.getElementById('apikey-set').addEventListener('click', function() { vscode.postMessage({ command: 'setApiKey' }); });
+			function link(text, command, field) {
+				var a = document.createElement('a');
+				a.className = 'apikey-link';
+				a.textContent = text;
+				a.addEventListener('click', function() { vscode.postMessage(field === undefined || field === null ? { command: command } : { command: command, field: field }); });
+				return a;
 			}
+			el.textContent = '';
+			msg.entries.forEach(function(entry, i) {
+				if (i > 0) { el.appendChild(separator('\u00b7')); }
+				var name = entry.hasKey ? document.createElement('span') : link('', 'setApiKey', entry.field);
+				name.className = entry.hasKey ? 'apikey-ok' : 'apikey-link';
+				name.innerHTML = keyIcon;
+				name.appendChild(document.createTextNode(entry.name));
+				name.title = entry.tooltip;
+				el.appendChild(name);
+				if (entry.hasKey) {
+					el.appendChild(separator('|'));
+					el.appendChild(link(msg.change || 'change', 'setApiKey', entry.field));
+					el.appendChild(separator('|'));
+					el.appendChild(link(msg.clear || 'clear', 'clearApiKey', entry.field));
+				}
+			});
+			line.hidden = false;
 		}
 
 		window.addEventListener('message', function(event) {
