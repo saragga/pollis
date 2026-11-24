@@ -10485,6 +10485,40 @@
 			]
 		},
 		{
+			"id": "transfer",
+			"title": "Transfer Learning and Fine-Tuning",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.statistics.nn.transfer",
+					"menuTitles": [
+						"Transfer Learning and Fine-Tuning"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "published",
+			"decisionFirstColumn": "Tab",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/transfer.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"transfer/decision-guide.md",
+				"transfer/diagnostics.md",
+				"transfer/enki.md",
+				"transfer/factsheet.md",
+				"transfer/overview.md",
+				"transfer/transfer-learning.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"ArchaeologicalDetection.jl",
+				"NNlib.jl",
+				"DecisionTree.jl",
+				"Rasters.jl"
+			]
+		},
+		{
 			"id": "transformer",
 			"title": "Transformers",
 			"source": "pollis",

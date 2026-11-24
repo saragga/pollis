@@ -1,0 +1,420 @@
+# Transfer Learning and Fine-Tuning Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/transfer.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Transfer Learning and Fine-Tuning"
+viewType = "pollis.transfer"
+defaultModel = "published"
+decisionFirstColumn = "Tab"
+
+[[packages]]
+name = "ArchaeologicalDetection.jl"
+github = "https://github.com/Trumpingtons/ArchaeologicalDetection.jl"
+
+[[packages]]
+name = "NNlib.jl"
+github = "https://github.com/FluxML/NNlib.jl"
+
+[[packages]]
+name = "DecisionTree.jl"
+github = "https://github.com/JuliaAI/DecisionTree.jl"
+
+[[packages]]
+name = "Rasters.jl"
+github = "https://github.com/rafaqz/Rasters.jl"
+
+[requires]
+packages = ["ArchGDAL.jl", "DuckDB.jl", "Plots.jl"]
+
+[[wikis]]
+name = "Factsheet"
+file = "transfer/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "transfer/overview.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Transfer Learning"
+file = "transfer/transfer-learning.md"
+bundled = true
+
+[[wikis]]
+name = "Enki"
+file = "transfer/enki.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "transfer/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "transfer/diagnostics.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "Ros2025b"
+
+[[references]]
+separator = true
+label = "Data"
+
+[[references]]
+key = "Ros2025a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "YCBL2014a"
+
+[[references]]
+key = "TL2019a"
+
+[[references]]
+key = "Bre2001a"
+
+[[models]]
+id = "published"
+label = "As Published"
+
+[[models]]
+id = "frozen"
+label = "Frozen Features"
+
+[[models]]
+id = "tuned"
+label = "Fine-Tuned Head"
+
+[[bullets]]
+text = "As Published"
+detail = "Enki, a network trained on tells of the Ancient Near East, applied unchanged to new ground"
+
+[[bullets]]
+text = "Frozen Features"
+detail = "Enki's network kept as it is, its 1,280 channels the input of a random forest trained on the known sites"
+
+[[bullets]]
+text = "Fine-Tuned Head"
+detail = "Enki's network frozen, its last two layers trained again on the known sites, starting from Enki's weights"
+
+[[bullets]]
+text = "Held-Out Ground"
+detail = "Each tab trains on one side of the area and is scored on the other, on sites it has not seen"
+
+[[decisionRows]]
+task = "As Published"
+context = "No known sites"
+purpose = "The published network and head, unchanged: the baseline the other tabs must beat"
+
+[[decisionRows]]
+task = "Frozen Features"
+context = "Few known sites"
+purpose = "A random forest on the network's channels, with nothing of the network trained"
+
+[[decisionRows]]
+task = "Fine-Tuned Head"
+context = "Some hundreds of images"
+purpose = "The two dense layers trained again from the published weights, the network beneath frozen"
+
+[[inputs]]
+id = "folder"
+label = "Folder"
+tooltip = "Folder of the files: data/examples of the open Pollis Workspace, otherwise in Pollis's own folder. Enki's weights (about 52 MB), the image, the channels of its cells and the known sites are kept there and read from there the next time."
+default = "~/.pollis/data/examples"
+folder = "data/examples"
+
+[[inputs]]
+id = "box"
+label = "Area"
+tooltip = "West, south, east and north, in degrees. The default is the area of the terps (wierden) of northern Groningen, about 15 by 15 km. The first run takes about 20 minutes: the image of 1 m, about 0.4 GB, then Enki's network over each of its cells of 350 m."
+default = "6.42, 53.22, 6.64, 53.35"
+
+[[inputs]]
+id = "imagery"
+label = "Imagery (WMS)"
+tooltip = "The address of a Web Map Service of RGB imagery, read with GDAL's WMS driver. The default is the current aerial photographs of 25 cm of the Netherlands from PDOK, which need no key."
+default = "https://service.pdok.nl/hwh/luchtfotorgb/wms/v1_0?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Actueel_ortho25&SRS=EPSG:4326&BBOX=3.2,50.7,7.3,53.6&FORMAT=image/jpeg"
+
+[[inputs]]
+id = "sites"
+label = "Known Sites"
+tooltip = "A vector file of known sites (a GeoPackage, GeoJSON or Shapefile, in any coordinate system), in the folder, or an absolute path: the centre of each feature is taken. With the default, groningen-terps.gpkg, the code first writes the protected archaeological monuments of the Rijksdienst voor het Cultureel Erfgoed in the area, from PDOK's OGC API, unless the folder has the file already."
+default = "groningen-terps.gpkg"
+
+[[inputs]]
+id = "held"
+label = "Held-Out Side"
+tooltip = "The side of the area kept out of training and scored. The area is split at the column of cells that halves the known sites."
+kind = "select"
+default = "east"
+newRow = true
+
+[[inputs.options]]
+value = "east"
+label = "East"
+
+[[inputs.options]]
+value = "west"
+label = "West"
+
+[[inputs]]
+id = "share"
+label = "Share of Cells"
+tooltip = "The share of the cells of highest share, from 0 to 1, that counts as found: the score is the share of held-out sites in them, and Features Found joins them into features."
+default = "0.1"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Seed of the random draws: the cells away from the known sites, the forest, and the images kept out of training of the head."
+default = "1"
+
+[[inputs]]
+id = "trees"
+label = "Trees"
+tooltip = "Number of trees of the random forest. Each tree is grown on 70% of the images, drawn with replacement, and chooses each split among 36 channels drawn at random, about the square root of the 1,280."
+default = "128"
+models = ["frozen"]
+
+[[inputs]]
+id = "epochs"
+label = "Epochs"
+tooltip = "How many times the training goes through the images: 15 in Enki's own training of its head. A fifth of the images, drawn at random, is kept out, and the head of the epoch with the lowest loss on them is kept."
+default = "15"
+models = ["tuned"]
+
+[[inputs]]
+id = "rate"
+label = "Learning Rate"
+tooltip = "The learning rate of Adam: 0.0001 in Enki's own training of its head."
+default = "0.0001"
+models = ["tuned"]
+
+[[inputs]]
+id = "batch"
+label = "Batch"
+tooltip = "Images in each step of Adam: 128 in Enki's own training."
+default = "128"
+models = ["tuned"]
+
+[[inputs]]
+id = "dropout"
+label = "Dropout"
+tooltip = "The share of the 1,280 channels set to zero at random in each step of training: 0.3 in Enki's own network."
+default = "0.3"
+models = ["tuned"]
+
+[[codeBranches]]
+model = "*"
+code = '''
+using ArchaeologicalDetection, Rasters, ArchGDAL, Serialization, Statistics
+{{?model=frozen}}using DecisionTree
+{{?sites=groningen-terps.gpkg}}using DuckDB, Downloads
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files
+box = ({{box}})  # west, south, east, north, in degrees
+enki = enki_model(enki_weights(folder))  # Enki as published, about 52 MB, downloaded once to the folder
+image = aerial_image(box; source = "WMS:" * raw"{{imagery}}", path = joinpath(folder, "aerial-" * join(box, "_") * ".tif"))  # read from the file when it is there
+
+sites_path = joinpath(folder, "{{sites}}")  # an absolute path is kept as it is
+{{?sites=groningen-terps.gpkg}}# Example file: the protected archaeological monuments in the area, from the Rijksdienst voor het Cultureel Erfgoed through PDOK's OGC API. Replace "groningen-terps.gpkg" with your own file of known sites.
+{{?sites=groningen-terps.gpkg}}if !isfile(sites_path)
+{{?sites=groningen-terps.gpkg}}    json = Downloads.download("https://api.pdok.nl/rce/beschermde-gebieden-cultuurhistorie/ogc/v1/collections/rce_inspire_polygons/items?f=json&limit=1000&bbox=" * join(box, ","), joinpath(folder, "rce-protected-sites.json"))
+{{?sites=groningen-terps.gpkg}}    con = DBInterface.connect(DuckDB.DB)
+{{?sites=groningen-terps.gpkg}}    DBInterface.execute(con, "INSTALL spatial"); DBInterface.execute(con, "LOAD spatial")
+{{?sites=groningen-terps.gpkg}}    DBInterface.execute(con, "SET geometry_always_xy = true")  # coordinates as x, y: longitude and latitude, or easting and northing
+{{?sites=groningen-terps.gpkg}}    DBInterface.execute(con, "COPY (SELECT localid, ci_citation, geom FROM ST_Read('$(json)') WHERE siteprotectionclassification ILIKE '%archaeological%') TO '$(sites_path)' WITH (FORMAT GDAL, DRIVER 'GPKG', SRS 'EPSG:4326')")
+{{?sites=groningen-terps.gpkg}}end
+points = site_points(image, sites_path)  # the centre of each known site, in the coordinates of the image
+
+# Enki's network over every cell of 350 m: the longest part, kept in a file
+cells_path = joinpath(folder, "enki-cells-" * join(box, "_") * ".jls")
+if isfile(cells_path)
+    cells = deserialize(cells_path)
+else
+    cells = enki_pooled(enki, image)  # the 1,280 channels of each cell
+    serialize(cells_path, cells)
+end
+
+# The grid: columns from west to east, rows from north to south; the area split at the column that halves the known sites
+valid = isfinite.(parent(enki_probability(enki, cells)))  # the cells with imagery
+nx, ny = size(valid)
+west, top = Rasters.bounds(cells, X)[1], Rasters.bounds(cells, Y)[2]
+side = (Rasters.bounds(cells, X)[2] - west) / nx
+cell_of((x, y)) = (floor(Int, (x - west) / side) + 1, floor(Int, (top - y) / side) + 1)
+site_cells = cell_of.(points)
+keep = [1 <= i <= nx && 1 <= j <= ny && valid[i, j] for (i, j) in site_cells]
+points, site_cells = points[keep], site_cells[keep]
+middle = round(Int, median(first.(site_cells)))
+{{?held=east}}train_columns, test_columns = 1:middle - 1, middle:nx
+{{?held=west}}train_columns, test_columns = middle:nx, 1:middle - 1
+train_sites = findall(c -> first(c) in train_columns, site_cells)
+test_sites = findall(c -> first(c) in test_columns, site_cells)
+println(length(train_sites), " known sites to train on, ", length(test_sites), " held out on the {{held}} side")
+
+{{?model!=published}}# Images of the known sites to train on, nine around each, and cells away from them: their channels, read with Enki's network
+{{?model!=published}}examples = enki_examples(enki, image, cells[X = train_columns], points[train_sites]; seed = {{seed}})
+{{?model=published}}model = enki  # Enki's network and head, unchanged
+{{?model=published}}probability = enki_probability(model, cells)  # the share for a site, on the grid of the cells
+{{?model=frozen}}forest = build_forest(examples.labels, Matrix(transpose(examples.pooled)), -1, {{trees}}; rng = {{seed}})  # on the channels of Enki's frozen network
+{{?model=frozen}}channels = parent(permutedims(cells, (X, Y, Band)))
+{{?model=frozen}}with_image = findall(valid)
+{{?model=frozen}}probability = copy(enki_probability(enki, cells))  # the grid of the cells, its values replaced by the forest's
+{{?model=frozen}}parent(probability)[with_image] = apply_forest_proba(forest, Float32.(stack((channels[I, :] for I in with_image); dims = 1)), [false, true])[:, 2]
+{{?model=tuned}}tuned = enki_finetune(enki, examples.pooled, examples.labels; epochs = {{epochs}}, rate = {{rate}}, batch = {{batch}}, dropout = {{dropout}}, seed = {{seed}})
+{{?model=tuned}}model = tuned.model  # Enki's frozen network, with the head of the epoch of lowest loss on the images kept out
+{{?model=tuned}}probability = enki_probability(model, cells)  # the share for a site, on the grid of the cells
+
+# Scores on the held-out side, on sites no tab has trained on
+test = [valid[i, j] && i in test_columns for i in 1:nx, j in 1:ny]
+at_site = falses(nx, ny)
+foreach(c -> at_site[c...] = true, site_cells[test_sites])
+cutoff(P, share) = sort(P[test]; rev = true)[max(1, round(Int, share * count(test)))]  # the lowest share in the top share of held-out cells
+recall(P, share) = (t = cutoff(P, share); mean(P[c...] >= t for c in site_cells[test_sites]))  # held-out sites in those cells
+auc(P) = mean((p > q) + 0.5 * (p == q) for p in P[test .& at_site], q in P[test .& .!at_site])
+P = parent(probability)
+println("Held-out ground: AUC ", round(auc(P); digits = 3), ", held-out sites in the top ", round(Int, 100 * {{share}}), "% of cells: ", round(100 * recall(P, {{share}}); digits = 1), "%")
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "probability-map"
+label = "Probability Map"
+desc = "The share for a site of every cell of 350 m, with the known sites and the line that splits the area"
+code = '''
+using Plots
+plot(probability; title = "Share for a site, {{held}} side held out", colorbar_title = "share")
+scatter!(first.(points), last.(points); markersize = 3, markercolor = :white, label = "known sites")
+vline!([west + (middle - 1) * side]; color = :red, linewidth = 2, label = "split")
+'''
+
+[[actionGroups.actions]]
+id = "training-curves"
+label = "Training Curves"
+desc = "The loss of the head after each epoch, on the images trained on and on the images kept out"
+models = ["tuned"]
+code = '''
+using Plots
+epoch = [h.epoch for h in tuned.history]
+plot(epoch, [h.loss for h in tuned.history]; label = "images trained on", xlabel = "epoch", ylabel = "cross-entropy", marker = :circle)
+plot!(epoch, [h.validation_loss for h in tuned.history]; label = "images kept out", marker = :circle)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "sites-missed"
+label = "Sites Missed"
+desc = "The held-out sites whose cell is not in the top Share of Cells, with its share and its rank among the held-out cells"
+code = '''
+t = cutoff(P, {{share}})
+missed = [k for k in test_sites if P[site_cells[k]...] < t]
+println(length(missed), " of ", length(test_sites), " held-out sites outside the top ", round(Int, 100 * {{share}}), "% of cells")
+for k in missed
+    p = P[site_cells[k]...]
+    println("  x ", round(Int, points[k][1]), ", y ", round(Int, points[k][2]), ": share ", round(p; digits = 3), ", rank ", count(>(p), P[test]) + 1, " of ", count(test))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "features-found"
+label = "Features Found"
+desc = "The cells of the top Share of Cells of the whole area joined into features, written as points to a GeoPackage in the folder"
+code = '''
+using DuckDB
+features = enki_features(probability; share = {{share}})  # the cells of the top share joined through their sides
+{{?model=published}}out = joinpath(folder, "features-as-published.gpkg")
+{{?model=frozen}}out = joinpath(folder, "features-frozen-features.gpkg")
+{{?model=tuned}}out = joinpath(folder, "features-fine-tuned-head.gpkg")
+epsg = ((box[2] + box[4]) / 2 >= 0 ? 32600 : 32700) + floor(Int, ((box[1] + box[3]) / 2 + 180) / 6) + 1  # the UTM zone of the image
+if isfile(out)
+    println(out, " is there already: rename or move it first")
+elseif isempty(features.candidates)
+    println("No features")
+else
+    con = DBInterface.connect(DuckDB.DB)
+    DBInterface.execute(con, "INSTALL spatial"); DBInterface.execute(con, "LOAD spatial")
+    DBInterface.execute(con, "SET geometry_always_xy = true")  # coordinates as x, y: longitude and latitude, or easting and northing
+    rows = join(["($(c.id), $(c.area), $(c.roundness), $(c.probability), ST_Point($(c.x), $(c.y)))" for c in features.candidates], ", ")
+    DBInterface.execute(con, "COPY (SELECT * FROM (VALUES $(rows)) t(id, area, roundness, share, geom)) TO '$(out)' WITH (FORMAT GDAL, DRIVER 'GPKG', SRS 'EPSG:$(epsg)')")
+    println(length(features.candidates), " features written to ", out)
+end
+'''
+
+[[actionGroups.actions]]
+id = "save-model"
+label = "Save the Tuned Model"
+desc = "Write the head trained again, its two dense layers, to a JLD2 file of about 1.3 MB in the folder, to read back onto Enki's network"
+models = ["tuned"]
+code = '''
+path = enki_save(joinpath(folder, "enki-tuned-head.jld2"), tuned.model)
+println("Wrote ", path)
+# Read back later onto Enki's network: enki_model(enki_weights(folder); head = path)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "three-models"
+label = "Three Models on Held-Out Ground"
+desc = "As Published, Frozen Features and Fine-Tuned Head scored on the same held-out side: the AUC, and the held-out sites in the top 5, 10 and 20% of cells; the forest and the head with their default settings"
+code = '''
+using DecisionTree, Printf
+@isdefined(examples) || (examples = enki_examples(enki, image, cells[X = train_columns], points[train_sites]; seed = {{seed}}))
+channels = parent(permutedims(cells, (X, Y, Band)))
+with_image = findall(valid)
+forest = build_forest(examples.labels, Matrix(transpose(examples.pooled)), -1, 128; rng = {{seed}})
+frozen = fill(NaN, nx, ny)
+frozen[with_image] = apply_forest_proba(forest, Float32.(stack((channels[I, :] for I in with_image); dims = 1)), [false, true])[:, 2]
+head = enki_finetune(enki, examples.pooled, examples.labels; seed = {{seed}}).model
+println(rpad("", 17), "AUC    top 5%  top 10%  top 20%")
+for (name, Q) in [("As Published", parent(enki_probability(enki, cells))), ("Frozen Features", frozen), ("Fine-Tuned Head", parent(enki_probability(head, cells)))]
+    @printf("%-17s%.3f  %.3f   %.3f    %.3f\n", name, auc(Q), recall(Q, 0.05), recall(Q, 0.1), recall(Q, 0.2))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "what-retrained"
+label = "What Was Retrained"
+desc = "The weights of Enki's network, frozen in every tab, against what each tab trains on the known sites"
+code = '''
+n_weights(x::AbstractArray{<:Number}) = length(x)
+n_weights(x::Union{Tuple, AbstractArray}) = sum(n_weights, x; init = 0)  # tuples and arrays of layers
+n_weights(x) = isstructtype(typeof(x)) ? sum(f -> n_weights(getfield(x, f)), fieldnames(typeof(x)); init = 0) : 0
+head_weights = n_weights(enki.hidden) + n_weights(enki.output)
+println("Enki's network beneath the head: ", n_weights(enki) - head_weights, " weights, frozen in every tab")
+println("Enki's head, two dense layers of 1,280 to 256 and 256 to 2: ", head_weights, " weights")
+{{?model=published}}println("As Published trains nothing: the head is Enki's own")
+{{?model=frozen}}println("Frozen Features sets the head aside and trains a forest of ", length(forest.trees), " trees, with ", sum(length, forest.trees), " leaves")
+{{?model=tuned}}println("Fine-Tuned Head trains the ", head_weights, " weights of the head again, starting from Enki's: ", round(100 * head_weights / n_weights(enki); digits = 1), "% of the model")
+'''

@@ -75,6 +75,7 @@ import { LMHAR_PANEL } from './commands/lmhar.command.js';
 import { CDS_PANEL } from './commands/cds.command.js';
 import { DMAP_PANEL } from './commands/dmap.command.js';
 import { NODE_PANEL } from './commands/node.command.js';
+import { TRANSFER_PANEL } from './commands/transfer.command.js';
 import { ATTR_PANEL } from './commands/attr.command.js';
 import { CHAOS_PANEL } from './commands/chaos.command.js';
 import { CMPLX_PANEL } from './commands/cmplx.command.js';
@@ -163,6 +164,7 @@ const SBI_OPEN = (accessor: ServicesAccessor) => openScaffoldWebview(accessor, S
 
 CommandsRegistry.registerCommand('chiara.statistics.sbi', SBI_OPEN);
 CommandsRegistry.registerCommand('chiara.statistics.nn.node', accessor => openScaffoldWebview(accessor, NODE_PANEL));
+CommandsRegistry.registerCommand('chiara.statistics.nn.transfer', accessor => openScaffoldWebview(accessor, TRANSFER_PANEL));
 
 const EXP_OPEN = (accessor: ServicesAccessor) => openScaffoldWebview(accessor, EXP_PANEL);
 
@@ -1206,6 +1208,13 @@ MenuRegistry.appendMenuItem(NNSubmenuId, {
 	command: { id: 'chiara.statistics.sbi', title: localize('nn.sbi', 'Parameter Estimation by Neural Networks') },
 	order: 1,
 }); // NeuralEstimators.jl — amortized Bayesian posterior inference
+
+// Trained Networks on New Data
+MenuRegistry.appendMenuItem(NNSubmenuId, {
+	group: '3_nn_transfer',
+	command: { id: 'chiara.statistics.nn.transfer', title: localize('nn.transfer', 'Transfer Learning and Fine-Tuning') },
+	order: 1,
+}); // ArchaeologicalDetection.jl, DecisionTree.jl — Enki as published, frozen or with its head trained again
 
 
 // ============================================
