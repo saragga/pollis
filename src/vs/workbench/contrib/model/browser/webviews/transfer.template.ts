@@ -9,7 +9,7 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 export function getTransferHtml(): string {
 	return buildScaffoldHtml('transfer', TRANSFER_METADATA.transfer, {
 		title: 'Transfer Learning and Fine-Tuning',
-		defaultModel: 'published',
+		defaultModel: 'features',
 		decisionFirstColumn: 'Tab',
 	});
 }
