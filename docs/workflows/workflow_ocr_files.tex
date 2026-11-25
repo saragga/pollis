@@ -1,0 +1,338 @@
+% Pollis drill-down: OCR Files and Snippets, reading scanned works in other languages: a record for each work, a reader
+% that shows each page of the scan beside its text, passages cut out and corrected as snippets, their translation by a
+% local model and their reading aloud (25 November 2026). A draft, marked as one on its first page and in its footer,
+% until the feature is built; its examples are to be adapted as the feature is built.
+% Compile with: latexmk -pdf workflow_ocr_files.tex
+\input{workflow_style}
+
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{needspace}
+
+\fancyhf{}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: OCR Files and Snippets\enspace·\enspace Draft}
+\fancyfoot[R]{\footnotesize\color{soft}\thepage}
+
+\titleformat{\section}{\color{navy}\large\bfseries}{\color{deepamber}\thesection}{0.6em}{}
+\titleformat{\subsection}{\color{navy}\normalsize\bfseries}{\color{deepamber}\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+\setlength{\parskip}{4pt}
+
+\lstset{basicstyle=\ttfamily\footnotesize, columns=fullflexible, keepspaces=true, breaklines=true,
+  backgroundcolor=\color{pale}, frame=leftline, rulecolor=\color{amber}, framerule=2pt, xleftmargin=6pt,
+  framexleftmargin=6pt, aboveskip=4pt, belowskip=4pt, upquote=true, tabsize=2,
+  literate={é}{{\'e}}1 {è}{{\`e}}1 {à}{{\`a}}1 {ç}{{\c{c}}}1 {£}{{\pounds}}1 {—}{{---}}1}
+
+\usepackage{xurl}
+\newcommand{\file}[1]{{\small\nolinkurl{#1}}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcommand{\ui}[1]{\textbf{#1}}
+
+\begin{document}
+
+\workflowhead[Drill-Down\enspace{\color{deepamber}\bfseries Draft}]{OCR Files and Snippets}
+  {Reading scanned works in other languages}
+  {A record for each work, its pages beside their text, passages corrected as snippets, translated by a local model
+   and read aloud.}
+
+\begin{nbox}
+{\color{amber}\bfseries Drill-down, draft.}\enspace
+This drill-down describes OCR Files and Snippets before the feature is in Pollis: its menu items are not there yet,
+and its examples will change with it.
+
+Many sources are old printed books in other languages, read from scans whose text has errors. OCR Files and Snippets,
+beside PDF Files, keeps a record for each scanned work, shows each page of the scan beside its text, cuts passages out
+and corrects them as snippets, and translates them with a local model you choose, without the internet.
+
+This drill-down describes each part: the work's record (\S\ref{sec:record}), its contents (\S\ref{sec:contents}), the
+checks that find misread words (\S\ref{sec:correct}), snippets (\S\ref{sec:snippets}), translation
+(\S\ref{sec:translation}), reading aloud (\S\ref{sec:aloud}), where works are kept (\S\ref{sec:where}) and the menu
+items (\S\ref{sec:menu}).
+\end{nbox}
+
+\tableofcontents
+
+\section{What it is for}\label{sec:why}
+\begin{itemize}
+  \item \textbf{The original language is often the only free text.} For Van Gogh's last years, 1886 to 1890, the scan
+    with its text is volume 3 of \emph{Brieven aan zijn broeder} (1914). Its letters are mostly in French, with some
+    in Dutch.
+  \item \textbf{The scan's text has errors that change meaning}: ``s6rie'' for s\'erie, ``\pounds tude'' for
+    \'etude, ``Yerde'' for Verde, ``Auversest'' for Auvers est.
+  \item \textbf{Errors in the text become errors in the translation.} A model translates well only text that has been
+    read right, so a passage is corrected before it is translated.
+\end{itemize}
+The feature is not tied to one toolbox: archives, old editions, inscriptions and the Britannica page have the same
+need.
+
+\section{How it works}\label{sec:how}
+The work's record says what the work is and where its scan is; every step reads it.
+\begin{enumerate}
+  \item \textbf{Open a work}: from its Internet Archive identifier, a Project Gutenberg number or a local PDF. Pollis
+    writes its record, filling what the source gives: title, author, year, language, contents.
+  \item \textbf{Read it}: each page of the scan beside its text, with the words the checks flag highlighted.
+  \item \textbf{Choose parts}: one or more entries of the contents, or a page range.
+  \item \textbf{Extract and correct}: the text of the chosen parts, with each flagged word beside its piece of the
+    scan, corrected by you. The result is a snippet.
+  \item \textbf{Translate}: the snippet, with a local model you choose, into the language you pick. The translation
+    is saved with the snippet, labelled with its model and date.
+  \item \textbf{Read aloud}: the snippet, or its translation.
+  \item \textbf{Use it}: copy a snippet, send it to a notebook, or cite it from a panel.
+\end{enumerate}
+
+\section{The work record}\label{sec:record}
+Each work is one TOML file, \file{work.toml}, in its own folder \file{~/.pollis/works/<id>/}, beside its snippets.
+Every field but \file{id} and the scan is optional, since some works have no known author, year or even title.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}p{0.29\linewidth}L@{}}
+\toprule
+\textbf{Field} & \textbf{What it holds} \\
+\midrule
+\file{id} & A short name for the folder, such as \file{van-gogh-brieven-3} \\
+\file{title}, \file{author}, \file{editor}, \file{translator}, \file{year} & As printed, when known \\
+\file{languages} & The languages of the text, as codes (\file{fr}, \file{nl}), the language of most of it first \\
+\file{entryType} & The BibTeX entry type: \file{book}, \file{article}, \file{incollection}, \file{misc}, and so on \\
+\file{referenceKey} & The work's key in PollisReferences, when it is there; the record then does not repeat its
+  details \\
+\file{summary}, \file{summarySource} & A few sentences on the work, and the page they come from, such as a Wikipedia
+  article or a catalogue \\
+\file{[scan]} & Where the scan and its text are: an Internet Archive identifier, a Gutenberg number or a local file
+  (\S\ref{sec:where}) \\
+\file{[[contents]]} & The table of contents, each entry with its label and pages (\S\ref{sec:contents}) \\
+\file{[[words]]} & The work's own words that the dictionary does not know, accepted once: names, old spellings \\
+\file{[[glossary]]} & Agreed translations of names and recurring terms, used by every translation of the work \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The record of the third volume of Van Gogh's letters to Theo:
+\begin{lstlisting}
+id = "van-gogh-brieven-3"
+title = "Brieven aan zijn broeder, derde deel"
+author = "Vincent van Gogh"
+editor = "J. van Gogh-Bonger"
+year = 1914
+languages = ["fr", "nl"]
+entryType = "book"
+summary = "The letters of Vincent van Gogh to his brother Theo from Paris, Arles, Saint-Rémy and Auvers, 1886 to 1890, as he wrote them, with his sister-in-law's notes in Dutch."
+
+[scan]
+archive = "brievenaanzijnbr03gogh"
+
+[[contents]]
+label = "Verblijf in Parijs. Maart 1886 — Februari 1888"
+pages = "1-5"
+
+[[contents]]
+label = "Verblijf in Arles. Februari 1888 — Mei 1889"
+pages = "6-"
+
+[[words]]
+word = "Gachet"
+
+[[glossary]]
+term = "le midi"
+en = "the South"
+\end{lstlisting}
+
+\section{Contents}\label{sec:contents}
+Each contents entry points to pages of the scan, so choosing parts works the same for every work. You pick one entry or
+several.
+
+\subsection{Where the contents come from}
+\begin{enumerate}
+  \item \textbf{The Internet Archive's contents file} (\file{_toc.xml}), the OCR of the book's own contents page. It
+    is a draft to check: for Van Gogh's volume 3 it reads ``Verblijf in Arles. Februari 1888 --- Mei 1889. Brief
+    463---590 - 6'', but some of its lines run a page number into the next entry.
+  \item \textbf{The PDF's outline}, for a local PDF that has one.
+  \item \textbf{The headings} of a Gutenberg text.
+  \item \textbf{You}, entry by entry, in the reader.
+\end{enumerate}
+
+\subsection{Without a table of contents}
+The entries are other units of the work: Van Gogh's numbered letters, the sections of the Periplus of the Erythraean
+Sea, the stanzas of the Meghaduta. When nothing else is possible, the entries are page ranges.
+
+\subsection{Printed pages and scan pages}
+They differ: a scan's first pages are covers and front matter, and plates add pages with no number. The Internet
+Archive's page-numbers file (\file{_page_numbers.json}) gives the printed number of each scan page, with the
+probability of its reading: in volume 3, scan page 32 is printed page 20, read with a probability of 93 per cent.
+Contents entries give printed pages, and Pollis turns them into scan pages. Where there is no such file, you set the
+difference once for the work.
+
+\section{Extracting and correcting}\label{sec:correct}
+The checks flag the words most likely misread; you correct them, each beside its piece of the scan. Nothing is changed
+without you.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}p{0.2\linewidth}LL@{}}
+\toprule
+\textbf{Check} & \textbf{What it catches} & \textbf{Example} \\
+\midrule
+The OCR's own confidence & Words the OCR itself was unsure of: the Internet Archive's hOCR file gives every word its
+  box on the page and a confidence from 0 to 100 & ``ziekenkiiizen'' (ziekenhuizen), confidence 7 \\
+A dictionary of the language & Words in no dictionary, from Hunspell's free word lists, which LibreOffice uses
+  & ``s6rie'', ``Auversest'' \\
+Word lists of the work's time & Old spellings that a modern dictionary flags, where such lists exist: Portuguese
+  spelling, for instance, changed in 1911, 1945 and 1990 & ``gelukwenschen'' in Dutch before 1947 \\
+The work's own words & Names and spellings accepted once, so they are not flagged again & Gachet, Roulin \\
+Common OCR confusions & The correction of a flagged word: \'e read as 6, \`e as \pounds, c as e, rn as m, li as h &
+  ``eher'' $\rightarrow$ cher, ``\pounds tude'' $\rightarrow$ \'etude \\
+A second scan & Misreads that are real words, where two scans of the same edition disagree & A word one scan reads
+  right \\
+The language model & Words that do not fit their sentence, as suggestions only & A misread that is still a word \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Every correction is kept as ``read as X, corrected to Y'', so the scan's reading can always be restored. A second scan
+is the strongest check, and the Internet Archive often has more than one copy of a book: Pollis offers the other copies
+of the same edition it finds.
+
+\subsection{Beyond printed text}
+The checks above are for printed text in a modern script, whose scan already has its text. A page with no text, such
+as a page you photograph, needs OCR first. An inscription in an ancient script is a case of its own: its extraction
+and translation need an OCR or a vision model that reads that script.
+
+\needspace{16\baselineskip}
+\section{Snippets}\label{sec:snippets}
+A snippet is a passage with its place in the work, its corrected text, the corrections made and any translations, of
+any size you choose: a couple of paragraphs, a chapter, one inscription. It is one TOML file in the work's
+\file{snippets} folder:
+\begin{lstlisting}
+work = "van-gogh-brieven-3"
+label = "Brief 499, Saintes-Maries"
+letter = 499
+language = "fr"
+text = "Je t'écris de Stes. Maries au bord de la Méditerranée enfin."
+
+[[corrections]]
+read = "M£diterranee"
+corrected = "Méditerranée"
+
+[[translations]]
+language = "en"
+model = "EuroLLM-9B-Instruct-2512.Q4_K_M"
+made = 2026-11-25
+text = "I write to you from Stes. Maries on the Mediterranean at last."
+\end{lstlisting}
+The passages of the Historical Geography topics are snippets in all but name: a work, a place in it and its words. A
+topic's passage becomes a snippet when you make it one.
+
+\section{Translation}\label{sec:translation}
+A snippet is translated by a local model you choose, run by llama-server as Pollis runs its other local models, so it
+works without the internet. The translation is saved with the snippet, so each passage is translated once.
+
+\subsection{Context without losing time}
+Writing a translation is slow, about 6 words a second for a model of 9 billion parameters on a Mac with 16 GB of
+memory; reading the source is much faster. So each request carries more than it translates:
+\begin{itemize}
+  \item the paragraph before, with its translation already made;
+  \item the paragraph to translate;
+  \item the paragraph after, marked as context only;
+  \item the work's glossary.
+\end{itemize}
+Short paragraphs, as in letters and poems, are grouped into units of a few hundred words. The translation is shown word
+by word as it is written. \ui{Translate Again} translates a passage with the whole snippet as context, for the passage
+that only later paragraphs explain.
+
+\subsection{The model}
+The model must take instructions: TranslateGemma's fixed prompt has no room for context or a glossary, while general
+models such as EuroLLM and Gemma~4 take both. Three models on four passages of the 1914 letters, three in French and one
+in Dutch, the scan's errors corrected first:
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}p{0.22\linewidth}LLL@{}}
+\toprule
+\textbf{Passage} & \textbf{TranslateGemma 4B} & \textbf{Gemma 4 12B} & \textbf{EuroLLM 9B-2512} \\
+\midrule
+Arles, on arrival (French) & Right & Right & Right \\
+Saintes-Maries (French) & ``sardines'' for maquereaux (mackerel) & Right, one clumsy phrase & Right \\
+Auvers, the first letter (French) & ``old reeds'' for vieux chaume (old thatch) & Right & Right \\
+To his mother (Dutch) & Reverses the meaning of a sentence & Gives his mother's move to Vincent & The right person,
+  one nuance off \\
+\midrule
+Seconds a passage & 9 to 12 & 28 to 51 & 22 to 28 \\
+Size at 4 bits & 2.5 GB & 7.1 GB & 5.6 GB \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The times were measured with a download running and two embedding servers of Pollis in memory. None of the three was
+right in every sentence of the Dutch letter, so every translation is labelled as made by a model, with the model and
+the date.
+
+\section{Reading aloud}\label{sec:aloud}
+\ui{Read Aloud} reads a snippet, or its translation, with the voice tools of Pollis, in the language of the text.
+
+\needspace{8\baselineskip}
+\section{Where works are kept}\label{sec:where}
+\subsection{One folder per work}
+A work's folder, \file{~/.pollis/works/<id>/}, holds two kinds of files:
+\begin{itemize}
+  \item \textbf{Small text files}, a few kilobytes each: the record, the snippets with their corrections and
+    translations, the glossary and the word list. They are what you make.
+  \item \textbf{Large files}, kept only as a copy of the source: the scan's text, the word positions (the hOCR file of
+    volume 3 is 28 MB) and the page images (221 MB for volume 3). Pollis can fetch each page's image when it is shown,
+    or download the whole scan to read offline; it shows the size of the scan and the free disk space, and you choose.
+\end{itemize}
+
+\subsection{A work in a project}
+\ui{Add to Workspace} puts a work into the Pollis Workspace open, so that a project keeps its sources when it is copied
+or shared. It copies only the small text files. The large files stay in \file{~/.pollis/works/}, once on the computer,
+and the record points to them by a permalink, the address that names the source for good:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}p{0.2\linewidth}p{0.36\linewidth}L@{}}
+\toprule
+\textbf{Source} & \textbf{Permalink} & \textbf{On another computer} \\
+\midrule
+Internet Archive & The item's identifier: \file{archive = "brievenaanzijnbr03gogh"}, that is,
+  \file{archive.org/details/brievenaanzijnbr03gogh} & Pollis fetches the text and the pages again from the same address \\
+Project Gutenberg & The ebook's number: \file{gutenberg = 16659} & The same \\
+A local PDF & Its fingerprint, the SHA-256 of the file, with the path it had & Pollis finds the file in
+  \file{~/.pollis/works/} by its fingerprint, or asks for it \\
+\bottomrule
+\end{tabularx}
+\end{center}
+Corrections and translations belong to the snippets, not to the large files, so nothing you made is lost when the large
+files are fetched again.
+
+\section{Menu items}\label{sec:menu}
+The submenu \ui{Explore}\gt\ui{OCR Files and Snippets}, below \ui{PDF Files}. Its page has numbered steps, those of
+\S\ref{sec:how}; the other items open it at a step or work on what is open.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}p{0.22\linewidth}L@{}}
+\toprule
+\textbf{Item} & \textbf{What it does} \\
+\midrule
+\ui{Open Work...} & Asks for an Internet Archive identifier or link, a Gutenberg number or a local PDF, writes the
+  work's record and opens the page at Read \\
+\ui{Works} & Lists the works opened, with their title, author, year and languages \\
+\ui{Read} & The scan's pages beside their text, the flagged words highlighted, the contents at the side \\
+\ui{Extract Snippet} & The chosen contents entries or pages as a snippet, at the step of correcting it \\
+\ui{Translate Snippet} & The snippet translated, with the model and the language you choose \\
+\ui{Read Aloud} & Reads the snippet, or its translation, aloud \\
+\ui{Snippets} & Lists the snippets of every work, with their translations, to copy, send to a notebook or open \\
+\ui{Glossary} & The work's agreed translations of names and terms, to edit \\
+\ui{Add to Workspace} & Puts the work's record and snippets into the Pollis Workspace open (\S\ref{sec:where}) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section*{Sources}\addcontentsline{toc}{section}{Sources}
+\begin{itemize}
+  \item \href{https://archive.org/details/brievenaanzijnbr03gogh}{\color{pblue}Brieven aan zijn broeder, volume 3
+    (1914)}, the Getty Research Institute's copy at the Internet Archive, with its
+    \href{https://archive.org/metadata/brievenaanzijnbr03gogh/files}{\color{pblue}files}: text, hOCR, contents and
+    page numbers.
+  \item \href{https://huggingface.co/utter-project/EuroLLM-9B-Instruct-2512}{\color{pblue}EuroLLM-9B-Instruct-2512},
+    and its \href{https://huggingface.co/mradermacher/EuroLLM-9B-Instruct-2512-GGUF}{\color{pblue}4-bit GGUF
+    conversion}.
+\end{itemize}
+
+\end{document}

@@ -558,6 +558,7 @@ export const POLLIS_DOCUMENTS: Readonly<Record<string, string>> = {
 	'pollis-drilldown-prediction-challenges.pdf': localize('openDrillDownPredictionCompetitions', "Drill-down: Prediction Challenges"),
 	'pollis-drilldown-plotting.pdf': localize('openDrillDownPlotting', "Drill-down: Plotting"),
 	'pollis-drilldown-customisation.pdf': localize('openDrillDownCustomisation', "Drill-down: Customisation"),
+	'pollis-drilldown-ocr-files.pdf': localize('openDrillDownOcrFiles', "Drill-down: OCR Files and Snippets"),
 };
 
 /**
@@ -839,6 +840,25 @@ registerAction2(class extends Action2 {
 
 	run(accessor: ServicesAccessor): Promise<void> {
 		return openDocument(accessor, 'pollis-drilldown-customisation.pdf');
+	}
+});
+
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.action.openDrillDownOcrFiles',
+			title: {
+				...localize2('openDrillDownOcrFiles', "Drill-down: OCR Files and Snippets"),
+				mnemonicTitle: localize({ key: 'miDrillDownOcrFiles', comment: ['&& denotes a mnemonic'] }, "OC&&R Files and Snippets"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDrillDownsMenu, group: '1_drilldowns', order: 11 }
+		});
+	}
+
+	run(accessor: ServicesAccessor): Promise<void> {
+		return openDocument(accessor, 'pollis-drilldown-ocr-files.pdf');
 	}
 });
 
