@@ -462,7 +462,7 @@ function pageHtml(): string {
 		} else if (entry.text === null || entry.text === undefined) {
 			body.appendChild(element('p', 'status', TEXT.noText));
 		} else {
-			for (const paragraph of entry.text.split('\n')) {
+			for (const paragraph of entry.text.split('\\n')) {
 				if (paragraph.trim()) { body.appendChild(element('p', '', paragraph)); }
 			}
 		}
