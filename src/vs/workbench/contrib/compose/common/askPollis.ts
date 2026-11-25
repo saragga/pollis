@@ -1112,6 +1112,12 @@ export interface IAskPollisService {
 	 * collection of Retrieval-Augmented Generation, its name, the `collection`.
 	 */
 	answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, attachments?: readonly IAskPollisAttachment[], collection?: string): Promise<IAskPollisAnswer>;
+	/**
+	 * Has the model `model` of this computer (a value of pollis.ask.chatModel: an `hf:` file of ~/.pollis/models, or a
+	 * path), started through the Julia extension, write the reply to `messages`, `onText` given the reply so far as it
+	 * comes: the translations of OCR Files and Snippets.
+	 */
+	converse(model: string, messages: readonly IAskPollisMessage[], onText: (text: string) => void, token: CancellationToken): Promise<IAskPollisAnswer>;
 	/** The tables and views of the DuckDB database at `path`, with their columns, as an attachment gives them; it is opened read-only and no view is run. */
 	describeDatabase(path: string): Promise<string>;
 	/** The help of the DuckDB function `name`, whatever its case, from DuckDB's own catalogue, as help?> in duckdb> shows it: none when DuckDB has no function of that name. */

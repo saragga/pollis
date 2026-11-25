@@ -1,0 +1,23 @@
+# OCR Files and Snippets Webview Configuration
+# A page in the Time Arrow style of the scaffold, not a panel: only its Learn More. Its works are read by the utility
+# process of compose/node/ocrFiles.ts, and the page is compose/browser/ocrFilesPage.ts. `pageCommand` is the command
+# that opens it. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ocrFiles.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "OCR Files and Snippets"
+viewType = "pollis.ocrFiles"
+pageCommand = "pollis.ocrFiles.works"
+
+[[wikis]]
+name = "Overview"
+file = "ocrFiles/overview.md"
+bundled = true
+description = "The seven steps: opening a work, reading its pages, choosing parts, extracting and correcting a snippet, translating it, reading it aloud and using it"
+
+[[wikis]]
+name = "Factsheet"
+file = "ocrFiles/factsheet.md"
+bundled = true
+description = "The sources, the checks of a word and their dictionaries, the files of a work and its snippets, and where works are kept"

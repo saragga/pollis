@@ -6,6 +6,7 @@
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { Emitter } from '../../../../base/common/event.js';
 import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
+import { hasKey } from '../../../../base/common/types.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
 import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
@@ -14,7 +15,7 @@ import { InstantiationType, registerSingleton } from '../../../../platform/insta
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IUtilityProcessWorkerWorkbenchService } from '../../../services/utilityProcess/electron-browser/utilityProcessWorkerWorkbenchService.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_CONTEXT, ASK_SIMILARITY_PREFIX, askCloudModel, askPollisMessages, askShares, embeddingPrefixes, IAskPassageMatch, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexStatus, IAskPollisNamedIndex, IAskPollisPassage, IAskPollisReranked, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_CONTEXT, ASK_SIMILARITY_PREFIX, askCloudModel, askPollisMessages, askShares, embeddingPrefixes, IAskPassageMatch, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexStatus, IAskPollisMessage, IAskPollisNamedIndex, IAskPollisPassage, IAskPollisReranked, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest } from '../common/askPollis.js';
 import { IDuckDBFunctionKind } from '../../databases/common/duckdbHelp.js';
 
 /** What the command of the Julia extension that starts a llama.cpp server answers (pollisLlamaServer.ts). */
@@ -256,19 +257,38 @@ class AskPollisService extends Disposable implements IAskPollisService {
 			}
 			chat = { provider: cloud.provider, url: provider.url, model: cloud.id, key };
 		} else {
-			const model = answerWith?.startsWith(ASK_LOCAL_PREFIX) ? answerWith.slice(ASK_LOCAL_PREFIX.length) : this.configurationService.getValue<string>('pollis.ask.chatModel')?.trim() || ASK_CHAT_MODEL;
-			let server: ILlamaServerAnswer | undefined;
-			try {
-				server = await this.commandService.executeCommand<ILlamaServerAnswer>('language-julia.pollisLlamaServer', { model });
-			} catch (err) {
-				server = { error: err instanceof Error ? err.message : String(err) };
+			const local = await this.localChat(answerWith?.startsWith(ASK_LOCAL_PREFIX) ? answerWith.slice(ASK_LOCAL_PREFIX.length) : this.configurationService.getValue<string>('pollis.ask.chatModel')?.trim() || ASK_CHAT_MODEL);
+			if (!hasKey(local, { url: true })) {
+				return local;
 			}
-			if (!server?.url) {
-				return { model: server?.model ?? model, error: server?.error };
-			}
-			chat = { provider: 'local', url: server.url, model: server.model ?? model };
+			chat = local;
 		}
-		const name = cloud?.label ?? chat.model;
+		// A model of this computer does not see images yet
+		const seen = (attached: readonly IAskPollisAttachment[] | undefined) => cloud ? attached : attached?.filter(attachment => attachment.kind !== 'image');
+		return this.stream(chat, cloud?.label ?? chat.model, askPollisMessages(turns.map(turn => ({ ...turn, attachments: seen(turn.attachments) })), question, passages, seen(attachments), collection), onText, token);
+	}
+
+	async converse(model: string, messages: readonly IAskPollisMessage[], onText: (text: string) => void, token: CancellationToken): Promise<IAskPollisAnswer> {
+		const local = await this.localChat(model);
+		return hasKey(local, { url: true }) ? this.stream(local, local.model, messages, onText, token) : local;
+	}
+
+	/** The chat of the model `model` of this computer, in a llama-server the Julia extension starts; or why it did not start. */
+	private async localChat(model: string): Promise<Omit<IAskPollisChatRequest, 'id' | 'messages'> | IAskPollisAnswer> {
+		let server: ILlamaServerAnswer | undefined;
+		try {
+			server = await this.commandService.executeCommand<ILlamaServerAnswer>('language-julia.pollisLlamaServer', { model });
+		} catch (err) {
+			server = { error: err instanceof Error ? err.message : String(err) };
+		}
+		if (!server?.url) {
+			return { model: server?.model ?? model, error: server?.error };
+		}
+		return { provider: 'local', url: server.url, model: server.model ?? model };
+	}
+
+	/** The reply of the chat model of `chat` to `messages`, `onText` given it as it comes; `name` the model's name in the answer. */
+	private async stream(chat: Omit<IAskPollisChatRequest, 'id' | 'messages'>, name: string, messages: readonly IAskPollisMessage[], onText: (text: string) => void, token: CancellationToken): Promise<IAskPollisAnswer> {
 		if (token.isCancellationRequested) {
 			return { model: name };
 		}
@@ -282,9 +302,7 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		}));
 		store.add(token.onCancellationRequested(() => proxy.stop(id)));
 		try {
-			// A model of this computer does not see images yet
-			const seen = (attached: readonly IAskPollisAttachment[] | undefined) => cloud ? attached : attached?.filter(attachment => attachment.kind !== 'image');
-			const end = await proxy.chat({ ...chat, id, messages: askPollisMessages(turns.map(turn => ({ ...turn, attachments: seen(turn.attachments) })), question, passages, seen(attachments), collection) });
+			const end = await proxy.chat({ ...chat, id, messages });
 			return { model: name, ...end };
 		} finally {
 			store.dispose();

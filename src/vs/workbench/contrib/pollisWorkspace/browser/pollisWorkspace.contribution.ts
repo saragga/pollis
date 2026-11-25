@@ -53,7 +53,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 });
 
 /** The kinds of file a Pollis Workspace has a folder for. */
-export type PollisWorkspaceFolder = 'data' | 'knowledge_base' | 'reports' | 'methods' | 'workflows' | 'panels' | 'toolboxes' | 'programs' | 'orchestration' | 'games' | 'changes';
+export type PollisWorkspaceFolder = 'data' | 'knowledge_base' | 'reports' | 'methods' | 'workflows' | 'panels' | 'toolboxes' | 'programs' | 'orchestration' | 'games' | 'works' | 'changes';
 
 /** The folder of each kind, as a new workspace names it, what its README says it holds, and its subfolders. */
 const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; readonly readme: string; readonly subfolders?: readonly string[] }>> = {
@@ -67,6 +67,7 @@ const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; r
 	programs: { name: 'programs', readme: 'The programs and libraries compiled from your Julia code on the pages of Compose > Compilation Lab: executables in executables/ and shared libraries in shared_libraries/, one folder for each tool that compiled them, Rust crates in rust/, DuckDB extensions in duckdb_extensions/, and WebAssembly modules in webassembly/.', subfolders: ['executables', 'shared_libraries', 'rust', 'duckdb_extensions', 'webassembly'] },
 	orchestration: { name: 'orchestration', readme: 'The studies of Compose > Orchestration, where coding agents work on research together, one folder each: those of Many Analysts in many-analysts/, each with its question, its data, a folder for each analyst and the results.', subfolders: ['many-analysts'] },
 	games: { name: 'games', readme: 'The games of Compose > Simulation Games that you ran as facilitator, by case and then one folder each: game.toml with its teams and seed, and a folder for each round with the teams\' decisions, the state of the model and the results; and, in cases, the cases you write with Compose > Simulation Games > Create a Simulation Game...' },
+	works: { name: 'works', readme: 'The scanned works you read in Explore > OCR Files and Snippets and add to the workspace, one folder each: its record, work.toml, with its contents, its own words and its glossary, and its snippets in snippets/, each with its corrections and translations. The scans themselves stay in ~/.pollis/works.' },
 	changes: { name: 'changes', readme: 'Your changes to the panels, workflows, wikis and notebooks that come with Pollis and its toolboxes, one small file each.' },
 };
 

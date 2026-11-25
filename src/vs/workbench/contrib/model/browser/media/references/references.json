@@ -675,6 +675,72 @@
 			"open_access": true
 		},
 		{
+			"key": "ACSSW2020a",
+			"type": "misc",
+			"title": "IIIF Presentation API 3.0",
+			"authors": [
+				"Appleby, Michael",
+				"Crane, Tom",
+				"Sanderson, Robert",
+				"Stroop, Jon",
+				"Warner, Simeon"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"publisher": "IIIF Consortium",
+			"url": "https://iiif.io/api/presentation/3.0/",
+			"abstract": "The specification of the IIIF Presentation API, version 3.0, published by the IIIF Consortium. Its objective is to provide the information necessary to allow a rich, online viewing environment for compound digital objects to be presented to a human user, often with the IIIF Image API. A Manifest describes one object with Canvases that hold its images; its label is a short textual surrogate for the resource that a human reads, its metadata an ordered list of label and value pairs for display, with no descriptive semantics to be inferred, and its navDate a date that clients may use for navigation in a date-based interface such as a calendar or timeline, given as an XSD dateTime.",
+			"abstract_source": "manual",
+			"keywords": [
+				"IIIF",
+				"Presentation API",
+				"manifest",
+				"navDate",
+				"metadata",
+				"digital collections"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"note": "Version 3.0.0"
+		},
+		{
+			"key": "ACSSW2020b",
+			"type": "misc",
+			"title": "IIIF Image API 3.0",
+			"authors": [
+				"Appleby, Michael",
+				"Crane, Tom",
+				"Sanderson, Robert",
+				"Stroop, Jon",
+				"Warner, Simeon"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"publisher": "IIIF Consortium",
+			"url": "https://iiif.io/api/image/3.0/",
+			"abstract": "The specification of the IIIF Image API, version 3.0, published by the IIIF Consortium. It specifies a web service that returns an image in response to a standard HTTP or HTTPS request whose URI names the region, size, rotation, quality and format of the image wanted, and an image information document (info.json) that gives the image's width and height, its tiles and sizes, and the functions the server supports. The API also covers the CORS headers that let a web page read the images.",
+			"abstract_source": "manual",
+			"keywords": [
+				"IIIF",
+				"Image API",
+				"image server",
+				"tiles",
+				"region",
+				"size"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"note": "Version 3.0.0"
+		},
+		{
 			"key": "AD2006a",
 			"type": "article",
 			"title": "Mesh Adaptive Direct Search Algorithms for Constrained Optimization",
@@ -1431,6 +1497,64 @@
 			"retrieved": "2026-11-19",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "ANIGN2025a",
+			"type": "misc",
+			"title": "Carte de Cassini – exemplaire du Roi",
+			"authors": [
+				"Archives nationales",
+				"Institut national de l'information géographique et forestière"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2025,
+			"url": "https://cartes.gouv.fr/rechercher-une-donnee/dataset/ARCHIVES-NATIONALES_CASSINI-ROI",
+			"abstract": "The general map of France known as the map of Cassini, made by the Cassini family of cartographers between 1756 and 1815: about 180 sheets, the first map of the kingdom that is both general and detailed, showing France within its borders of the time, without Nice, Savoy and Corsica and with towns now in Belgium, Luxembourg or Germany. This copy, commissioned by the King, was scanned at 400 dpi by the Archives nationales, then cut, assembled and georeferenced by IGN, and is served as tiles by the Géoplateforme. Some areas are missing where sheets were lost or damaged. It is public information that may be reused freely and at no cost, for any purpose including commercial, under the Licence Ouverte, provided the integrity of the data is respected and every redistribution names the source given in the metadata.",
+			"abstract_source": "manual",
+			"keywords": [
+				"Cassini",
+				"France",
+				"historical maps",
+				"eighteenth century",
+				"georeferencing",
+				"IGN"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset, Licence Ouverte / Open License"
+		},
+		{
+			"key": "ANIGN2025b",
+			"type": "misc",
+			"title": "Carte de Cassini – exemplaire dit « de Marie-Antoinette »",
+			"authors": [
+				"Archives nationales",
+				"Institut national de l'information géographique et forestière"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2025,
+			"url": "https://cartes.gouv.fr/rechercher-une-donnee/dataset/BNF_CASSINI-MARIE-ANTOINETTE",
+			"abstract": "The map of Cassini, made between 1756 and 1815, in the copy said to have been made for Queen Marie-Antoinette: nearly 180 sheets scanned at 400 dpi by the Bibliothèque nationale de France, then cut, assembled and georeferenced by IGN, and served as tiles by the Géoplateforme. It covers France within its borders of the time, except some areas where sheets were lost or damaged. It is public information that may be reused freely and at no cost, for any purpose including commercial, under the Licence Ouverte, provided the integrity of the data is respected and every redistribution names the source given in the metadata.",
+			"abstract_source": "manual",
+			"keywords": [
+				"Cassini",
+				"France",
+				"historical maps",
+				"Bibliothèque nationale de France",
+				"georeferencing",
+				"IGN"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset, Licence Ouverte / Open License"
 		},
 		{
 			"key": "ANMC2017a",
@@ -2264,6 +2388,33 @@
 			"open_access": false
 		},
 		{
+			"key": "All2026a",
+			"type": "misc",
+			"title": "Allmaps: curating, georeferencing and exploring IIIF maps",
+			"authors": [
+				"Allmaps"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://allmaps.org",
+			"abstract": "Allmaps is a set of open-source tools for curating, georeferencing and exploring collections of digitized maps shared through IIIF by libraries, archives and museums. With Allmaps Editor any map from an institution that supports IIIF can be georeferenced, without GIS infrastructure or generated XYZ tiles: the ground control points and the mask of each map are saved as a Georeference Annotation. The Allmaps API (api.allmaps.org) lists the georeferenced maps that intersect a point or a box, or lie within a box, with their area and scale, as annotations or as GeoJSON, and the Allmaps Tile Server (allmaps.xyz) serves each map warped onto web map tiles.",
+			"abstract_source": "manual",
+			"keywords": [
+				"Allmaps",
+				"georeferencing",
+				"IIIF",
+				"historical maps",
+				"tile server",
+				"annotations"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Alo2006a",
 			"type": "book",
 			"title": "An Introduction to Systems Biology: Design Principles of Biological Circuits",
@@ -2798,6 +2949,33 @@
 			"open_access": true
 		},
 		{
+			"key": "BBCKP...2010a",
+			"type": "article",
+			"title": "A Theory of Learning from Different Domains",
+			"authors": [
+				"Ben-David, Shai",
+				"Blitzer, John",
+				"Crammer, Koby",
+				"Kulesza, Alex",
+				"Pereira, Fernando",
+				"Vaughan, Jennifer Wortman"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "Machine Learning",
+			"volume": "79",
+			"number": "1-2",
+			"pages": "151-175",
+			"doi": "10.1007/s10994-009-5152-4",
+			"openalex": "W2104094955",
+			"abstract": "Discriminative learning methods for classification perform well when training and test data are drawn from the same distribution. Often, however, we have plentiful labeled training data from a source domain but wish to learn a classifier which performs well on a target domain with a different distribution and little or no labeled training data. In this work we investigate two questions. First, under what conditions can a classifier trained from source data be expected to perform well on target data? Second, given a small amount of labeled target data, how should we combine it during training with the large amount of labeled source data to achieve the lowest target error at test time? We address the first question by bounding a classifier’s target error in terms of its source error and the divergence between the two domains. We give a classifier-induced divergence measure that can be estimated from finite, unlabeled samples from the domains. Under the assumption that there exists some hypothesis that performs well in both domains, we show that this quantity together with the empirical source error characterize the target error of a source-trained classifier. We answer the second question by bounding the target error of a model which minimizes a convex combination of the empirical source and target errors. Previous theoretical work has considered minimizing just the source error, just the target error, or weighting instances from the two domains equally. We show how to choose the optimal combination of source and target error as a function of the divergence, the sample sizes of both domains, and the complexity of the hypothesis class. The resulting bound generalizes the previously studied cases and is always at least as tight as a bound which considers minimizing only the target error or an equal weighting of source and target errors.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-25",
+			"checked": false
+		},
+		{
 			"key": "BBDG2018a",
 			"type": "book",
 			"title": "Trades, Quotes and Prices: Financial Markets Under the Microscope",
@@ -3014,6 +3192,50 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "BBZ2013a",
+			"type": "article",
+			"title": "From Baghdad to London: Unraveling Urban Development in Europe, the Middle East, and North Africa, 800–1800",
+			"authors": [
+				"Bosker, Maarten",
+				"Buringh, Eltjo",
+				"van Zanden, Jan Luiten"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2013,
+			"journal": "The Review of Economics and Statistics",
+			"volume": "95",
+			"number": "4",
+			"pages": "1418-1437",
+			"issn": "0034-6535",
+			"doi": "10.1162/REST_a_00284",
+			"openalex": "W2129366450",
+			"url": "https://doi.org/10.1162/REST_a_00284",
+			"abstract": "This paper empirically investigates why, between 800 and 1800, the urban center of gravity moved from the Islamic world to Europe. Using a large new city-specific data set covering Europe, the Middle East, and North Africa, we unravel the role of geography and institutions in determining long-run city development in the two regions. We find that the main reasons for the Islamic world's stagnation and Europe's long-term success are specific to each region: any significant positive interaction between cities in the two regions hampered by their different main religious orientation. Together, the long-term consequences of a different choice of main transport mode (camel versus ship) and the development of forms of local participative government in Europe that made cities less dependent on the state explain why Europe's urban development eventually outpaced that in the Islamic world.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"urban development",
+				"long-run economic growth",
+				"Islamic world",
+				"Europe",
+				"Middle East",
+				"North Africa",
+				"development geography",
+				"institutions",
+				"religious orientation",
+				"transport modes",
+				"camel transport",
+				"carriage of goods by sea",
+				"participatory government",
+				"state dependence"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "BC1964a",
@@ -4810,6 +5032,38 @@
 			"open_access": true
 		},
 		{
+			"key": "BK1979a",
+			"type": "article",
+			"title": "A physically based, variable contributing area model of basin hydrology",
+			"authors": [
+				"Beven, K. J.",
+				"Kirkby, M. J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1979,
+			"journal": "Hydrological Sciences Bulletin",
+			"volume": "24",
+			"pages": "43-69",
+			"issn": "0303-6936",
+			"doi": "10.1080/02626667909491834",
+			"openalex": "W1981646498",
+			"url": "https://doi.org/10.1080/02626667909491834",
+			"abstract": "A hydrological forecasting model is presented that attempts to combine the important distributed effects of channel network topology and dynamic contributing areas with the advantages of simple lumped parameter basin models. Quick response flow is predicted from a storage/contributing area relationship derived analytically from the topographic structure of a unit within a basin. Average soil water response is represented by a constant leakage infiltration store and an exponential subsurface water store. A simple non-linear routing procedure related to the link frequency distribution of the channel network completes the model and allows distinct basin sub-units, such as headwater and sideslope areas to be modelled separately. The model parameters are physically based in the sense that they may be determined directly by measurement and the model may be used at ungauged sites. Procedures for applying the model and tests with data from the Crimple Beck basin are described. Using only measured and estimated parameter values, without optimization, the model makes satisfactory predictions of basin response. The modular form of the model structure should allow application over a range of small and medium sized basins while retaining the possibility of including more complex model components when suitable data are available.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"river basin hydrology",
+				"ungauged sites",
+				"physically based hydrological model"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"issue": "1"
+		},
+		{
 			"key": "BK1980a",
 			"type": "article",
 			"title": "The Solution of Linear Difference Models under Rational Expectations",
@@ -5298,6 +5552,41 @@
 			"open_access": true
 		},
 		{
+			"key": "BLM2014a",
+			"type": "article",
+			"title": "Priority-flood: An optimal depression-filling and watershed-labeling algorithm for digital elevation models",
+			"authors": [
+				"Barnes, Richard",
+				"Lehman, Clarence",
+				"Mulla, David"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"journal": "Computers & Geosciences",
+			"volume": "62",
+			"pages": "117-127",
+			"issn": "0098-3004",
+			"doi": "10.1016/j.cageo.2013.04.024",
+			"openalex": "W2094887943",
+			"url": "https://doi.org/10.1016/j.cageo.2013.04.024",
+			"abstract": "Depressions (or pits) are areas within a digital elevation model that are surrounded by higher terrain, with no outlet to lower areas. Filling them so they are level, as fluid would fill them if the terrain was impermeable, is often necessary in preprocessing DEMs. The depression-filling algorithm presented here - called Priority-Flood - unifies and improves the work of a number of previous authors who have published similar algorithms. The algorithm operates by flooding DEMs inwards from their edges using a priority queue to determine the next cell to be flooded. The resultant DEM has no depressions or digital dams: every cell is guaranteed to drain. The algorithm is optimal for both integer and floating-point data, working in O(n) and O(nlog\"2n) time, respectively. It is shown that by using a plain queue to fill depressions once they have been found, an O(mlog\"2m) time-complexity can be achieved, where m does not exceed the number of cells n. This is the lowest time complexity of any known floating-point depression-filling algorithm. In testing, this improved variation of the algorithm performed up to 37% faster than the original. Additionally, a parallel version of an older, but widely used, depression-filling algorithm required six parallel processors to achieve a run-time on par with what the newer algorithm's improved variation took on a single processor. The Priority-Flood Algorithm is simple to understand and implement: the included pseudocode is only 20 lines and the included C++ reference implementation is under a hundred lines. The algorithm can work on irregular meshes as well as 4-, 6-, 8-, and n-connected grids. It can also be adapted to label watersheds and determine flow directions through either incremental elevation changes or depression carving. In the case of incremental elevation changes, the algorithm includes safety checks not present in prior works.",
+			"abstract_source": "semanticscholar",
+			"keywords": [
+				"digital elevation model",
+				"priority queues",
+				"time complexity",
+				"parallel algorithms",
+				"flow direction determination",
+				"irregular meshes"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "BLP1995a",
 			"type": "article",
 			"title": "Automobile Prices in Market Equilibrium",
@@ -5582,6 +5871,44 @@
 			"legacy_key": "brown2020",
 			"source": "manual",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "BMTCB...2025a",
+			"type": "article",
+			"title": "Cliopatria - A geospatial database of world-wide political entities from 3400BCE to 2024CE",
+			"authors": [
+				"Bennett, James S.",
+				"Mutch, Erin",
+				"Tollefson, Andrew",
+				"Chalstrey, Ed",
+				"Benam, Majid",
+				"Cioni, Enrico",
+				"Reddish, Jenny",
+				"Zsambok, Jakob",
+				"Levine, Jill",
+				"Cook, C. Justin",
+				"Francois, Pieter",
+				"Hoyer, Daniel",
+				"Turchin, Peter"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"journal": "Scientific Data",
+			"volume": "12",
+			"number": "1",
+			"pages": "247",
+			"issn": "2052-4463",
+			"doi": "10.1038/s41597-025-04516-9",
+			"openalex": "W4407414158",
+			"url": "https://doi.org/10.1038/s41597-025-04516-9",
+			"oa_url": "https://www.nature.com/articles/s41597-025-04516-9.pdf",
+			"abstract": "The scientific understanding of the complex dynamics of global history – from the rise and spread of states to their declines and falls, from their peaceful interactions with economic or diplomatic exchanges to violent confrontations – requires, at its core, a consistent and explicit encoding of historical political entities, their locations, extents and durations. Numerous attempts have been made to produce digital geographical compendia of polities with different time depths and resolutions. Most have been limited in scope and many of the more comprehensive geospatial datasets must either be licensed or are stored in proprietary formats, making access for scholarly analysis difficult. To address these issues we have developed Cliopatria, a comprehensive open-source geospatial dataset of worldwide states from 3400BCE to 2024CE. Presently it comprises over 1600 political entities sampled at varying timesteps and spatial scales. Here, we discuss its construction, its scope, and its current limitations.",
+			"abstract_source": "crossref",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -8519,6 +8846,40 @@
 			"open_access": false
 		},
 		{
+			"key": "Bur2020a",
+			"type": "misc",
+			"title": "European urban population, 700 - 2000",
+			"authors": [
+				"Buringh, Eltjo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"publisher": "DANS Data Station Social Sciences and Humanities",
+			"doi": "10.17026/dans-xzy-u62q",
+			"openalex": "W6943940935",
+			"url": "https://doi.org/10.17026/dans-xzy-u62q",
+			"abstract": "This dataset contains estimates of the urban population (in thousands of inhabitants) between the years 700 and 2000 in 2,262 European settlements. It is based on previous historical demographic sources that have been critically assessed and systematically complemented with new population estimates for additional time windows, deriving from either quantitative sources or proxies. Missing data are covered by city-specific imputations. It contains European cities with more than 100,000 inhabitants. Furthermore medieval first and second nature geographical data for all cities have been added, as well as their historical names.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"urban population",
+				"historical demography",
+				"European cities",
+				"medieval towns",
+				"population estimates",
+				"historical geography",
+				"city names",
+				"urbanization",
+				"settlement history"
+			],
+			"keywords_source": "openalex",
+			"source": "datacite",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset, version 1.1, CC0 1.0"
+		},
+		{
 			"key": "Buu2018a",
 			"type": "book",
 			"title": "Flexible Imputation of Missing Data",
@@ -8873,6 +9234,47 @@
 			"retrieved": "2026-10-30",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "CCCKK2026a",
+			"type": "article",
+			"title": "Automatic detection of archaeological features from airborne laser scanning data using deep learning: Development and evaluation of the ADAF tool",
+			"authors": [
+				"Čož, Nejc",
+				"Corns, Anthony",
+				"Curran, Susan",
+				"Kocev, Dragi",
+				"Kokalj, Žiga"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"journal": "Journal of Archaeological Science: Reports",
+			"volume": "71",
+			"pages": "105733",
+			"issn": "2352-409X",
+			"doi": "10.1016/j.jasrep.2026.105733",
+			"openalex": "W7144337187",
+			"url": "https://doi.org/10.1016/j.jasrep.2026.105733",
+			"abstract": "The need to use machine learning (ML) in archaeology is constantly increasing due to the growing availability of large amounts of high-quality airborne laser scanning data (ALS, lidar). The Automatic Detection of Archaeological Features (ADAF) tool was developed to provide an easily accessible deep learning (DL) software for automating the detection of archaeological features from ALS data. The software has a user interface that requires minimal interaction and no prior knowledge of ML techniques, greatly improving accessibility for the archaeological community. The underlying ML models (MLMs) have been trained on an extensive archive of ALS datasets in Ireland, which have been labelled by experts with three types of archaeological features, namely enclosures, ringforts and barrows. The core components of the tool are the Relief Visualisation Toolbox (RVT) for processing the ALS data into ML-friendly visualisations and the Artificial Intelligence Toolbox for Earth Observation (AiTLAS), which provides access to the DL models, both of which are actively used in the field of aerial archaeology. Although developed for detecting selected archaeological monuments in Ireland, ADAF supports retraining with data from other regions and other monument types, enabling its use in archaeological contexts worldwide. The practical application of the software was tested on an active infrastructure development corridor in Ireland. The results showed a promising 84 % recall rate for known archaeological sites and outperformed human detection by discovering 116 potential new archaeological sites that had not been noticed during manual inspection. • ADAF is an easy-to-use deep learning tool for detection of archaeology from ALS data. • 10,000+ samples of enclosures, ringforts and barrows support robust model training. • HRNet and Faster R-CNN are used for semantic segmentation and object detection. • Real-world testing on 197 km 2 showed ADAF detected features missed in manual survey.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"archaeological feature detection",
+				"airborne laser scanning",
+				"LiDAR",
+				"deep learning",
+				"enclosure",
+				"ringforts",
+				"barrows",
+				"semantic segmentation",
+				"object detection",
+				"HRNet"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "CCDDH...2018a",
@@ -13235,6 +13637,42 @@
 			"open_access": false
 		},
 		{
+			"key": "DAC2008a",
+			"type": "article",
+			"title": "Visualisation of LiDAR terrain models for archaeological feature detection",
+			"authors": [
+				"Devereux, B. J.",
+				"Amable, G. S.",
+				"Crow, P."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"journal": "Antiquity",
+			"volume": "82",
+			"pages": "470-479",
+			"issn": "0003-598X",
+			"doi": "10.1017/s0003598x00096952",
+			"openalex": "W1798489336",
+			"url": "https://doi.org/10.1017/s0003598x00096952",
+			"abstract": "LiDAR is developing into a formidable instrument of aerial survey. Here the author shows how the LiDAR picture can be enhanced so that features picked up by illumination from different directions can be combined in one comprehensive survey.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"LiDAR",
+				"terrain models",
+				"archaeological feature detection",
+				"aerial survey",
+				"image enhancement",
+				"3D visualization"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false,
+			"issue": "316"
+		},
+		{
 			"key": "DBKYZ...2019a",
 			"type": "article",
 			"title": "The UCR Time Series Archive",
@@ -13591,6 +14029,31 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "DDSLL...2009a",
+			"type": "inproceedings",
+			"title": "ImageNet: A Large-Scale Hierarchical Image Database",
+			"authors": [
+				"Deng, Jia",
+				"Dong, Wei",
+				"Socher, Richard",
+				"Li, Li-Jia",
+				"Li, Kai",
+				"Fei-Fei, Li"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"booktitle": "2009 IEEE Conference on Computer Vision and Pattern Recognition",
+			"pages": "248-255",
+			"doi": "10.1109/CVPR.2009.5206848",
+			"openalex": "W2108598243",
+			"abstract": "The explosion of image data on the Internet has the potential to foster more sophisticated and robust models and algorithms to index, retrieve, organize and interact with images and multimedia data. But exactly how such data can be harnessed and organized remains a critical problem. We introduce here a new database called “ImageNet”, a large-scale ontology of images built upon the backbone of the WordNet structure. ImageNet aims to populate the majority of the 80,000 synsets of WordNet with an average of 500–1000 clean and full resolution images. This will result in tens of millions of annotated images organized by the semantic hierarchy of WordNet. This paper offers a detailed analysis of ImageNet in its current state: 12 subtrees with 5247 synsets and 3.2 million images in total. We show that ImageNet is much larger in scale and diversity and much more accurate than the current image datasets. Constructing such a large-scale database is a challenging task. We describe the data collection scheme with Amazon Mechanical Turk. Lastly, we illustrate the usefulness of ImageNet through three simple applications in object recognition, image classification and automatic object clustering. We hope that the scale, accuracy, diversity and hierarchical structure of ImageNet can offer unparalleled opportunities to researchers in the computer vision community and beyond.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false
 		},
 		{
 			"key": "DDT2019a",
@@ -14639,6 +15102,45 @@
 			"open_access": false
 		},
 		{
+			"key": "DKPKS...2023a",
+			"type": "article",
+			"title": "AiTLAS: Artificial Intelligence Toolbox for Earth Observation",
+			"authors": [
+				"Dimitrovski, Ivica",
+				"Kitanovski, Ivan",
+				"Panov, Panče",
+				"Kostovska, Ana",
+				"Simidjievski, Nikola",
+				"Kocev, Dragi"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "Remote Sensing",
+			"volume": "15",
+			"pages": "2343",
+			"issn": "2072-4292",
+			"doi": "10.3390/rs15092343",
+			"openalex": "W4367310933",
+			"url": "https://doi.org/10.3390/rs15092343",
+			"abstract": "We propose AiTLAS—an open-source, state-of-the-art toolbox for exploratory and predictive analysis of satellite imagery. It implements a range of deep-learning architectures and models tailored for the EO tasks illustrated in this case. The versatility and applicability of the toolbox are showcased in a variety of EO tasks, including image scene classification, semantic image segmentation, object detection, and crop type prediction. These use cases demonstrate the potential of the toolbox to support the complete data analysis pipeline starting from data preparation and understanding, through learning novel models or fine-tuning existing ones, using models for making predictions on unseen images, and up to analysis and understanding of the predictions and the predictive performance yielded by the models. AiTLAS brings the AI and EO communities together by facilitating the use of EO data in the AI community and accelerating the uptake of (advanced) machine-learning methods and approaches by EO experts. It achieves this by providing: (1) user-friendly, accessible, and interoperable resources for data analysis through easily configurable and readily usable pipelines; (2) standardized, verifiable, and reusable data handling, wrangling, and pre-processing approaches for constructing AI-ready data; (3) modular and configurable modeling approaches and (pre-trained) models; and (4) standardized and reproducible benchmark protocols including data and models.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"satellite imagery",
+				"Earth observation",
+				"image classification",
+				"semantic segmentation",
+				"object detection",
+				"AI-ready data"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"issue": "9"
+		},
+		{
 			"key": "DKPR1987a",
 			"type": "article",
 			"title": "Hybrid Monte Carlo",
@@ -14846,6 +15348,41 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "DLS2019a",
+			"type": "article",
+			"title": "A comparison of automated object extraction methods for mound and shell-ring identification in coastal South Carolina",
+			"authors": [
+				"Davis, Dylan S.",
+				"Lipo, Carl P.",
+				"Sanger, Matthew C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "Journal of Archaeological Science: Reports",
+			"volume": "23",
+			"pages": "166-177",
+			"issn": "2352-409X",
+			"doi": "10.1016/j.jasrep.2018.10.035",
+			"openalex": "W2898318323",
+			"url": "https://doi.org/10.1016/j.jasrep.2018.10.035",
+			"abstract": "One persistent archaeological challenge is the generation of systematic documentation for the extant archaeological record at the scale of landscapes. Often our information for landscapes is the result of haphazard and patchy surveys that stem from opportunistic and historic efforts. Consequently, overall knowledge of some regions is the product of ad hoc survey area delineation, degree of accessibility, effective ground visibility, and the fraction of areas that have survived destruction from development. These factors subsequently contribute unknown biases to our understanding of chronology, settlements patterns, interaction, and exchange. Aerial remote sensing offers one potential solution for improving our knowledge of landscapes. With sensors that include LiDAR, remote sensing can identify archaeological features that are otherwise obscured by vegetation. Object-based image analyses (OBIA) of remote sensing data hold particular promise to facilitate regional analyses thorough the automation of archaeological feature recognition. Here, we explore four OBIA algorithms for artificial mound feature detection using LiDAR from Beaufort County, South Carolina: multiresolution segmentation, inverse depression analysis, template matching, and a newly designed algorithm that combines elements of segmentation and template matching. While no single algorithm proved to be consistently superior to the others, a combination of methods is shown to be the most effective for detecting archaeological features.",
+			"abstract_source": "semanticscholar",
+			"keywords": [
+				"archaeological feature detection",
+				"artificial mounds",
+				"shell rings",
+				"object-based image analysis",
+				"LiDAR",
+				"multi-scale segmentation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -15348,6 +15885,42 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "DSL2019a",
+			"type": "article",
+			"title": "Automated mound detection using lidar and object-based image analysis in Beaufort County, South Carolina",
+			"authors": [
+				"Davis, Dylan S.",
+				"Sanger, Matthew C.",
+				"Lipo, Carl P."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "Southeastern Archaeology",
+			"volume": "38",
+			"pages": "23-37",
+			"issn": "0734-578X",
+			"doi": "10.1080/0734578X.2018.1482186",
+			"openalex": "W2807045604",
+			"url": "https://doi.org/10.1080/0734578X.2018.1482186",
+			"abstract": "The study of precontact anthropogenic mounded features—earthen mounds, shell heaps, and shell rings—in the American Southeast is stymied by the spotty distribution of systematic surveys across the region. Many extant, yet unidentified, archaeological mound features continue to evade detection due to the heavily forested canopies that occupy large areas of the region, making pedestrian surveys difficult and preventing aerial observation. Object-based image analysis (OBIA) is a tool for analyzing light and radar (lidar) data and offers an inexpensive opportunity to address this challenge. Using publicly available lidar data from Beaufort County, South Carolina, and an OBIA approach that incorporates morphometric classification and statistical template matching, we systematically identify over 160 previously undetected mound features. This result improves our overall knowledge of settlement patterns by providing systematic knowledge about past landscapes.",
+			"abstract_source": "semanticscholar",
+			"keywords": [
+				"earth mounds",
+				"shell heaps",
+				"shell rings",
+				"LiDAR",
+				"object-based image analysis",
+				"morphometric classification"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"issue": "1"
 		},
 		{
 			"key": "DTA1986a",
@@ -16234,6 +16807,31 @@
 			"open_access": false
 		},
 		{
+			"key": "E2026a",
+			"type": "misc",
+			"title": "Earth Search: Sentinel-2 Level-2A",
+			"authors": [
+				"Element 84"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://element84.com/earth-search/",
+			"abstract": "Global Sentinel-2 data from the Multispectral Instrument (MSI) onboard Sentinel-2",
+			"abstract_source": "publisher",
+			"keywords": [
+				"sentinel",
+				"earth observation",
+				"esa"
+			],
+			"keywords_source": "publisher",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset, updated continuously"
+		},
+		{
 			"key": "EA1996a",
 			"type": "book",
 			"title": "Growing Artificial Societies: Social Science from the Bottom Up",
@@ -16249,6 +16847,25 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "EA2022a",
+			"type": "misc",
+			"title": "LIDAR Composite Digital Terrain Model (DTM) - 1m",
+			"authors": [
+				"Environment Agency"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2022,
+			"url": "https://environment.data.gov.uk/dataset/13787b9a-26a4-4775-8523-806d13af58fc",
+			"abstract": "The LIDAR Composite DTM (Digital Terrain Model) is a raster elevation model covering about 99% of England at 1 m spatial resolution. The DTM is produced from the last or only laser pulse returned to the sensor; surface objects are removed from the Digital Surface Model, using bespoke algorithms and manual editing of the data, to produce a terrain model of just the surface. Produced by the Environment Agency in 2022, it is derived from a combination of its Time Stamped archive and National LIDAR Programme surveys.",
+			"abstract_source": "publisher",
+			"source": "manual",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset"
 		},
 		{
 			"key": "EC2009a",
@@ -17595,6 +18212,40 @@
 			"open_access": false
 		},
 		{
+			"key": "ETBBB...2025a",
+			"type": "misc",
+			"title": "Pleiades Datasets 4.1",
+			"authors": [
+				"Elliott, Tom",
+				"Talbert, Richard",
+				"Bagnall, Roger",
+				"Becker, Jeffrey",
+				"Bond, Sarah",
+				"Gillies, Sean",
+				"Holman, Lindsay",
+				"Horne, Ryan",
+				"Moss, Gabe",
+				"Rabinowitz, Adam",
+				"Robinson, Elizabeth",
+				"Turner, Brian",
+				"Institute for the Study of the Ancient World (NYU)"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"publisher": "Zenodo",
+			"doi": "10.5281/zenodo.1193921",
+			"url": "https://doi.org/10.5281/zenodo.1193921",
+			"abstract": "This is a package of data derived from the Pleiades gazetteer of ancient places. It is used for archival and redistribution purposes and is likely to be less up-to-date than the live data at https://pleiades.stoa.org. Pleiades is a community-built gazetteer and graph of ancient places. It publishes authoritative information about ancient places and spaces, providing unique services for finding, displaying, and reusing that information under open license. It publishes not just for individual human users, but also for search engines and for the widening array of computational research and visualization tools that support humanities teaching and research. Pleiades is a continuously published scholarly reference work for the 21st century. We embrace the new paradigm of citizen humanities, encouraging contributions from any knowledgeable person and doing so in a context of pervasive peer review. Pleiades welcomes your contribution, no matter how small, and we have a number of useful tasks suitable for volunteers of every interest. Please report problems and make feature requests via the main Pleiades Gazetteer Issue Tracker. Content is governed by the copyrights of the individual contributors responsible for its creation. Some rights are reserved. All content is distributed under the terms of a Creative Commons Attribution license (cc-by). In order to facilitate reproducibility and to comply with license terms, we encourage use and citation of numbered releases for scholarly work that will be published in static form.",
+			"abstract_source": "datacite",
+			"source": "datacite",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"version": "4.1",
+			"note": "Dataset"
+		},
+		{
 			"key": "EY1936a",
 			"type": "article",
 			"title": "The Approximation of One Matrix by Another of Lower Rank",
@@ -18379,6 +19030,41 @@
 			"open_access": false
 		},
 		{
+			"key": "FHBCK2016a",
+			"type": "article",
+			"title": "Automated feature extraction for prospection and analysis of monumental earthworks from aerial LiDAR in the Kingdom of Tonga",
+			"authors": [
+				"Freeland, Travis",
+				"Heung, Brandon",
+				"Burley, David V.",
+				"Clark, Geoffrey",
+				"Knudby, Anders"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"journal": "Journal of Archaeological Science",
+			"volume": "69",
+			"pages": "64-74",
+			"issn": "0305-4403",
+			"doi": "10.1016/j.jas.2016.04.011",
+			"openalex": "W2339652516",
+			"url": "https://doi.org/10.1016/j.jas.2016.04.011",
+			"keywords": [
+				"automatic feature extraction",
+				"airborne laser scanning",
+				"earth mounds",
+				"Tongatapu",
+				"Tonga",
+				"object-based image analysis"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "FHM2018a",
 			"type": "inproceedings",
 			"title": "Addressing Function Approximation Error in Actor-Critic Methods",
@@ -18505,6 +19191,56 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "FMLC2026a",
+			"type": "misc",
+			"title": "NNlib.jl: neural network primitives with multiple backends",
+			"authors": [
+				"FluxML Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/FluxML/NNlib.jl",
+			"abstract": "Neural Network primitives with multiple backends",
+			"abstract_source": "github",
+			"keywords": [
+				"deep-learning",
+				"julia",
+				"machine-learning"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "FMLC2026b",
+			"type": "misc",
+			"title": "Metalhead.jl: AI models in Julia on top of Flux.jl",
+			"authors": [
+				"FluxML Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/FluxML/Metalhead.jl",
+			"abstract": "AI models in Julia on top of Flux.jl",
+			"abstract_source": "github",
+			"keywords": [
+				"computer-vision",
+				"deep-learning",
+				"flux",
+				"julia",
+				"machine-learning"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-24",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "FNKO2011a",
@@ -18914,6 +19650,33 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "FS2011a",
+			"type": "article",
+			"title": "LSMR: An Iterative Algorithm for Sparse Least-Squares Problems",
+			"authors": [
+				"Fong, David Chin-Lung",
+				"Saunders, Michael"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2011,
+			"journal": "SIAM Journal on Scientific Computing",
+			"volume": "33",
+			"number": "5",
+			"pages": "2950-2971",
+			"issn": "1064-8275",
+			"doi": "10.1137/10079687x",
+			"openalex": "W1983886273",
+			"url": "https://doi.org/10.1137/10079687x",
+			"oa_url": "https://arxiv.org/pdf/1006.0758",
+			"abstract": "An iterative method LSMR is presented for solving linear systems $Ax=b$ and least-squares problems $\\min \\|Ax-b\\|_2$, with A being sparse or a fast linear operator. LSMR is based on the Golub–Kahan bidiagonalization process. It is analytically equivalent to the MINRES method applied to the normal equation $A^T\\! Ax = A^T\\! b$, so that the quantities $\\|A^T\\! r_k\\|$ are monotonically decreasing (where $r_k = b - Ax_k$ is the residual for the current iterate $x_k$). We observe in practice that $\\|r_k\\|$ also decreases monotonically, so that compared to LSQR (for which only $\\|r_k\\|$ is monotonic) it is safer to terminate LSMR early. We also report some experiments with reorthogonalization.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "FS2022a",
@@ -19816,6 +20579,49 @@
 			"keywords_source": "arxiv",
 			"source": "manual",
 			"retrieved": "2026-11-19",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "GBDS2017a",
+			"type": "article",
+			"title": "Anthropogenic land use estimates for the Holocene – HYDE 3.2",
+			"authors": [
+				"Klein Goldewijk, Kees",
+				"Beusen, Arthur",
+				"Doelman, Jonathan",
+				"Stehfest, Elke"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"journal": "Earth System Science Data",
+			"volume": "9",
+			"number": "2",
+			"pages": "927-953",
+			"issn": "1866-3516",
+			"doi": "10.5194/essd-9-927-2017",
+			"openalex": "W2560200117",
+			"url": "https://doi.org/10.5194/essd-9-927-2017",
+			"abstract": "This paper presents an update and extension of HYDE, the History Database of the Global Environment (HYDE version 3.2). HYDE is an internally consistent combination of historical population estimates and allocation algorithms with time-dependent weighting maps for land use. Categories include cropland, with new distinctions for irrigated and rain-fed crops (other than rice) and irrigated and rain-fed rice. Grazing lands are also provided, divided into more intensively used pasture and less intensively used rangeland, and further specified with respect to conversion of natural vegetation to facilitate global change modellers. Population is represented by maps of total, urban, rural population, population density and built-up area. The period covered is 10 000 before Common Era (BCE) to 2015 Common Era (CE). All data can be downloaded from https://doi.org/10.17026/dans-25g-gez3. We estimate that global population increased from 4.4 million people (we also estimate a lower range < 0.01 and an upper range of 8.9 million) in 10 000 BCE to 7.257 billion in 2015 CE, resulting in a global population density increase from 0.03 persons (or capita, in short cap) km−2 (range 0–0.07) to almost 56 cap km−2 respectively. The urban built-up area evolved from almost zero to roughly 58 Mha in 2015 CE, still only less than 0.5 % of the total land surface of the globe. Cropland occupied approximately less than 1 % of the global land area (13 037 Mha, excluding Antarctica) for a long time period until 1 CE, quite similar to the grazing land area. In the following centuries the share of global cropland slowly grew to 2.2 % in 1700 CE (ca. 293 Mha, uncertainty range 220–367 Mha), 4.4 % in 1850 CE (578 Mha, range 522–637 Mha) and 12.2 % in 2015 CE (ca. 1591 Mha, range 1572–1604 Mha). Cropland can be further divided into rain-fed and irrigated land, and these categories can be further separated into rice and non-rice. Rain-fed croplands were much more common, with 2.2 % in 1700 CE (289 Mha, range 217–361 Mha), 4.2 % (549 Mha, range 496–606 Mha) in 1850 CE and 10.1 % (1316 Mha, range 1298–1325 Mha) in 2015 CE, while irrigated croplands used less than 0.05 % (4.3 Mha, range 3.1–5.5 Mha), 0.2 % (28 Mha, range 25–31 Mha) and 2.1 % (277 Mha, range 273–278 Mha) in 1700, 1850 and 2015 CE, respectively. We estimate the irrigated rice area (paddy) to be 0.1 % (13 Mha, range 9–16 Mha) in 1700 CE, 0.2 % (28 Mha, range 26–31 Mha) in 1850 CE and 0.9 % (118 Mha, range 117–120 Mha) in 2015 CE. The estimates for land used for grazing are much more uncertain. We estimate that the share of grazing land grew from 5.1 % in 1700 CE (667 Mha, range 507–820 Mha) to 9.6 % in 1850 CE (1192 Mha, range 1068–1304 Mha) and 24.9 % in 2015 CE (3241 Mha, range 3211–3270 Mha). To aid the modelling community we have divided land used for grazing into more intensively used pasture, less intensively used converted rangeland and less or unmanaged natural unconverted rangeland. Pasture occupied 1.1 % in 1700 CE (145 Mha, range 79–175 Mha), 1.9 % in 1850 CE (253 Mha, range 218–287 Mha) and 6.0 % (787 Mha, range 779–795 Mha) in 2015 CE, while rangelands usually occupied more space due to their occurrence in more arid regions and thus lower yields to sustain livestock. We estimate converted rangeland at 0.6 % in 1700 CE (82 Mha range 66–93 Mha), 1 % in 1850 CE (129 Mha range 118–136 Mha) and 2.4 % in 2015 CE (310 Mha range 306–312 Mha), while the unconverted natural rangelands occupied approximately 3.4 % in 1700 CE (437 Mha, range 334–533 Mha), 6.2 % in 1850 CE (810 Mha, range 733–881 Mha) and 16.5 % in 2015 CE (2145 Mha, range 2126–2164 Mha).",
+			"abstract_source": "openalex",
+			"keywords": [
+				"anthropogenic land use",
+				"Holocene",
+				"cropland",
+				"irrigated rice",
+				"rainfed rice",
+				"pasture",
+				"rangeland",
+				"population density",
+				"urban built-up area",
+				"historical population estimates",
+				"land allocation",
+				"global environmental history"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-23",
 			"checked": false,
 			"open_access": true
 		},
@@ -22931,6 +23737,44 @@
 			"open_access": false
 		},
 		{
+			"key": "Gol2025a",
+			"type": "misc",
+			"title": "HYDE data for the Global Carbon Budget (2025)",
+			"authors": [
+				"Klein Goldewijk, Kees"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"publisher": "Utrecht University",
+			"doi": "10.24416/UU01-F45D44",
+			"openalex": "W6888950917",
+			"url": "https://doi.org/10.24416/UU01-F45D44",
+			"abstract": "This HYDE version 3.5 replaces former HYDE 3.4 version. This database presents an update and expansion of the History Database of the Global Environment (HYDE, v 3.5). HYDE is and internally consistent combination of updated historical population estimates and land use. Categories include cropland, with a new distinction into irrigated and rain fed crops (other than rice) and irrigated and rain fed rice. Also grazing lands are provided, divided into more intensively used pasture, converted rangeland and non-converted natural (less intensively used) rangeland. Population is represented by maps of total, urban, rural population and population density as well as built-up area. The period covered is 10,000 BCE to 2024 CE. Spatial resolution is 5 arc minutes (approx. 85 km2 at the equator), the files are in Arcmap asciigrid format. Major updates include: • Radiocarbon data from the IMSET project (Marc Vander Linden, pers.comm.) providing new estimates for EurAsia of the onset of agriculture (timing and location, gridded maps) • Implementation of new archaeological expertise from the ArchaeoGlobe Project (Stephens et al, 2019), onset of agriculture (timing and location per region, outside EurAsia) • Use of satellite information on land cover from the European Space Agency (ESA) consortium for the spatial land use allocation on a yearly basis from 1992 – 2018. • Use of different remote sensing imagery (MODIS) and statistics (MapBiomas version C9) for Brazil for the 1985-2023 period, and for Indonesia (MB 3.0) for the 2000-2023 period, China for the 1900-2019 period. • Update FAO data from 1961-2022 (2023-2025 extrapolated) • Extension of the database to year 2025 • More input on sub-national level for cropland and grazing land • netCDF added as output format",
+			"abstract_source": "openalex",
+			"keywords": [
+				"Hyde",
+				"land use",
+				"cropland",
+				"rice",
+				"pasture",
+				"rangeland",
+				"population density",
+				"built-up areas",
+				"carbon-14",
+				"archaeological data",
+				"land cover",
+				"cropland expansion",
+				"global carbon budget"
+			],
+			"keywords_source": "openalex",
+			"source": "datacite",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset, HYDE 3.5, version 1.0, CC BY 4.0"
+		},
+		{
 			"key": "Goo1953a",
 			"type": "article",
 			"title": "The Population Frequencies of Species and the Estimation of Population Parameters",
@@ -23239,6 +24083,60 @@
 			"source": "manual",
 			"retrieved": "2026-11-21",
 			"checked": false
+		},
+		{
+			"key": "Goo2026h",
+			"type": "misc",
+			"title": "Import Map Features from a File",
+			"authors": [
+				"Google"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://support.google.com/mymaps/answer/3024836",
+			"abstract": "My Maps imports map features, such as lines, shapes and places, into a layer of a map from a file: CSV, TSV, KML, KMZ, GPX, XLSX, a Google Sheet, or photos in Google Drive or Google Photos. Unzipped KML and KMZ files can be up to 5 MB and other files up to 40 MB, and a file should not have more than 2,000 rows. A spreadsheet needs a row of titles and a column of latitude and longitude, addresses, place names or WKT geometry, the last in a column named WKT. A layer is imported from the legend of the map, with Add layer and then Import.",
+			"abstract_source": "manual",
+			"keywords": [
+				"Google My Maps",
+				"KML",
+				"KMZ",
+				"CSV",
+				"import",
+				"web maps"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"note": "My Maps Help"
+		},
+		{
+			"key": "Goo2026i",
+			"type": "misc",
+			"title": "Import Data into Google Earth",
+			"authors": [
+				"Google"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://support.google.com/earth/answer/7365595",
+			"abstract": "Google Earth imports a user's own geospatial data into a cloud-based map project from KML and KMZ, GeoJSON, a zipped Shapefile, and, experimentally, CSV and Google Sheets. Data can be imported as map features, editable placemarks, paths and polygons, up to 10,000 features and 250,000 vertices per import; as data layers, read-only but filtered and styled by column values, for larger datasets, counted against the Google Earth storage quota; or as local KML and KMZ files, opened from the device and visible only there.",
+			"abstract_source": "manual",
+			"keywords": [
+				"Google Earth",
+				"KML",
+				"KMZ",
+				"GeoJSON",
+				"import",
+				"data layers"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"note": "Google Earth Help"
 		},
 		{
 			"key": "Gra1969a",
@@ -23713,6 +24611,32 @@
 			"open_access": true
 		},
 		{
+			"key": "HBBCD2020a",
+			"type": "misc",
+			"title": "terra: Spatial Data Analysis",
+			"authors": [
+				"Hijmans, Robert J.",
+				"Brown, Andrew",
+				"Barbosa, A. Márcia",
+				"Cordano, Emanuele",
+				"Dyba, Krzysztof"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"publisher": "The R Foundation",
+			"doi": "10.32614/cran.package.terra",
+			"openalex": "W4399637217",
+			"url": "https://doi.org/10.32614/cran.package.terra",
+			"abstract": "Methods for spatial data analysis with vector (points, lines, polygons) and raster (grid) data. Methods for vector data include geometric operations such as intersect and buffer. Raster methods include local, focal, global, zonal and geometric operations. The predict and interpolate methods facilitate the use of regression type (interpolation, machine learning) models for spatial prediction, including with satellite remote sensing data. Processing of very large files is supported. See the manual and tutorials on <https://rspatial.org/> to get started.",
+			"abstract_source": "crossref",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"note": "R package version 1.9-60"
+		},
+		{
 			"key": "HBBZM...2021a",
 			"type": "inproceedings",
 			"title": "Measuring Massive Multitask Language Understanding",
@@ -23886,6 +24810,25 @@
 			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "HE2026a",
+			"type": "misc",
+			"title": "National Heritage List for England (NHLE)",
+			"authors": [
+				"Historic England"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://historicengland.org.uk/listing/the-list/",
+			"abstract": "The official register of the nationally protected historic buildings and sites of England: listed buildings, scheduled monuments, registered parks and gardens, registered battlefields, protected wreck sites and World Heritage Sites, each with its list entry number, name, dates of designation and boundary, published as open data and through web services.",
+			"abstract_source": "publisher",
+			"source": "manual",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset, updated continuously"
 		},
 		{
 			"key": "HG2008a",
@@ -25484,6 +26427,44 @@
 			"open_access": true
 		},
 		{
+			"key": "HR2009a",
+			"type": "book",
+			"title": "Geomorphometry: Concepts, Software, Applications",
+			"authors": [
+				"Hengl, Tomislav",
+				"Reuter, Hannes I."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"publisher": "Elsevier",
+			"address": "Amsterdam",
+			"volume": "33",
+			"isbn": "9780123743459",
+			"doi": "10.1016/S0166-2481(08)X0001-7",
+			"openalex": "W1600740555",
+			"url": "https://doi.org/10.1016/S0166-2481(08)X0001-7",
+			"keywords": [
+				"terrain analysis",
+				"digital elevation model",
+				"land surface parameters",
+				"landform mapping",
+				"soil classification",
+				"soil fertility",
+				"soil porosity",
+				"soil structure",
+				"natural hazards",
+				"topographic analysis"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"series": "Developments in Soil Science",
+			"note": "Edited volume"
+		},
+		{
 			"key": "HR2013a",
 			"type": "article",
 			"title": "Borg: An Auto-Adaptive Many-Objective Evolutionary Computing Framework",
@@ -25556,6 +26537,33 @@
 			"keywords_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-14",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "HS1952a",
+			"type": "article",
+			"title": "Methods of conjugate gradients for solving linear systems",
+			"authors": [
+				"Hestenes, M. R.",
+				"Stiefel, E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1952,
+			"journal": "Journal of Research of the National Bureau of Standards",
+			"volume": "49",
+			"number": "6",
+			"pages": "409",
+			"issn": "0091-0635",
+			"doi": "10.6028/jres.049.044",
+			"openalex": "W2316564661",
+			"url": "https://doi.org/10.6028/jres.049.044",
+			"oa_url": "https://doi.org/10.6028/jres.049.044",
+			"abstract": "An iterative algorithm is given for solving a system Ax=k of n linear equations in n unknowns. The solution is given in n steps. It is shown that this method is a special case of a very general method which also includes Gaussian elimination. These general algorithms are essentially algorithms for finding an n dimensional ellipsoid. Connections are made with the theory of orthogonal polynomials and continued fractions.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
 			"checked": false,
 			"open_access": true
 		},
@@ -27160,6 +28168,42 @@
 			"open_access": false
 		},
 		{
+			"key": "Hes2010a",
+			"type": "article",
+			"title": "LiDAR‐derived Local Relief Models – a new tool for archaeological prospection",
+			"authors": [
+				"Hesse, Ralf"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "Archaeological Prospection",
+			"volume": "17",
+			"pages": "67-72",
+			"issn": "1075-2196",
+			"doi": "10.1002/arp.374",
+			"openalex": "W2091460873",
+			"url": "https://doi.org/10.1002/arp.374",
+			"abstract": "Local relief models (LRM) are proposed as a new tool for archaeological prospection. A data processing approach is presented which produces LRM from LiDAR‐derived high‐resolution digital elevation models (DEMs). The LRM represents local, small‐scale elevation differences after removing the large‐scale landscape forms from the data. The LRM greatly enhances the visibility of small‐scale, shallow topographic features irrespective of the illumination angle and allows their relative elevations as well as their volumes to be measured directly. This makes the LRM an improved basis for spatially extensive archaeological prospection over a wide range of landscapes. The LRM raster map of local positive and negative relief variations can be used for the mapping and prospection of archaeological features such as burial mounds, linear and circular earthworks, sunken roads, agricultural terraces, ridge and furrow fields, kiln podia and mining/quarrying sites. This approach is currently being used in a project aimed at the complete archaeological mapping and prospection of the state Baden‐Württemberg (Germany), covering an area of 35 751 km2. The goal of the project is the verification and extension of the existing archaeological data base. An object‐based local relief vector layer is produced as a by‐product; however, due to the common amalgamation of natural and anthropogenic features this cannot be used efficiently for archaeological prospection at present. Copyright © 2010 John Wiley & Sons, Ltd.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"LiDAR",
+				"digital elevation model",
+				"topographic features",
+				"burial mounds",
+				"earthworks",
+				"ridge and furrow",
+				"archaeological mapping",
+				"Baden-Württemberg"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false,
+			"issue": "2"
+		},
+		{
 			"key": "Het2000a",
 			"type": "article",
 			"title": "The Mathematics of Infectious Diseases",
@@ -27436,6 +28480,40 @@
 			"open_access": false
 		},
 		{
+			"key": "Hor1981a",
+			"type": "article",
+			"title": "Hill shading and the reflectance map",
+			"authors": [
+				"Horn, Berthold K. P."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1981,
+			"journal": "Proceedings of the IEEE",
+			"volume": "69",
+			"pages": "14-47",
+			"issn": "0018-9219",
+			"doi": "10.1109/proc.1981.11918",
+			"openalex": "W2032075694",
+			"url": "https://doi.org/10.1109/proc.1981.11918",
+			"abstract": "Shaded overlays for maps give the user an immediate appreciation for the surface topography since they appeal to an important visual depth cue. A brief review of the history of manual methods is followed by a discussion of a number of methods that have been proposed for the automatic generation of shaded overlays. These techniques are compared using the reflectance map as a common representation for the dependence of tone or gray level on the orientation of surface elements.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"hill shading",
+				"reflectance map",
+				"surface topography",
+				"surface orientation",
+				"gray level",
+				"map visualization"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false,
+			"issue": "1"
+		},
+		{
 			"key": "Hot1933a",
 			"type": "article",
 			"title": "Analysis of a Complex of Statistical Variables into Principal Components",
@@ -27644,6 +28722,34 @@
 			"open_access": false
 		},
 		{
+			"key": "IGN2026a",
+			"type": "misc",
+			"title": "API Géoplateforme – Diffusion d'images tuilées WMTS",
+			"authors": [
+				"Institut national de l'information géographique et forestière"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetCapabilities",
+			"abstract": "The WMTS service of IGN's Géoplateforme, which serves precomputed images as tiles in predefined formats, reference systems and zoom levels, following the OGC WMTS 1.0.0 standard, under the general terms of use of cartes.gouv.fr. Its layers include the maps of Cassini, the map of the état-major (1820-1866) and that of the surroundings of Paris (1818-1824), IGN's map of 1950 at 1:50,000, historical aerial photographs of 1950-1965, 1965-1980 and 1980-1995, and today's Plan IGN and aerial photographs, each with its tile matrix set and the zoom levels it covers.",
+			"abstract_source": "manual",
+			"keywords": [
+				"IGN",
+				"Géoplateforme",
+				"WMTS",
+				"tiles",
+				"France",
+				"aerial photographs",
+				"état-major"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "IGR2024a",
 			"type": "inproceedings",
 			"title": "Hybrid Symbolic-Numeric and Numerically-Assisted Symbolic Integration",
@@ -27674,6 +28780,32 @@
 			"classifications_source": "pdf",
 			"source": "crossref",
 			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "IIIFC2023a",
+			"type": "misc",
+			"title": "Georeference Extension",
+			"authors": [
+				"International Image Interoperability Framework Consortium"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2023,
+			"url": "https://iiif.io/api/extension/georef/",
+			"abstract": "An extension of the IIIF APIs, produced by the IIIF Maps Community Group and the IIIF Maps Technical Specification Group and first published on 15 May 2023, that describes how to store the metadata needed to georeference a IIIF resource in a Georeference Annotation. Georeferencing maps the internal coordinates of an image to geographic coordinates; the annotation targets a Canvas or Image Service, with a region called a map, and its body is a GeoJSON Feature Collection of ground control points, each linking resource coordinates to geographic coordinates, with an optional transformation, such as a polynomial or thin plate spline, that clients may use. Georeference Annotations convert images such as digitized maps and aerial photographs into geospatial assets.",
+			"abstract_source": "manual",
+			"keywords": [
+				"IIIF",
+				"georeferencing",
+				"annotations",
+				"ground control points",
+				"historical maps"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
 			"checked": false,
 			"open_access": true
 		},
@@ -27919,6 +29051,47 @@
 			"retrieved": "2026-11-20",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "IMLM2023a",
+			"type": "article",
+			"title": "MultiscaleDTM: An open‐source R package for multiscale geomorphometric analysis",
+			"authors": [
+				"Ilich, Alexander R.",
+				"Misiuk, Benjamin",
+				"Lecours, Vincent",
+				"Murawski, Steven A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "Transactions in GIS",
+			"volume": "27",
+			"pages": "1164-1204",
+			"issn": "1361-1682",
+			"doi": "10.1111/tgis.13067",
+			"openalex": "W4378574680",
+			"url": "https://doi.org/10.1111/tgis.13067",
+			"abstract": "Digital terrain models (DTMs) are datasets containing altitude values above or below a reference level, such as a reference ellipsoid or a tidal datum over geographic space, often in the form of a regularly gridded raster. They can be used to calculate terrain attributes that describe the shape and characteristics of topographic surfaces. Calculating these terrain attributes often requires multiple software packages that can be expensive and specialized. We have created a free, open‐source R package, MultiscaleDTM , that allows for the calculation of members from each of the five major thematic groups of terrain attributes: slope, aspect, curvature, relative position, and roughness, from a regularly gridded DTM. Furthermore, these attributes can be calculated at multiple spatial scales of analysis, a key feature that is missing from many other packages. Here, we demonstrate the functionality of the package and provide a simulation exploring the relationship between slope and roughness. When roughness measures do not account for slope, these attributes exhibit a strong positive correlation. To minimize this correlation, we propose a new roughness measure called adjusted standard deviation. In most scenarios tested, this measure produced the lowest rank correlation with slope out of all the roughness measures tested. Lastly, the simulation shows that some existing roughness measures from the literature that are supposed to be independent of slope can actually exhibit a strong inverse relationship with the slope in some cases.",
+			"abstract_source": "crossref",
+			"keywords": [
+				"digital terrain model",
+				"terrain analysis",
+				"terrain attributes",
+				"multiscale analysis",
+				"slope",
+				"roughness measure",
+				"curvature",
+				"aspect",
+				"relative position",
+				"open-source R package"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"issue": "4"
 		},
 		{
 			"key": "INSEE2026a",
@@ -28183,6 +29356,33 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "JAIC2026a",
+			"type": "misc",
+			"title": "DecisionTree.jl: Julia implementation of Decision Tree (CART) and Random Forest algorithms",
+			"authors": [
+				"JuliaAI Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/JuliaAI/DecisionTree.jl",
+			"abstract": "Julia implementation of Decision Tree (CART) and Random Forest algorithms",
+			"abstract_source": "github",
+			"keywords": [
+				"classification",
+				"decision-tree",
+				"julia",
+				"machine-learning",
+				"random-forests",
+				"regression"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -28762,6 +29962,30 @@
 			"abstract_source": "github",
 			"legacy_key": "contributors2024b",
 			"source": "manual",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "JMLC2026a",
+			"type": "misc",
+			"title": "MLDatasets.jl: utility package for accessing common machine learning datasets in Julia",
+			"authors": [
+				"JuliaML Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/JuliaML/MLDatasets.jl",
+			"abstract": "Utility package for accessing common Machine Learning datasets in Julia",
+			"abstract_source": "github",
+			"keywords": [
+				"dataset",
+				"julia",
+				"machine-learning"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-24",
 			"checked": false,
 			"open_access": true
 		},
@@ -29894,6 +31118,43 @@
 			"open_access": false
 		},
 		{
+			"key": "KH2017a",
+			"type": "book",
+			"title": "Airborne laser scanning raster data visualization: A guide to good practice",
+			"authors": [
+				"Kokalj, Žiga",
+				"Hesse, Ralf"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"publisher": "Založba ZRC",
+			"address": "Ljubljana",
+			"isbn": "9789612549848",
+			"issn": "2712-2840",
+			"doi": "10.3986/9789612549848",
+			"openalex": "W2997570459",
+			"url": "https://doi.org/10.3986/9789612549848",
+			"abstract": "This guide provides an insight into a range of visualization techniques for high-resolution digital elevation models (DEMs). It is provided in the context of investigation and interpretation of various types of historical and modern, cultural and natural small-scale relief features and landscape structures. It also provides concise guidance for selecting the best techniques when looking at a specific type of landscape and/or looking for particular kinds of forms. The three main sections – descriptions of visualization techniques, guidance for selection of the techniques, and visualization tools – accompany examples of visualizations, exemplar archaeological and geomorphological case studies, a glossary of terms, and a list of references and recommendations for further reading. The structure facilitates people of different academic background and level of expertise to understand different visualizations, how to read them, how to manipulate the settings in a calculation, and choose the best suited for the purpose of the intended investigation.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"airborne laser scanning",
+				"digital elevation model",
+				"relief features",
+				"landscape structure",
+				"archaeological landscape",
+				"geomorphology",
+				"visualization techniques",
+				"visualization tools"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"series": "Prostor, kraj, čas"
+		},
+		{
 			"key": "KHA2024a",
 			"type": "misc",
 			"title": "Interpolations.jl: Fast, Flexible Interpolations",
@@ -29986,6 +31247,31 @@
 			"retrieved": "2026-11-09",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "KKCKC...2025a",
+			"type": "misc",
+			"title": "ADAF machine learning model weights",
+			"authors": [
+				"Kostovska, Ana",
+				"Kocev, Dragi",
+				"Čož, Nejc",
+				"Kokalj, Žiga",
+				"Curran, Susan",
+				"Corns, Anthony"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"doi": "10.5281/zenodo.15848663",
+			"url": "https://doi.org/10.5281/zenodo.15848663",
+			"abstract": "This dataset contains pretrained deep learning model weights for the ADAF (Automatic Detection of Archaeological Features) tool. Models are provided in PyTorch format and are compatible with the AiTLAS Python framework. They support both object detection (Faster R-CNN) and semantic segmentation (HRNet) tasks across four archaeological classes: all archaeology (AO), barrows, enclosures, and ringforts. These models were trained on expert-annotated airborne laser scanning (ALS) data from Ireland and are intended for use with the ADAF application. For installation and usage instructions, refer to the ADAF GitHub repository: https://github.com/EarthObservation/adaf .",
+			"abstract_source": "datacite",
+			"source": "datacite",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset, version 1.0.0"
 		},
 		{
 			"key": "KKSP2017a",
@@ -30915,6 +32201,42 @@
 			"open_access": false
 		},
 		{
+			"key": "KS2019a",
+			"type": "article",
+			"title": "Why Not a Single Image? Combining Visualizations to Facilitate Fieldwork and On-Screen Mapping",
+			"authors": [
+				"Kokalj, Žiga",
+				"Somrak, Maja"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "Remote Sensing",
+			"volume": "11",
+			"pages": "747",
+			"issn": "2072-4292",
+			"doi": "10.3390/rs11070747",
+			"openalex": "W2934396264",
+			"url": "https://doi.org/10.3390/rs11070747",
+			"abstract": "Visualization products computed from a raster elevation model still form the basis of most archaeological and geomorphological enquiries of lidar data. We believe there is a need to improve the existing visualizations and create meaningful image combinations that preserve positive characteristics of individual techniques. In this paper, we list the criteria a good visualization should meet, present five different blend modes (normal, screen, multiply, overlay, luminosity), which combine various images into one, discuss their characteristics, and examine how they can be used to improve the visibility (recognition) of small topographical features. Blending different relief visualization techniques allows for a simultaneous display of distinct topographical features in a single (enhanced) image. We provide a “recipe” and a tool for a mix of visualization techniques and blend modes, including all the settings, to compute a visualization for archaeological topography that meets all of the criteria of a good visualization.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"LiDAR",
+				"relief visualization",
+				"image blending",
+				"blend modes",
+				"archaeological topography",
+				"geomorphology",
+				"fieldwork"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"issue": "7"
+		},
+		{
 			"key": "KSBKJ...2019a",
 			"type": "misc",
 			"title": "FastGRNN: A Fast, Accurate, Stable and Tiny Kilobyte Sized Gated Recurrent Neural Network",
@@ -31148,6 +32470,28 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "KSL2019a",
+			"type": "inproceedings",
+			"title": "Do Better ImageNet Models Transfer Better?",
+			"authors": [
+				"Kornblith, Simon",
+				"Shlens, Jonathon",
+				"Le, Quoc V."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"booktitle": "2019 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)",
+			"pages": "2656-2666",
+			"doi": "10.1109/CVPR.2019.00277",
+			"openalex": "W2804935296",
+			"abstract": "Transfer learning is a cornerstone of computer vision, yet little work has been done to evaluate the relationship between architecture and transfer. An implicit hypothesis in modern computer vision research is that models that perform better on ImageNet necessarily perform better on other vision tasks. However, this hypothesis has never been systematically tested. Here, we compare the performance of 16 classification networks on 12 image classification datasets. We find that, when networks are used as fixed feature extractors or fine-tuned, there is a strong correlation between ImageNet accuracy and transfer accuracy (r = 0.99 and 0.96, respectively). In the former setting, we find that this relationship is very sensitive to the way in which networks are trained on ImageNet; many common forms of regularization slightly improve ImageNet accuracy but yield features that are much worse for transfer learning. Additionally, we find that, on two small fine-grained image classification datasets, pretraining on ImageNet provides minimal benefits, indicating the learned features from ImageNet do not transfer well to fine-grained tasks. Together, our results show that ImageNet architectures generalize well across datasets, but ImageNet features are less general than previously suggested.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false
 		},
 		{
 			"key": "KSSSU2017a",
@@ -33172,6 +34516,43 @@
 			"checked": false,
 			"open_access": true,
 			"note": "Editors; living standard of 11 April 2024"
+		},
+		{
+			"key": "LDGHH...2017a",
+			"type": "inproceedings",
+			"title": "Feature Pyramid Networks for Object Detection",
+			"authors": [
+				"Lin, Tsung-Yi",
+				"Dollár, Piotr",
+				"Girshick, Ross",
+				"He, Kaiming",
+				"Hariharan, Bharath",
+				"Belongie, Serge"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"booktitle": "2017 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)",
+			"pages": "936-944",
+			"doi": "10.1109/CVPR.2017.106",
+			"openalex": "W2565639579",
+			"url": "https://doi.org/10.1109/CVPR.2017.106",
+			"abstract": "Feature pyramids are a basic component in recognition systems for detecting objects at different scales. But pyramid representations have been avoided in recent object detectors that are based on deep convolutional networks, partially because they are slow to compute and memory intensive. In this paper, we exploit the inherent multi-scale, pyramidal hierarchy of deep convolutional networks to construct feature pyramids with marginal extra cost. A top-down architecture with lateral connections is developed for building high-level semantic feature maps at all scales. This architecture, called a Feature Pyramid Network (FPN), shows significant improvement as a generic feature extractor in several applications. Using a basic Faster R-CNN system, our method achieves state-of-the-art single-model results on the COCO detection benchmark without bells and whistles, surpassing all existing single-model entries including those from the COCO 2016 challenge winners. In addition, our method can run at 5 FPS on a GPU and thus is a practical and accurate solution to multi-scale object detection. Code will be made publicly available.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"feature pyramid network",
+				"multi-scale object detection",
+				"lateral connections",
+				"Faster R-CNN",
+				"COCO benchmark",
+				"deep convolutional neural networks",
+				"feature extraction"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "LDHKP...2007a",
@@ -35791,6 +37172,39 @@
 			"open_access": true
 		},
 		{
+			"key": "Lin2016a",
+			"type": "article",
+			"title": "Whitebox GAT: A case study in geomorphometric analysis",
+			"authors": [
+				"Lindsay, John B."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"journal": "Computers & Geosciences",
+			"volume": "95",
+			"pages": "75-84",
+			"issn": "0098-3004",
+			"doi": "10.1016/j.cageo.2016.07.003",
+			"openalex": "W2472391669",
+			"url": "https://doi.org/10.1016/j.cageo.2016.07.003",
+			"keywords": [
+				"open source GIS",
+				"terrain analysis",
+				"airborne laser scanning",
+				"ground point filtering",
+				"stream network extraction",
+				"sub-basin delineation",
+				"headwater catchments",
+				"software extensibility"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Lit1988a",
 			"type": "article",
 			"title": "A Test of Missing Completely at Random for Multivariate Data with Missing Values",
@@ -36969,6 +38383,48 @@
 			"open_access": true
 		},
 		{
+			"key": "MEJ2020a",
+			"type": "article",
+			"title": "A comprehensive system of definitions of land surface (topographic) curvatures, with implications for their application in geoscience modelling and prediction",
+			"authors": [
+				"Minár, Jozef",
+				"Evans, Ian S.",
+				"Jenčo, Marián"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "Earth-Science Reviews",
+			"volume": "211",
+			"pages": "103414",
+			"issn": "0012-8252",
+			"doi": "10.1016/j.earscirev.2020.103414",
+			"openalex": "W3095679457",
+			"url": "https://doi.org/10.1016/j.earscirev.2020.103414",
+			"abstract": "Current use of land surface curvatures (LSCs) is in a confused state as a large gap has opened up between applications and theoretical work. LSCs exercise important control on changes of gravity potential energy and the equilibrium of the surface, and they are increasingly used in geosciences but they are not consistently defined. This paper offers a comprehensive theoretical framework for definition, classification and interpretation of LSCs. Systematization of known and newly derived relationships between LSCs is followed by extension of the traditional scheme for interpretation. A new comprehensive system of LSCs starts with the basic trio: profile, plan and twisting curvatures, and includes their slope-dependent sub-forms, combinations and imitations. Analysis of their influence on changes of gravitational potential energy available for mass flows is crucial for their understanding, and leads to a new interpretation of difference curvature. The systematic evaluation of LSCs as expressions of slope disequilibrium offers a further interpretation: zero values of LSCs can be considered as important theoretical attractors of landform development. LSCs are increasingly employed for analyses of landslide, flood, snow avalanche, forest fire, soil erosion, mass balance, ground water, digital soil mapping, individual landform identification and land surface segmentation, modelling of landscape development, classification of LIDAR data and visualization of terrain features. Important improvement of LSC use in all these spheres is possible. They are mostly computed in geographical information systems with limited capabilities: the performance of ArcGIS, SAGA, GRASS, LandSerf, Surfer and MICRODEM is compared here. The important interrelations of DEM resolution, accuracy and generalization are demonstrated in relation to the nested hierarchy of land forms and processes. The best interpretable LSCs, and challenges of future progress, are specified at the close of the paper.",
+			"abstract_source": "semanticscholar",
+			"keywords": [
+				"topographic curvature",
+				"profile curvature",
+				"plan curvature",
+				"gravitational potential energy",
+				"mass flow",
+				"landform development",
+				"DEM resolution",
+				"landslide analysis",
+				"avalanches",
+				"soil erosion",
+				"landscape modeling",
+				"LiDAR classification",
+				"terrain visualization"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "MF2000a",
 			"type": "article",
 			"title": "Estimation of Tail-Related Risk Measures for Heteroscedastic Financial Time Series",
@@ -37149,6 +38605,45 @@
 			"retrieved": "2026-11-20",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "MGL1991a",
+			"type": "article",
+			"title": "Digital terrain modelling: A review of hydrological, geomorphological, and biological applications",
+			"authors": [
+				"Moore, I. D.",
+				"Grayson, R. B.",
+				"Ladson, A. R."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1991,
+			"journal": "Hydrological Processes",
+			"volume": "5",
+			"pages": "3-30",
+			"issn": "0885-6087",
+			"doi": "10.1002/hyp.3360050103",
+			"openalex": "W2143296882",
+			"url": "https://doi.org/10.1002/hyp.3360050103",
+			"abstract": "The topography of a catchment has a major impact on the hydrological, geomorphological, and biological processes active in the landscape. The spatial distribution of topographic attributes can often be used as an indirect measure of the spatial variability of these processes and allows them to be mapped using relatively simple techniques. Many geographic information systems are being developed that store topographic information as the primary data for analysing water resource and biological problems. Furthermore, topography can be used to develop more physically realistic structures for hydrologic and water quality models that directly account for the impact of topography on the hydrology. Digital elevation models are the primary data used in the analysis of catchment topography. We describe elevation data sources, digital elevation model structures, and the analysis of digital elevation data for hydrological, geomorphological, and biological applications. Some hydrologic models that make use of digital representations of topography are also considered.",
+			"abstract_source": "crossref",
+			"keywords": [
+				"digital terrain modeling",
+				"digital elevation model",
+				"catchment topography",
+				"topographic attributes",
+				"hydrological modeling",
+				"geomorphology",
+				"landscape ecology",
+				"water quality modeling",
+				"physically based hydrologic model"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false,
+			"issue": "1"
 		},
 		{
 			"key": "MGLRS...2010a",
@@ -38131,6 +39626,60 @@
 			"open_access": false
 		},
 		{
+			"key": "MO2020a",
+			"type": "article",
+			"title": "BiLQ: An Iterative Method for Nonsymmetric Linear Systems with a Quasi-Minimum Error Property",
+			"authors": [
+				"Montoison, Alexis",
+				"Orban, Dominique"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "SIAM Journal on Matrix Analysis and Applications",
+			"volume": "41",
+			"number": "3",
+			"pages": "1145-1166",
+			"issn": "0895-4798",
+			"doi": "10.1137/19m1290991",
+			"openalex": "W3047080367",
+			"url": "https://doi.org/10.1137/19m1290991",
+			"oa_url": "https://arxiv.org/pdf/1910.02598",
+			"abstract": "We introduce an iterative method named BiLQ for solving general square linear systems $Ax=b$ that is based on the Lanczos biorthogonalization process defined by least-norm subproblems and that is a natural companion to BiCG and Qmr. Whereas the iterates of BiCG, Cgs, and BiCGStab may not exist when the tridiagonal projection of $A$ is singular, BiLQ is reliable on compatible systems even if $A$ is ill-conditioned or singular. As in the symmetric case, the BiCG residual is often smaller than the BiLQ residual, and when the BiCG iterate exists, an inexpensive transfer from the BiLQ iterate is possible. Although the Euclidean norm of the BiLQ error is usually not monotonic, it is monotonic in a different norm that depends on the Lanczos vectors. We establish a similar property for the Qmr residual. BiLQ combines with Qmr to take advantage of two initial vectors and solve a system and an adjoint system simultaneously at a cost similar to that of applying either method. We derive an analogous combination of Usymlq and Usymlqr based on the orthogonal tridiagonalization process. The resulting combinations, named BiLQR and TriLQR, may be used to estimate integral functionals involving the solution of a primal and an adjoint system. We compare BiLQR and TriLQR with Minres-qlp on a related augmented system, which performs a comparable amount of work and requires comparable storage. In our experiments, BiLQR terminates earlier than TriLQR and Minres-qlp in terms of residual and error of the primal and adjoint systems.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "MO2021a",
+			"type": "article",
+			"title": "TriCG and TriMR: Two Iterative Methods for Symmetric Quasi-Definite Systems",
+			"authors": [
+				"Montoison, Alexis",
+				"Orban, Dominique"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "SIAM Journal on Scientific Computing",
+			"volume": "43",
+			"number": "4",
+			"pages": "A2502-A2525",
+			"issn": "1064-8275",
+			"doi": "10.1137/20m1363030",
+			"openalex": "W3186276368",
+			"url": "https://doi.org/10.1137/20m1363030",
+			"oa_url": "https://arxiv.org/pdf/2008.12863",
+			"abstract": "We introduce iterative methods called TriCG and TriMR for solving symmetric quasi-definite systems based on the orthogonal tridiagonalization process proposed by Saunders, Simon, and Yip in 1988. TriCG and TriMR are tantamount to preconditioned Block-Cg and Block-Minres with two right-hand sides in which the two approximate solutions are summed at each iteration, but require less storage and work per iteration. We evaluate the performance of TriCG and TriMR on linear systems generated from the SuiteSparse Matrix Collection and from discretized and stabilized Stokes equations. We compare TriCG and TriMR with Symmlq and Minres, the recommended Krylov methods for symmetric and indefinite systems. In all our experiments, TriCG and TriMR terminate earlier than Symmlq and Minres on a residual-based stopping condition with an improvement of up to 50% in terms of number of iterations. They also terminate more reliably than Block-Cg and Block-Minres. Experiments in quadruple and octuple precision suggest that loss of orthogonality in the basis vectors is significantly less pronounced in TriCG and TriMR than in Block-Cg and Block-Minres.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "MO2023a",
 			"type": "article",
 			"title": "Krylov.jl: A Julia basket of hand-picked Krylov methods",
@@ -38154,6 +39703,33 @@
 			"abstract_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "MO2023b",
+			"type": "article",
+			"title": "GPMR: An Iterative Method for Unsymmetric Partitioned Linear Systems",
+			"authors": [
+				"Montoison, Alexis",
+				"Orban, Dominique"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "SIAM Journal on Matrix Analysis and Applications",
+			"volume": "44",
+			"number": "1",
+			"pages": "293-311",
+			"issn": "0895-4798",
+			"doi": "10.1137/21m1459265",
+			"openalex": "W4323825473",
+			"url": "https://doi.org/10.1137/21m1459265",
+			"oa_url": "https://arxiv.org/pdf/2111.07007",
+			"abstract": "We introduce an iterative method named Gpmr (general partitioned minimum residual) for solving [Formula: see text] block unsymmetric linear systems. Gpmr is based on a new process that simultaneously reduces two rectangular matrices to upper Hessenberg form and is closely related to the block-Arnoldi process. Gpmr is tantamount to Block-Gmres with two right-hand sides in which the two approximate solutions are summed at each iteration, but its storage and work per iteration are similar to those of Gmres. We compare the performance of Gpmr with Gmres on linear systems from the SuiteSparse Matrix Collection. In our experiments, Gpmr terminates significantly earlier than Gmres on a residual-based stopping condition with an improvement ranging from around 10% up to 50% in terms of number of iterations.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
 			"checked": false,
 			"open_access": true
 		},
@@ -39502,6 +41078,34 @@
 			"open_access": false
 		},
 		{
+			"key": "Mar1992a",
+			"type": "techreport",
+			"title": "Multidirectional, oblique-weighted, shaded-relief image of the Island of Hawaii",
+			"authors": [
+				"Mark, Robert K."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1992,
+			"publisher": "U.S. Geological Survey",
+			"institution": "U.S. Geological Survey Open-File Report 92-422",
+			"doi": "10.3133/ofr92422",
+			"openalex": "W135252013",
+			"url": "https://doi.org/10.3133/ofr92422",
+			"keywords": [
+				"Hawaii Island",
+				"shaded relief",
+				"oblique view",
+				"topography",
+				"satellite imagery"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Mar2015a",
 			"type": "book",
 			"title": "An Introduction to Mathematical Epidemiology",
@@ -39789,6 +41393,36 @@
 			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Mer1569a",
+			"type": "misc",
+			"title": "Nova et aucta orbis terrae descriptio ad usum navigantium emendate accomodata",
+			"authors": [
+				"Mercator, Gerhard"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1569,
+			"publisher": "e-rara, Universitätsbibliothek Basel",
+			"doi": "10.3931/e-rara-25290",
+			"url": "https://doi.org/10.3931/e-rara-25290",
+			"abstract": "Gerhard Mercator's world map, printed at Duisburg in 1569: one map on 18 sheets, a copperplate engraving of 135 x 212 cm, at about 1:20,000,000, from 180° west to 180° east and from 90° north to 90° south. The digitised copy is that of the University Library of Basel (UBH Kartenslg AA 3-5), online in e-rara, the platform for digitized rare books from Swiss institutions, since 24 June 2014, with the sheets joined into one image and marked with the Public Domain Mark 1.0.",
+			"abstract_source": "manual",
+			"keywords": [
+				"Mercator",
+				"world map",
+				"1569",
+				"e-rara",
+				"University Library of Basel",
+				"IIIF"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"note": "Digitised map, Public Domain Mark 1.0"
 		},
 		{
 			"key": "Mer1968a",
@@ -40333,6 +41967,32 @@
 			"keywords_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "NASA2026a",
+			"type": "misc",
+			"title": "Earthdata Login: User Token Management",
+			"authors": [
+				"National Aeronautics and Space Administration"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://urs.earthdata.nasa.gov/documentation/for_users/user_token",
+			"abstract": "The documentation of the user tokens of NASA's Earthdata Login: a user generates and manages tokens in the Earthdata Login profile or with the User Tokens API, whose methods create a token, list the tokens of an account, revoke a token, retrieve a token or create one when none exists (find_or_create_token), and renew a token, each authorised with the account's username and password in an HTTP Basic header. A user token is valid for 60 days, an account holds at most two valid tokens at a time, and an application sends the token as a Bearer token.",
+			"abstract_source": "manual",
+			"keywords": [
+				"NASA",
+				"Earthdata Login",
+				"user token",
+				"authentication",
+				"download"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
 			"checked": false,
 			"open_access": true
 		},
@@ -41024,6 +42684,31 @@
 			"open_access": true
 		},
 		{
+			"key": "NWCBW...2011a",
+			"type": "inproceedings",
+			"title": "Reading Digits in Natural Images with Unsupervised Feature Learning",
+			"authors": [
+				"Netzer, Yuval",
+				"Wang, Tao",
+				"Coates, Adam",
+				"Bissacco, Alessandro",
+				"Wu, Bo",
+				"Ng, Andrew Y."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2011,
+			"booktitle": "NIPS Workshop on Deep Learning and Unsupervised Feature Learning 2011",
+			"openalex": "W2335728318",
+			"url": "http://ufldl.stanford.edu/housenumbers/nips2011_housenumbers.pdf",
+			"abstract": "Detecting and reading text from natural images is a hard computer vision task that is central to a variety of emerging applications. Related problems like document character recognition have been widely studied by computer vision and machine learning researchers and are virtually solved for practical applications like reading handwritten digits. Reliably recognizing characters in more complex scenes like photographs, however, is far more difficult: the best existing methods lag well behind human performance on the same tasks. In this paper we attack the problem of recognizing digits in a real application using unsupervised feature learning methods: reading house numbers from street level photos. To this end, we introduce a new benchmark dataset for research use containing over 600,000 labeled digits cropped from Street View images. We then demonstrate the difficulty of recognizing these digits when the problem is approached with hand-designed features. Finally, we employ variants of two recently proposed unsupervised feature learning methods and find that they are convincingly superior on our benchmarks.",
+			"abstract_source": "openalex",
+			"source": "manual",
+			"retrieved": "2026-11-25",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "NYCDCP2026a",
 			"type": "misc",
 			"title": "2020 Neighborhood Tabulation Areas (NTAs)",
@@ -41549,6 +43234,49 @@
 			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "OCGLG...2020a",
+			"type": "article",
+			"title": "Automated detection of archaeological mounds using machine-learning classification of multisensor and multitemporal satellite data",
+			"authors": [
+				"Orengo, Hector A.",
+				"Conesa, Francesc C.",
+				"Garcia-Molsosa, Arnau",
+				"Lobo, Agustín",
+				"Green, Adam S.",
+				"Madella, Marco",
+				"Petrie, Cameron A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "Proceedings of the National Academy of Sciences",
+			"volume": "117",
+			"pages": "18240-18250",
+			"issn": "0027-8424",
+			"doi": "10.1073/pnas.2005583117",
+			"openalex": "W3044773400",
+			"url": "https://doi.org/10.1073/pnas.2005583117",
+			"abstract": "Significance This paper illustrates the potential of machine learning-based classification of multisensor, multitemporal satellite data for the remote detection and mapping of archaeological mounded settlements in arid environments. Our research integrates multitemporal synthetic-aperture radar and multispectral bands to produce a highly accurate probability field of mound signatures. The results largely expand the known concentration of Indus settlements in the Cholistan Desert in Pakistan ( ca . 3300 to 1500 BC), with the detection of hundreds of new sites deeper in the desert than previously suspected including several large-sized (>30 ha) urban centers. These distribution patterns have major implications regarding the influence of climate change and desertification in the collapse of the largest of the Old-World Bronze Age civilizations.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"Indus Valley civilization",
+				"Cholistan Desert",
+				"synthetic aperture radar",
+				"multispectral satellite imagery",
+				"multi-temporal satellite imagery",
+				"machine learning classification",
+				"arid regions",
+				"desertification",
+				"remote sensing of archaeological sites"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"issue": "31"
 		},
 		{
 			"key": "OCPB2016a",
@@ -42132,6 +43860,32 @@
 			"keywords_source": "github",
 			"source": "manual",
 			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "ON2026a",
+			"type": "misc",
+			"title": "Tabula Peutingeriana (Cod. 324)",
+			"authors": [
+				"Österreichische Nationalbibliothek"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://data.onb.ac.at/dtl/2764184",
+			"abstract": "The record and full digitisation of the Tabula Peutingeriana at the Austrian National Library, Cod. 324: a manuscript map in Latin dated 1200-1220, 340 x 6745 mm, originally a roll and now in 11 segments in passe-partout. Conrad Celtis bequeathed it to Konrad Peutinger. The library's IIIF manifest gives an image of the front and of the back of each segment, and asks that reuse name the Austrian National Library.",
+			"abstract_source": "manual",
+			"keywords": [
+				"Tabula Peutingeriana",
+				"Roman roads",
+				"manuscript map",
+				"Austrian National Library",
+				"IIIF"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
 			"checked": false,
 			"open_access": true
 		},
@@ -42818,6 +44572,24 @@
 			"open_access": true
 		},
 		{
+			"key": "Our2026b",
+			"type": "misc",
+			"title": "Historical boundaries of world countries and cultural regions (historical-basemaps)",
+			"authors": [
+				"Ourednik, André"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/aourednik/historical-basemaps",
+			"abstract": "Collection of georeferenced boundaries of world countries and cultural regions for use in mapping historical data on global or continental scale",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "PB1995a",
 			"type": "article",
 			"title": "Approximations to the Log-Likelihood Function in the Nonlinear Mixed-Effects Model",
@@ -43298,6 +45070,24 @@
 			"open_access": false
 		},
 		{
+			"key": "PJC2026a",
+			"type": "misc",
+			"title": "Pickle.jl: loading and saving objects in Python's Pickle format",
+			"authors": [
+				"Pickle.jl Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/chengchingwen/Pickle.jl",
+			"abstract": "An experimental package for loading and saving object in Python Pickle format.",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "PKCD2023a",
 			"type": "misc",
 			"title": "The Impact of AI on Developer Productivity: Evidence from GitHub Copilot",
@@ -43685,6 +45475,32 @@
 			"open_access": true
 		},
 		{
+			"key": "PS1975a",
+			"type": "article",
+			"title": "Solution of Sparse Indefinite Systems of Linear Equations",
+			"authors": [
+				"Paige, C. C.",
+				"Saunders, M. A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1975,
+			"journal": "SIAM Journal on Numerical Analysis",
+			"volume": "12",
+			"number": "4",
+			"pages": "617-629",
+			"issn": "0036-1429",
+			"doi": "10.1137/0712047",
+			"openalex": "W2018850201",
+			"url": "https://doi.org/10.1137/0712047",
+			"abstract": "The method of conjugate gradients for solving systems of linear equations with a symmetric positive definite matrix A is given as a logical development of the Lanczos algorithm for tridiagonalizing A. This approach suggests numerical algorithms for solving such systems when A is symmetric but indefinite. These methods have advantages when A is large and sparse.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "PS1978a",
 			"type": "article",
 			"title": "Modified Policy Iteration Algorithms for Discounted Markov Decision Problems",
@@ -43706,6 +45522,33 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "PS1982a",
+			"type": "article",
+			"title": "LSQR: An Algorithm for Sparse Linear Equations and Sparse Least Squares",
+			"authors": [
+				"Paige, Christopher C.",
+				"Saunders, Michael A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1982,
+			"journal": "ACM Transactions on Mathematical Software",
+			"volume": "8",
+			"number": "1",
+			"pages": "43-71",
+			"issn": "0098-3500",
+			"doi": "10.1145/355984.355989",
+			"openalex": "W2097897435",
+			"url": "https://doi.org/10.1145/355984.355989",
+			"oa_url": "https://dl.acm.org/doi/pdf/10.1145/355984.355989",
+			"abstract": "An iterative method is given for solving Ax = b and min ||Ax - b||_2, where the matrix A is large and sparse. The method is based on the bidiagonalization procedure of Golub and Kahan. It is analytically equivalent to the standard method of conjugate gradients, but possesses more favorable numerical properties. Reliable stopping criteria are derived, along with estimates of standard errors for x and the condition number of A. These are used in the FORTRAN implementation of the method, subroutine LSQR. Numerical tests are described comparing LSQR with several other conjugate-gradient algorithms, indicating that LSQR is the most reliable algorithm when A is ill-conditioned.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "PS1988a",
@@ -43824,6 +45667,45 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "PS2026a",
+			"type": "article",
+			"title": "Geomorphometry.jl: Analyzing and visualizing the shape of the Earth in Julia.",
+			"authors": [
+				"Pronk, Maarten",
+				"Schouten, Rafael"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"journal": "Journal of Open Source Software",
+			"volume": "11",
+			"pages": "10395",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.10395",
+			"openalex": "W7165674640",
+			"url": "https://doi.org/10.21105/joss.10395",
+			"abstract": "Digital elevation models (DEMs) are fundamental datasets in the earth sciences, used in applications from flood risk assessment to habitat mapping and climate modelling. Analysing the shape of the Earth's surface-the domain of geomorphometry-requires algorithms for deriving terrain attributes (slope, aspect, curvature), classifying landforms, routing water flows, and visualising terrain.Geomorphometry.jl is a Julia (Bezanson et al., 2017) package that provides efficient, composable, and extendable implementations of these algorithms, designed to work with plain matrices as well as geospatial data types from the Julia ecosystem.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"terrain analysis",
+				"digital elevation model",
+				"terrain attributes",
+				"slope",
+				"aspect",
+				"curvature",
+				"landform classification",
+				"terrain visualization",
+				"Julia",
+				"geospatial data"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"issue": "122"
 		},
 		{
 			"key": "PSKB2023a",
@@ -44050,6 +45932,29 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "PY2010a",
+			"type": "article",
+			"title": "A Survey on Transfer Learning",
+			"authors": [
+				"Pan, Sinno Jialin",
+				"Yang, Qiang"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "IEEE Transactions on Knowledge and Data Engineering",
+			"volume": "22",
+			"number": "10",
+			"pages": "1345-1359",
+			"doi": "10.1109/TKDE.2009.191",
+			"openalex": "W2165698076",
+			"abstract": "A major assumption in many machine learning and data mining algorithms is that the training and future data must be in the same feature space and have the same distribution. However, in many real-world applications, this assumption may not hold. For example, we sometimes have a classification task in one domain of interest, but we only have sufficient training data in another domain of interest, where the latter data may be in a different feature space or follow a different data distribution. In such cases, knowledge transfer, if done successfully, would greatly improve the performance of learning by avoiding much expensive data-labeling efforts. In recent years, transfer learning has emerged as a new learning framework to address this problem. This survey focuses on categorizing and reviewing the current progress on transfer learning for classification, regression, and clustering problems. In this survey, we discuss the relationship between transfer learning and other related machine learning techniques such as domain adaptation, multitask learning and sample selection bias, as well as covariate shift. We also explore some potential future issues in transfer learning research.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false
 		},
 		{
 			"key": "PZHZ2022a",
@@ -44346,6 +46251,27 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Ped2007a",
+			"type": "misc",
+			"title": "ANE Site Placemarks for Google Earth",
+			"authors": [
+				"Pedersen, Olof"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"publisher": "Zenodo",
+			"doi": "10.5281/zenodo.6384045",
+			"url": "https://doi.org/10.5281/zenodo.6384045",
+			"abstract": "ANE.kmz is a set of site placemarks for Google Earth of a selection of the most important archaeological sites in the Ancient Near East. ANE.kmz works with Google Earth Pro, which first has to be downloaded for free. When opened inside Google Earth Pro, ANE.kmz gives, to the left, an alphabetic list of ancient sites and, to the right, on the satellite images the same sites marked. For the moment, there are some 2500 sites with modern names; among them some 400 have ancient names. Additions of more sites are planned. Ancient names are written without parenthesis. Modern names are within parenthesis. Most sites have been identified on the satellite images. ANE Waters.kmz is an experimental set of provisional water placemarks for Google Earth covering Mesopotamia up to modern time. ANE Picture.jpg is just illustrating the appearence of ANE.kmz before zooming in and is not for use. The development started in 2007 with support from Uppsala University, the Urban Mind Project at Mistra, and the Excellence Cluster Topoi at Freie Universität Berlin. Early versions were hosted by Uppsala University servers.",
+			"abstract_source": "datacite",
+			"source": "datacite",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset"
 		},
 		{
 			"key": "Pen2011a",
@@ -45557,6 +47483,39 @@
 			"open_access": true
 		},
 		{
+			"key": "RDE1999a",
+			"type": "article",
+			"title": "A Terrain Ruggedness Index That Quantifies Topographic Heterogeneity",
+			"authors": [
+				"Riley, Shawn J.",
+				"DeGloria, Stephen D.",
+				"Elliot, Robert"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1999,
+			"journal": "Intermountain Journal of Sciences",
+			"volume": "5",
+			"pages": "23-27",
+			"openalex": "W7220037522",
+			"abstract": "Terrain is an important feature of the structural niche occupied by terrestrial species. However, most researchers refer to terrain only in qualitative terms that precludes testing hypotheses about the actual importance of terrain. We present an easily calculated terrain ruggedness index (TRI) that provides an objective quantitative measure of topographic heterogeneity. Our model computes TRI values for each grid cell of a digital elevation model using a \"DOCELL\" command in an Arc/ Info geographical information system that calculates the sum change in elevation between a grid cell and its eight neighbor grid cells. T he concept and algorithm we present can be used at any scale relevant to the species of concern and question being asked for which elevation data exist.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"terrain ruggedness index",
+				"topographic heterogeneity",
+				"digital elevation model",
+				"elevation change",
+				"terrestrial organisms",
+				"habitat structure"
+			],
+			"keywords_source": "openalex",
+			"source": "openalex",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"issue": "1-4"
+		},
+		{
 			"key": "RG1978a",
 			"type": "article",
 			"title": "Estimating Prevalence from the Results of a Screening Test",
@@ -45626,6 +47585,47 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "RHGS2017a",
+			"type": "article",
+			"title": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks",
+			"authors": [
+				"Ren, Shaoqing",
+				"He, Kaiming",
+				"Girshick, Ross",
+				"Sun, Jian"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+			"volume": "39",
+			"pages": "1137-1149",
+			"issn": "0162-8828",
+			"doi": "10.1109/TPAMI.2016.2577031",
+			"openalex": "W639708223",
+			"url": "https://doi.org/10.1109/TPAMI.2016.2577031",
+			"abstract": "State-of-the-art object detection networks depend on region proposal algorithms to hypothesize object locations. Advances like SPPnet [1] and Fast R-CNN [2] have reduced the running time of these detection networks, exposing region proposal computation as a bottleneck. In this work, we introduce a Region Proposal Network (RPN) that shares full-image convolutional features with the detection network, thus enabling nearly cost-free region proposals. An RPN is a fully convolutional network that simultaneously predicts object bounds and objectness scores at each position. The RPN is trained end-to-end to generate high-quality region proposals, which are used by Fast R-CNN for detection. We further merge RPN and Fast R-CNN into a single network by sharing their convolutional features-using the recently popular terminology of neural networks with 'attention' mechanisms, the RPN component tells the unified network where to look. For the very deep VGG-16 model [3] , our detection system has a frame rate of 5 fps (including all steps) on a GPU, while achieving state-of-the-art object detection accuracy on PASCAL VOC 2007, 2012, and MS COCO datasets with only 300 proposals per image. In ILSVRC and COCO 2015 competitions, Faster R-CNN and RPN are the foundations of the 1st-place winning entries in several tracks. Code has been made publicly available.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"Faster R-CNN",
+				"region proposal network",
+				"real-time object detection",
+				"Fast R-CNN",
+				"bounding box regression",
+				"VGG16",
+				"attention mechanism",
+				"end-to-end learning",
+				"Pascal VOC",
+				"MS COCO"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"issue": "6"
 		},
 		{
 			"key": "RHMLB...2024a",
@@ -46720,6 +48720,73 @@
 			"open_access": false
 		},
 		{
+			"key": "RRS2016a",
+			"type": "article",
+			"title": "Spatializing 6,000 years of global urbanization from 3700 BC to AD 2000",
+			"authors": [
+				"Reba, Meredith",
+				"Reitsma, Femke",
+				"Seto, Karen C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"journal": "Scientific Data",
+			"volume": "3",
+			"number": "1",
+			"pages": "160034",
+			"issn": "2052-4463",
+			"doi": "10.1038/sdata.2016.34",
+			"openalex": "W2416708489",
+			"url": "https://doi.org/10.1038/sdata.2016.34",
+			"abstract": "How were cities distributed globally in the past? How many people lived in these cities? How did cities influence their local and regional environments? In order to understand the current era of urbanization, we must understand long-term historical urbanization trends and patterns. However, to date there is no comprehensive record of spatially explicit, historic, city-level population data at the global scale. Here, we developed the first spatially explicit dataset of urban settlements from 3700 BC to AD 2000, by digitizing, transcribing, and geocoding historical, archaeological, and census-based urban population data previously published in tabular form by Chandler and Modelski. The dataset creation process also required data cleaning and harmonization procedures to make the data internally consistent. Additionally, we created a reliability ranking for each geocoded location to assess the geographic uncertainty of each data point. The dataset provides the first spatially explicit archive of the location and size of urban populations over the last 6,000 years and can contribute to an improved understanding of contemporary and historical urbanization trends.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"historical urbanization",
+				"urban population",
+				"urban settlement",
+				"geocoding",
+				"data harmonization",
+				"global cities"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "RRS2018a",
+			"type": "misc",
+			"title": "Historical Urban Population: 3700 BC - AD 2000",
+			"authors": [
+				"Reba, Meredith",
+				"Reitsma, Femke",
+				"Seto, Karen C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"publisher": "NASA Socioeconomic Data and Applications Center (SEDAC)",
+			"doi": "10.7927/H4ZG6QBX",
+			"openalex": "W6959364871",
+			"url": "https://doi.org/10.7927/H4ZG6QBX",
+			"abstract": "The Historical Urban Population, 3700 BC - AD 2000, originally developed by the Yale School of Forestry & Environmental Studies, is the first spatially explicit global data set containing location and size of urban populations over the last 6,000 years. The data set was created by digitizing, transcribing, and geocoding historical, archaeological, and census-based urban population data. Each data point consists of a city name, latitude, longitude, year, population, and a reliability ranking to assess the geographic uncertainty of each data point. Despite spatial and temporal gaps, no other geocoded data set at this resolution exists. It can therefore be used to investigate long-term historical urbanization trends and patterns, evaluate the current era of urbanization, and build a richer record of urban population through history.",
+			"abstract_source": "publisher",
+			"keywords": [
+				"urbanization",
+				"demographic history",
+				"cities",
+				"settlement history"
+			],
+			"keywords_source": "openalex",
+			"source": "datacite",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset, version 1.00; distributed by NASA Earthdata"
+		},
+		{
 			"key": "RRS2020a",
 			"type": "inproceedings",
 			"title": "How Much Knowledge Can You Pack Into the Parameters of a Language Model?",
@@ -46776,6 +48843,29 @@
 			"keywords_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "RS1987a",
+			"type": "incollection",
+			"title": "Algebraic Multigrid",
+			"authors": [
+				"Ruge, J. W.",
+				"Stüben, K."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1987,
+			"booktitle": "Multigrid Methods",
+			"publisher": "Society for Industrial and Applied Mathematics",
+			"pages": "73-130",
+			"isbn": "9781611971057",
+			"doi": "10.1137/1.9781611971057.ch4",
+			"openalex": "W2498157954",
+			"url": "https://doi.org/10.1137/1.9781611971057.ch4",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
 			"checked": false,
 			"open_access": false
 		},
@@ -48006,6 +50096,46 @@
 			"open_access": false
 		},
 		{
+			"key": "Ros2025a",
+			"type": "misc",
+			"title": "Enki: AI for Archaeology – Datasets for Automatic Site Recognition",
+			"authors": [
+				"Rosati, Paolo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"publisher": "Zenodo",
+			"doi": "10.5281/zenodo.14950564",
+			"url": "https://doi.org/10.5281/zenodo.14950564",
+			"abstract": "Enki: AI for Archaeology – Datasets for Automatic Site Recognition Artificial intelligence meets archaeology with Enki, a deep learning supervised system designed to support the discovery of hidden archaeological sites. This first version of Enki dataset, released under the CC-BY-SA 4.0 license, enables the exploration and analysis of satellite and aerial images to identify potential traces of possible ancient settlements. Available Datasets We have released three high-quality datasets for training, validating, and testing automatic recognition models: ✅ Normalized_Tell_combined_350 (Training Set) • 21,654 images • Resolution: 350×350 px • Size: 1.70 GB ✅ Val_norm (Validation Set) • 1,290 images • Resolution: 350×350 px • Size: 287 MB ✅ Test_2025_02_05 (Test Set) • 1,459 images • Resolution: 3023×3023 px • Size: 12.05 GB These datasets have been specifically designed to optimize the training of computer vision models specializing in the identification of tells, anthropogenic settlements, and other archaeological structures that are invisible to the naked eye.",
+			"abstract_source": "datacite",
+			"source": "datacite",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset"
+		},
+		{
+			"key": "Ros2025b",
+			"type": "misc",
+			"title": "Enki: AI-Assistant for Archaeological Discoveries",
+			"authors": [
+				"Rosati, Paolo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"url": "https://github.com/archeorosati/enki",
+			"abstract": "Enki: AI-Powered Archaeological Discovery 🚀 Unveiling the Past with AI Enki is an open-source deep learning framework for detecting archaeological sites using computer vision and remote sensing. Trained on a solid image datasets, it enables large-scale automated site recognition. Open research, CC-BY-SA 4.0.",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"note": "Software and trained model"
+		},
+		{
 			"key": "Rot2022a",
 			"type": "article",
 			"title": "Pretest with Caution: Event-Study Estimates after Testing for Parallel Trends",
@@ -48339,6 +50469,29 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "SASC2014a",
+			"type": "inproceedings",
+			"title": "CNN Features Off-the-Shelf: An Astounding Baseline for Recognition",
+			"authors": [
+				"Sharif Razavian, Ali",
+				"Azizpour, Hossein",
+				"Sullivan, Josephine",
+				"Carlsson, Stefan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"booktitle": "2014 IEEE Conference on Computer Vision and Pattern Recognition Workshops",
+			"pages": "512-519",
+			"doi": "10.1109/CVPRW.2014.131",
+			"openalex": "W2062118960",
+			"abstract": "Recent results indicate that the generic descriptors extracted from the convolutional neural networks are very powerful. This paper adds to the mounting evidence that this is indeed the case. We report on a series of experiments conducted for different recognition tasks using the publicly available code and model of the OverFeat network which was trained to perform object classification on ILSVRC13. We use features extracted from the OverFeat network as a generic image representation to tackle the diverse range of recognition tasks of object image classification, scene recognition, fine grained recognition, attribute detection and image retrieval applied to a diverse set of datasets. We selected these tasks and datasets as they gradually move further away from the original task and data the OverFeat network was trained to solve. Astonishingly, we report consistent superior results compared to the highly tuned state-of-the-art systems in all the visual classification tasks on various datasets. For instance retrieval it consistently outperforms low memory footprint methods except for sculptures dataset. The results are achieved using a linear SVM classifier (or L2 distance in case of retrieval) applied to a feature representation of size 4096 extracted from a layer in the net. The representations are further modified using simple augmentation techniques e.g. jittering. The results strongly suggest that features obtained from deep learning with convolutional nets should be the primary candidate in most visual recognition tasks.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false
 		},
 		{
 			"key": "SATSE...2025a",
@@ -49335,6 +51488,37 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "SGRWC...2022a",
+			"type": "article",
+			"title": "Mapping the International System, 1886-2019: The CShapes 2.0 Dataset",
+			"authors": [
+				"Schvitz, Guy",
+				"Girardin, Luc",
+				"Rüegger, Seraina",
+				"Weidmann, Nils B.",
+				"Cederman, Lars-Erik",
+				"Gleditsch, Kristian Skrede"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"journal": "Journal of Conflict Resolution",
+			"volume": "66",
+			"number": "1",
+			"pages": "144-161",
+			"issn": "0022-0027",
+			"doi": "10.1177/00220027211013563",
+			"openalex": "W3159132863",
+			"url": "https://doi.org/10.1177/00220027211013563",
+			"oa_url": "https://journals.sagepub.com/doi/pdf/10.1177/00220027211013563",
+			"abstract": "This article introduces CShapes 2.0, a GIS dataset that maps the borders of states and dependent territories from 1886 through 2019. Our dataset builds on the previous CShapes dataset and improves it in two ways. First, it extends temporal coverage from 1946 back to the year 1886, which followed the Berlin Conference on the partition of Africa. Second, the new dataset is no longer limited to independent states, but also maps the borders of colonies and other dependencies, thereby providing near complete global coverage of political units throughout recent history. This article explains the coding procedure, provides a preview of the dataset and presents three illustrative applications.",
+			"abstract_source": "crossref",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -50337,6 +52521,32 @@
 			"open_access": false
 		},
 		{
+			"key": "SS1986a",
+			"type": "article",
+			"title": "GMRES: A Generalized Minimal Residual Algorithm for Solving Nonsymmetric Linear Systems",
+			"authors": [
+				"Saad, Youcef",
+				"Schultz, Martin H."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1986,
+			"journal": "SIAM Journal on Scientific and Statistical Computing",
+			"volume": "7",
+			"number": "3",
+			"pages": "856-869",
+			"issn": "0196-5204",
+			"doi": "10.1137/0907058",
+			"openalex": "W2140153041",
+			"url": "https://doi.org/10.1137/0907058",
+			"abstract": "We present an iterative method for solving linear systems, which has the property of minimizing at every step the norm of the residual vector over a Krylov subspace. The algorithm is derived from the Arnoldi process for constructing an $l_2 $-orthogonal basis of Krylov subspaces. It can be considered as a generalization of Paige and Saunders’ MINRES algorithm and is theoretically equivalent to the Generalized Conjugate Residual (GCR) method and to ORTHODIR. The new algorithm presents several advantages over GCR and ORTHODIR.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "SS1989a",
 			"type": "book",
 			"title": "System Identification",
@@ -51100,6 +53310,33 @@
 			"open_access": true
 		},
 		{
+			"key": "SSY1988a",
+			"type": "article",
+			"title": "Two Conjugate-Gradient-Type Methods for Unsymmetric Linear Equations",
+			"authors": [
+				"Saunders, M. A.",
+				"Simon, H. D.",
+				"Yip, E. L."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1988,
+			"journal": "SIAM Journal on Numerical Analysis",
+			"volume": "25",
+			"number": "4",
+			"pages": "927-940",
+			"issn": "0036-1429",
+			"doi": "10.1137/0725052",
+			"openalex": "W1992793565",
+			"url": "https://doi.org/10.1137/0725052",
+			"abstract": "We propose two new conjugate-gradient-type methods for the solution of sparse unsymmetric linear systems. We present a new tridiagonalization process for unsymmetric matrices that is closely related to the Lanczos process. We use orthogonal factorizations of the tridiagonal matrix to derive the new algorithms USYMLQ and USYMQR in the same fashion as SYMMLQ and MINRES [C. C. Paige and M. A. Saunders, “Solution of sparse indefinite systems of linear equations,” SIAM J. Numer. Anal., 12 (1975), pp. 617–629], for symmetric matrices. Some numerical results for the new methods and comparisons with other methods are presented.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "ST1998a",
 			"type": "article",
 			"title": "Using Complex Variables to Estimate Derivatives of Real Functions",
@@ -51761,6 +53998,26 @@
 			"open_access": true
 		},
 		{
+			"key": "Saa2003a",
+			"type": "book",
+			"title": "Iterative Methods for Sparse Linear Systems",
+			"authors": [
+				"Saad, Yousef"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2003,
+			"publisher": "Society for Industrial and Applied Mathematics",
+			"isbn": "9780898715347",
+			"doi": "10.1137/1.9780898718003",
+			"openalex": "W1506342804",
+			"url": "https://doi.org/10.1137/1.9780898718003",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Sar1958a",
 			"type": "article",
 			"title": "The Estimation of Economic Relationships Using Instrumental Variables",
@@ -51956,6 +54213,24 @@
 			"keywords_source": "github",
 			"source": "manual",
 			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "Sch2026c",
+			"type": "misc",
+			"title": "Stencils.jl: Static Stencil mapping for Julia",
+			"authors": [
+				"Schouten, Rafael"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/rafaqz/Stencils.jl",
+			"abstract": "Static Stencil mapping for Julia",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-22",
 			"checked": false,
 			"open_access": true
 		},
@@ -53393,6 +55668,39 @@
 			"open_access": false
 		},
 		{
+			"key": "TL2019a",
+			"type": "inproceedings",
+			"title": "EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks",
+			"authors": [
+				"Tan, Mingxing",
+				"Le, Quoc V."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"booktitle": "Proceedings of the 36th International Conference on Machine Learning",
+			"volume": "97",
+			"pages": "6105-6114",
+			"openalex": "W2946948417",
+			"url": "https://proceedings.mlr.press/v97/tan19a.html",
+			"abstract": "Convolutional Neural Networks (ConvNets) are commonly developed at a fixed resource budget, and then scaled up for better accuracy if more resources are available. In this paper, we systematically study model scaling and identify that carefully balancing network depth, width, and resolution can lead to better performance. Based on this observation, we propose a new scaling method that uniformly scales all dimensions of depth/width/resolution using a simple yet highly effective compound coefficient. We demonstrate the effectiveness of this method on scaling up MobileNets and ResNet. To go even further, we use neural architecture search to design a new baseline network and scale it up to obtain a family of models, called EfficientNets, which achieve much better accuracy and efficiency than previous ConvNets. In particular, our EfficientNet-B7 achieves state-of-the-art 84.3% top-1 accuracy on ImageNet, while being 8.4x smaller and 6.1x faster on inference than the best existing ConvNet. Our EfficientNets also transfer well and achieve state-of-the-art accuracy on CIFAR-100 (91.7%), Flowers (98.8%), and 3 other transfer learning datasets, with an order of magnitude fewer parameters. Source code is at https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"EfficientNet",
+				"model scaling",
+				"convolutional neural networks",
+				"compound scaling",
+				"MobileNet",
+				"ResNet"
+			],
+			"keywords_source": "openalex",
+			"source": "openalex",
+			"retrieved": "2026-11-23",
+			"checked": false,
+			"open_access": true,
+			"series": "Proceedings of Machine Learning Research"
+		},
+		{
 			"key": "TLBBB...2010a",
 			"type": "article",
 			"title": "Species Interactions in a Parasite Community Drive Infection Risk in a Wildlife Population",
@@ -53573,6 +55881,41 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "TP2012a",
+			"type": "article",
+			"title": "Automatic Detection of Pit Structures in Airborne Laser Scanning Data",
+			"authors": [
+				"Trier, Øivind Due",
+				"Pilø, Lars Holger"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2012,
+			"journal": "Archaeological Prospection",
+			"volume": "19",
+			"pages": "103-121",
+			"issn": "1075-2196",
+			"doi": "10.1002/arp.1421",
+			"openalex": "W2152482502",
+			"url": "https://doi.org/10.1002/arp.1421",
+			"abstract": "This paper describes a new method for the automatic detection of pit structures in airborne laser scanning data collected with at least five emitted pulses per square metre. Oppland County, Norway, has a large number of ancient iron production sites and hunting systems. Today, these are manifested as pits in the ground. The iron production sites were used 1400–700 yr ago, and consist of charcoal burning pits, often located in groups of four around a central oven, which also occasionally can be located as a small mound. The hunting systems were used 2000–500 yr ago, and consisted of concealed pitfall traps and wooden fences, located on deer trekking routes. The fences are gone, but the pits remain. Many of the iron production sites and hunting systems are located in forested areas. The current, traditional mapping of these is relatively poor, with many individual pits missing, and poor positional accuracy of the ones that are mapped. This means that overlays of cultural heritage sites cannot be trusted when planning new highways, residential areas, cabins, etc. Experience suggests that automatic detection is clearly superior to visual inspection of the lidar data in finding small pits or pits that are not easily visible. However, visual inspection is better at finding additional information as human interpretation based on archaeological knowledge can be applied. Combining these two methods secures a very good basis for subsequent field survey. In conclusion, we demonstrate that automatic detection of hunting systems and iron extraction sites in lidar data is a valuable tool in combination with visual inspection of the lidar data, prior to field survey. Provided that the point density of the lidar data is high enough, the field survey can be accomplished ten times faster compared with the traditional approach without lidar data. Copyright © 2012 John Wiley & Sons, Ltd.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"pit detection",
+				"airborne laser scanning",
+				"LiDAR",
+				"archaeological site detection",
+				"pitfall traps",
+				"cultural heritage mapping"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false,
+			"issue": "2"
 		},
 		{
 			"key": "TR2004a",
@@ -54113,6 +56456,38 @@
 			"open_access": false
 		},
 		{
+			"key": "Tar1997a",
+			"type": "article",
+			"title": "A new method for the determination of flow directions and upslope areas in grid digital elevation models",
+			"authors": [
+				"Tarboton, David G."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1997,
+			"journal": "Water Resources Research",
+			"volume": "33",
+			"pages": "309-319",
+			"issn": "0043-1397",
+			"doi": "10.1029/96wr03137",
+			"openalex": "W2119534769",
+			"url": "https://doi.org/10.1029/96wr03137",
+			"abstract": "A new procedure for the representation of flow directions and calculation of upslope areas using rectangular grid digital elevation models is presented. The procedure is based on representing flow direction as a single angle taken as the steepest downward slope on the eight triangular facets centered at each grid point. Upslope area is then calculated by proportioning flow between two downslope pixels according to how close this flow direction is to the direct angle to the downslope pixel. This procedure offers improvements over prior procedures that have restricted flow to eight possible directions (introducing grid bia) or proportioned flow according to slope (introducing unrealistic dispersion). The new procedure is more robust than prior procedures based on fitting local planes while retaining a simple grid based structure. Detailed algorithms are presented and results are demonstrated through test examples and application to digital elevation data sets.",
+			"abstract_source": "crossref",
+			"keywords": [
+				"flow direction",
+				"digital elevation model",
+				"triangular facets",
+				"grid bias"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"issue": "2"
+		},
+		{
 			"key": "Tas2000a",
 			"type": "article",
 			"title": "Out-of-sample tests of forecasting accuracy: an analysis and review",
@@ -54490,6 +56865,31 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "Tom1990a",
+			"type": "book",
+			"title": "Geographic Information Systems and Cartographic Modeling",
+			"authors": [
+				"Tomlin, C. Dana"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1990,
+			"publisher": "Prentice Hall",
+			"address": "Englewood Cliffs, NJ",
+			"isbn": "9780133509274",
+			"openalex": "W1544752055",
+			"keywords": [
+				"Cartography",
+				"Data processing",
+				"Geographic information systems"
+			],
+			"keywords_source": "openlibrary",
+			"source": "openalex",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "Tsi2011a",
@@ -55755,6 +58155,31 @@
 			"open_access": true
 		},
 		{
+			"key": "Vor1992a",
+			"type": "article",
+			"title": "Bi-CGSTAB: A Fast and Smoothly Converging Variant of Bi-CG for the Solution of Nonsymmetric Linear Systems",
+			"authors": [
+				"van der Vorst, H. A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1992,
+			"journal": "SIAM Journal on Scientific and Statistical Computing",
+			"volume": "13",
+			"number": "2",
+			"pages": "631-644",
+			"issn": "0196-5204",
+			"doi": "10.1137/0913035",
+			"openalex": "W2155216327",
+			"url": "https://doi.org/10.1137/0913035",
+			"abstract": "Recently the Conjugate Gradients-Squared (CG-S) method has been proposed as an attractive variant of the Bi-Conjugate Gradients (Bi-CG) method. However, it has been observed that CG-S may lead to a rather irregular convergence behaviour, so that in some cases rounding errors can even result in severe cancellation effects in the solution. In this paper, another variant of Bi-CG is proposed which does not seem to suffer from these negative effects. Numerical experiments indicate also that the new variant, named Bi-CGSTAB, is often much more efficient than CG-S.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-24",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "WA2018a",
 			"type": "article",
 			"title": "Estimation and Inference of Heterogeneous Treatment Effects using Random Forests",
@@ -55921,6 +58346,46 @@
 			"open_access": false
 		},
 		{
+			"key": "WB2019a",
+			"type": "misc",
+			"title": "whitebox: 'WhiteboxTools' R Frontend",
+			"authors": [
+				"Wu, Qiusheng",
+				"Brown, Andrew"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"publisher": "The R Foundation",
+			"doi": "10.32614/cran.package.whitebox",
+			"openalex": "W4399635675",
+			"url": "https://doi.org/10.32614/cran.package.whitebox",
+			"abstract": "An R frontend for the 'WhiteboxTools' library, which is an advanced geospatial data analysis platform developed by Prof. John Lindsay at the University of Guelph's Geomorphometry and Hydrogeomatics Research Group. 'WhiteboxTools' can be used to perform common geographical information systems (GIS) analysis operations, such as cost-distance analysis, distance buffering, and raster reclassification. Remote sensing and image processing tasks include image enhancement (e.g. panchromatic sharpening, contrast adjustments), image mosaicing, numerous filtering operations, simple classification (k-means), and common image transformations. 'WhiteboxTools' also contains advanced tooling for spatial hydrological analysis (e.g. flow-accumulation, watershed delineation, stream network analysis, sink removal), terrain analysis (e.g. common terrain indices such as slope, curvatures, wetness index, hillshading; hypsometric analysis; multi-scale topographic position analysis), and LiDAR data processing. Suggested citation: Lindsay (2016) <doi:10.1016/j.cageo.2016.07.003>.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"geospatial analysis",
+				"raster analysis",
+				"cost-distance analysis",
+				"image enhancement",
+				"image stitching",
+				"image filtering",
+				"image classification",
+				"K-means classification",
+				"flow accumulation",
+				"watershed delineation",
+				"terrain analysis",
+				"terrain indices",
+				"hypsometric analysis",
+				"remote sensing"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"note": "R package version 2.4.3"
+		},
+		{
 			"key": "WB2024a",
 			"type": "misc",
 			"title": "World Bank Indicators API Documentation",
@@ -55990,6 +58455,32 @@
 			"source": "crossref",
 			"retrieved": "2026-10-30",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "WC2026a",
+			"type": "misc",
+			"title": "Commons:When to use the PD-Art tag",
+			"authors": [
+				"Wikimedia Commons"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://commons.wikimedia.org/wiki/Commons:When_to_use_the_PD-Art_tag",
+			"abstract": "The policy of Wikimedia Commons on the PD-Art tag, which an uploader of a photograph taken by somebody else may use to assert that the photograph can have no independent copyright, as it is a faithful reproduction of an old, public domain, two-dimensional work of art. The tag can be used on any such photograph regardless of the source country, following a poll in July 2008; scans and photocopies have the PD-scan tag instead. A photograph whose framing, lighting or point of view involve artistic choices is not covered.",
+			"abstract_source": "manual",
+			"keywords": [
+				"Wikimedia Commons",
+				"public domain",
+				"PD-Art",
+				"reproductions",
+				"copyright"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-23",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -56627,6 +59118,45 @@
 			"open_access": true
 		},
 		{
+			"key": "WOBGG2007a",
+			"type": "article",
+			"title": "Multiscale Terrain Analysis of Multibeam Bathymetry Data for Habitat Mapping on the Continental Slope",
+			"authors": [
+				"Wilson, Margaret F. J.",
+				"O'Connell, Brian",
+				"Brown, Colin",
+				"Guinan, Janine C.",
+				"Grehan, Anthony J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "Marine Geodesy",
+			"volume": "30",
+			"pages": "3-35",
+			"issn": "0149-0419",
+			"doi": "10.1080/01490410701295962",
+			"openalex": "W1990082322",
+			"url": "https://doi.org/10.1080/01490410701295962",
+			"abstract": "Multibeam surveys can provide detailed bathymetry data for the continental slope from which quantitative descriptors of the seabed terrain (e.g., slope) may be obtained. We illustrate the value of these descriptors for benthic habitat mapping, and highlight the advantages of multiscale analysis. We examine the application of these descriptors as predictor variables for species distribution models, which are particularly valuable in the deep sea where opportunities to directly survey the benthic fauna remain limited. Our initial models are encouraging and suggest that wider adoption of these methods may assist the delivery of ecologically relevant information to marine resource managers.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"multibeam bathymetry",
+				"continental slope",
+				"benthic habitat mapping",
+				"multiscale analysis",
+				"species distribution modeling",
+				"deep-sea benthos",
+				"marine resource management"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false,
+			"issue": "1-2"
+		},
+		{
 			"key": "WPS2016a",
 			"type": "article",
 			"title": "Smoothing Parameter and Model Selection for General Smooth Models",
@@ -56790,6 +59320,50 @@
 			"retrieved": "2026-11-13",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "WSCJD...2021a",
+			"type": "article",
+			"title": "Deep High-Resolution Representation Learning for Visual Recognition",
+			"authors": [
+				"Wang, Jingdong",
+				"Sun, Ke",
+				"Cheng, Tianheng",
+				"Jiang, Borui",
+				"Deng, Chaorui",
+				"Zhao, Yang",
+				"Liu, Dong",
+				"Mu, Yadong",
+				"Tan, Mingkui",
+				"Wang, Xinggang",
+				"Liu, Wenyu",
+				"Xiao, Bin"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+			"volume": "43",
+			"pages": "3349-3364",
+			"issn": "0162-8828",
+			"doi": "10.1109/TPAMI.2020.2983686",
+			"openalex": "W3014641072",
+			"url": "https://doi.org/10.1109/TPAMI.2020.2983686",
+			"abstract": "High-resolution representations are essential for position-sensitive vision problems, such as human pose estimation, semantic segmentation, and object detection. Existing state-of-the-art frameworks first encode the input image as a low-resolution representation through a subnetwork that is formed by connecting high-to-low resolution convolutions in series (e.g., ResNet, VGGNet), and then recover the high-resolution representation from the encoded low-resolution representation. Instead, our proposed network, named as High-Resolution Network (HRNet), maintains high-resolution representations through the whole process. There are two key characteristics: (i) Connect the high-to-low resolution convolution streams in parallel and (ii) repeatedly exchange the information across resolutions. The benefit is that the resulting representation is semantically richer and spatially more precise. We show the superiority of the proposed HRNet in a wide range of applications, including human pose estimation, semantic segmentation, and object detection, suggesting that the HRNet is a stronger backbone for computer vision problems. All the codes are available at https://github.com/HRNet.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"HRNet",
+				"human pose estimation",
+				"semantic segmentation",
+				"object detection",
+				"backbone networks"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"issue": "10"
 		},
 		{
 			"key": "WSE2001a",
@@ -57425,6 +59999,32 @@
 			"open_access": false
 		},
 		{
+			"key": "Wig2019a",
+			"type": "misc",
+			"title": "PyTorch Image Models",
+			"authors": [
+				"Wightman, Ross"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"doi": "10.5281/zenodo.4414861",
+			"url": "https://github.com/huggingface/pytorch-image-models",
+			"abstract": "The largest collection of PyTorch image encoders / backbones. Including train, eval, inference, export scripts, and pretrained weights -- ResNet, ResNeXT, EfficientNet, NFNet, Vision Transformer (ViT), MobileNetV4, MobileNet-V3 & V2, RegNet, DPN, CSPNet, Swin Transformer, MaxViT, CoAtNet, ConvNeXt, and more",
+			"abstract_source": "github",
+			"keywords": [
+				"pytorch",
+				"pretrained-models",
+				"image-classification",
+				"imagenet"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Wil1945a",
 			"type": "article",
 			"title": "Individual Comparisons by Ranking Methods",
@@ -57659,6 +60259,43 @@
 			"open_access": false
 		},
 		{
+			"key": "Woo2003a",
+			"type": "article",
+			"title": "Thin Plate Regression Splines",
+			"authors": [
+				"Wood, Simon N."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2003,
+			"journal": "Journal of the Royal Statistical Society Series B: Statistical Methodology",
+			"volume": "65",
+			"number": "1",
+			"pages": "95-114",
+			"issn": "1369-7412",
+			"doi": "10.1111/1467-9868.00374",
+			"openalex": "W2140308441",
+			"url": "https://doi.org/10.1111/1467-9868.00374",
+			"abstract": "Summary I discuss the production of low rank smoothers for d ≥ 1 dimensional data, which can be fitted by regression or penalized regression methods. The smoothers are constructed by a simple transformation and truncation of the basis that arises from the solution of the thin plate spline smoothing problem and are optimal in the sense that the truncation is designed to result in the minimum possible perturbation of the thin plate spline smoothing problem given the dimension of the basis used to construct the smoother. By making use of Lanczos iteration the basis change and truncation are computationally efficient. The smoothers allow the use of approximate thin plate spline models with large data sets, avoid the problems that are associated with ‘knot placement’ that usually complicate modelling with regression splines or penalized regression splines, provide a sensible way of modelling interaction terms in generalized additive models, provide low rank approximations to generalized smoothing spline models, appropriate for use with large data sets, provide a means for incorporating smooth functions of more than one variable into non-linear models and improve the computational efficiency of penalized likelihood models incorporating thin plate splines. Given that the approach produces spline-like models with a sparse basis, it also provides a natural way of incorporating unpenalized spline-like terms in linear and generalized linear models, and these can be treated just like any other model terms from the point of view of model selection, inference and diagnostics.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"basis truncation",
+				"Lanczos iteration",
+				"penalized regression",
+				"generalized additive models",
+				"interaction terms",
+				"nonlinear models",
+				"penalized likelihood",
+				"knot placement",
+				"model selection"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-21",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Woo2009a",
 			"type": "book",
 			"title": "An Introduction to MultiAgent Systems",
@@ -57674,6 +60311,45 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Woo2011a",
+			"type": "article",
+			"title": "Fast Stable Restricted Maximum Likelihood and Marginal Likelihood Estimation of Semiparametric Generalized Linear Models",
+			"authors": [
+				"Wood, Simon N."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2011,
+			"journal": "Journal of the Royal Statistical Society Series B: Statistical Methodology",
+			"volume": "73",
+			"number": "1",
+			"pages": "3-36",
+			"issn": "1369-7412",
+			"doi": "10.1111/j.1467-9868.2010.00749.x",
+			"openalex": "W2119160928",
+			"url": "https://doi.org/10.1111/j.1467-9868.2010.00749.x",
+			"abstract": "Summary Recent work by Reiss and Ogden provides a theoretical basis for sometimes preferring restricted maximum likelihood (REML) to generalized cross-validation (GCV) for smoothing parameter selection in semiparametric regression. However, existing REML or marginal likelihood (ML) based methods for semiparametric generalized linear models (GLMs) use iterative REML or ML estimation of the smoothing parameters of working linear approximations to the GLM. Such indirect schemes need not converge and fail to do so in a non-negligible proportion of practical analyses. By contrast, very reliable prediction error criteria smoothing parameter selection methods are available, based on direct optimization of GCV, or related criteria, for the GLM itself. Since such methods directly optimize properly defined functions of the smoothing parameters, they have much more reliable convergence properties. The paper develops the first such method for REML or ML estimation of smoothing parameters. A Laplace approximation is used to obtain an approximate REML or ML for any GLM, which is suitable for efficient direct optimization. This REML or ML criterion requires that Newton–Raphson iteration, rather than Fisher scoring, be used for GLM fitting, and a computationally stable approach to this is proposed. The REML or ML criterion itself is optimized by a Newton method, with the derivatives required obtained by a mixture of implicit differentiation and direct methods. The method will cope with numerical rank deficiency in the fitted model and in fact provides a slight improvement in numerical robustness on the earlier method of Wood for prediction error criteria based smoothness selection. Simulation results suggest that the new REML and ML methods offer some improvement in mean-square error performance relative to GCV or Akaike’s information criterion in most cases, without the small number of severe undersmoothing failures to which Akaike’s information criterion and GCV are prone. This is achieved at the same computational cost as GCV or Akaike’s information criterion. The new approach also eliminates the convergence failures of previous REML- or ML-based approaches for penalized GLMs and usually has lower computational cost than these alternatives. Example applications are presented in adaptive smoothing, scalar on function regression and generalized additive model selection.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"restricted maximum likelihood",
+				"marginal likelihood",
+				"bandwidth selection",
+				"Laplace approximation",
+				"Newton's method",
+				"Fisher scoring",
+				"generalized cross-validation",
+				"Akaike information criterion",
+				"adaptive smoothing",
+				"scalar-on-function regression",
+				"convergence stability"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-21",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "Woo2019a",
@@ -57739,6 +60415,38 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "YCBL2014a",
+			"type": "inproceedings",
+			"title": "How Transferable Are Features in Deep Neural Networks?",
+			"authors": [
+				"Yosinski, Jason",
+				"Clune, Jeff",
+				"Bengio, Yoshua",
+				"Lipson, Hod"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"booktitle": "Advances in Neural Information Processing Systems 27",
+			"pages": "3320-3328",
+			"doi": "10.48550/arXiv.1411.1792",
+			"url": "https://arxiv.org/abs/1411.1792",
+			"abstract": "Many deep neural networks trained on natural images exhibit a curious phenomenon in common: on the first layer they learn features similar to Gabor filters and color blobs. Such first-layer features appear not to be specific to a particular dataset or task, but general in that they are applicable to many datasets and tasks. Features must eventually transition from general to specific by the last layer of the network, but this transition has not been studied extensively. In this paper we experimentally quantify the generality versus specificity of neurons in each layer of a deep convolutional neural network and report a few surprising results. Transferability is negatively affected by two distinct issues: (1) the specialization of higher layer neurons to their original task at the expense of performance on the target task, which was expected, and (2) optimization difficulties related to splitting networks between co-adapted neurons, which was not expected. In an example network trained on ImageNet, we demonstrate that either of these two issues may dominate, depending on whether features are transferred from the bottom, middle, or top of the network. We also document that the transferability of features decreases as the distance between the base task and target task increases, but that transferring features even from distant tasks can be better than using random features. A final surprising result is that initializing a network with transferred features from almost any number of layers can produce a boost to generalization that lingers even after fine-tuning to the target dataset.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"transfer learning",
+				"fine-tuning",
+				"convolutional neural networks",
+				"feature transferability",
+				"ImageNet"
+			],
+			"keywords_source": "manual",
+			"source": "arxiv",
+			"retrieved": "2026-11-24",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -57977,6 +60685,40 @@
 			"retrieved": "2026-11-07",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "YSP2002a",
+			"type": "article",
+			"title": "Visualizing topography by openness: A new application of image processing to digital elevation models",
+			"authors": [
+				"Yokoyama, Ryuzo",
+				"Shirasawa, Michio",
+				"Pike, Richard J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Photogrammetric Engineering and Remote Sensing",
+			"volume": "68",
+			"pages": "257-265",
+			"openalex": "W2111891265",
+			"abstract": "A new parameter, here termed openness, expressing the degree of dominance or enclosure of a location on an irregular surface, is developed to visualize topographic character. Openness is an angular measure of the relation between surface relief and horizontal distance. For angles less than 90\", it is equivalent to the internal angle of a cone, its apex at a DEM location, constrained by neighboring elevations within a specified radial distance. Openness incorporates the terrain line-of-sight, or viewshed, concept and is calculated from multiple zenith and nadir angles-here along eight azimuths. Openness has two viewer perspectives. Positive values, expressing openness above the surface, are high for convex forms, whereas negative values describe this attribute below the surface and are high for concave forms. Openness values are mapped by gray-scale tones. The emphasis of terrain convexity and concavity in openness maps facilitates the interpretation of landforms on the Earth's surface and its seafloor, and on the planets, as well as features on any irregular surface-such as those generated by industrial procedures.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"digital elevation model",
+				"viewshed",
+				"lines of sight",
+				"landform interpretation",
+				"bathymetry",
+				"planetary surfaces",
+				"irregular surfaces"
+			],
+			"keywords_source": "openalex",
+			"source": "openalex",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false,
+			"issue": "3"
 		},
 		{
 			"key": "YSXSB...2024a",
@@ -58759,6 +61501,43 @@
 			"open_access": true
 		},
 		{
+			"key": "ZOK2011a",
+			"type": "article",
+			"title": "Sky-View Factor as a Relief Visualization Technique",
+			"authors": [
+				"Zakšek, Klemen",
+				"Oštir, Kristof",
+				"Kokalj, Žiga"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2011,
+			"journal": "Remote Sensing",
+			"volume": "3",
+			"pages": "398-415",
+			"issn": "2072-4292",
+			"doi": "10.3390/rs3020398",
+			"openalex": "W1996075252",
+			"url": "https://doi.org/10.3390/rs3020398",
+			"abstract": "Remote sensing has become the most important data source for the digital elevation model (DEM) generation. DEM analyses can be applied in various fields and many of them require appropriate DEM visualization support. Analytical hill-shading is the most frequently used relief visualization technique. Although widely accepted, this method has two major drawbacks: identifying details in deep shades and inability to properly represent linear features lying parallel to the light beam. Several authors have tried to overcome these limitations by changing the position of the light source or by filtering. This paper proposes a new relief visualization technique based on diffuse, rather than direct, illumination. It utilizes the sky-view factor—a parameter corresponding to the portion of visible sky limited by relief. Sky-view factor can be used as a general relief visualization technique to show relief characteristics. In particular, we show that this visualization is a very useful tool in archaeology as it improves the recognition of small scale features from high resolution DEMs.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"sky view factor",
+				"relief visualization",
+				"diffuse illumination",
+				"digital elevation model",
+				"hill shading",
+				"high-resolution DEM",
+				"light source position"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"issue": "2"
+		},
+		{
 			"key": "ZPOL1997a",
 			"type": "inproceedings",
 			"title": "New Algorithms for Fast Discovery of Association Rules",
@@ -58776,6 +61555,25 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "ZRCUL2025a",
+			"type": "misc",
+			"title": "RVT: Relief Visualization Toolbox in Python (rvt-py), version 2.2.3",
+			"authors": [
+				"ZRC SAZU and University of Ljubljana (UL FGG)"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2025,
+			"url": "https://github.com/EarthObservation/RVT_py",
+			"abstract": "The Relief Visualization Toolbox computes visualisations of elevation models that help find and interpret small topographic features, among them hillshading from one or several directions, slope, the simple local relief model, the sky-view factor and its anisotropic variant, positive and negative openness, sky illumination, local dominance, the multi-scale relief model and multi-scale topographic position, and blends them into combined images such as the Visualization for Archaeological Topography.",
+			"abstract_source": "package documentation",
+			"source": "manual",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true,
+			"note": "Python package rvt-py"
 		},
 		{
 			"key": "ZRYYW...2025a",
@@ -59018,6 +61816,43 @@
 			"open_access": true
 		},
 		{
+			"key": "ZT1987a",
+			"type": "article",
+			"title": "Quantitative analysis of land surface topography",
+			"authors": [
+				"Zevenbergen, Lyle W.",
+				"Thorne, Colin R."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1987,
+			"journal": "Earth Surface Processes and Landforms",
+			"volume": "12",
+			"pages": "47-56",
+			"issn": "0197-9337",
+			"doi": "10.1002/esp.3290120107",
+			"openalex": "W1983513512",
+			"url": "https://doi.org/10.1002/esp.3290120107",
+			"abstract": "Land surface topography significantly affects the processes of runoff and erosion. A system which determines slope, aspect, and curvature in both the down‐slope and across‐slope directions is developed for an altitude matrix. Also, the upslope drainage area and maximum drainage distance are determined for every point within the altitude matrix. A FORTRAN 66 program performs the analysis.",
+			"abstract_source": "crossref",
+			"keywords": [
+				"land surface topography",
+				"slope",
+				"aspect",
+				"curvature",
+				"drainage area",
+				"runoff",
+				"erosion",
+				"digital terrain analysis"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": false,
+			"issue": "1"
+		},
+		{
 			"key": "ZT1999a",
 			"type": "article",
 			"title": "Multiobjective Evolutionary Algorithms: A Comparative Case Study and the Strength Pareto Approach",
@@ -59092,6 +61927,51 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "ZVDDB...2022a",
+			"type": "misc",
+			"title": "ESA WorldCover 10 m 2021 v200",
+			"authors": [
+				"Zanaga, Daniele",
+				"Van De Kerchove, Ruben",
+				"Daems, Dirk",
+				"De Keersmaecker, Wanda",
+				"Brockmann, Carsten",
+				"Kirches, Grit",
+				"Wevers, Jan",
+				"Cartus, Oliver",
+				"Santoro, Maurizio",
+				"Fritz, Steffen",
+				"Lesiv, Myroslava",
+				"Herold, Martin",
+				"Tsendbazar, Nandin-Erdene",
+				"Xu, Panpan",
+				"Ramoino, Fabrizio",
+				"Arino, Olivier"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"publisher": "Zenodo",
+			"doi": "10.5281/zenodo.7254221",
+			"openalex": "W4393636991",
+			"url": "https://doi.org/10.5281/zenodo.7254221",
+			"abstract": "The European Space Agency (ESA) WorldCover 10 m 2021 product provides a global land cover map for 2021 at 10 m resolution based on Sentinel-1 and Sentinel-2 data. The WorldCover product comes with 11 land cover classes, aligned with UN-FAO's Land Cover Classification System, and has been generated in the framework of the ESA WorldCover project. The ESA WorldCover 10m 2021 v200 product updates the existing ESA WorldCover 10m 2020 v100 product to 2021 but is produced using an improved algorithm version (v200) compared to the 2020 map. Consequently, since the WorldCover maps for 2020 and 2021 were generated with different algorithm versions (v100 and v200, respectively), changes between the maps should be treated with caution, as they include both real changes in land cover and changes due to the algorithms used.",
+			"abstract_source": "datacite",
+			"keywords": [
+				"Land cover",
+				"Land use",
+				"Sentinel-1",
+				"Sentinel-2",
+				"Remote sensing",
+				"European Space Agency"
+			],
+			"keywords_source": "datacite",
+			"source": "datacite",
+			"retrieved": "2026-11-22",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "ZW2020a",
@@ -60106,6 +62986,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "BBZ2013a",
+			"count": 398,
+			"source": "openalex",
+			"date": "2026-11-23"
+		},
+		{
 			"key": "BC1964a",
 			"count": 11644,
 			"source": "crossref",
@@ -60526,6 +63412,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "BK1979a",
+			"count": 6397,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "BK1979a",
+			"count": 8980,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "BK1980a",
 			"count": 1469,
 			"source": "crossref",
@@ -60694,6 +63592,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "BLM2014a",
+			"count": 226,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "BLM2014a",
+			"count": 302,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "BLP1995a",
 			"count": 3489,
 			"source": "crossref",
@@ -60770,6 +63680,18 @@
 			"count": 1775,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "BMTCB...2025a",
+			"count": 2,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "BMTCB...2025a",
+			"count": 4,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "BN1981a",
@@ -61558,6 +64480,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Bur2020a",
+			"count": 3,
+			"source": "openalex",
+			"date": "2026-11-23"
+		},
+		{
 			"key": "CAZC2019a",
 			"count": 214,
 			"source": "openalex",
@@ -61634,6 +64562,18 @@
 			"count": 795,
 			"source": "openalex",
 			"date": "2026-10-30"
+		},
+		{
+			"key": "CCCKK2026a",
+			"count": 1,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "CCCKK2026a",
+			"count": 4,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "CCDDH...2018a",
@@ -62518,6 +65458,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "DAC2008a",
+			"count": 173,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "DAC2008a",
+			"count": 243,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "DBKYZ...2019a",
 			"count": 1029,
 			"source": "crossref",
@@ -62890,6 +65842,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "DKPKS...2023a",
+			"count": 15,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "DKPKS...2023a",
+			"count": 22,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "DKPR1987a",
 			"count": 3171,
 			"source": "crossref",
@@ -62954,6 +65918,18 @@
 			"count": 50443,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "DLS2019a",
+			"count": 20,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "DLS2019a",
+			"count": 53,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "DM1995a",
@@ -63104,6 +66080,18 @@
 			"count": 5309,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "DSL2019a",
+			"count": 64,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "DSL2019a",
+			"count": 86,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "DTA1986a",
@@ -63730,6 +66718,18 @@
 			"date": "2026-11-18"
 		},
 		{
+			"key": "FHBCK2016a",
+			"count": 113,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "FHBCK2016a",
+			"count": 141,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "FHWG2009a",
 			"count": 232,
 			"source": "crossref",
@@ -63890,6 +66890,12 @@
 			"count": 4619,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "FS2011a",
+			"count": 598,
+			"source": "openalex",
+			"date": "2026-11-24"
 		},
 		{
 			"key": "FS2022a",
@@ -64142,6 +67148,12 @@
 			"count": 659,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "GBDS2017a",
+			"count": 1466,
+			"source": "openalex",
+			"date": "2026-11-23"
 		},
 		{
 			"key": "GBR2007a",
@@ -64954,6 +67966,12 @@
 			"date": "2026-11-13"
 		},
 		{
+			"key": "Gol2025a",
+			"count": 5,
+			"source": "openalex",
+			"date": "2026-11-23"
+		},
+		{
 			"key": "Goo1953a",
 			"count": 2240,
 			"source": "crossref",
@@ -65132,6 +68150,18 @@
 			"count": 1204,
 			"source": "openalex",
 			"date": "2026-10-30"
+		},
+		{
+			"key": "HBBCD2020a",
+			"count": 478,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "HBBCD2020a",
+			"count": 996,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "HBBZM...2021a",
@@ -65626,6 +68656,18 @@
 			"date": "2026-11-18"
 		},
 		{
+			"key": "HR2009a",
+			"count": 1,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "HR2009a",
+			"count": 599,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "HR2013a",
 			"count": 643,
 			"source": "crossref",
@@ -65642,6 +68684,12 @@
 			"count": 682,
 			"source": "openalex",
 			"date": "2026-11-14"
+		},
+		{
+			"key": "HS1952a",
+			"count": 10408,
+			"source": "openalex",
+			"date": "2026-11-24"
 		},
 		{
 			"key": "HS1966a",
@@ -66166,6 +69214,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Hes2010a",
+			"count": 304,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "Hes2010a",
+			"count": 482,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "Het2000a",
 			"count": 5494,
 			"source": "crossref",
@@ -66268,6 +69328,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Hor1981a",
+			"count": 1005,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "Hor1981a",
+			"count": 1575,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "Hot1933a",
 			"count": 7270,
 			"source": "crossref",
@@ -66356,6 +69428,18 @@
 			"count": 4174,
 			"source": "openalex",
 			"date": "2026-11-18"
+		},
+		{
+			"key": "IMLM2023a",
+			"count": 58,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "IMLM2023a",
+			"count": 57,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "IS2015a",
@@ -66838,6 +69922,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "KH2017a",
+			"count": 168,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "KH2017a",
+			"count": 239,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "KHL2008a",
 			"count": 328,
 			"source": "crossref",
@@ -67202,6 +70298,18 @@
 			"count": 40,
 			"source": "openalex",
 			"date": "2026-11-03"
+		},
+		{
+			"key": "KS2019a",
+			"count": 256,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "KS2019a",
+			"count": 332,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "KSBKJ...2019a",
@@ -67820,6 +70928,18 @@
 			"count": 6282,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "LDGHH...2017a",
+			"count": 25776,
+			"source": "crossref",
+			"date": "2026-11-23"
+		},
+		{
+			"key": "LDGHH...2017a",
+			"count": 36512,
+			"source": "openalex",
+			"date": "2026-11-23"
 		},
 		{
 			"key": "LDHKP...2007a",
@@ -68518,6 +71638,18 @@
 			"date": "2026-11-07"
 		},
 		{
+			"key": "Lin2016a",
+			"count": 429,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "Lin2016a",
+			"count": 543,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "Lit1988a",
 			"count": 8663,
 			"source": "crossref",
@@ -68776,6 +71908,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "MEJ2020a",
+			"count": 126,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "MEJ2020a",
+			"count": 148,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "MF2000a",
 			"count": 1278,
 			"source": "crossref",
@@ -68816,6 +71960,18 @@
 			"count": 99,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "MGL1991a",
+			"count": 2961,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "MGL1991a",
+			"count": 4194,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "MGLRS...2010a",
@@ -69008,6 +72164,24 @@
 			"count": 3749,
 			"source": "crossref",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "MO2020a",
+			"count": 6,
+			"source": "openalex",
+			"date": "2026-11-24"
+		},
+		{
+			"key": "MO2021a",
+			"count": 10,
+			"source": "openalex",
+			"date": "2026-11-24"
+		},
+		{
+			"key": "MO2023b",
+			"count": 8,
+			"source": "openalex",
+			"date": "2026-11-24"
 		},
 		{
 			"key": "MP1967a",
@@ -69320,6 +72494,18 @@
 			"count": 30712,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Mar1992a",
+			"count": 31,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "Mar1992a",
+			"count": 53,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "Mar2015a",
@@ -69910,6 +73096,18 @@
 			"date": "2026-11-18"
 		},
 		{
+			"key": "OCGLG...2020a",
+			"count": 168,
+			"source": "crossref",
+			"date": "2026-11-23"
+		},
+		{
+			"key": "OCGLG...2020a",
+			"count": 202,
+			"source": "openalex",
+			"date": "2026-11-23"
+		},
+		{
 			"key": "OCPB2016a",
 			"count": 516,
 			"source": "crossref",
@@ -70288,6 +73486,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "PS1975a",
+			"count": 2030,
+			"source": "openalex",
+			"date": "2026-11-24"
+		},
+		{
 			"key": "PS1978a",
 			"count": 143,
 			"source": "crossref",
@@ -70298,6 +73502,12 @@
 			"count": 239,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "PS1982a",
+			"count": 4962,
+			"source": "openalex",
+			"date": "2026-11-24"
 		},
 		{
 			"key": "PS1988a",
@@ -70334,6 +73544,18 @@
 			"count": 111,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "PS2026a",
+			"count": 1,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "PS2026a",
+			"count": 1,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "PSKB2023a",
@@ -70822,6 +74044,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "RDE1999a",
+			"count": 2216,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "RG1978a",
 			"count": 868,
 			"source": "crossref",
@@ -70844,6 +74072,18 @@
 			"count": 174,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "RHGS2017a",
+			"count": 36650,
+			"source": "crossref",
+			"date": "2026-11-23"
+		},
+		{
+			"key": "RHGS2017a",
+			"count": 80902,
+			"source": "openalex",
+			"date": "2026-11-23"
 		},
 		{
 			"key": "RHSPP...2024a",
@@ -71122,6 +74362,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "RRS2016a",
+			"count": 161,
+			"source": "openalex",
+			"date": "2026-11-23"
+		},
+		{
+			"key": "RRS2018a",
+			"count": 5,
+			"source": "openalex",
+			"date": "2026-11-23"
+		},
+		{
 			"key": "RRZ1994a",
 			"count": 2189,
 			"source": "crossref",
@@ -71132,6 +74384,12 @@
 			"count": 3862,
 			"source": "openalex",
 			"date": "2026-11-18"
+		},
+		{
+			"key": "RS1987a",
+			"count": 1486,
+			"source": "openalex",
+			"date": "2026-11-24"
 		},
 		{
 			"key": "RS1991a",
@@ -71854,6 +75112,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "SGRWC...2022a",
+			"count": 46,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "SGRWC...2022a",
+			"count": 93,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "SHMGS...2016a",
 			"count": 11987,
 			"source": "crossref",
@@ -72106,6 +75376,12 @@
 			"date": "2026-11-03"
 		},
 		{
+			"key": "SS1986a",
+			"count": 13069,
+			"source": "openalex",
+			"date": "2026-11-24"
+		},
+		{
 			"key": "SS1989b",
 			"count": 589,
 			"source": "crossref",
@@ -72296,6 +75572,12 @@
 			"count": 6112,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "SSY1988a",
+			"count": 64,
+			"source": "openalex",
+			"date": "2026-11-24"
 		},
 		{
 			"key": "ST1998a",
@@ -72500,6 +75782,12 @@
 			"count": 21,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Saa2003a",
+			"count": 17439,
+			"source": "openalex",
+			"date": "2026-11-24"
 		},
 		{
 			"key": "Sar1958a",
@@ -73012,6 +76300,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "TP2012a",
+			"count": 59,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "TP2012a",
+			"count": 78,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "TR2004a",
 			"count": 1231,
 			"source": "crossref",
@@ -73168,6 +76468,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Tar1997a",
+			"count": 2021,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "Tar1997a",
+			"count": 2969,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "Tas2000a",
 			"count": 966,
 			"source": "crossref",
@@ -73262,6 +76574,12 @@
 			"count": 449,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "Tom1990a",
+			"count": 1206,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "Tsi2011a",
@@ -73576,6 +76894,12 @@
 			"date": "2026-10-30"
 		},
 		{
+			"key": "Vor1992a",
+			"count": 6249,
+			"source": "openalex",
+			"date": "2026-11-24"
+		},
+		{
 			"key": "WA2018a",
 			"count": 2548,
 			"source": "crossref",
@@ -73628,6 +76952,18 @@
 			"count": 1550,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "WB2019a",
+			"count": 13,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "WB2019a",
+			"count": 28,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "WBCKN...2017a",
@@ -73828,6 +77164,18 @@
 			"date": "2026-11-06"
 		},
 		{
+			"key": "WOBGG2007a",
+			"count": 902,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "WOBGG2007a",
+			"count": 1146,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "WRK2005a",
 			"count": 387,
 			"source": "crossref",
@@ -73850,6 +77198,18 @@
 			"count": 42996,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "WSCJD...2021a",
+			"count": 4352,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "WSCJD...2021a",
+			"count": 6078,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "WSE2001a",
@@ -74116,6 +77476,30 @@
 			"date": "2026-11-18"
 		},
 		{
+			"key": "Woo2003a",
+			"count": 2124,
+			"source": "crossref",
+			"date": "2026-11-21"
+		},
+		{
+			"key": "Woo2003a",
+			"count": 2927,
+			"source": "openalex",
+			"date": "2026-11-21"
+		},
+		{
+			"key": "Woo2011a",
+			"count": 6965,
+			"source": "crossref",
+			"date": "2026-11-21"
+		},
+		{
+			"key": "Woo2011a",
+			"count": 8854,
+			"source": "openalex",
+			"date": "2026-11-21"
+		},
+		{
 			"key": "Xie2021a",
 			"count": 217,
 			"source": "crossref",
@@ -74198,6 +77582,12 @@
 			"count": 1843,
 			"source": "openalex",
 			"date": "2026-11-07"
+		},
+		{
+			"key": "YSP2002a",
+			"count": 603,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "YSXSB...2024a",
@@ -74398,6 +77788,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "ZOK2011a",
+			"count": 564,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "ZOK2011a",
+			"count": 763,
+			"source": "openalex",
+			"date": "2026-11-22"
+		},
+		{
 			"key": "ZS2009a",
 			"count": 3498,
 			"source": "crossref",
@@ -74414,6 +77816,18 @@
 			"count": 243,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "ZT1987a",
+			"count": 1364,
+			"source": "crossref",
+			"date": "2026-11-22"
+		},
+		{
+			"key": "ZT1987a",
+			"count": 1902,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "ZT1999a",
@@ -74438,6 +77852,12 @@
 			"count": 4349,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "ZVDDB...2022a",
+			"count": 1405,
+			"source": "openalex",
+			"date": "2026-11-22"
 		},
 		{
 			"key": "ZW2020a",
@@ -77315,7 +80735,7 @@
 		},
 		{
 			"id": "node",
-			"title": "Neural ODEs for System Identification",
+			"title": "Neural ODEs and Universal Differential Equations",
 			"description": "Neural ODE · Augmented · UDE",
 			"commands": [
 				"chiara.statistics.nn.node"
@@ -77365,8 +80785,8 @@
 		},
 		{
 			"id": "ode",
-			"title": "ODE Inference Methods",
-			"description": "Structural Identifiability · Single-Start · Multi-Start · Profile Likelihood · Bayesian Inference",
+			"title": "Parameter Estimation for ODEs",
+			"description": "Single-Start · Multi-Start · Profile Likelihood",
 			"commands": [
 				"chiara.statistics.ode"
 			],
@@ -77376,15 +80796,43 @@
 				"MGALS...2021a",
 				"LMIGK...2023a",
 				"BM2020a",
-				"XGTTT...2020a",
 				"BW1988a",
 				"SSBCD...2021a",
 				"RKMBS...2009a",
 				"RSBMS...2013a",
 				"VFWHB2019a",
-				"FS2022a",
+				"FS2022a"
+			]
+		},
+		{
+			"id": "odebayes",
+			"title": "Bayesian Inference for ODEs",
+			"description": "NUTS · HMC",
+			"commands": [
+				"chiara.statistics.odebayes"
+			],
+			"keys": [
+				"PFGLO...2025a",
+				"LMIGK...2023a",
+				"MGALS...2021a",
+				"XGTTT...2020a",
+				"SSBCD...2021a",
+				"RSBMS...2013a",
 				"HG2014a",
 				"VGSCB2021a"
+			]
+		},
+		{
+			"id": "odeident",
+			"title": "Structural Identifiability of ODEs",
+			"description": "Identifiability",
+			"commands": [
+				"chiara.statistics.odeident"
+			],
+			"keys": [
+				"DGHP2023a",
+				"BM2020a",
+				"RKMBS...2009a"
 			]
 		},
 		{
@@ -77859,7 +81307,7 @@
 		},
 		{
 			"id": "sbi",
-			"title": "Simulation-Based Inference",
+			"title": "Parameter Estimation by Neural Networks",
 			"description": "Point · Interval · Quantile",
 			"commands": [
 				"chiara.statistics.sbi"
@@ -77944,7 +81392,7 @@
 		{
 			"id": "si",
 			"title": "System Identification Methods",
-			"description": "ARX · ARMAX · N4SID · OE",
+			"description": "ARX · ARMAX · Subspace Methods · Output-Error",
 			"commands": [
 				"chiara.statistics.si"
 			],
@@ -78211,6 +81659,30 @@
 				"TET2012a",
 				"Kel2017a",
 				"HJM2019a"
+			]
+		},
+		{
+			"id": "transfer",
+			"title": "Transfer Learning and Fine-Tuning",
+			"description": "Feature Extraction · Last Block · Fully Fine-Tuned",
+			"commands": [
+				"chiara.statistics.nn.transfer"
+			],
+			"keys": [
+				"Inn2018a",
+				"FMLC2026b",
+				"JMLC2026a",
+				"DDSLL...2009a",
+				"LBBH1998a",
+				"NWCBW...2011a",
+				"HZRS2016a",
+				"YCBL2014a",
+				"SASC2014a",
+				"KSL2019a",
+				"PY2010a",
+				"BBCKP...2010a",
+				"KB2015a",
+				"IS2015a"
 			]
 		},
 		{

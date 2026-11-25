@@ -60,6 +60,8 @@ import { FORECASTING_COMPETITIONS_COMMAND_ID } from './forecastingCompetitionsPa
 import { FORECASTING_CATALOGUE_COMMAND_ID } from './forecastingActive.js';
 import './forecastingCataloguePage.js';
 import { MODEL_ZOO_COMMAND_ID } from './modelZooPage.js';
+import { OCR_FILES_COMMANDS } from '../common/ocrFiles.js';
+import './ocrFilesPage.js';
 import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { TIMEFUNCTION_PANEL } from '../../model/browser/commands/timeFunction.command.js';
 import { FINDALLOCS_PANEL } from '../../model/browser/commands/findAllocs.command.js';
@@ -101,6 +103,7 @@ const CollaborationMenu = new MenuId('menubarCollaborationMenu');
 const LiteratureMenu = new MenuId('menubarLiteratureMenu');
 const ForecastingCompetitionsMenu = new MenuId('menubarForecastingCompetitionsMenu');
 const PdfFilesMenu = new MenuId('menubarPdfFilesMenu');
+const OcrFilesMenu = new MenuId('menubarOcrFilesMenu');
 
 // ------------------- COMPOSE ------------------------
 
@@ -395,6 +398,68 @@ MenuRegistry.appendMenuItem(PdfFilesMenu, {
 	group: '2_markup',
 	command: { id: PDF_DRAW_COMMAND_ID, title: localize('compose.pdfDraw', "Draw") },
 	order: 4,
+});
+
+// Explore > OCR Files and Snippets, below PDF Files (ocrFilesPage.ts): each item opens the page at its step
+MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+	group: '1_explore',
+	submenu: OcrFilesMenu,
+	title: localize('compose.ocrFiles', "OCR Files and Snippets"),
+	order: 6,
+});
+
+MenuRegistry.appendMenuItem(OcrFilesMenu, {
+	group: '1_work',
+	command: { id: OCR_FILES_COMMANDS.openWork, title: localize('compose.ocrOpenWork', "Open Work...") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(OcrFilesMenu, {
+	group: '1_work',
+	command: { id: OCR_FILES_COMMANDS.works, title: localize('compose.ocrWorks', "Works") },
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(OcrFilesMenu, {
+	group: '2_read',
+	command: { id: OCR_FILES_COMMANDS.read, title: localize('compose.ocrRead', "Read") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(OcrFilesMenu, {
+	group: '2_read',
+	command: { id: OCR_FILES_COMMANDS.extract, title: localize('compose.ocrExtract', "Extract Snippet") },
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(OcrFilesMenu, {
+	group: '2_read',
+	command: { id: OCR_FILES_COMMANDS.translate, title: localize('compose.ocrTranslate', "Translate Snippet") },
+	order: 3,
+});
+
+MenuRegistry.appendMenuItem(OcrFilesMenu, {
+	group: '2_read',
+	command: { id: OCR_FILES_COMMANDS.readAloud, title: localize('compose.ocrReadAloud', "Read Aloud") },
+	order: 4,
+});
+
+MenuRegistry.appendMenuItem(OcrFilesMenu, {
+	group: '3_use',
+	command: { id: OCR_FILES_COMMANDS.snippets, title: localize('compose.ocrSnippets', "Snippets") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(OcrFilesMenu, {
+	group: '3_use',
+	command: { id: OCR_FILES_COMMANDS.glossary, title: localize('compose.ocrGlossary', "Glossary") },
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(OcrFilesMenu, {
+	group: '3_use',
+	command: { id: OCR_FILES_COMMANDS.addToWorkspace, title: localize('compose.ocrAddToWorkspace', "Add to Workspace") },
+	order: 3,
 });
 
 // ==============================================================

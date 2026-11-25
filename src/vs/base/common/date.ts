@@ -287,6 +287,15 @@ export const safeIntl = {
 			}
 		});
 	},
+	DisplayNames(locales: Intl.LocalesArgument, options: Intl.DisplayNamesOptions): Lazy<Intl.DisplayNames> {
+		return new Lazy(() => {
+			try {
+				return new Intl.DisplayNames(locales, options);
+			} catch {
+				return new Intl.DisplayNames(undefined, options);
+			}
+		});
+	},
 	Segmenter(locales?: Intl.LocalesArgument, options?: Intl.SegmenterOptions): Lazy<Intl.Segmenter> {
 		return new Lazy(() => {
 			try {
