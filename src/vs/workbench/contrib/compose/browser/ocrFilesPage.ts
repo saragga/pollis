@@ -36,7 +36,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { parseToml } from '../../model/browser/common/tomlPanelData.js';
 import { OCRFILES_METADATA } from '../../model/browser/webviews/ocrFiles.data.js';
-import { buildWebviewHtml, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, ONE_BLUE_BUTTON_JS, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { CellEditType, CellKind } from '../../notebook/common/notebookCommon.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
@@ -1368,9 +1368,7 @@ function pageHtml(): string {
 		.ocr table.list tr.pick:hover td { background: var(--vscode-list-hoverBackground); }
 		.ocr .fields { display: grid; grid-template-columns: max-content 1fr; gap: 4px 10px; align-items: center; font-size: 12px; }
 		.ocr .fields textarea { min-height: 54px; resize: vertical; }
-		.ocr .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; }
-		.ocr .link:hover { text-decoration: underline; }
-		.ocr .links { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+		.ocr .bar { flex-wrap: wrap; margin: 6px 0; }
 		.ocr .reader { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 190px; gap: 12px; margin-top: 10px; }
 		.ocr .reader.noImage { grid-template-columns: minmax(0, 1fr) 190px; }
 		.ocr .scanBox { position: relative; align-self: start; }
@@ -1418,6 +1416,7 @@ function pageHtml(): string {
 			step('step-use', localize('ocrFiles.stepUse', "Use It"), `<div class="ocr" id="use"></div>`, `<span class="small" id="head-use"></span>`),
 		],
 		pageScriptJs: `
+	${ONE_BLUE_BUTTON_JS.trim()}
 	(() => {
 	const TEXT = ${JSON.stringify(text)};
 	const SPEAKER = ${JSON.stringify(voiceSpeakerSvg)};
@@ -1446,15 +1445,17 @@ function pageHtml(): string {
 	function format(template, ...values) {
 		return values.reduce((result, value, index) => result.split('{' + index + '}').join(value), template);
 	}
-	function button(label, onClick, current) {
-		const node = element('button', 'action' + (current ? ' current' : ''), label);
+	// A button of a row, whose blue the scaffold's script gives: the first at first, then the last hovered
+	function button(label, onClick) {
+		const node = element('button', 'action', label);
 		node.addEventListener('click', onClick);
 		return node;
 	}
-	function link(label, onClick) {
-		const node = element('button', 'link', label);
-		node.addEventListener('click', onClick);
-		return node;
+	// A row of buttons, one of them blue
+	function buttonRow(...buttons) {
+		const row = element('div', 'bar');
+		for (const item of buttons) { row.appendChild(item); }
+		return row;
 	}
 	function bytes(value) {
 		if (value === undefined || value === null) { return '?'; }
@@ -1470,7 +1471,8 @@ function pageHtml(): string {
 		const pane = document.getElementById(STEPS[id] || id);
 		if (pane) {
 			pane.classList.remove('collapsed');
-			pane.scrollIntoView({ block: 'start', behavior: 'smooth' });
+			// The first step stays below the title, Ask Pollis and the introduction; a later step is scrolled to
+			if (id === 'open') { window.scrollTo({ top: 0, behavior: 'smooth' }); } else { pane.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
 		}
 	}
 	function showError(container) {
@@ -1499,7 +1501,7 @@ function pageHtml(): string {
 		const send = () => { if (input.value.trim()) { errorText = ''; vscode.postMessage({ command: 'openSource', source: input.value.trim() }); } };
 		input.addEventListener('keydown', event => { if (event.key === 'Enter') { send(); } });
 		bar.appendChild(input);
-		bar.appendChild(button(TEXT.open, send, true));
+		bar.appendChild(button(TEXT.open, send));
 		bar.appendChild(button(TEXT.openPdf, () => { errorText = ''; vscode.postMessage({ command: 'openPdf' }); }));
 		box.appendChild(bar);
 		if (busy) { box.appendChild(element('p', 'status', busy)); }
@@ -1563,10 +1565,8 @@ function pageHtml(): string {
 			for (const key of Object.keys(inputs)) { record[key] = inputs[key].value; }
 			vscode.postMessage({ command: 'saveRecord', record });
 		}));
-		const links = element('span', 'links');
-		if (work.scan.archive || work.scan.gutenberg) { links.appendChild(link(TEXT.openOnline, () => vscode.postMessage({ command: 'openOnline' }))); }
-		if (!state.inWorkspace) { links.appendChild(link(TEXT.addToWorkspace, () => vscode.postMessage({ command: 'addToWorkspace' }))); }
-		saveBar.appendChild(links);
+		if (work.scan.archive || work.scan.gutenberg) { saveBar.appendChild(button(TEXT.openOnline, () => vscode.postMessage({ command: 'openOnline' }))); }
+		if (!state.inWorkspace) { saveBar.appendChild(button(TEXT.addToWorkspace, () => vscode.postMessage({ command: 'addToWorkspace' }))); }
 		box.appendChild(saveBar);
 		box.appendChild(element('span', 'small', '')).id = 'recordStatus';
 		if (work.scan.archive && scanSize) {
@@ -1608,7 +1608,7 @@ function pageHtml(): string {
 		nav.appendChild(button(TEXT.previous, () => page && vscode.postMessage({ command: 'page', page: page.page - 1 })));
 		nav.appendChild(number);
 		nav.appendChild(element('span', 'small', format(TEXT.pageOf, state.pages)));
-		nav.appendChild(button(TEXT.next, () => vscode.postMessage({ command: 'page', page: (page ? page.page : 0) + 1 }), true));
+		nav.appendChild(button(TEXT.next, () => vscode.postMessage({ command: 'page', page: (page ? page.page : 0) + 1 })));
 		if (page) {
 			nav.appendChild(element('span', 'small', page.printed ? format(TEXT.printedPage, page.printed) : TEXT.noPrinted));
 			head.textContent = (state.current.title || state.current.id) + ' · ' + page.page + '/' + state.pages;
@@ -1659,7 +1659,7 @@ function pageHtml(): string {
 			const why = element('div', 'why');
 			why.appendChild(element('div', '', chosenWord.text + ' · ' + flagText(chosenWord)));
 			if (chosenWord.suggestions && chosenWord.suggestions.length) { why.appendChild(element('div', 'small', format(TEXT.suggestions, chosenWord.suggestions.join(', ')))); }
-			why.appendChild(link(TEXT.acceptWord, () => vscode.postMessage({ command: 'acceptWord', word: chosenWord.text })));
+			why.appendChild(buttonRow(button(TEXT.acceptWord, () => vscode.postMessage({ command: 'acceptWord', word: chosenWord.text }))));
 			textColumn.appendChild(why);
 		}
 		textColumn.appendChild(element('p', 'hint', TEXT.legend));
@@ -1683,10 +1683,9 @@ function pageHtml(): string {
 			});
 			row.appendChild(label);
 			row.appendChild(element('div', 'pages', entry.pages || TEXT.noPagesYet));
-			const links = element('div', 'links');
-			links.appendChild(link(TEXT.entryHere, () => vscode.postMessage({ command: 'entryHere', index, page: page.page })));
-			links.appendChild(link(TEXT.removeEntry, () => vscode.postMessage({ command: 'removeEntry', index })));
-			row.appendChild(links);
+			row.appendChild(buttonRow(
+				button(TEXT.entryHere, () => vscode.postMessage({ command: 'entryHere', index, page: page.page })),
+				button(TEXT.removeEntry, () => vscode.postMessage({ command: 'removeEntry', index }))));
 			side.appendChild(row);
 		});
 		const input = element('input', 'wide');
@@ -1695,7 +1694,7 @@ function pageHtml(): string {
 		input.style.width = '100%';
 		input.style.marginTop = '8px';
 		side.appendChild(input);
-		side.appendChild(link(TEXT.addEntry, () => { if (input.value.trim()) { vscode.postMessage({ command: 'addEntry', label: input.value.trim(), page: page.page }); } }));
+		side.appendChild(buttonRow(button(TEXT.addEntry, () => { if (input.value.trim()) { vscode.postMessage({ command: 'addEntry', label: input.value.trim(), page: page.page }); } })));
 		// A scan without printed numbers: the number printed on this page sets the difference for the whole work
 		if (!(state.printed || []).some(label => label)) {
 			side.appendChild(element('div', 'label', TEXT.setPrinted));
@@ -1748,7 +1747,7 @@ function pageHtml(): string {
 		input.value = range;
 		input.addEventListener('input', () => { range = input.value; });
 		bar.appendChild(input);
-		bar.appendChild(button(TEXT.extract, () => { errorText = ''; vscode.postMessage({ command: 'extract', entries: [...chosenEntries], range: input.value }); }, true));
+		bar.appendChild(button(TEXT.extract, () => { errorText = ''; vscode.postMessage({ command: 'extract', entries: [...chosenEntries], range: input.value }); }));
 		box.appendChild(bar);
 		if (busy && busy.startsWith(TEXT.extracting.split('{0}')[0])) { box.appendChild(element('p', 'status', busy)); }
 	}
@@ -1841,7 +1840,7 @@ function pageHtml(): string {
 		box.appendChild(tools);
 		if (busy && extractState.busy) { box.appendChild(element('p', 'status', busy)); }
 		const saveBar = element('div', 'bar');
-		saveBar.appendChild(button(TEXT.saveSnippet, () => vscode.postMessage({ command: 'saveSnippet', label: extractState.label, text: extractState.text }), true));
+		saveBar.appendChild(button(TEXT.saveSnippet, () => vscode.postMessage({ command: 'saveSnippet', label: extractState.label, text: extractState.text })));
 		const status = element('span', 'small', extractState.saved ? format(TEXT.saved, extractState.saved) : '');
 		saveBar.appendChild(status);
 		box.appendChild(saveBar);
@@ -1870,11 +1869,11 @@ function pageHtml(): string {
 			input.value = (flag.suggestions && flag.suggestions[0]) || flag.word;
 			bar.appendChild(input);
 			if (flag.suggestions && flag.suggestions.length > 1) {
-				for (const suggestion of flag.suggestions.slice(1)) { bar.appendChild(link(suggestion, () => { input.value = suggestion; })); }
+				for (const suggestion of flag.suggestions.slice(1)) { bar.appendChild(button(suggestion, () => { input.value = suggestion; })); }
 			}
 			bar.appendChild(button(TEXT.correct, () => correct(flag, input.value)));
 			bar.appendChild(button(TEXT.keep, () => dismiss(flag)));
-			bar.appendChild(link(TEXT.acceptWord, () => { vscode.postMessage({ command: 'acceptWord', word: flag.word }); flags = flags.filter(other => other.word !== flag.word); drawChecks(); }));
+			bar.appendChild(button(TEXT.acceptWord, () => { vscode.postMessage({ command: 'acceptWord', word: flag.word }); flags = flags.filter(other => other.word !== flag.word); drawChecks(); }));
 			body.appendChild(bar);
 			row.appendChild(body);
 			checks.appendChild(row);
@@ -1939,9 +1938,9 @@ function pageHtml(): string {
 			const select = modelSelect();
 			bar.appendChild(select);
 			if (state.translating) {
-				bar.appendChild(button(TEXT.stop, () => vscode.postMessage({ command: 'stopTranslation' }), true));
+				bar.appendChild(button(TEXT.stop, () => vscode.postMessage({ command: 'stopTranslation' })));
 			} else {
-				bar.appendChild(button(TEXT.translate, () => { state.translating = true; errorText = ''; vscode.postMessage({ command: 'translate', language: language.value.trim(), model: select.value }); drawTranslate(); }, true));
+				bar.appendChild(button(TEXT.translate, () => { state.translating = true; errorText = ''; vscode.postMessage({ command: 'translate', language: language.value.trim(), model: select.value }); drawTranslate(); }));
 			}
 			box.appendChild(bar);
 			box.appendChild(element('p', 'hint', TEXT.translationNote));
@@ -1951,10 +1950,10 @@ function pageHtml(): string {
 				const target = element('div', 'target' + (unit.writing ? ' writing' : ''), unit.text || (unit.writing ? TEXT.writing : ''));
 				row.appendChild(target);
 				if (unit.text && !state.translating) {
-					const again = link(TEXT.translateAgain, () => { state.translating = true; vscode.postMessage({ command: 'translate', language: language.value.trim(), model: select.value, unit: index }); drawTranslate(); });
+					const again = button(TEXT.translateAgain, () => { state.translating = true; vscode.postMessage({ command: 'translate', language: language.value.trim(), model: select.value, unit: index }); drawTranslate(); });
 					again.title = TEXT.translateAgainHelp;
 					row.appendChild(element('div'));
-					row.appendChild(again);
+					row.appendChild(buttonRow(again));
 				}
 				box.appendChild(row);
 			});
@@ -1988,7 +1987,7 @@ function pageHtml(): string {
 				line.appendChild(cell);
 			}
 			const remove = element('td');
-			remove.appendChild(link(TEXT.removeEntry, () => { glossaryRows.splice(index, 1); drawTranslate(); }));
+			remove.appendChild(buttonRow(button(TEXT.removeEntry, () => { glossaryRows.splice(index, 1); drawTranslate(); })));
 			line.appendChild(remove);
 			table.appendChild(line);
 		});
@@ -2045,7 +2044,7 @@ function pageHtml(): string {
 			speaking = true;
 			speechSynthesis.speak(utterance);
 			drawAloud();
-		}, true);
+		});
 		const icon = element('span', 'speaker');
 		icon.innerHTML = SPEAKER;
 		speak.appendChild(icon);
@@ -2079,14 +2078,14 @@ function pageHtml(): string {
 				row.appendChild(element('td', '', snippet.language));
 				row.appendChild(element('td', '', (snippet.translations || []).map(item => item.language + ' (' + item.model + ', ' + item.made + ')').join('; ')));
 				const actions = element('td');
-				const links = element('div', 'links');
+				const links = element('div', 'bar');
 				const act = action => () => vscode.postMessage({ command: 'snippet', work: snippet.work, name: snippet.name, action });
-				links.appendChild(link(TEXT.copy, act('copy')));
-				links.appendChild(link(TEXT.copyCitation, act('citation')));
-				links.appendChild(link(TEXT.sendToNotebook, act('notebook')));
-				links.appendChild(link(TEXT.openFile, act('open')));
-				links.appendChild(link(TEXT.translate, act('translate')));
-				links.appendChild(link(TEXT.readAloud, act('aloud')));
+				links.appendChild(button(TEXT.copy, act('copy')));
+				links.appendChild(button(TEXT.copyCitation, act('citation')));
+				links.appendChild(button(TEXT.sendToNotebook, act('notebook')));
+				links.appendChild(button(TEXT.openFile, act('open')));
+				links.appendChild(button(TEXT.translate, act('translate')));
+				links.appendChild(button(TEXT.readAloud, act('aloud')));
 				actions.appendChild(links);
 				row.appendChild(actions);
 				table.appendChild(row);

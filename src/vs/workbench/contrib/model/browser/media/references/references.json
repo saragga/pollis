@@ -1992,7 +1992,8 @@
 			"openalex": "W3121794982",
 			"url": "https://doi.org/10.1257/000282803321455214",
 			"abstract": "Gravity equations have been widely used to infer trade flow effects of various institutional arrangements. We show that estimated gravity equations do not have a theoretical foundation. This implies both that estimation suffers from omitted variables bias and that comparative statics analysis is unfounded. We develop a method that (i) consistently and efficiently estimates a theoretical gravity equation and (ii) correctly calculates the comparative statics of trade frictions. We apply the method to solve the famous McCallum border puzzle. Applying our method, we find that national borders reduce trade between industrialized countries by moderate amounts of 20–50 percent.",
-			"source": "openalex"
+			"source": "openalex",
+			"open_access": false
 		},
 		{
 			"key": "AW2021a",
@@ -2969,11 +2970,13 @@
 			"pages": "151-175",
 			"doi": "10.1007/s10994-009-5152-4",
 			"openalex": "W2104094955",
+			"oa_url": "https://link.springer.com/content/pdf/10.1007/s10994-009-5152-4.pdf",
 			"abstract": "Discriminative learning methods for classification perform well when training and test data are drawn from the same distribution. Often, however, we have plentiful labeled training data from a source domain but wish to learn a classifier which performs well on a target domain with a different distribution and little or no labeled training data. In this work we investigate two questions. First, under what conditions can a classifier trained from source data be expected to perform well on target data? Second, given a small amount of labeled target data, how should we combine it during training with the large amount of labeled source data to achieve the lowest target error at test time? We address the first question by bounding a classifier’s target error in terms of its source error and the divergence between the two domains. We give a classifier-induced divergence measure that can be estimated from finite, unlabeled samples from the domains. Under the assumption that there exists some hypothesis that performs well in both domains, we show that this quantity together with the empirical source error characterize the target error of a source-trained classifier. We answer the second question by bounding the target error of a model which minimizes a convex combination of the empirical source and target errors. Previous theoretical work has considered minimizing just the source error, just the target error, or weighting instances from the two domains equally. We show how to choose the optimal combination of source and target error as a function of the divergence, the sample sizes of both domains, and the complexity of the hypothesis class. The resulting bound generalizes the previously studied cases and is always at least as tight as a bound which considers minimizing only the target error or an equal weighting of source and target errors.",
 			"abstract_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-25",
-			"checked": false
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "BBDG2018a",
@@ -3511,6 +3514,40 @@
 			"keywords_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-20",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "BCHG2021a",
+			"type": "article",
+			"title": "PDAL: An open source library for the processing and analysis of point clouds",
+			"authors": [
+				"Butler, Howard",
+				"Chambers, Bradley",
+				"Hartzell, Preston",
+				"Glennie, Craig"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "Computers & Geosciences",
+			"volume": "148",
+			"pages": "104680",
+			"issn": "0098-3004",
+			"doi": "10.1016/j.cageo.2020.104680",
+			"openalex": "W3116458195",
+			"keywords": [
+				"PDAL",
+				"point cloud processing",
+				"open source software",
+				"airborne laser scanning",
+				"iterative closest point",
+				"Python extension",
+				"geospatial data"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-25",
 			"checked": false,
 			"open_access": true
 		},
@@ -9720,6 +9757,57 @@
 			"open_access": true
 		},
 		{
+			"key": "CEGHA...2018a",
+			"type": "article",
+			"title": "Ancient lowland Maya complexity as revealed by airborne laser scanning of northern Guatemala",
+			"authors": [
+				"Canuto, Marcello A.",
+				"Estrada-Belli, Francisco",
+				"Garrison, Thomas G.",
+				"Houston, Stephen D.",
+				"Acuña, Mary Jane",
+				"Kováč, Milan",
+				"Marken, Damien",
+				"Nondédéo, Philippe",
+				"Auld-Thomas, Luke",
+				"Castanet, Cyril",
+				"Chatelain, David",
+				"Chiriboga, Carlos R.",
+				"Drápela, Tomáš",
+				"Lieskovský, Tibor",
+				"Tokovinine, Alexandre",
+				"Velasquez, Antolín",
+				"Fernández-Díaz, Juan C.",
+				"Shrestha, Ramesh"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "Science",
+			"volume": "361",
+			"number": "6409",
+			"pages": "eaau0137",
+			"issn": "0036-8075",
+			"doi": "10.1126/science.aau0137",
+			"openalex": "W2893644756",
+			"abstract": "Lowland Maya civilization flourished in the tropical region of the Yucatan peninsula and environs for more than 2500 years (~1000 BCE to 1500 CE). Known for its sophistication in writing, art, architecture, astronomy, and mathematics, Maya civilization still poses questions about the nature of its cities and surrounding populations because of its location in an inaccessible forest. In 2016, an aerial lidar survey across 2144 square kilometers of northern Guatemala mapped natural terrain and archaeological features over several distinct areas. We present results from these data, revealing interconnected urban settlement and landscapes with extensive infrastructural development. Studied through a joint international effort of interdisciplinary teams sharing protocols, this lidar survey compels a reevaluation of Maya demography, agriculture, and political economy and suggests future avenues of field research.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"Maya archaeology",
+				"LiDAR survey",
+				"urban settlement",
+				"Maya agriculture",
+				"political economy",
+				"northern Guatemala",
+				"Yucatán Peninsula"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-25",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "CF1938a",
 			"type": "article",
 			"title": "Moments and Cumulants in the Specification of Distributions",
@@ -10148,7 +10236,8 @@
 			"url": "https://doi.org/10.1177/1536867X20909691",
 			"oa_url": "https://journals.sagepub.com/doi/pdf/10.1177/1536867X20909691",
 			"abstract": "In this article, we present ppmlhdfe, a new command for estimation of (pseudo-)Poisson regression models with multiple high-dimensional fixed effects (HDFE). Estimation is implemented using a modified version of the iteratively reweighted least-squares algorithm that allows for fast estimation in the presence of HDFE. Because the code is built around the reghdfe package ( Correia, 2014 , Statistical Software Components S457874, Department of Economics, Boston College), it has similar syntax, supports many of the same functionalities, and benefits from reghdfe‘s fast convergence properties for computing high-dimensional leastsquares problems. Performance is further enhanced by some new techniques we introduce for accelerating HDFE iteratively reweighted least-squares estimation specifically. ppmlhdfe also implements a novel and more robust approach to check for the existence of (pseudo)maximum likelihood estimates.",
-			"source": "openalex"
+			"source": "openalex",
+			"open_access": true
 		},
 		{
 			"key": "CH1967a",
@@ -12709,7 +12798,8 @@
 			"doi": "10.1016/0304-4076(90)90014-K",
 			"openalex": "W1972707698",
 			"url": "https://doi.org/10.1016/0304-4076(90)90014-K",
-			"source": "openalex"
+			"source": "openalex",
+			"open_access": false
 		},
 		{
 			"key": "CT2004a",
@@ -13048,6 +13138,31 @@
 			"keywords_source": "github",
 			"legacy_key": "baggecarlson2024",
 			"source": "manual",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "Car2026a",
+			"type": "misc",
+			"title": "NearestNeighbors.jl: High performance nearest neighbor data structures and algorithms for Julia",
+			"authors": [
+				"Carlsson, Kristoffer"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/KristofferC/NearestNeighbors.jl",
+			"abstract": "High performance nearest neighbor data structures (KDTree and BallTree) and algorithms for Julia.",
+			"abstract_source": "github",
+			"keywords": [
+				"datastructures",
+				"knn-search",
+				"nearest-neighbors",
+				"range-search"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-25",
 			"checked": false,
 			"open_access": true
 		},
@@ -14053,7 +14168,8 @@
 			"abstract_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-24",
-			"checked": false
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "DDT2019a",
@@ -18684,7 +18800,8 @@
 			"openalex": "W1993723510",
 			"url": "https://doi.org/10.1111/j.1467-9787.1982.tb00744.x",
 			"abstract": "\"In this paper, [the authors] suggest an alternative method for fitting the gravity model. In this method, the interaction variable is treated as the outcome of a discrete probability process, whose mean is a function of the size and distance variables. This treatment seems appropriate when the dependent variable represents a count of the number of items (people, vehicles, shipments) moving from one place to another. It would seem to have special advantages where there are some pairs of places between which few items move. The argument will be illustrated with reference to data on the numbers of migrants moving in 1970-1971 between pairs of the 126 labor market areas defined for Great Britain....\"",
-			"source": "openalex"
+			"source": "openalex",
+			"open_access": false
 		},
 		{
 			"key": "FAHA2023a",
@@ -23935,7 +24052,8 @@
 			"keywords_source": "manual",
 			"source": "manual",
 			"retrieved": "2026-11-21",
-			"checked": false
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "Goo2026b",
@@ -23960,7 +24078,8 @@
 			"keywords_source": "manual",
 			"source": "manual",
 			"retrieved": "2026-11-21",
-			"checked": false
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "Goo2026c",
@@ -23985,7 +24104,8 @@
 			"keywords_source": "manual",
 			"source": "manual",
 			"retrieved": "2026-11-21",
-			"checked": false
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "Goo2026d",
@@ -24009,7 +24129,8 @@
 			"keywords_source": "manual",
 			"source": "manual",
 			"retrieved": "2026-11-21",
-			"checked": false
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "Goo2026e",
@@ -24034,7 +24155,8 @@
 			"keywords_source": "manual",
 			"source": "manual",
 			"retrieved": "2026-11-21",
-			"checked": false
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "Goo2026f",
@@ -24058,7 +24180,8 @@
 			"keywords_source": "manual",
 			"source": "manual",
 			"retrieved": "2026-11-21",
-			"checked": false
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "Goo2026g",
@@ -24082,7 +24205,8 @@
 			"keywords_source": "manual",
 			"source": "manual",
 			"retrieved": "2026-11-21",
-			"checked": false
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "Goo2026h",
@@ -24109,6 +24233,7 @@
 			"source": "manual",
 			"retrieved": "2026-11-23",
 			"checked": false,
+			"open_access": true,
 			"note": "My Maps Help"
 		},
 		{
@@ -24136,6 +24261,7 @@
 			"source": "manual",
 			"retrieved": "2026-11-23",
 			"checked": false,
+			"open_access": true,
 			"note": "Google Earth Help"
 		},
 		{
@@ -28373,6 +28499,24 @@
 			"open_access": true
 		},
 		{
+			"key": "Hob2021a",
+			"type": "misc",
+			"title": "Cloud Optimized Point Cloud Specification 1.0",
+			"authors": [
+				"Hobu, Inc."
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2021,
+			"url": "https://copc.io",
+			"abstract": "Geospatial, compressed, range-readable, LAZ-compatible point cloud format.",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-25",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Hof2018a",
 			"type": "article",
 			"title": "GeoStats.jl – High-performance geostatistics in Julia",
@@ -29208,6 +29352,53 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "ITLFO...2020a",
+			"type": "article",
+			"title": "Monumental architecture at Aguada Fénix and the rise of Maya civilization",
+			"authors": [
+				"Inomata, Takeshi",
+				"Triadan, Daniela",
+				"Vázquez López, Verónica A.",
+				"Fernandez-Diaz, Juan Carlos",
+				"Omori, Takayuki",
+				"Méndez Bauer, María Belén",
+				"García Hernández, Melina",
+				"Beach, Timothy",
+				"Cagnato, Clarissa",
+				"Aoyama, Kazuo",
+				"Nasu, Hiroo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "Nature",
+			"volume": "582",
+			"number": "7813",
+			"pages": "530-533",
+			"issn": "0028-0836",
+			"doi": "10.1038/s41586-020-2343-4",
+			"openalex": "W3032168764",
+			"abstract": "Archaeologists have traditionally thought that the development of Maya civilization was gradual, assuming that small villages began to emerge during the Middle Preclassic period (1000-350 BC; dates are calibrated throughout) along with the use of ceramics and the adoption of sedentism1. Recent finds of early ceremonial complexes are beginning to challenge this model. Here we describe an airborne lidar survey and excavations of the previously unknown site of Aguada Fénix (Tabasco, Mexico) with an artificial plateau, which measures 1,400 m in length and 10 to 15 m in height and has 9 causeways radiating out from it. We dated this construction to between 1000 and 800 BC using a Bayesian analysis of radiocarbon dates. To our knowledge, this is the oldest monumental construction ever found in the Maya area and the largest in the entire pre-Hispanic history of the region. Although the site exhibits some similarities to the earlier Olmec centre of San Lorenzo, the community of Aguada Fénix probably did not have marked social inequality comparable to that of San Lorenzo. Aguada Fénix and other ceremonial complexes of the same period suggest the importance of communal work in the initial development of Maya civilization.",
+			"abstract_source": "pubmed",
+			"keywords": [
+				"Middle Preclassic period",
+				"monumental architecture",
+				"causeway",
+				"ceremonial complex",
+				"San Lorenzo",
+				"Olmec",
+				"social inequality",
+				"communal labor",
+				"pre-Hispanic Maya",
+				"Tabasco"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-25",
+			"checked": false,
 			"open_access": false
 		},
 		{
@@ -32487,11 +32678,13 @@
 			"pages": "2656-2666",
 			"doi": "10.1109/CVPR.2019.00277",
 			"openalex": "W2804935296",
+			"oa_url": "https://arxiv.org/pdf/1805.08974",
 			"abstract": "Transfer learning is a cornerstone of computer vision, yet little work has been done to evaluate the relationship between architecture and transfer. An implicit hypothesis in modern computer vision research is that models that perform better on ImageNet necessarily perform better on other vision tasks. However, this hypothesis has never been systematically tested. Here, we compare the performance of 16 classification networks on 12 image classification datasets. We find that, when networks are used as fixed feature extractors or fine-tuned, there is a strong correlation between ImageNet accuracy and transfer accuracy (r = 0.99 and 0.96, respectively). In the former setting, we find that this relationship is very sensitive to the way in which networks are trained on ImageNet; many common forms of regularization slightly improve ImageNet accuracy but yield features that are much worse for transfer learning. Additionally, we find that, on two small fine-grained image classification datasets, pretraining on ImageNet provides minimal benefits, indicating the learned features from ImageNet do not transfer well to fine-grained tasks. Together, our results show that ImageNet architectures generalize well across datasets, but ImageNet features are less general than previously suggested.",
 			"abstract_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-24",
-			"checked": false
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "KSSSU2017a",
@@ -35693,7 +35886,8 @@
 			"openalex": "W2018474251",
 			"url": "https://doi.org/10.1111/j.1467-9787.2008.00573.x",
 			"abstract": "ABSTRACT Standard spatial autoregressive models rely on spatial weight structures constructed to model dependence among n regions. Ways of parsimoniously modeling the connectivity among the sample of N = n 2 origin‐destination (OD) pairs that arise in a closed system of interregional flows has remained a stumbling block. We overcome this problem by proposing spatial weight structures that model dependence among the N OD pairs in a fashion consistent with standard spatial autoregressive models. This results in a family of spatial OD models introduced here that represent an extension of the spatial regression models described in Anselin (1988) .",
-			"source": "openalex"
+			"source": "openalex",
+			"open_access": false
 		},
 		{
 			"key": "LP2009a",
@@ -40969,7 +41163,8 @@
 			"keywords_source": "manual",
 			"source": "manual",
 			"retrieved": "2026-11-20",
-			"checked": false
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "Mar1952a",
@@ -41204,6 +41399,27 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "Mau2026a",
+			"type": "misc",
+			"title": "UAV Lidar Survey of Museo Quirigua, Guatemala, January 2024",
+			"authors": [
+				"Maurer, Jeremy"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"publisher": "OpenTopography",
+			"doi": "10.5069/G9416V95",
+			"url": "https://doi.org/10.5069/G9416V95",
+			"abstract": "This flight was part of a multi-day, multi-site lidar survey of various points along the Motagua and Polochic Faults in Guatemala. UAV-based lidar survey of Museo Quirigua, Guatemala, part of the 2024 Spring Campaign conducted by Missouri S&T under an NSF planning grant led by J. Obrist-Farner and Jeremy Maurer to collect and analyze high-resolution topography data along several points of the Polochic-Motagua Fault System (PMFS). This dataset was collected at the request of the curators of the Quirigua archeological site, as they were interested in identifying mounds and other archeological points of interest underneath the tree canopy.",
+			"abstract_source": "datacite",
+			"source": "datacite",
+			"retrieved": "2026-11-25",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset"
 		},
 		{
 			"key": "May1966a",
@@ -44468,6 +44684,27 @@
 			"open_access": true
 		},
 		{
+			"key": "Ope2022a",
+			"type": "misc",
+			"title": "Lidar Survey of Middle Usumacinta Region, Mexico",
+			"authors": [
+				"OpenTopography"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2022,
+			"publisher": "OpenTopography",
+			"doi": "10.5069/G95B00NF",
+			"url": "https://doi.org/10.5069/G95B00NF",
+			"abstract": "This dataset is a lidar survey by the Middle Usumacinta Archaeological Project. It examines the distribution of archaeological sites in the Middle Usumacinta region in eastern Tabasco, Mexico. Data was collected for Dr. Takeshi Inomata at the University of Arizona.",
+			"abstract_source": "datacite",
+			"source": "datacite",
+			"retrieved": "2026-11-25",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset"
+		},
+		{
 			"key": "Ope2026a",
 			"type": "misc",
 			"title": "OpenTopography API",
@@ -44544,7 +44781,8 @@
 			"url": "https://doi.org/10.18335/region.v3i2.175",
 			"oa_url": "http://openjournals.wu.ac.at/ojs/index.php/region/article/download/175/122",
 			"abstract": "This primer provides a practical guide to get started with spatial interaction modeling using the SpInt module in the python spatial analysis library (PySAL).",
-			"source": "openalex"
+			"source": "openalex",
+			"open_access": true
 		},
 		{
 			"key": "Our2026a",
@@ -44727,6 +44965,38 @@
 			"keywords_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-20",
+			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "PCM2013a",
+			"type": "article",
+			"title": "An improved simple morphological filter for the terrain classification of airborne LIDAR data",
+			"authors": [
+				"Pingel, Thomas J.",
+				"Clarke, Keith C.",
+				"McBride, William A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2013,
+			"journal": "ISPRS Journal of Photogrammetry and Remote Sensing",
+			"volume": "77",
+			"pages": "21-30",
+			"issn": "0924-2716",
+			"doi": "10.1016/j.isprsjprs.2012.12.002",
+			"openalex": "W2034546021",
+			"keywords": [
+				"terrain classification",
+				"airborne laser scanning",
+				"point clouds",
+				"digital elevation model",
+				"image inpainting",
+				"virtual worlds"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-25",
 			"checked": false,
 			"open_access": false
 		},
@@ -45954,7 +46224,8 @@
 			"abstract_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-24",
-			"checked": false
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "PZHZ2022a",
@@ -46985,6 +47256,35 @@
 			"source": "manual",
 			"retrieved": "2026-10-31",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "Pro2026b",
+			"type": "misc",
+			"title": "LazIO.jl: Extends LasIO with Laszip integration",
+			"authors": [
+				"Pronk, Maarten"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/evetion/LazIO.jl",
+			"abstract": "Extends LasIO with Laszip integration",
+			"abstract_source": "github",
+			"keywords": [
+				"io",
+				"julia",
+				"lasio",
+				"lastools",
+				"laszip",
+				"laz",
+				"lidar",
+				"pointcloud"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-25",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -50487,11 +50787,13 @@
 			"pages": "512-519",
 			"doi": "10.1109/CVPRW.2014.131",
 			"openalex": "W2062118960",
+			"oa_url": "http://urn.kb.se/resolve?urn=urn:nbn:se:kth:diva-149178",
 			"abstract": "Recent results indicate that the generic descriptors extracted from the convolutional neural networks are very powerful. This paper adds to the mounting evidence that this is indeed the case. We report on a series of experiments conducted for different recognition tasks using the publicly available code and model of the OverFeat network which was trained to perform object classification on ILSVRC13. We use features extracted from the OverFeat network as a generic image representation to tackle the diverse range of recognition tasks of object image classification, scene recognition, fine grained recognition, attribute detection and image retrieval applied to a diverse set of datasets. We selected these tasks and datasets as they gradually move further away from the original task and data the OverFeat network was trained to solve. Astonishingly, we report consistent superior results compared to the highly tuned state-of-the-art systems in all the visual classification tasks on various datasets. For instance retrieval it consistently outperforms low memory footprint methods except for sculptures dataset. The results are achieved using a linear SVM classifier (or L2 distance in case of retrieval) applied to a feature representation of size 4096 extracted from a layer in the net. The representations are further modified using simple augmentation techniques e.g. jittering. The results strongly suggest that features obtained from deep learning with convolutional nets should be the primary candidate in most visual recognition tasks.",
 			"abstract_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-24",
-			"checked": false
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "SATSE...2025a",
@@ -51933,6 +52235,41 @@
 			"open_access": false
 		},
 		{
+			"key": "SL2020a",
+			"type": "article",
+			"title": "Comparison of Filters for Archaeology-Specific Ground Extraction from Airborne LiDAR Point Clouds",
+			"authors": [
+				"Štular, Benjamin",
+				"Lozić, Edisa"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "Remote Sensing",
+			"volume": "12",
+			"number": "18",
+			"pages": "3025",
+			"issn": "2072-4292",
+			"doi": "10.3390/rs12183025",
+			"openalex": "W3091350177",
+			"abstract": "Identifying bare-earth or ground returns within point cloud data is a crucially important process for archaeologists who use airborne LiDAR data, yet there has thus far been very little comparative assessment of the available archaeology-specific methods and their usefulness for archaeological applications. This article aims to provide an archaeology-specific comparison of filters for ground extraction from airborne LiDAR point clouds. The qualitative and quantitative comparison of the data from four archaeological sites from Austria, Slovenia, and Spain should also be relevant to other disciplines that use visualized airborne LiDAR data. We have compared nine filters implemented in free or low-cost off-the-shelf software, six of which are evaluated in this way for the first time. The results of the qualitative and quantitative comparison are not directly analogous, and no filter is outstanding compared to the others. However, the results are directly transferable to real-world problem-solving: Which filter works best for a given combination of data density, landscape type, and type of archaeological features? In general, progressive TIN (software: lasground_new) and a hybrid (software: Global Mapper) commercial filter are consistently among the best, followed by an open source slope-based one (software: Whitebox GAT). The ability of the free multiscale curvature classification filter (software: MCC-LIDAR) to remove vegetation is also commendable. Notably, our findings show that filters based on an older generation of algorithms consistently outperform newer filtering techniques. This is a reminder of the indirect path from publishing an algorithm to filter implementation in software.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"airborne laser scanning",
+				"point cloud filtering",
+				"bare earth extraction",
+				"archaeological site",
+				"vegetation removal",
+				"software comparison",
+				"archaeological feature"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-25",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "SLA2012a",
 			"type": "inproceedings",
 			"title": "Practical Bayesian Optimization of Machine Learning Algorithms",
@@ -53267,7 +53604,8 @@
 			"url": "https://doi.org/10.1162/rest.88.4.641",
 			"oa_url": "https://direct.mit.edu/rest/article-pdf/88/4/641/1982805/rest.88.4.641.pdf",
 			"abstract": "Abstract Although economists have long been aware of Jensen's inequality, many econometric applications have neglected an important implication of it: under heteroskedasticity, the parameters of log-linearized models estimated by OLS lead to biased estimates of the true elasticities. We explain why this problem arises and propose an appropriate estimator. Our criticism of conventional practices and the proposed solution extend to a broad range of applications where log-linearized equations are estimated. We develop the argument using one particular illustration, the gravity equation for trade. We find significant differences between estimates obtained with the proposed estimator and those obtained with the traditional method.",
-			"source": "openalex"
+			"source": "openalex",
+			"open_access": true
 		},
 		{
 			"key": "SSWAF2016a",
@@ -60071,7 +60409,8 @@
 			"openalex": "W2100963312",
 			"url": "https://doi.org/10.1068/a030001",
 			"abstract": "This paper shows that the gravity model is not a single model but that there is a whole family of spatial interaction models. The properties of this family are outlined in some detail. Basic concepts of such models can be developed in a variety of ways, and these are illustrated. The paper then outlines a number of other theoretical developments, and is particularly concerned with the disaggregation of such models, with the incorporation of time variables, and with the relation of spatial interaction, to more general, models. Uses of spatial interaction models are outlined briefly and the final section of the paper draws a number of conclusions and presents a summary.",
-			"source": "openalex"
+			"source": "openalex",
+			"open_access": false
 		},
 		{
 			"key": "Wil1992a",
@@ -61044,6 +61383,43 @@
 			"retrieved": "2026-10-30",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "ZCWSY...2003a",
+			"type": "article",
+			"title": "A progressive morphological filter for removing nonground measurements from airborne LIDAR data",
+			"authors": [
+				"Zhang, Keqi",
+				"Chen, Shu-Ching",
+				"Whitman, Dean",
+				"Shyu, Mei-Ling",
+				"Yan, Jianhua",
+				"Zhang, Chengcui"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2003,
+			"journal": "IEEE Transactions on Geoscience and Remote Sensing",
+			"volume": "41",
+			"number": "4",
+			"pages": "872-882",
+			"issn": "0196-2892",
+			"doi": "10.1109/tgrs.2003.810682",
+			"openalex": "W2027781877",
+			"abstract": "Recent advances in airborne light detection and ranging (LIDAR) technology allow rapid and inexpensive measurements of topography over large areas. This technology is becoming a primary method for generating high-resolution digital terrain models (DTMs) that are essential to numerous applications such as flood modeling and landslide prediction. Airborne LIDAR systems usually return a three-dimensional cloud of point measurements from reflective objects scanned by the laser beneath the flight path. In order to generate a DTM, measurements from nonground features such as buildings, vehicles, and vegetation have to be classified and removed. In this paper, a progressive morphological filter was developed to detect nonground LIDAR measurements. By gradually increasing the window size of the filter and using elevation difference thresholds, the measurements of vehicles, vegetation, and buildings are removed, while ground data are preserved. Datasets from mountainous and flat urbanized areas were selected to test the progressive morphological filter. The results show that the filter can remove most of the nonground points effectively.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"airborne laser scanning",
+				"digital terrain model",
+				"point cloud classification",
+				"urban terrain",
+				"mountainous terrain"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-25",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "ZCZX2023a",
@@ -63034,6 +63410,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "BCHG2021a",
+			"count": 54,
+			"source": "crossref",
+			"date": "2026-11-25"
+		},
+		{
+			"key": "BCHG2021a",
+			"count": 81,
+			"source": "openalex",
+			"date": "2026-11-25"
+		},
+		{
 			"key": "BCP2022a",
 			"count": 14,
 			"source": "crossref",
@@ -64652,6 +65040,18 @@
 			"count": 1316,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "CEGHA...2018a",
+			"count": 296,
+			"source": "crossref",
+			"date": "2026-11-25"
+		},
+		{
+			"key": "CEGHA...2018a",
+			"count": 482,
+			"source": "openalex",
+			"date": "2026-11-25"
 		},
 		{
 			"key": "CF1938a",
@@ -69460,6 +69860,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "ITLFO...2020a",
+			"count": 165,
+			"source": "crossref",
+			"date": "2026-11-25"
+		},
+		{
+			"key": "ITLFO...2020a",
+			"count": 254,
+			"source": "openalex",
+			"date": "2026-11-25"
+		},
+		{
 			"key": "Inn2018a",
 			"count": 282,
 			"source": "crossref",
@@ -73318,6 +73730,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "PCM2013a",
+			"count": 358,
+			"source": "crossref",
+			"date": "2026-11-25"
+		},
+		{
+			"key": "PCM2013a",
+			"count": 456,
+			"source": "openalex",
+			"date": "2026-11-25"
+		},
+		{
 			"key": "PCMV2015a",
 			"count": 3330,
 			"source": "crossref",
@@ -75242,6 +75666,18 @@
 			"count": 6600,
 			"source": "crossref",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "SL2020a",
+			"count": 37,
+			"source": "crossref",
+			"date": "2026-11-25"
+		},
+		{
+			"key": "SL2020a",
+			"count": 50,
+			"source": "openalex",
+			"date": "2026-11-25"
 		},
 		{
 			"key": "SLGCZ...2017a",
@@ -77684,6 +78120,18 @@
 			"count": 1860,
 			"source": "openalex",
 			"date": "2026-10-30"
+		},
+		{
+			"key": "ZCWSY...2003a",
+			"count": 876,
+			"source": "crossref",
+			"date": "2026-11-25"
+		},
+		{
+			"key": "ZCWSY...2003a",
+			"count": 1175,
+			"source": "openalex",
+			"date": "2026-11-25"
 		},
 		{
 			"key": "ZCZX2023a",
