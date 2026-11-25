@@ -26,6 +26,12 @@ An accuracy that falls while the cross-entropy keeps falling marks fitting to th
 
 The difference between the two accuracies measures how much of what the model learnt is particular to MNIST. **Three Tabs and From Scratch** prints the same two accuracies for the three tabs and for ResNet-18 trained from random weights, so the difference can be compared across them. When the digits of a dataset are not equally frequent, the share right for each digit is a better guide than the overall accuracy, which weighs the frequent digits most.
 
+## How do I read Reading the Comparison?
+
+**Reading the Comparison** reads the accuracies printed by **Three Tabs and From Scratch**, which must be run first. For each model it gives the drop from MNIST to SVHN, and how many standard errors its accuracy on SVHN lies above chance, one in ten; for each tab, its gain over ResNet-18 trained from random weights, on MNIST and on SVHN.
+
+An accuracy measured on a sample of test images varies with the sample. **Reading the Comparison** therefore lists the pairs of models whose accuracies on one dataset are closer than two standard errors of their difference: the sample cannot tell those two apart. The standard errors cover the sampling of the test images only. Each model is trained once, and training again with another **Seed** changes its first weights and the order of its batches, which moves its accuracies as well.
+
 ## What do What Was Retrained and Accuracy by Cut Layer show?
 
 **What Was Retrained** counts the weights of ResNet-18 by stage, and the weights the tab trains: the new last layer for **Feature Extraction**, the fourth stage and the new last layer for **Last Block**, every weight for **Fully Fine-Tuned**. The fourth stage holds three quarters of the network's weights.

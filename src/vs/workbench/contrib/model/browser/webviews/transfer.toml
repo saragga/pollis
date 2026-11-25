@@ -391,9 +391,10 @@ push!(results, ("Fully Fine-Tuned", m))
 m = create_model("resnet18"; num_classes = 10)  # the same network, from random weights
 fit!(m, m, x_train; rate = {{rate}}, epochs = {{tuneEpochs}})
 push!(results, ("From Scratch", m))
+comparison = [(name = name, mnist = accuracy(m, x_test, y_test), svhn = accuracy(m, x_svhn, y_svhn)) for (name, m) in results]
 println(rpad("", 20), "MNIST   SVHN")
-for (name, m) in results
-    @printf("%-20s%.3f   %.3f\n", name, accuracy(m, x_test, y_test), accuracy(m, x_svhn, y_svhn))
+for c in comparison
+    @printf("%-20s%.3f   %.3f\n", c.name, c.mnist, c.svhn)
 end
 '''
 
@@ -416,6 +417,33 @@ for (name, layer) in [("first stages", Chain(model.conv1, model.bn1)), ("stage 1
     println("  ", rpad(name, 16), lpad(n(layer), 10))
 end
 println("Trained on the new images: ", trained, " weights, ", round(100 * trained / total; digits = 2), "% of the model")
+'''
+
+[[actionGroups.actions]]
+id = "reading-comparison"
+label = "Reading the Comparison"
+desc = "The accuracies of Three Tabs and From Scratch read against each other: the gain of each tab over From Scratch, the drop from MNIST to SVHN, the distance from chance in standard errors, and the pairs too close to tell apart on these samples"
+code = '''
+using Printf
+if !@isdefined(comparison)
+    println("Run Three Tabs and From Scratch first: Reading the Comparison reads the accuracies of its four models.")
+else
+    se(p, n) = sqrt(p * (1 - p) / n)  # the standard error of an accuracy p on n images
+    n_mnist, n_svhn = length(y_test), length(y_svhn)
+    scratch = comparison[end]
+    for c in comparison
+        @printf("%s: MNIST %.3f, SVHN %.3f, a drop of %.3f; on SVHN %.1f standard errors above chance (0.1)",
+            c.name, c.mnist, c.svhn, c.mnist - c.svhn, (c.svhn - 0.1) / sqrt(0.1 * 0.9 / n_svhn))
+        c === scratch || @printf("; %+.1f points against From Scratch on MNIST, %+.1f on SVHN", 100 * (c.mnist - scratch.mnist), 100 * (c.svhn - scratch.svhn))
+        println()
+    end
+    println("\nPairs closer than two standard errors, not told apart by these samples:")
+    for a in eachindex(comparison), b in a+1:length(comparison), (data, n) in ((:mnist, n_mnist), (:svhn, n_svhn))
+        p, q = getfield(comparison[a], data), getfield(comparison[b], data)
+        abs(p - q) < 2 * sqrt(se(p, n)^2 + se(q, n)^2) && println("  ", comparison[a].name, " and ", comparison[b].name, " on ", uppercase(string(data)))
+    end
+    println("\nEach model was trained once: training again with another Seed moves its accuracies too, which these standard errors leave out.")
+end
 '''
 
 [[actionGroups.actions]]

@@ -39,6 +39,7 @@ A model can score well on test images drawn the same way as its training images 
 | Diagnose | **Confusion Matrix** | Each true digit against the digit given |
 | Predict | **On Another Dataset** | The model applied to SVHN, beside its accuracy on MNIST |
 | Compare | **Three Tabs and From Scratch** | The three tabs and ResNet-18 trained from random weights, on MNIST and SVHN |
+| Interpret | **Reading the Comparison** | The accuracies of Three Tabs and From Scratch read against each other and against chance |
 | Interpret | **What Was Retrained** | The weights kept against those trained |
 | Interpret | **Accuracy by Cut Layer** | A new last layer on each stage of the network as trained on ImageNet |
 
