@@ -5,8 +5,8 @@
 
 // Britannica Through the Editions, a page in the Minimal style of the scaffold: an article of the Encyclopaedia
 // Britannica in every edition from 1771 to 1929, its length, its share of its edition, its contributor and its opening,
-// with a link to its page of the scan. The cases follow an article with what changes from one edition to the next; a
-// headword of the user's own is shown the same way. The Historical Geography and Archaeology Toolbox's menu opens it.
+// with a link to its page of the scan, for a headword the user looks up. The Historical Geography and Archaeology
+// Toolbox's menu opens it.
 
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { localize, localize2 } from '../../../../nls.js';
@@ -33,7 +33,6 @@ import { DatabaseConnectionContextMenu, DatabaseItemId, DatabaseItemKind } from 
 
 type BritannicaMessage =
 	| { readonly command: 'ready' }
-	| { readonly command: 'case'; readonly id: string }
 	| { readonly command: 'headword'; readonly headword: string }
 	| { readonly command: 'openScan'; readonly url: string };
 
@@ -155,14 +154,9 @@ async function openBritannicaPage(accessor: ServicesAccessor): Promise<void> {
 					webviewInput.webview.postMessage({ command: 'error', message: error instanceof Error ? error.message : String(error) });
 				}
 				break;
-			case 'case':
-				if (typeof message.id === 'string') {
-					await lookUp({ kind: 'case', id: message.id });
-				}
-				break;
 			case 'headword':
 				if (typeof message.headword === 'string' && message.headword.trim()) {
-					await lookUp({ kind: 'headword', headword: message.headword.trim().slice(0, 200) });
+					await lookUp({ headword: message.headword.trim().slice(0, 200) });
 				}
 				break;
 			case 'openScan':
@@ -175,19 +169,23 @@ async function openBritannicaPage(accessor: ServicesAccessor): Promise<void> {
 	}));
 }
 
-/** The page: its texts come from here, the editions, cases and articles from the `state` and `result` messages. */
+/** The page: its texts come from here, the editions and articles from the `state` and `result` messages. */
 function pageHtml(): string {
 	const text = {
-		intro: localize('britannica.intro', "The articles of the Encyclopaedia Britannica in every edition from the first, of 1768 to 1771, to the fourteenth, of 1929, read from the scans of the Internet Archive: how long each article is, its share of its edition, who signed it and how it opens, with a link to its page of the scan. Choose a case, or look up a headword of your own."),
-		cases: localize('britannica.cases', "Cases"),
-		yourEntry: localize('britannica.yourEntry', "Your Entry"),
+		intro: localize('britannica.intro', "The articles of the Encyclopaedia Britannica in every edition from the first, of 1768 to 1771, to the fourteenth, of 1929, read from the scans of the Internet Archive: how long each article is, its share of its edition, who signed it and how it opens, with a link to its page of the scan. Look up a headword."),
+		yourEntry: localize('britannica.yourEntry', "Headword"),
 		placeholder: localize('britannica.placeholder', "A headword, such as VIVALDI, or DARWIN, CHARLES"),
 		lookUp: localize('britannica.lookUp', "Look Up"),
 		lookUpHelp: localize('britannica.lookUpHelp', "The headword as the Britannica prints it, its first word or words before a comma; the words after a comma, a first name for example, pick the articles whose title has them."),
-		characters: localize('britannica.characters', "Characters"),
-		share: localize('britannica.share', "Share of the Edition"),
+		characters: localize('britannica.characters', "Length in Characters"),
+		share: localize('britannica.share', "Per Million Characters of the Edition"),
 		measure: localize('britannica.measure', "Bars"),
+		editionColumn: localize('britannica.editionColumn', "Edition"),
+		yearsColumn: localize('britannica.yearsColumn', "Years"),
+		perMillionShort: localize('britannica.perMillionShort', "{0} per million"),
 		noArticle: localize('britannica.noArticle', "No article"),
+		notInSupplement: localize('britannica.notInSupplement', "Not in this supplement"),
+		notInNewVolumes: localize('britannica.notInNewVolumes', "Not in these new volumes"),
 		chars: localize('britannica.chars', "{0} characters"),
 		perMillion: localize('britannica.perMillion', "{0} per million characters of the edition"),
 		signed: localize('britannica.signed', "Signed {0}"),
@@ -198,7 +196,8 @@ function pageHtml(): string {
 		alsoUnder: localize('britannica.alsoUnder', "Also under this headword"),
 		notFound: localize('britannica.notFound', "No article under {0} in any edition."),
 		suggestions: localize('britannica.suggestions', "Headwords that start the same:"),
-		editionsFound: localize('britannica.editionsFound', "In {0} of {1} editions."),
+		editionsFound: localize('britannica.editionsFound', "In {0} of {1} editions and {2} of {3} supplements."),
+		partHelp: localize('britannica.partHelp', "The supplements (3S, 6S) and the new volumes of the tenth, twelfth and thirteenth editions added articles to the editions before them, whose volumes readers kept: an article they leave out was still in those volumes."),
 		missing: localize('britannica.missing', "PollisBritannica is not on this computer yet. Pollis installs it with its other built-in databases when the Julia REPL starts: start the REPL, and open this page again once it is ready."),
 		loading: localize('britannica.loading', "Reading PollisBritannica..."),
 		error: localize('britannica.error', "PollisBritannica could not be read: {0}"),
@@ -212,10 +211,6 @@ function pageHtml(): string {
 		extraCss: `
 		.britannicaPage * { box-sizing: border-box; }
 		.britannicaPage .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); margin: 14px 0 6px 0; }
-		.britannicaPage .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-		.britannicaPage .chip { font: inherit; font-size: 12px; color: var(--vscode-foreground); background: none; border: 1px solid var(--vscode-widget-border); border-radius: 12px; padding: 3px 12px; cursor: pointer; }
-		.britannicaPage .chip:hover { border-color: var(--vscode-focusBorder); }
-		.britannicaPage .chip.selected { border-color: var(--vscode-focusBorder); background: var(--vscode-list-inactiveSelectionBackground); }
 		.britannicaPage .lookup { display: flex; gap: 8px; align-items: center; }
 		.britannicaPage .lookup input { flex: 1; min-width: 0; font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); border-radius: 2px; padding: 4px 8px; }
 		.britannicaPage .lookup input:focus { outline: 1px solid var(--vscode-focusBorder); }
@@ -223,11 +218,12 @@ function pageHtml(): string {
 		.britannicaPage button.action:not(:disabled):hover { opacity: 1; }
 		${ONE_BLUE_BUTTON_CSS.trim()}
 		.britannicaPage .help, .britannicaPage .ocr { font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.45; margin: 6px 0 0 0; }
-		.britannicaPage .summary { line-height: 1.5; margin: 16px 0 4px 0; }
 		.britannicaPage .status { color: var(--vscode-descriptionForeground); margin-top: 16px; }
 		.britannicaPage .measureRow { display: flex; align-items: center; gap: 10px; margin: 14px 0 6px 0; font-size: 12px; color: var(--vscode-descriptionForeground); }
 		.britannicaPage .measureRow label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
-		.britannicaPage .bars { display: grid; grid-template-columns: max-content 1fr max-content; gap: 3px 10px; align-items: center; font-size: 12px; }
+		.britannicaPage .bars { display: grid; grid-template-columns: max-content max-content 1fr max-content; gap: 3px 10px; align-items: center; font-size: 12px; }
+		.britannicaPage .bars .head { font-size: 11px; font-weight: 600; color: var(--vscode-descriptionForeground); }
+		.britannicaPage .bars .editionKey { text-align: right; font-variant-numeric: tabular-nums; }
 		.britannicaPage .bars .years { color: var(--vscode-descriptionForeground); white-space: nowrap; font-variant-numeric: tabular-nums; }
 		.britannicaPage .bars .track { height: 10px; background: var(--vscode-editorWidget-background); border-radius: 2px; overflow: hidden; }
 		.britannicaPage .bars .fill { height: 100%; background: var(--vscode-charts-blue); border-radius: 2px; }
@@ -240,7 +236,6 @@ function pageHtml(): string {
 		.britannicaPage .articleTitle { font-weight: 600; }
 		.britannicaPage .facts { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 2px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
 		.britannicaPage .opening { font-style: italic; line-height: 1.45; margin: 6px 0 0 0; }
-		.britannicaPage .note { line-height: 1.45; margin: 8px 0 0 0; }
 		.britannicaPage .others { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 8px; }
 		.britannicaPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
 		.britannicaPage .link:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
@@ -256,7 +251,6 @@ function pageHtml(): string {
 	const SCAN = ${JSON.stringify(SCAN_PREFIX)};
 	const main = document.getElementById('main');
 	let editions = [];
-	let cases = [];
 	let shown = undefined;
 	let measure = 'share';
 
@@ -279,7 +273,12 @@ function pageHtml(): string {
 		return value >= 10 ? value.toFixed(0) : value >= 1 ? value.toFixed(1) : value.toFixed(2);
 	}
 
-	// The cases and the lookup, once the editions are known
+	// What an edition without the article says: a supplement or new volumes left it to the volumes before them
+	function absentText(edition) {
+		return edition && edition.kind === 'supplement' ? TEXT.notInSupplement : edition && edition.kind === 'newVolumes' ? TEXT.notInNewVolumes : TEXT.noArticle;
+	}
+
+	// The lookup, once the editions are known
 	function showControls(state) {
 		main.textContent = '';
 		if (state.kind === 'missing') {
@@ -287,18 +286,6 @@ function pageHtml(): string {
 			return;
 		}
 		editions = state.editions;
-		main.appendChild(element('div', 'label', TEXT.cases));
-		const chips = element('div', 'chips');
-		for (const item of state.cases) {
-			const chip = element('button', 'chip', item.title);
-			chip.dataset.case = item.id;
-			chip.addEventListener('click', () => {
-				selectChip(item.id);
-				vscode.postMessage({ command: 'case', id: item.id });
-			});
-			chips.appendChild(chip);
-		}
-		main.appendChild(chips);
 		main.appendChild(element('div', 'label', TEXT.yourEntry));
 		const lookup = element('div', 'lookup bar');
 		const input = element('input');
@@ -308,7 +295,6 @@ function pageHtml(): string {
 		const button = element('button', 'action current', TEXT.lookUp);
 		const send = () => {
 			if (input.value.trim()) {
-				selectChip(undefined);
 				vscode.postMessage({ command: 'headword', headword: input.value });
 			}
 		};
@@ -320,15 +306,7 @@ function pageHtml(): string {
 		main.appendChild(element('p', 'help', TEXT.lookUpHelp));
 		main.appendChild(element('div', '', undefined)).id = 'result';
 		main.appendChild(element('p', 'ocr', TEXT.ocr));
-		if (state.cases.length) {
-			selectChip(state.cases[0].id);
-			vscode.postMessage({ command: 'case', id: state.cases[0].id });
-		}
-	}
-	function selectChip(id) {
-		for (const chip of document.querySelectorAll('.chip')) {
-			chip.classList.toggle('selected', chip.dataset.case === id);
-		}
+		input.focus();
 	}
 
 	// The bars, an edition each: the longest article under the headword, by characters or by share of its edition
@@ -348,6 +326,9 @@ function pageHtml(): string {
 		}
 		container.appendChild(row);
 		const bars = element('div', 'bars');
+		for (const heading of [TEXT.editionColumn, TEXT.yearsColumn, '', '']) {
+			bars.appendChild(element('span', 'head', heading));
+		}
 		const values = entries.map(entry => {
 			const edition = editions.find(item => item.edition === entry.edition);
 			const article = entry.articles[0];
@@ -356,9 +337,10 @@ function pageHtml(): string {
 		const top = Math.max(...values, 1e-9);
 		entries.forEach((entry, index) => {
 			const edition = editions.find(item => item.edition === entry.edition);
-			const years = element('span', 'years', edition ? edition.years : entry.edition);
-			years.title = edition ? edition.label : '';
-			bars.appendChild(years);
+			const key = element('span', 'editionKey', entry.edition);
+			key.title = edition ? edition.label : '';
+			bars.appendChild(key);
+			bars.appendChild(element('span', 'years', edition ? edition.years : ''));
 			const track = element('div', 'track');
 			const fill = element('div', 'fill');
 			fill.style.width = (100 * values[index] / top).toFixed(2) + '%';
@@ -366,17 +348,17 @@ function pageHtml(): string {
 			bars.appendChild(track);
 			const article = entry.articles[0];
 			if (article) {
-				const value = element('span', 'value', measure === 'share' ? perMillionText(values[index]) : number(article.chars));
+				const value = element('span', 'value', measure === 'share' ? format(TEXT.perMillionShort, perMillionText(values[index])) : number(article.chars));
 				value.title = article.title;
 				bars.appendChild(value);
 			} else {
-				bars.appendChild(element('span', 'value none', '—'));
+				bars.appendChild(element('span', 'value none', edition && edition.kind !== 'full' ? absentText(edition) : '—'));
 			}
 		});
 		container.appendChild(bars);
 	}
 
-	// An edition: each article with its facts, its opening and its scan, and what the case says of it
+	// An edition: each article with its facts, its opening and its scan
 	function showEdition(container, entry) {
 		const edition = editions.find(item => item.edition === entry.edition);
 		const box = element('div', 'edition');
@@ -400,10 +382,7 @@ function pageHtml(): string {
 			article.appendChild(element('p', 'opening', '\\u201c' + first.opening + '\\u2026\\u201d'));
 			box.appendChild(article);
 		} else {
-			box.appendChild(element('div', 'noArticle', TEXT.noArticle));
-		}
-		if (entry.note) {
-			box.appendChild(element('p', 'note', entry.note));
+			box.appendChild(element('div', 'noArticle', absentText(edition)));
 		}
 		if (others.length) {
 			box.appendChild(element('div', 'others', TEXT.alsoUnder + ': ' + others.map(other => other.title + ' (' + number(other.chars) + ')').join('; ')));
@@ -416,10 +395,6 @@ function pageHtml(): string {
 		if (!container || !shown) { return; }
 		container.textContent = '';
 		const { lookup, result } = shown;
-		if (lookup.kind === 'case') {
-			const item = cases.find(other => other.id === lookup.id);
-			if (item) { container.appendChild(element('p', 'summary', item.summary)); }
-		}
 		if (!result.entries.length) {
 			container.appendChild(element('p', 'status', format(TEXT.notFound, lookup.headword || '')));
 			if (result.suggestions.length) {
@@ -437,8 +412,12 @@ function pageHtml(): string {
 			}
 			return;
 		}
-		const found = result.entries.filter(entry => entry.articles.length).length;
-		container.appendChild(element('p', 'help', format(TEXT.editionsFound, found, result.entries.length)));
+		const isFull = entry => { const edition = editions.find(item => item.edition === entry.edition); return !edition || edition.kind === 'full'; };
+		const full = result.entries.filter(isFull);
+		const parts = result.entries.filter(entry => !isFull(entry));
+		const found = entries => entries.filter(entry => entry.articles.length).length;
+		container.appendChild(element('p', 'help', format(TEXT.editionsFound, found(full), full.length, found(parts), parts.length)));
+		container.appendChild(element('p', 'help', TEXT.partHelp));
 		showBars(container, result.entries);
 		for (const entry of result.entries) {
 			showEdition(container, entry);
@@ -450,7 +429,6 @@ function pageHtml(): string {
 	window.addEventListener('message', event => {
 		const message = event.data;
 		if (message.command === 'state') {
-			cases = message.state.kind === 'ready' ? message.state.cases : [];
 			showControls(message.state);
 		} else if (message.command === 'result') {
 			shown = { lookup: message.lookup, result: message.result };

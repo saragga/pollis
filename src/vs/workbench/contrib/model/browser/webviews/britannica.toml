@@ -18,7 +18,7 @@ github = "https://github.com/Trumpingtons/PollisBritannica.jl"
 name = "Overview"
 file = "britannica/overview.md"
 bundled = true
-description = "What the page shows, the cases, looking up a headword of your own, and the PollisBritannica database"
+description = "What the page shows, looking up a headword, the bars, the editions without the article, and the PollisBritannica database"
 
 [[wikis]]
 name = "Factsheet"

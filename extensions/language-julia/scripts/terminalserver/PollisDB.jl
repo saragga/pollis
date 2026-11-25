@@ -171,7 +171,7 @@ const BRITANNICA = Base.PkgId(UUID("db89cef9-ae45-49bd-8a72-96bae7fb52a2"), "Pol
 const BRITANNICA_URL = "https://github.com/Trumpingtons/PollisBritannica.jl"
 """The commit of PollisBritannica.jl installed, from GitHub."""
 const BRITANNICA_COMMIT = joinpath(ENVIRONMENT, "PollisBritannica.commit")
-"""The PollisBritannica database: the editions, articles and cases of PollisBritannica.jl as tables, made by `build_britannica`."""
+"""The PollisBritannica database: the editions and articles of PollisBritannica.jl as tables, made by `build_britannica`."""
 const BRITANNICA_DB = joinpath(homedir(), ".pollis", "databases", "PollisBritannica.duckdb")
 """The PollisBritannica.jl folder and the SQL that `BRITANNICA_DB` was made with."""
 const BRITANNICA_STAMP = BRITANNICA_DB * ".stamp"
@@ -1984,13 +1984,11 @@ function britannica_sql(folder::AbstractString)
     return [
         "CREATE TABLE editions AS SELECT * FROM read_parquet('$(file("editions.parquet"))')",
         "CREATE TABLE articles AS SELECT * FROM read_parquet('$(file("articles.parquet"))') ORDER BY key, edition",
-        "CREATE TABLE cases AS SELECT * FROM read_json('$(file("cases.json"))')",
         "COMMENT ON TABLE editions IS 'The editions of the Encyclopaedia Britannica from 1771 to 1929: the volumes read, the articles found and their characters. Source: the scans of the Internet Archive'",
         "COMMENT ON TABLE articles IS 'The articles of the Encyclopaedia Britannica from 1771 to 1929, a row per article of each edition, read from the scans of the Internet Archive; the scan of an article is https://archive.org/details/<item>/page/n<page>'",
         "COMMENT ON COLUMN articles.key IS 'The headword in the capital letters A to Z only, to look an article up in every edition'",
         "COMMENT ON COLUMN articles.chars IS 'The length of the article in characters of its text'",
         "COMMENT ON COLUMN articles.signature IS 'The initials of the contributor, where the article is signed'",
-        "COMMENT ON TABLE cases IS 'Articles followed through the editions, a row per edition of each case, with what changes from one edition to the next'",
     ]
 end
 
@@ -2007,7 +2005,7 @@ end
     build_britannica()
 
 Make the PollisBritannica database `BRITANNICA_DB` when it is missing, or PollisBritannica.jl or the SQL of
-`britannica_sql` have changed since it was made: the editions, articles and cases of the package's artifact, copied
+`britannica_sql` have changed since it was made: the editions and articles of the package's artifact, copied
 into tables. Nothing else writes to it. Written under a temporary name and moved into place, as `build` does.
 """
 function build_britannica()

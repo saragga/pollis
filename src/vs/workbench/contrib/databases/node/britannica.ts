@@ -10,7 +10,7 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import * as fs from 'fs';
 import { join } from '../../../../base/common/path.js';
-import { IBritannica, IBritannicaArticle, IBritannicaCase, IBritannicaEdition, IBritannicaEntry, IBritannicaLookup, IBritannicaResult, IBritannicaState } from '../common/britannica.js';
+import { BritannicaEditionKind, IBritannica, IBritannicaArticle, IBritannicaEdition, IBritannicaEntry, IBritannicaLookup, IBritannicaResult, IBritannicaState } from '../common/britannica.js';
 import { POLLIS_HOME, sqlString } from './duckdbPollis.js';
 
 /** The database PollisDB.jl makes from the artifact of PollisBritannica.jl. */
@@ -18,6 +18,14 @@ const DATABASE = join(POLLIS_HOME, 'databases', 'PollisBritannica.duckdb');
 
 /** The editions in their order: 1, 2, 3, 3S, 4 and so on. */
 const EDITION_ORDER = `try_cast(regexp_extract(edition, '^\\d+') AS INTEGER), edition`;
+
+/** The editions made of new volumes only, sold with the volumes of the ninth (10) or the eleventh (12, 13). */
+const NEW_VOLUMES = new Set(['10', '12', '13']);
+
+/** What an edition is: the supplements' keys end in S. */
+function editionKind(edition: string): BritannicaEditionKind {
+	return edition.endsWith('S') ? 'supplement' : NEW_VOLUMES.has(edition) ? 'newVolumes' : 'full';
+}
 
 /** The letters A to Z of a text, in capitals: the key of a headword, as PollisBritannica.jl makes it. */
 function letters(text: string): string {
@@ -54,18 +62,14 @@ export class Britannica implements IBritannica {
 		this.attached = true;
 		const editions: IBritannicaEdition[] = (await this.rows(`SELECT * FROM britannica.editions ORDER BY ${EDITION_ORDER}`)).map(row => ({
 			edition: String(row.edition),
+			kind: editionKind(String(row.edition)),
 			label: String(row.label),
 			years: String(row.years),
 			volumes: Number(row.volumes),
 			articles: Number(row.articles),
 			chars: Number(row.chars),
 		}));
-		const cases: IBritannicaCase[] = (await this.rows('SELECT id, any_value(name) AS name, any_value(summary) AS summary, min(rowid) AS first FROM britannica.cases GROUP BY id ORDER BY first')).map(row => ({
-			id: String(row.id),
-			title: String(row.name),
-			summary: String(row.summary),
-		}));
-		return { kind: 'ready', editions, cases };
+		return { kind: 'ready', editions };
 	}
 
 	async lookup(lookup: IBritannicaLookup): Promise<IBritannicaResult> {
@@ -73,31 +77,21 @@ export class Britannica implements IBritannica {
 			return { entries: [], suggestions: [] };
 		}
 		const columns = 'a.edition, a.volume, a.item, a.page, a.headword, a.title, a.chars, a.signature, a.opening';
-		let rows: Row[];
-		let notes = new Map<string, string>();
-		if (lookup.kind === 'case') {
-			rows = await this.rows(`SELECT ${columns}
-				FROM britannica.cases c JOIN britannica.articles a ON a.edition = c.edition AND a.key = c.key AND (c.article IS NULL OR a.title ILIKE c.article)
-				WHERE c.id = ${sqlString(lookup.id)}
-				ORDER BY a.chars DESC`);
-			notes = new Map((await this.rows(`SELECT edition, note FROM britannica.cases WHERE id = ${sqlString(lookup.id)} AND note IS NOT NULL`)).map(row => [String(row.edition), String(row.note)]));
-		} else {
-			// The headword before the first comma is the key; the words after it, if any, must be in the title
-			const [head, ...rest] = lookup.headword.split(',');
-			const key = letters(head);
-			const words = letters(rest.join(' '));
-			if (!key) {
-				return { entries: [], suggestions: [] };
-			}
-			rows = await this.rows(`SELECT ${columns} FROM britannica.articles a
-				WHERE a.key = ${sqlString(key)}${words ? ` AND regexp_replace(upper(strip_accents(a.title)), '[^A-Z]', '', 'g') LIKE ${sqlString(`%${words}%`)}` : ''}
-				ORDER BY a.chars DESC`);
-			if (!rows.length) {
-				const suggestions = (await this.rows(`SELECT key, count(DISTINCT edition) AS editions FROM britannica.articles
-					WHERE key LIKE ${sqlString(`${key.slice(0, Math.max(3, key.length - 2))}%`)}
-					GROUP BY key ORDER BY editions DESC, key LIMIT 12`)).map(row => String(row.key));
-				return { entries: [], suggestions };
-			}
+		// The headword before the first comma is the key; the words after it, if any, must be in the title
+		const [head, ...rest] = lookup.headword.split(',');
+		const key = letters(head);
+		const words = letters(rest.join(' '));
+		if (!key) {
+			return { entries: [], suggestions: [] };
+		}
+		const rows = await this.rows(`SELECT ${columns} FROM britannica.articles a
+			WHERE a.key = ${sqlString(key)}${words ? ` AND regexp_replace(upper(strip_accents(a.title)), '[^A-Z]', '', 'g') LIKE ${sqlString(`%${words}%`)}` : ''}
+			ORDER BY a.chars DESC`);
+		if (!rows.length) {
+			const suggestions = (await this.rows(`SELECT key, count(DISTINCT edition) AS editions FROM britannica.articles
+				WHERE key LIKE ${sqlString(`${key.slice(0, Math.max(3, key.length - 2))}%`)}
+				GROUP BY key ORDER BY editions DESC, key LIMIT 12`)).map(row => String(row.key));
+			return { entries: [], suggestions };
 		}
 		const editions = (await this.rows(`SELECT edition FROM britannica.editions ORDER BY ${EDITION_ORDER}`)).map(row => String(row.edition));
 		const byEdition = new Map<string, IBritannicaArticle[]>(editions.map(edition => [edition, []]));
@@ -114,7 +108,7 @@ export class Britannica implements IBritannica {
 				opening: String(row.opening),
 			});
 		}
-		const entries: IBritannicaEntry[] = editions.map(edition => ({ edition, articles: byEdition.get(edition) ?? [], note: notes.get(edition) }));
+		const entries: IBritannicaEntry[] = editions.map(edition => ({ edition, articles: byEdition.get(edition) ?? [] }));
 		return { entries, suggestions: [] };
 	}
 }

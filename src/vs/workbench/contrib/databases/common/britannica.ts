@@ -12,10 +12,17 @@ import { createDecorator } from '../../../../platform/instantiation/common/insta
 /** The command that opens the page, which the Historical Geography and Archaeology Toolbox's menu runs. */
 export const BRITANNICA_COMMAND_ID = 'pollis.britannica.open';
 
+/**
+ * What an edition is: a full edition; a supplement (3S, 6S), whose volumes added to the editions before it; or the new
+ * volumes of the tenth, twelfth and thirteenth editions, which were sold with the volumes of the ninth or eleventh.
+ */
+export type BritannicaEditionKind = 'full' | 'supplement' | 'newVolumes';
+
 /** An edition of the Britannica: the volumes read, and the articles found in them. */
 export interface IBritannicaEdition {
 	/** Its key: 1 to 14, and 3S and 6S for the supplements. */
 	readonly edition: string;
+	readonly kind: BritannicaEditionKind;
 	readonly label: string;
 	readonly years: string;
 	readonly volumes: number;
@@ -41,29 +48,21 @@ export interface IBritannicaArticle {
 	readonly opening: string;
 }
 
-/** A case: an article followed through the editions, with what changes from one to the next. */
-export interface IBritannicaCase {
-	readonly id: string;
-	readonly title: string;
-	readonly summary: string;
-}
-
-/** An edition of a lookup: its articles, and for a case, what it says of that edition. */
+/** An edition of a lookup: its articles under the headword. */
 export interface IBritannicaEntry {
 	readonly edition: string;
 	readonly articles: readonly IBritannicaArticle[];
-	readonly note?: string;
 }
 
-/** What the page shows: the editions and the cases, or why it cannot. */
+/** What the page shows: the editions, or why it cannot. */
 export type IBritannicaState =
-	| { readonly kind: 'ready'; readonly editions: readonly IBritannicaEdition[]; readonly cases: readonly IBritannicaCase[] }
+	| { readonly kind: 'ready'; readonly editions: readonly IBritannicaEdition[] }
 	| { readonly kind: 'missing' };
 
-/** A lookup: a case, or the user's own headword. */
-export type IBritannicaLookup =
-	| { readonly kind: 'case'; readonly id: string }
-	| { readonly kind: 'headword'; readonly headword: string };
+/** A lookup: the user's headword. */
+export interface IBritannicaLookup {
+	readonly headword: string;
+}
 
 /** The result of a lookup, an entry per edition; for a headword with no article, headwords that start the same. */
 export interface IBritannicaResult {
