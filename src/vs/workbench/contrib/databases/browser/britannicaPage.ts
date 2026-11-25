@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 // Britannica Through the Editions, a page in the Minimal style of the scaffold: an article of the Encyclopaedia
-// Britannica in every edition from 1771 to 1929, its length, its share of its edition, its contributor and its opening,
-// with a link to its page of the scan, for a headword the user looks up. The Historical Geography and Archaeology
+// Britannica in every edition from 1771 to 1929, its length, its share of its edition, its contributor and its text,
+// with a link to its page of the scan, for a headword the user looks up. The texts are downloaded the first time one
+// is asked for, by the Julia extension (language-julia.pollisBritannicaTexts). The Historical Geography and Archaeology
 // Toolbox's menu opens it.
 
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
@@ -27,13 +28,14 @@ import { INotebookEditorModelResolverService } from '../../notebook/common/noteb
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { BRITANNICA_COMMAND_ID, IBritannicaLookup, IBritannicaService } from '../common/britannica.js';
+import { BRITANNICA_COMMAND_ID, BRITANNICA_TEXTS_COMMAND_ID, IBritannicaLookup, IBritannicaService, IBritannicaTextsAnswer } from '../common/britannica.js';
 import { BRITANNICA_DATABASE_ID } from '../common/databaseDrivers.js';
 import { DatabaseConnectionContextMenu, DatabaseItemId, DatabaseItemKind } from './connectionsView.js';
 
 type BritannicaMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'headword'; readonly headword: string }
+	| { readonly command: 'text'; readonly id: number }
 	| { readonly command: 'openScan'; readonly url: string };
 
 /** Where the scans are: a page of an item of the Internet Archive. */
@@ -144,6 +146,28 @@ async function openBritannicaPage(accessor: ServicesAccessor): Promise<void> {
 		}
 	};
 
+	// The text of an article, from the file of the texts, which is found, or downloaded, the first time a text is asked for
+	let textsFile: string | undefined;
+	const showText = async (id: number) => {
+		try {
+			if (!textsFile) {
+				let answer = await commandService.executeCommand<IBritannicaTextsAnswer>(BRITANNICA_TEXTS_COMMAND_ID, { task: 'locate' });
+				if (answer?.path === '') {
+					webviewInput.webview.postMessage({ command: 'textDownloading', id });
+					answer = await commandService.executeCommand<IBritannicaTextsAnswer>(BRITANNICA_TEXTS_COMMAND_ID, { task: 'download' });
+				}
+				if (!answer?.path) {
+					webviewInput.webview.postMessage({ command: 'text', id, error: answer?.error ?? 'failed' });
+					return;
+				}
+				textsFile = answer.path;
+			}
+			webviewInput.webview.postMessage({ command: 'text', id, text: await britannicaService.text(textsFile, id) });
+		} catch (error) {
+			webviewInput.webview.postMessage({ command: 'text', id, error: error instanceof Error ? error.message : String(error) });
+		}
+	};
+
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: BritannicaMessage }) => {
 		const message = e.message;
 		switch (message.command) {
@@ -159,6 +183,11 @@ async function openBritannicaPage(accessor: ServicesAccessor): Promise<void> {
 					await lookUp({ headword: message.headword.trim().slice(0, 200) });
 				}
 				break;
+			case 'text':
+				if (typeof message.id === 'number' && Number.isInteger(message.id)) {
+					await showText(message.id);
+				}
+				break;
 			case 'openScan':
 				// The page of the scan opens in Pollis's own browser, beside the page
 				if (typeof message.url === 'string' && message.url.startsWith(SCAN_PREFIX)) {
@@ -172,7 +201,7 @@ async function openBritannicaPage(accessor: ServicesAccessor): Promise<void> {
 /** The page: its texts come from here, the editions and articles from the `state` and `result` messages. */
 function pageHtml(): string {
 	const text = {
-		intro: localize('britannica.intro', "The articles of the Encyclopaedia Britannica in every edition from the first, of 1768 to 1771, to the fourteenth, of 1929, read from the scans of the Internet Archive: how long each article is, its share of its edition, who signed it and how it opens, with a link to its page of the scan. Look up a headword."),
+		intro: localize('britannica.intro', "The articles of the Encyclopaedia Britannica in every edition from the first, of 1768 to 1771, to the fourteenth, of 1929, read from the scans of the Internet Archive: how long each article is, its share of its edition, who signed it and its text, with a link to its page of the scan. Look up a headword."),
 		yourEntry: localize('britannica.yourEntry', "Headword"),
 		placeholder: localize('britannica.placeholder', "A headword, such as VIVALDI, or DARWIN, CHARLES"),
 		lookUp: localize('britannica.lookUp', "Look Up"),
@@ -193,6 +222,14 @@ function pageHtml(): string {
 		volumePage: localize('britannica.volumePage', "Volume {0}, page {1} of the scan"),
 		volume: localize('britannica.volume', "Volume {0}"),
 		openScan: localize('britannica.openScan', "Open the Scan"),
+		showText: localize('britannica.showText', "Show the Text"),
+		hideText: localize('britannica.hideText', "Hide the Text"),
+		readingText: localize('britannica.readingText', "Reading the text..."),
+		downloadingTexts: localize('britannica.downloadingTexts', "Downloading the texts of the Britannica, about 535 MB: a minute or more, the first time only..."),
+		noText: localize('britannica.noText', "PollisBritannica has no text for this article."),
+		noJulia: localize('britannica.noJulia', "The texts are downloaded with Julia, which is not installed."),
+		noPackage: localize('britannica.noPackage', "PollisBritannica.jl is not installed yet, or is older than its texts: Pollis installs and updates it when the Julia REPL starts."),
+		textError: localize('britannica.textError', "The text could not be read: {0}"),
 		alsoUnder: localize('britannica.alsoUnder', "Also under this headword"),
 		notFound: localize('britannica.notFound', "No article under {0} in any edition."),
 		suggestions: localize('britannica.suggestions', "Headwords that start the same:"),
@@ -235,7 +272,9 @@ function pageHtml(): string {
 		.britannicaPage .article { margin-top: 8px; }
 		.britannicaPage .articleTitle { font-weight: 600; }
 		.britannicaPage .facts { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 2px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
-		.britannicaPage .opening { font-style: italic; line-height: 1.45; margin: 6px 0 0 0; }
+		.britannicaPage .articleText { margin: 8px 0 0 0; max-height: 420px; overflow-y: auto; line-height: 1.5; padding-right: 6px; }
+		.britannicaPage .articleText p { margin: 0 0 8px 0; }
+		.britannicaPage .articleText .status { margin-top: 0; }
 		.britannicaPage .others { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 8px; }
 		.britannicaPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
 		.britannicaPage .link:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
@@ -251,6 +290,9 @@ function pageHtml(): string {
 	const SCAN = ${JSON.stringify(SCAN_PREFIX)};
 	const main = document.getElementById('main');
 	let editions = [];
+	// The texts read, by article, and the articles whose text is shown
+	const texts = new Map();
+	const opened = new Set();
 	let shown = undefined;
 	let measure = 'share';
 
@@ -358,7 +400,7 @@ function pageHtml(): string {
 		container.appendChild(bars);
 	}
 
-	// An edition: each article with its facts, its opening and its scan
+	// An edition: each article with its facts, its scan and its text
 	function showEdition(container, entry) {
 		const edition = editions.find(item => item.edition === entry.edition);
 		const box = element('div', 'edition');
@@ -378,8 +420,27 @@ function pageHtml(): string {
 			const scan = element('button', 'link', TEXT.openScan);
 			scan.addEventListener('click', () => vscode.postMessage({ command: 'openScan', url: SCAN + encodeURIComponent(first.item) + (first.page === null ? '' : '/page/n' + first.page) }));
 			facts.appendChild(scan);
+			const toggle = element('button', 'link', opened.has(first.id) ? TEXT.hideText : TEXT.showText);
+			facts.appendChild(toggle);
 			article.appendChild(facts);
-			article.appendChild(element('p', 'opening', '\\u201c' + first.opening + '\\u2026\\u201d'));
+			const body = element('div', 'articleText');
+			body.dataset.id = String(first.id);
+			body.hidden = !opened.has(first.id);
+			if (opened.has(first.id)) { fillText(body, texts.get(first.id)); }
+			toggle.addEventListener('click', () => {
+				if (opened.has(first.id)) {
+					opened.delete(first.id);
+					body.hidden = true;
+					toggle.textContent = TEXT.showText;
+					return;
+				}
+				opened.add(first.id);
+				body.hidden = false;
+				toggle.textContent = TEXT.hideText;
+				fillText(body, texts.get(first.id));
+				if (!texts.has(first.id)) { vscode.postMessage({ command: 'text', id: first.id }); }
+			});
+			article.appendChild(body);
 			box.appendChild(article);
 		} else {
 			box.appendChild(element('div', 'noArticle', absentText(edition)));
@@ -388,6 +449,26 @@ function pageHtml(): string {
 			box.appendChild(element('div', 'others', TEXT.alsoUnder + ': ' + others.map(other => other.title + ' (' + number(other.chars) + ')').join('; ')));
 		}
 		container.appendChild(box);
+	}
+
+	// The text of an article, a paragraph a line, or what stands in its place while it is read
+	function fillText(body, entry) {
+		body.textContent = '';
+		if (!entry) {
+			body.appendChild(element('p', 'status', TEXT.readingText));
+		} else if (entry.error) {
+			const message = entry.error === 'noJulia' ? TEXT.noJulia : entry.error === 'noPackage' ? TEXT.noPackage : format(TEXT.textError, entry.error);
+			body.appendChild(element('p', 'status', message));
+		} else if (entry.text === null || entry.text === undefined) {
+			body.appendChild(element('p', 'status', TEXT.noText));
+		} else {
+			for (const paragraph of entry.text.split('\n')) {
+				if (paragraph.trim()) { body.appendChild(element('p', '', paragraph)); }
+			}
+		}
+	}
+	function textBodies(id) {
+		return document.querySelectorAll('.articleText[data-id="' + id + '"]');
 	}
 
 	function showResult() {
@@ -433,6 +514,18 @@ function pageHtml(): string {
 		} else if (message.command === 'result') {
 			shown = { lookup: message.lookup, result: message.result };
 			showResult();
+		} else if (message.command === 'textDownloading') {
+			for (const body of textBodies(message.id)) {
+				body.textContent = '';
+				body.appendChild(element('p', 'status', TEXT.downloadingTexts));
+			}
+		} else if (message.command === 'text') {
+			const entry = { text: message.text, error: message.error };
+			// An error is shown but not kept, so that opening the text again asks again
+			if (!entry.error) { texts.set(message.id, entry); }
+			for (const body of textBodies(message.id)) {
+				fillText(body, entry);
+			}
 		} else if (message.command === 'error') {
 			const container = document.getElementById('result') || main;
 			container.textContent = '';

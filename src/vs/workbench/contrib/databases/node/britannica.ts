@@ -76,7 +76,7 @@ export class Britannica implements IBritannica {
 		if (!this.attached && (await this.state()).kind === 'missing') {
 			return { entries: [], suggestions: [] };
 		}
-		const columns = 'a.edition, a.volume, a.item, a.page, a.headword, a.title, a.chars, a.signature, a.opening';
+		const columns = 'a.id, a.edition, a.volume, a.item, a.page, a.headword, a.title, a.chars, a.signature';
 		// The headword before the first comma is the key; the words after it, if any, must be in the title
 		const [head, ...rest] = lookup.headword.split(',');
 		const key = letters(head);
@@ -97,6 +97,7 @@ export class Britannica implements IBritannica {
 		const byEdition = new Map<string, IBritannicaArticle[]>(editions.map(edition => [edition, []]));
 		for (const row of rows) {
 			byEdition.get(String(row.edition))?.push({
+				id: Number(row.id),
 				edition: String(row.edition),
 				volume: String(row.volume),
 				item: String(row.item),
@@ -105,10 +106,17 @@ export class Britannica implements IBritannica {
 				title: String(row.title),
 				chars: Number(row.chars),
 				signature: row.signature === null ? null : String(row.signature),
-				opening: String(row.opening),
 			});
 		}
 		const entries: IBritannicaEntry[] = editions.map(edition => ({ edition, articles: byEdition.get(edition) ?? [] }));
 		return { entries, suggestions: [] };
+	}
+
+	async text(file: string, id: number): Promise<string | null> {
+		if (!file.endsWith('texts.parquet') || !fs.existsSync(file) || !Number.isInteger(id)) {
+			return null;
+		}
+		const [row] = await this.rows(`SELECT text FROM read_parquet(${sqlString(file)}) WHERE id = ${id}`);
+		return row ? String(row.text) : null;
 	}
 }

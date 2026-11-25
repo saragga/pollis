@@ -33,6 +33,8 @@ export interface IBritannicaEdition {
 
 /** An article of an edition, where its scan is, and its length. */
 export interface IBritannicaArticle {
+	/** Its number, by which the texts of PollisBritannica.jl give its text. */
+	readonly id: number;
 	readonly edition: string;
 	readonly volume: string;
 	/** The item of the Internet Archive that holds its scan. */
@@ -44,8 +46,6 @@ export interface IBritannicaArticle {
 	readonly chars: number;
 	/** The contributor's initials, where the article is signed. */
 	readonly signature: string | null;
-	/** Its first words. */
-	readonly opening: string;
 }
 
 /** An edition of a lookup: its articles under the headword. */
@@ -74,6 +74,20 @@ export interface IBritannicaResult {
 export interface IBritannica {
 	state(): Promise<IBritannicaState>;
 	lookup(lookup: IBritannicaLookup): Promise<IBritannicaResult>;
+	/** The text of the article `id`, a paragraph a line, read from `file`, the texts of PollisBritannica.jl; null when it has none. */
+	text(file: string, id: number): Promise<string | null>;
+}
+
+/**
+ * The command of the Julia extension that finds the texts of PollisBritannica.jl: with {task: 'locate'} it answers
+ * {path}, the file of the texts, '' when they are not on this computer; with {task: 'download'} it downloads them first.
+ */
+export const BRITANNICA_TEXTS_COMMAND_ID = 'language-julia.pollisBritannicaTexts';
+
+/** What the command of the texts answers. */
+export interface IBritannicaTextsAnswer {
+	readonly path?: string;
+	readonly error?: string;
 }
 
 export const IBritannicaService = createDecorator<IBritannicaService>('britannicaService');

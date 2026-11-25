@@ -43,6 +43,10 @@ class BritannicaService extends Disposable implements IBritannicaService {
 	async lookup(lookup: IBritannicaLookup): Promise<IBritannicaResult> {
 		return (await this.get()).proxy.lookup(lookup);
 	}
+
+	async text(file: string, id: number): Promise<string | null> {
+		return (await this.get()).proxy.text(file, id);
+	}
 }
 
 registerSingleton(IBritannicaService, BritannicaService, InstantiationType.Delayed);

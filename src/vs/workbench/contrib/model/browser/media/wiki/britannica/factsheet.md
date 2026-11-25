@@ -21,14 +21,15 @@ The `articles` table of PollisBritannica has a row for each article of each edit
 
 | Column | What it holds |
 |---|---|
+| `id` | The number of the article, by which the texts give its text |
 | `edition` | The key of the edition |
 | `volume` | The volume, with a or b for the two parts of a volume bound apart |
-| `item`, `page` | The item of the Internet Archive and the page of its scan where the article starts |
+| `item`, `page`, `end_page` | The item of the Internet Archive and the pages of its scan where the article starts and ends |
+| `printing` | In the fourteenth edition, the printing of the copy read, 1929 or 1930 |
 | `key` | The headword in the capital letters A to Z only, to look the article up in every edition |
 | `headword`, `title` | The headword, and the title with its qualifiers, as the scan reads them |
 | `chars` | The length of the article in characters |
 | `signature` | The initials of the contributor, where the article is signed |
-| `opening` | The first words of the article |
 
 The page of an article's scan is `https://archive.org/details/<item>/page/n<page>`.
 
