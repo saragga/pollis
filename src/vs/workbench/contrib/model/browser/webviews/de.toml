@@ -20,6 +20,12 @@ github = "https://github.com/JuliaStats/KernelDensity.jl"
 name = "Distributions.jl"
 github = "https://github.com/JuliaStats/Distributions.jl"
 
+[[packages]]
+name = "Extremes.jl"
+# Fork of jojal5/Extremes.jl at its dev branch, without Gadfly (upstream pull request 144): the registered 1.0.5 depends on Gadfly, which holds DataStructures at 0.18 and so keeps Symbolics 7 out of the environment (upstream issue 146); back to upstream once a version without Gadfly is registered
+github = "https://github.com/Trumpingtons/Extremes.jl"
+fork = true
+
 [requires]
 packages = ["StatsBase.jl", "KernelDensity.jl", "Distributions.jl", "Extremes.jl", "Bootstrap.jl", "HypothesisTests.jl", "Plots.jl"]
 
