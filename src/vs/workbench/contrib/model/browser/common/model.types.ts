@@ -299,6 +299,8 @@ export interface IScaffoldPanelData {
 	readonly columns?: IModelColumn[];
 	/** Minimal: the rows of the table. */
 	readonly rows?: IModelRow[];
+	/** Minimal: its sister panels, shown as cards in See Also at the end of the page. */
+	readonly seeAlso?: IModelSeeAlso[];
 	/** Time Arrow: the table between the introduction and the steps. */
 	readonly matrix?: IModelMatrix;
 	/** Time Arrow: the numbered steps. */
@@ -311,16 +313,17 @@ export interface IModelMatrix {
 	readonly rows: string[][];
 }
 
+/** A card of See Also on a Minimal panel: a sister panel, opened by its command. */
+export interface IModelSeeAlso {
+	readonly command: string;
+	readonly title: string;
+	readonly description: string;
+}
+
 /** A column of the table of a Minimal panel (`[[columns]]`): its `id` names the value of each row in it. */
 export interface IModelColumn {
 	readonly id: string;
 	readonly label: string;
-}
-
-/** A value of a row of a Minimal panel in one of its columns, a link when the row gives `<column>Url`. */
-export interface IModelCell {
-	readonly text: string;
-	readonly url: string;
 }
 
 /**
@@ -332,7 +335,8 @@ export interface IModelRow {
 	readonly title: string;
 	readonly subtitle: string;
 	readonly description: string;
-	readonly cells: IModelCell[];
+	/** Its value in each of the panel's columns, in their order. */
+	readonly cells: string[];
 	readonly code: string;
 }
 

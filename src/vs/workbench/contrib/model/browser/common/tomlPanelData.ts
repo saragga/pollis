@@ -490,12 +490,6 @@ function asTexts(value: unknown): string[] {
 	return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 }
 
-/** A link that may be opened from a page: https only, else empty. */
-function asHttps(value: unknown): string {
-	const url = asText(value).trim();
-	return /^https:\/\/\S+$/.test(url) ? url : '';
-}
-
 /** A name that can be the id of an element of the page and the name of a file, or empty. */
 function asName(value: unknown): string {
 	const name = asText(value);
@@ -572,8 +566,8 @@ function timeArrowData(data: TomlValue): Pick<IScaffoldPanelData, 'style' | 'int
 /**
  * What a panel has when its `[meta]` says style = "minimal": `intro`, and in place of Example Code a table, whose first
  * column (`rowTitle`) holds the rows' titles and the others are its `[[columns]]`. Each of its `[[rows]]` gives its
- * `title`, `subtitle`, `description`, its value in each column under the column's id (a link when it gives
- * `<id>Url` too, https only) and its `code`. Rows and columns without a name are left out.
+ * `title`, `subtitle`, `description`, its value in each column under the column's id, and its `code`. Rows and columns
+ * without a name are left out.
  */
 function minimalData(data: TomlValue): Pick<IScaffoldPanelData, 'style' | 'intro' | 'rowTitle' | 'columns' | 'rows'> | undefined {
 	const meta = asTable(data.meta);
@@ -591,7 +585,7 @@ function minimalData(data: TomlValue): Pick<IScaffoldPanelData, 'style' | 'intro
 			title: asText(row.title),
 			subtitle: asText(row.subtitle),
 			description: asText(row.description),
-			cells: columns.map(column => ({ text: asText(row[column.id]), url: asHttps(row[`${column.id}Url`]) })),
+			cells: columns.map(column => asText(row[column.id])),
 			code: asText(row.code).replace(/^\n+|\s+$/g, ''),
 		})),
 	};

@@ -56,6 +56,7 @@ type ScaffoldWebviewMessage =
 	| { command: 'openNotebook'; target: string }
 	| { command: 'openWiki'; target: string }
 	| { command: 'openUrl'; url: string }
+	| { command: 'openSeeAlso'; target: string }
 	| { command: 'openDataset'; id: string }
 	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto' | 'duckdbRepl'; code: string; setup?: string; language?: 'sql'; before?: IStepsRunMessage['before']; stepCode?: boolean; name?: string; box?: string }
 	| { command: 'colorize'; code: string; target?: string; language?: 'sql' }
@@ -247,6 +248,14 @@ export function registerScaffoldWebviewHandlers(
 			case 'openUrl':
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
 				break;
+			case 'openSeeAlso': {
+				// A sister panel of a Minimal panel: only a command its See Also lists is run
+				const sister = data.seeAlso?.find(item => item.command === msg.target);
+				if (sister) {
+					await commandService.executeCommand(sister.command);
+				}
+				break;
+			}
 			case 'installPackages':
 				await pkgStatus.handleInstall();
 				break;

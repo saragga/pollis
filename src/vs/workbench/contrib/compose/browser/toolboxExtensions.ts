@@ -22,7 +22,7 @@ import { ISecretStorageService } from '../../../../platform/secrets/common/secre
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
 import { ExtensionsRegistry, IExtensionPointUser } from '../../../services/extensions/common/extensionsRegistry.js';
-import { IModelNotebook, IModelPaper, IModelWiki } from '../../model/browser/common/model.types.js';
+import { IModelNotebook, IModelPaper, IModelSeeAlso, IModelWiki, IScaffoldPanelData } from '../../model/browser/common/model.types.js';
 import { POLLIS_CREDENTIAL_FIELDS } from '../../model/browser/common/credentials.js';
 import { IScaffoldPanel, openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { registerExternalFolder } from '../../model/browser/common/customCopyFileSystem.js';
@@ -534,7 +534,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 		for (const extension of extensions) {
 			const location = extension.description.extensionLocation;
 			for (const toolbox of extension.value) {
-				const panels: { contribution: IToolboxPanelContribution; panel: IScaffoldPanel; faq: readonly IAskPollisEvalItem[]; tabs: readonly IToolboxPanelTabContribution[] }[] = [];
+				const read: { contribution: IToolboxPanelContribution; data: IScaffoldPanelData; apiKey: IApiKeyProvider | undefined; faq: readonly IAskPollisEvalItem[]; tabs: readonly IToolboxPanelTabContribution[] }[] = [];
 				for (const contribution of toolbox.panels) {
 					if (contribution.submenu && !submenuOf(toolbox, contribution)) {
 						extension.collector.error(localize('pollisToolboxes.unknownSubmenu', "Panel {0} names the submenu {1}, which the toolbox does not have. It goes straight in the toolbox's menu.", contribution.id, contribution.submenu));
@@ -562,23 +562,23 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 						for (const problem of apiKey.problems) {
 							extension.collector.error(localize('pollisToolboxes.apiKey', "The [apiKey] of panel {0}: {1}", contribution.id, problem));
 						}
-						panels.push({
-							contribution,
-							tabs,
-							faq: panelFaqItems(parsed, contribution.title),
-							panel: {
-								id: contribution.id,
-								viewType: `pollis.${contribution.id}`,
-								title: contribution.title,
-								data,
-								apiKey: apiKey.provider,
-								html: () => buildScaffoldHtml(contribution.id, data, { title: contribution.title, defaultModel: contribution.defaultModel ?? '', decisionFirstColumn: contribution.decisionFirstColumn }),
-							},
-						});
+						read.push({ contribution, data, apiKey: apiKey.provider, faq: panelFaqItems(parsed, contribution.title), tabs });
 					} catch (error) {
 						this.logService.error(`Pollis toolbox ${toolbox.id}: cannot read panel ${contribution.id} (${toml.toString()})`, error);
 					}
 				}
+				const panels = read.map(({ contribution, data: tomlData, apiKey, faq, tabs }) => {
+					const data: IScaffoldPanelData = tomlData.style === 'minimal' ? { ...tomlData, seeAlso: sisterPanels(read, contribution) } : tomlData;
+					const panel: IScaffoldPanel = {
+						id: contribution.id,
+						viewType: `pollis.${contribution.id}`,
+						title: contribution.title,
+						data,
+						apiKey,
+						html: () => buildScaffoldHtml(contribution.id, data, { title: contribution.title, defaultModel: contribution.defaultModel ?? '', decisionFirstColumn: contribution.decisionFirstColumn }),
+					};
+					return { contribution, tabs, faq, panel };
+				});
 				const documents: IToolboxDocumentInfo[] = [];
 				for (const document of toolbox.documents ?? []) {
 					const source = joinPath(location, document.source);
@@ -876,6 +876,17 @@ function publishedKey(loaded: ILoadedToolbox): string {
 /** The submenu of the toolbox's menu that a panel names, if the toolbox has it. */
 function submenuOf(toolbox: IToolboxContribution, contribution: IToolboxPanelContribution): IToolboxSubmenuContribution | undefined {
 	return toolbox.submenus?.find(submenu => submenu.id === contribution.submenu);
+}
+
+/**
+ * The sister panels of a Minimal panel, shown in its See Also: the other Minimal panels of its toolbox in the same
+ * submenu and group, in the order of the menu, each with its introduction.
+ */
+function sisterPanels(panels: readonly { readonly contribution: IToolboxPanelContribution; readonly data: IScaffoldPanelData }[], of: IToolboxPanelContribution): IModelSeeAlso[] {
+	return panels
+		.filter(({ contribution, data }) => data.style === 'minimal' && contribution.id !== of.id && contribution.submenu === of.submenu && contribution.group === of.group)
+		.sort((a, b) => a.contribution.order - b.contribution.order)
+		.map(({ contribution, data }) => ({ command: contribution.command, title: contribution.menuTitle ?? contribution.title, description: data.intro ?? '' }));
 }
 
 /**

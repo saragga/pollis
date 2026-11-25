@@ -287,21 +287,21 @@ const MINIMAL_CSS = `${compareCss}
 		table.minimal-table th, table.minimal-table td { text-align: left; vertical-align: top; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--vscode-widget-border); }
 		table.minimal-table th { font-size: 12px; font-weight: 600; color: var(--vscode-descriptionForeground); }
 		.row-title { font: inherit; font-weight: 600; color: var(--vscode-foreground); background: none; border: none; padding: 0; text-align: left; }
-		button.row-title { cursor: pointer; }
+		button.row-title { color: var(--vscode-textLink-foreground); cursor: pointer; }
 		button.row-title:hover { text-decoration: underline; }
 		.row-sub { color: var(--vscode-descriptionForeground); margin: 2px 0 0 0; }
 		.row-desc { color: var(--vscode-descriptionForeground); margin: 4px 0 0 0; line-height: 1.4; max-width: 720px; }
 		tr.row-details > td { padding: 0 0 12px 0; }
-		button.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; text-align: left; }
-		button.link:hover { text-decoration: underline; }
+		.see-also { margin: 8px 0 20px 0; }
+		.see-also-title { font-size: 15px; font-weight: 500; margin: 0 0 8px 0; }
 `;
 
-/** The script of a Minimal panel's table: the search, a row's code opened under it, and the links of its values. */
+/** The script of a Minimal panel: the search, a row's code opened under it, and the cards of See Also. */
 const MINIMAL_JS = `
 	document.addEventListener('click', event => {
-		const link = event.target.closest('button[data-url]');
-		if (link) {
-			vscode.postMessage({ command: 'openUrl', url: link.dataset.url });
+		const sister = event.target.closest('button[data-see-also]');
+		if (sister) {
+			vscode.postMessage({ command: 'openSeeAlso', target: sister.dataset.seeAlso });
 			return;
 		}
 		const title = event.target.closest('button[data-row]');
@@ -316,7 +316,7 @@ const MINIMAL_JS = `
 		minimalSearch.addEventListener('input', () => {
 			const query = minimalSearch.value.trim().toLowerCase();
 			let shown = 0;
-			document.querySelectorAll('tr.row').forEach(row => {
+			document.querySelectorAll('tr.minimal-row').forEach(row => {
 				const match = !query || row.dataset.search.includes(query);
 				row.hidden = !match;
 				shown += match ? 1 : 0;
@@ -350,16 +350,16 @@ function buildRowsHtml(data: IScaffoldPanelData): string {
 	const search = htmlEsc(localize('scaffold.minimal.search', "Search"));
 	const head = `<tr><th>${htmlEsc(data.rowTitle || localize('scaffold.minimal.name', "Name"))}</th>${columns.map(column => `<th>${htmlEsc(column.label)}</th>`).join('')}</tr>`;
 	const body = rows.map(row => {
-		const searched = [row.title, row.subtitle, row.description, ...row.cells.map(cell => cell.text)].join(' ').toLowerCase();
+		const searched = [row.title, row.subtitle, row.description, ...row.cells].join(' ').toLowerCase();
 		const title = row.code
 			? `<button class="row-title" data-row="${htmlEsc(row.id)}" aria-expanded="false">${htmlEsc(row.title)}</button>`
 			: `<span class="row-title">${htmlEsc(row.title)}</span>`;
 		const name = `<td>${title}${row.subtitle ? `<div class="row-sub">${htmlEsc(row.subtitle)}</div>` : ''}${row.description ? `<p class="row-desc">${htmlEsc(row.description)}</p>` : ''}</td>`;
-		const cells = row.cells.map(cell => `<td>${cell.url ? `<button class="link" data-url="${htmlEsc(cell.url)}">${htmlEsc(cell.text)}</button>` : htmlEsc(cell.text)}</td>`).join('');
+		const cells = row.cells.map(cell => `<td>${htmlEsc(cell)}</td>`).join('');
 		const details = row.code
 			? `\n\t\t\t<tr class="row-details" data-details="${htmlEsc(row.id)}" hidden><td colspan="${columns.length + 1}">${stepCodeBoxHtml(htmlEsc(rowKey(row)), htmlEsc(localize('scaffold.minimal.code', "Code")), '')}</td></tr>`
 			: '';
-		return `\t\t\t<tr class="row" data-search="${htmlEsc(searched)}">${name}${cells}</tr>${details}`;
+		return `\t\t\t<tr class="minimal-row" data-search="${htmlEsc(searched)}">${name}${cells}</tr>${details}`;
 	});
 	return `<input class="minimal-search" type="search" placeholder="${search}" aria-label="${search}">
 		<table class="minimal-table">
@@ -369,6 +369,19 @@ ${body.join('\n')}
 			</tbody>
 		</table>
 		<p class="hint minimal-none" hidden>${htmlEsc(localize('scaffold.minimal.noMatch', "Nothing matches the search."))}</p>`;
+}
+
+/** See Also of a Minimal panel: a card per sister panel, each with its introduction, which opens it. */
+function buildSeeAlsoHtml(data: IScaffoldPanelData): string {
+	if (!data.seeAlso?.length) {
+		return '';
+	}
+	const cards = data.seeAlso.map(sister => `<button class="nb-card" data-see-also="${htmlEsc(sister.command)}"><span class="nb-label">${htmlEsc(sister.title)}</span>${sister.description ? `<span class="nb-desc">${htmlEsc(sister.description)}</span>` : ''}</button>`);
+	return `
+		<div class="see-also">
+			<div class="see-also-title">${htmlEsc(localize('scaffold.minimal.seeAlso', "See Also"))}</div>
+			<div class="right-action-grid">${cards.join('')}</div>
+		</div>`;
 }
 
 /**
@@ -387,7 +400,7 @@ function buildMinimalHtml(panelId: string, data: IScaffoldPanelData, title: stri
 		...(hasNextSteps ? { actionsJs: buildActionsJs(data), ...buildNextSteps(panelId, data) } : { omitNextSteps: true }),
 		omitLearnMore: !hasLearnMore,
 		introHtml: htmlEsc(data.intro ?? ''),
-		bodyHtml: buildRowsHtml(data),
+		bodyHtml: buildRowsHtml(data) + buildSeeAlsoHtml(data),
 		extraCss: hasCode ? MINIMAL_CSS + stepCodeCss : MINIMAL_CSS,
 		...(hasCode ? {
 			stepSetupJs,
