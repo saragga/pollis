@@ -5011,7 +5011,7 @@
 				"QuadGK.jl",
 				"HCubature.jl",
 				"FastGaussQuadrature.jl",
-				"SymbolicNumericIntegration.jl"
+				"Giac.jl"
 			]
 		},
 		{
@@ -10438,7 +10438,7 @@
 			],
 			"packages": [
 				"Symbolics.jl",
-				"SymbolicNumericIntegration.jl"
+				"Giac.jl"
 			]
 		},
 		{
