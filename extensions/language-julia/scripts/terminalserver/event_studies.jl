@@ -18,9 +18,9 @@
 # releases, by its name, or, for a panel study, the loading of a package, by its name, and each estimator.
 import Pkg
 
-# The oldest EventStudies with what the page shows: the CAAR's band, the curves from the next open and the
-# panel studies' tables
-const MINIMUM = v"0.1.0"
+# The oldest EventStudies with what the page shows (the CAAR's band, the curves from the next open and the
+# panel studies' tables) and with the vignette as Package Vignettes compiles it, from its LaTeX sources
+const MINIMUM = v"0.1.1"
 const REGISTRY_URL = "https://github.com/Trumpingtons/PollisRegistry"
 const ENVIRONMENT = joinpath(homedir(), ".pollis", "event-studies", "julia", "v$(VERSION.major).$(VERSION.minor)")
 Pkg.activate(ENVIRONMENT; io = devnull)
