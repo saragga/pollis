@@ -77,6 +77,18 @@ interface IToolboxPlannedContribution {
 	readonly submenu?: string;
 }
 
+/** A page built into Pollis that a toolbox's menu opens: a menu item that runs the page's command. */
+interface IToolboxPageContribution {
+	/** The page's command, for example pollis.britannica.open. */
+	readonly command: string;
+	readonly title: string;
+	/** The menu group, which separators divide from the others. */
+	readonly group: string;
+	readonly order: number;
+	/** The id of the submenu of the toolbox's menu the item is in. Default: straight in the toolbox's menu. */
+	readonly submenu?: string;
+}
+
 /** A submenu of a toolbox's menu, which holds the panels and planned items that name it. */
 interface IToolboxSubmenuContribution {
 	readonly id: string;
@@ -102,6 +114,8 @@ interface IToolboxContribution {
 	readonly panels: IToolboxPanelContribution[];
 	/** The planned items of its menu, greyed out. */
 	readonly planned?: IToolboxPlannedContribution[];
+	/** The pages built into Pollis that its menu opens. */
+	readonly pages?: IToolboxPageContribution[];
 	/** Its vignettes, in Help > Documentation > Toolbox Vignettes. */
 	readonly documents?: IToolboxDocumentContribution[];
 	/** The texts it adds to the Knowledge Base. */
@@ -274,6 +288,21 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 						},
 					},
 				},
+				pages: {
+					type: 'array',
+					description: localize('pollisToolboxes.pages', "Pages built into Pollis that the toolbox's menu opens, beside its panels, such as Britannica Through the Editions: each a menu item that runs the page's command."),
+					items: {
+						type: 'object',
+						required: ['command', 'title', 'group', 'order'],
+						properties: {
+							command: { type: 'string', description: localize('pollisToolboxes.page.command', "The command of the page, for example pollis.britannica.open.") },
+							title: { type: 'string', description: localize('pollisToolboxes.page.title', "The menu item.") },
+							group: { type: 'string', description: localize('pollisToolboxes.page.group', "The group in the toolbox menu, or in its submenu if it names one.") },
+							order: { type: 'number', description: localize('pollisToolboxes.page.order', "The order in that group.") },
+							submenu: { type: 'string', description: localize('pollisToolboxes.page.submenu', "The id of the submenu of the toolbox's menu the item is in. Default: straight in the toolbox's menu.") },
+						},
+					},
+				},
 				documents: {
 					type: 'array',
 					description: localize('pollisToolboxes.documents', "The toolbox's vignettes, listed in Help > Documentation > Toolbox Vignettes. Pollis compiles each vignette from its LaTeX sources the first time it is opened."),
@@ -392,6 +421,8 @@ interface ILoadedToolbox {
 	readonly topicMaps: { readonly info: IToolboxTopicMapsInfo; readonly topics: readonly IToolboxTopicContribution[] } | undefined;
 	/** Its planned items, those whose submenu, if they name one, the toolbox has. */
 	readonly planned: readonly IToolboxPlannedContribution[];
+	/** The pages of Pollis its menu opens, those whose submenu, if they name one, the toolbox has. */
+	readonly pages: readonly IToolboxPageContribution[];
 }
 
 /**
@@ -618,6 +649,14 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					}
 					planned.push(item);
 				}
+				const pages: IToolboxPageContribution[] = [];
+				for (const page of toolbox.pages ?? []) {
+					if (typeof page.command !== 'string' || !page.command || typeof page.title !== 'string' || !page.title || typeof page.group !== 'string' || typeof page.order !== 'number' || (page.submenu !== undefined && !toolbox.submenus?.some(({ id }) => id === page.submenu))) {
+						extension.collector.error(localize('pollisToolboxes.page', "Page {0} must have its command, title, group and order, and name a submenu the toolbox has, if any.", String(page.title)));
+						continue;
+					}
+					pages.push(page);
+				}
 				const courses: IToolboxCourseContribution[] = [];
 				for (const course of toolbox.courses ?? []) {
 					if (typeof course.title !== 'string' || !course.title || typeof course.url !== 'string' || !course.url.startsWith('https://')) {
@@ -661,7 +700,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 						extension.collector.error(localize('pollisToolboxes.topicMapsFile', "The topic maps file {0} must be inside the extension folder.", String(toolbox.topicMaps.file)));
 					}
 				}
-				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts, courses, games, forecastingDatasets, topicMaps, planned });
+				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts, courses, games, forecastingDatasets, topicMaps, planned, pages });
 			}
 		}
 		if (generation !== this.generation) {
@@ -719,7 +758,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			const placement = entry ? placementOf(loaded, entry) : defaultPlacement(loaded);
 			const submenu = this.submenus.get(toolbox.id) ?? MenuId.for(`${TOOLBOX_SUBMENU_PREFIX}${toolbox.id}`);
 			this.submenus.set(toolbox.id, submenu);
-			if (placement.menu && (loaded.planned.length || loaded.topicMaps?.topics.length || loaded.panels.some(({ contribution }) => placement.panels[contribution.id]?.menu === TOOLBOX_MENU))) {
+			if (placement.menu && (loaded.planned.length || loaded.pages.length || loaded.topicMaps?.topics.length || loaded.panels.some(({ contribution }) => placement.panels[contribution.id]?.menu === TOOLBOX_MENU))) {
 				const { menu, group, order } = placement.menu;
 				append(MenuId.for(menu), { group, order, submenu, title: toolbox.title });
 			}
@@ -770,6 +809,13 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 				for (const item of loaded.planned) {
 					const inSubmenu = item.submenu ? toolbox.submenus?.find(({ id }) => id === item.submenu) : undefined;
 					append(inSubmenu ? nestedMenu(inSubmenu) : submenu, { group: item.group, order: item.order, title: item.title, command: { id: PLANNED_COMMAND, title: item.title }, planned: true });
+				}
+			}
+			// The pages of Pollis it opens, in the toolbox's own menu while that menu is placed
+			if (placement.menu) {
+				for (const page of loaded.pages) {
+					const inSubmenu = page.submenu ? toolbox.submenus?.find(({ id }) => id === page.submenu) : undefined;
+					append(inSubmenu ? nestedMenu(inSubmenu) : submenu, { group: page.group, order: page.order, title: page.title, command: { id: page.command, title: page.title } });
 				}
 			}
 			// Its topics, each opening the Topic Maps page on it, in the toolbox's own menu while that menu is placed

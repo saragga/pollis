@@ -1,0 +1,27 @@
+# Britannica Through the Editions Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: only its Powered by and Learn More. Its articles are those of
+# the built-in database PollisBritannica, which PollisDB.jl makes from the artifact of PollisBritannica.jl. `pageCommand`
+# is the command that opens it. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/britannica.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Britannica Through the Editions"
+viewType = "pollis.britannica"
+pageCommand = "pollis.britannica.open"
+
+[[packages]]
+name = "PollisBritannica.jl"
+github = "https://github.com/Trumpingtons/PollisBritannica.jl"
+
+[[wikis]]
+name = "Overview"
+file = "britannica/overview.md"
+bundled = true
+description = "What the page shows, the cases, looking up a headword of your own, and the PollisBritannica database"
+
+[[wikis]]
+name = "Factsheet"
+file = "britannica/factsheet.md"
+bundled = true
+description = "The editions from 1771 to 1929, what each article row holds, how the articles are found in the scans, and their limits"

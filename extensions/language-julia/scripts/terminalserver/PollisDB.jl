@@ -166,6 +166,15 @@ const KNOWLEDGE = Base.PkgId(UUID("20c90171-e345-48e2-b3f5-e1c5e5b81d48"), "Poll
 const KNOWLEDGE_URL = "https://github.com/Trumpingtons/PollisKnowledge.jl"
 """The commit of PollisKnowledge.jl installed, from GitHub."""
 const KNOWLEDGE_COMMIT = joinpath(ENVIRONMENT, "PollisKnowledge.commit")
+"""PollisBritannica.jl, whose artifact, an index of the articles of the Encyclopaedia Britannica from 1771 to 1929, `build_britannica` makes PollisBritannica from."""
+const BRITANNICA = Base.PkgId(UUID("db89cef9-ae45-49bd-8a72-96bae7fb52a2"), "PollisBritannica")
+const BRITANNICA_URL = "https://github.com/Trumpingtons/PollisBritannica.jl"
+"""The commit of PollisBritannica.jl installed, from GitHub."""
+const BRITANNICA_COMMIT = joinpath(ENVIRONMENT, "PollisBritannica.commit")
+"""The PollisBritannica database: the editions, articles and cases of PollisBritannica.jl as tables, made by `build_britannica`."""
+const BRITANNICA_DB = joinpath(homedir(), ".pollis", "databases", "PollisBritannica.duckdb")
+"""The PollisBritannica.jl folder and the SQL that `BRITANNICA_DB` was made with."""
+const BRITANNICA_STAMP = BRITANNICA_DB * ".stamp"
 """The PollisBenchmarks database: the catalogue of PollisBenchmarks.jl and the questions of the benchmarks built in, made by `build_benchmarks`."""
 const BENCHMARKS_DB = joinpath(homedir(), ".pollis", "databases", "PollisBenchmarks.duckdb")
 """The PollisBenchmarks.jl folder, its artifact and the SQL that `BENCHMARKS_DB` was made with."""
@@ -546,7 +555,7 @@ excel, which the Julia extension installs where DuckDB keeps its extensions, are
 const DUCKDB_CONFIG = ["autoinstall_known_extensions" => "false", "autoload_known_extensions" => "true"]
 
 """The databases of Pollis, built in and of its activity, that `connect` attaches, read-only, under their own names."""
-builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB, BENCHMARKS_DB, COMPETITIONS_DB, DOCUMENTS_DB, MODEL_EVALUATIONS_DB])
+builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, BRITANNICA_DB, REFERENCES_DB, BENCHMARKS_DB, COMPETITIONS_DB, DOCUMENTS_DB, MODEL_EVALUATIONS_DB])
 
 """
     connect(path = ":memory:"; name = "DuckDB", builtins = true, fts = true, show = true)
@@ -1955,6 +1964,81 @@ function build_journals()
     return nothing
 end
 
+"""The artifact of the installed PollisBritannica.jl: its folder and the folder of its files; `nothing` when it is not installed or its artifact is missing."""
+function britannica_source()
+    path = Base.locate_package(BRITANNICA)
+    path === nothing && return nothing
+    root = dirname(dirname(path))
+    toml = joinpath(root, "Artifacts.toml")
+    isfile(toml) || return nothing
+    Artifacts = Base.require(Base.PkgId(UUID("56f22d72-fd6d-98f1-02f0-08ddc0907c33"), "Artifacts"))
+    hash = Base.invokelatest(Artifacts.artifact_hash, "britannica", toml)
+    hash === nothing && return nothing
+    folder = Base.invokelatest(Artifacts.artifact_path, hash)
+    return isfile(joinpath(folder, "articles.parquet")) ? (; root, folder) : nothing
+end
+
+"""The SQL statements that make the tables of `BRITANNICA_DB` from the files of the artifact in `folder`."""
+function britannica_sql(folder::AbstractString)
+    file(name) = replace(joinpath(folder, name), "\\" => "/", "'" => "''")
+    return [
+        "CREATE TABLE editions AS SELECT * FROM read_parquet('$(file("editions.parquet"))')",
+        "CREATE TABLE articles AS SELECT * FROM read_parquet('$(file("articles.parquet"))') ORDER BY key, edition",
+        "CREATE TABLE cases AS SELECT * FROM read_json('$(file("cases.json"))')",
+        "COMMENT ON TABLE editions IS 'The editions of the Encyclopaedia Britannica from 1771 to 1929: the volumes read, the articles found and their characters. Source: the scans of the Internet Archive'",
+        "COMMENT ON TABLE articles IS 'The articles of the Encyclopaedia Britannica from 1771 to 1929, a row per article of each edition, read from the scans of the Internet Archive; the scan of an article is https://archive.org/details/<item>/page/n<page>'",
+        "COMMENT ON COLUMN articles.key IS 'The headword in the capital letters A to Z only, to look an article up in every edition'",
+        "COMMENT ON COLUMN articles.chars IS 'The length of the article in characters of its text'",
+        "COMMENT ON COLUMN articles.signature IS 'The initials of the contributor, where the article is signed'",
+        "COMMENT ON TABLE cases IS 'Articles followed through the editions, a row per edition of each case, with what changes from one edition to the next'",
+    ]
+end
+
+britannica_stamp(source) = source.root * "\n" * join(britannica_sql(source.folder), ";\n")
+
+"""Whether `BRITANNICA_DB` is missing or older than the installed PollisBritannica.jl or its SQL; `false` when it is not installed."""
+function britannica_outdated()
+    source = britannica_source()
+    source === nothing && return false
+    return !isfile(BRITANNICA_DB) || !isfile(BRITANNICA_STAMP) || read(BRITANNICA_STAMP, String) != britannica_stamp(source)
+end
+
+"""
+    build_britannica()
+
+Make the PollisBritannica database `BRITANNICA_DB` when it is missing, or PollisBritannica.jl or the SQL of
+`britannica_sql` have changed since it was made: the editions, articles and cases of the package's artifact, copied
+into tables. Nothing else writes to it. Written under a temporary name and moved into place, as `build` does.
+"""
+function build_britannica()
+    britannica_outdated() || return nothing
+    source = britannica_source()
+    println("Pollis: building the PollisBritannica database. This happens only when PollisBritannica.jl changes.")
+    DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
+    get(() -> Base.require(DBINTERFACE), Base.loaded_modules, DBINTERFACE)
+    mkpath(dirname(BRITANNICA_DB))
+    tmp = "$BRITANNICA_DB.$(getpid()).tmp"
+    rm(tmp; force = true)
+    try
+        Base.invokelatest() do
+            con = loaded(DBINTERFACE).connect(DuckDB.DB, tmp)
+            try
+                foreach(statement -> loaded(DBINTERFACE).execute(con, statement), britannica_sql(source.folder))
+                loaded(DBINTERFACE).execute(con, "CHECKPOINT")
+            finally
+                loaded(DBINTERFACE).close!(con)
+            end
+        end
+        mv(tmp, BRITANNICA_DB; force = true)
+        write(BRITANNICA_STAMP, britannica_stamp(source))
+    catch err
+        rm(tmp; force = true)
+        isfile(BRITANNICA_DB) || rethrow()
+        @warn "Pollis: could not rebuild the PollisBritannica database; the previous one is kept" exception = err
+    end
+    return nothing
+end
+
 """The columns of a reference, of Pollis or of the user; `pollis_key`, `merged_into`, `saved` and `removed` are the user's only."""
 const REFERENCE_COLUMNS = """
     key: 'VARCHAR', type: 'VARCHAR', title: 'VARCHAR', authors: 'VARCHAR[]', author_kind: 'VARCHAR', authors_complete: 'BOOLEAN',
@@ -2446,7 +2530,8 @@ end
 """The packages of Pollis installed from GitHub, the data of the built-in databases, PollisBenchmarks.jl and PollisKnowledge.jl, with the file of the commit installed."""
 const DATA_PACKAGES = [(pkg = DATASETS, url = DATASETS_URL, commit = DATASETS_COMMIT), (pkg = JOURNALS, url = JOURNALS_URL, commit = JOURNALS_COMMIT),
     (pkg = REFERENCES, url = REFERENCES_URL, commit = REFERENCES_COMMIT), (pkg = RSS, url = RSS_URL, commit = RSS_COMMIT),
-    (pkg = BENCHMARKS, url = BENCHMARKS_URL, commit = BENCHMARKS_COMMIT), (pkg = KNOWLEDGE, url = KNOWLEDGE_URL, commit = KNOWLEDGE_COMMIT)]
+    (pkg = BENCHMARKS, url = BENCHMARKS_URL, commit = BENCHMARKS_COMMIT), (pkg = KNOWLEDGE, url = KNOWLEDGE_URL, commit = KNOWLEDGE_COMMIT),
+    (pkg = BRITANNICA, url = BRITANNICA_URL, commit = BRITANNICA_COMMIT)]
 
 """
     pending()
@@ -2491,7 +2576,7 @@ its own, as it installs Revise, so the REPL never waits for Pkg.
 function needs_install()
     todo = pending()
     return !isempty(todo.missing_packages) || any(d -> d.missing || d.outdated, todo.data) || todo.registry_duckdb ||
-        !isfile(DATASETS_DB) || !isfile(RSS_DB) || !isfile(JOURNALS_DB) || journals_outdated() || package_data_uncopied() || references_outdated() ||
+        !isfile(DATASETS_DB) || !isfile(RSS_DB) || !isfile(JOURNALS_DB) || journals_outdated() || britannica_outdated() || package_data_uncopied() || references_outdated() ||
         benchmarks_outdated() || competitions_outdated()
 end
 

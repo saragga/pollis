@@ -205,6 +205,7 @@ import './contrib/compose/electron-browser/snowballDatabaseService.js';
 import './contrib/compose/electron-browser/askPollisService.js';
 import './contrib/compose/electron-browser/articleDownloadService.js';
 import './contrib/compose/electron-browser/forecastingDatasetsService.js';
+import './contrib/databases/electron-browser/britannicaService.js';
 
 // Policy Export
 import './contrib/policyExport/electron-browser/policyExport.contribution.js';
