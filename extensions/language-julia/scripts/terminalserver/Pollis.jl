@@ -17,10 +17,10 @@ ENVIRONMENT in LOAD_PATH || push!(LOAD_PATH, ENVIRONMENT)
 include(joinpath(@__DIR__, "pollis_registry.jl"))
 
 """
-    Pollis.packages(names...; forks = ())
+    Pollis.packages(names...; forks = (), minimum = ())
 
 Step 0 of every workflow, notebook and Code Example: install whichever of the named packages the
-active environment cannot load, and do nothing when all are there.
+active environment cannot load, upgrade those older than their `minimum`, and do nothing when all are there.
 
 A name is a string, `"Plots"` or `"PollisDatasets"`: added by name from General or from the Pollis
 registry, which is added and updated first when a name to install is in it or in no registry
@@ -28,6 +28,11 @@ reachable yet, so that an install sees the latest releases of Pollis's own packa
 registry is given with its link, `"Name" => "https://github.com/owner/Name.jl"`: added by name if a reachable
 registry has it, from the link otherwise. A name in `forks` is always added from its link, since the
 registered version may be the one present; it is re-added whenever anything is missing.
+
+`minimum` gives the oldest version a package may have, `"HistoricalGeography" => "0.1.6"`: a package
+installed in an older version is upgraded to that version or a later one of the same major version, for
+code that calls what the older version does not have. A package this Julia has already loaded in its
+older version is upgraded all the same, and Julia must be restarted to load the new one: it says so.
 
 The packages installed keep their versions. When that is impossible, only those from the Pollis registry
 are upgraded to make room; when that is not enough either, nothing is changed and the error says what
@@ -37,22 +42,43 @@ conflicts and how to install all the same, with other packages upgraded.
 Pollis.packages("ARCHModels", "Plots", "PollisDatasets")
 ```
 """
-function packages(names::Union{AbstractString, Pair{<:AbstractString, <:AbstractString}}...; forks = ())
+function packages(names::Union{AbstractString, Pair{<:AbstractString, <:AbstractString}}...; forks = (), minimum = ())
 	wanted = [name isa Pair ? (String(first(name)), String(last(name))) : (String(name), "") for name in names]
+	least = Dict(String(first(pair)) => VersionNumber(last(pair)) for pair in minimum)
 	missing_packages = filter(((name, _),) -> Base.identify_package(name) === nothing, wanted)
-	isempty(missing_packages) && return nothing
-	to_add = unique([missing_packages; filter(((name, _),) -> name in forks, wanted)])
+	outdated = filter(wanted) do (name, _)
+		version = haskey(least, name) ? installed_version(name) : nothing
+		return version !== nothing && version < least[name]
+	end
+	isempty(missing_packages) && isempty(outdated) && return nothing
+	# The outdated packages this Julia has loaded: upgraded on disk, but the old version stays loaded
+	loaded = [name for (name, _) in outdated if Base.root_module_exists(Base.identify_package(name))]
+	to_add = unique([missing_packages; outdated; filter(((name, _),) -> name in forks, wanted)])
 	# Pkg is loaded only now, so the adding runs in the newest world, where Pkg's methods exist.
-	Base.invokelatest(add, Base.require(PKG), to_add, forks)
+	Base.invokelatest(add, Base.require(PKG), to_add, forks, least)
+	isempty(loaded) || println(stderr, "Upgraded ", join(loaded, ", "), ", which this Julia has already loaded in an older version: restart the Julia REPL (or the notebook's kernel) to load the new one.")
 	return nothing
+end
+
+"""The version of the package `name` that the active environments load, from its Project.toml, without loading it; `nothing` when it cannot be loaded, or has no version."""
+function installed_version(name::AbstractString)
+	id = Base.identify_package(name)
+	id === nothing && return nothing
+	source = Base.locate_package(id)
+	source === nothing && return nothing
+	project = joinpath(dirname(dirname(source)), "Project.toml")
+	isfile(project) || return nothing
+	version = get(Base.parsed_toml(project), "version", nothing)
+	return version isa AbstractString ? VersionNumber(version) : nothing
 end
 
 """
 Adds each `(name, link)`: by name if a reachable registry has it and it is not a fork, from its link otherwise.
 The Pollis registry is added and updated first when a name that is not a fork is in it, or in no registry reachable
-yet: `Pkg.add` updates a registry at most once a day, so by itself it would miss the releases since.
+yet: `Pkg.add` updates a registry at most once a day, so by itself it would miss the releases since. A name in
+`least` is given its range of versions from its minimum.
 """
-function add(Pkg::Module, to_add, forks)
+function add(Pkg::Module, to_add, forks, least = Dict{String, VersionNumber}())
 	has(registry, name) = !isempty(Pkg.Registry.uuids_from_name(registry, name))
 	registered(name) = any(registry -> has(registry, name), Pkg.Registry.reachable_registries())
 	in_pollis_registry(name) = any(registry -> registry.name == "PollisRegistry" && has(registry, name), Pkg.Registry.reachable_registries())
@@ -61,7 +87,7 @@ function add(Pkg::Module, to_add, forks)
 		Pkg.Registry.update("PollisRegistry")
 	end
 	sources = [(name, name in forks || !(isempty(link) || registered(name)) ? link : "") for (name, link) in to_add]
-	add_keeping_versions(Pkg, sources)
+	add_keeping_versions(Pkg, sources, least)
 end
 
 """
@@ -70,9 +96,9 @@ itself, `Pkg.add` upgrades packages across the environment when it cannot keep t
 the installed packages of the Pollis registry alone are upgraded and the adding is tried again; when that fails too,
 the environment's files are put back as they were, and the error gives the conflict and the command that upgrades.
 """
-function add_keeping_versions(Pkg::Module, sources)
+function add_keeping_versions(Pkg::Module, sources, least = Dict{String, VersionNumber}())
 	conflict = resolver_conflict(Pkg) do
-		Pkg.add(kept_specs(Pkg, sources); preserve = Pkg.PRESERVE_ALL)
+		Pkg.add(kept_specs(Pkg, sources, least); preserve = Pkg.PRESERVE_ALL)
 	end
 	conflict === nothing && return
 	environment = Pkg.Types.EnvCache()
@@ -86,7 +112,7 @@ function add_keeping_versions(Pkg::Module, sources)
 				# Nothing is precompiled before the adding is known to work
 				withenv("JULIA_PKG_PRECOMPILE_AUTO" => "0") do
 					Pkg.update(upgradable; preserve = Pkg.PRESERVE_ALL, update_registry = false)
-					Pkg.add(kept_specs(Pkg, sources); preserve = Pkg.PRESERVE_ALL)
+					Pkg.add(kept_specs(Pkg, sources, least); preserve = Pkg.PRESERVE_ALL)
 				end
 			end
 			installed = conflict === nothing
@@ -98,7 +124,9 @@ function add_keeping_versions(Pkg::Module, sources)
 			return
 		end
 	end
-	arguments = [isempty(link) ? "Pkg.PackageSpec(name = $(repr(name)))" : "Pkg.PackageSpec(url = $(repr(link)))" for (name, link) in sources]
+	arguments = [!isempty(link) ? "Pkg.PackageSpec(url = $(repr(link)))" :
+		haskey(least, name) ? "Pkg.PackageSpec(name = $(repr(name)), version = $(repr(string(least_range(least[name])))))" :
+		"Pkg.PackageSpec(name = $(repr(name)))" for (name, link) in sources]
 	error("""
 	Pollis did not install $(join(first.(sources), ", ")): they conflict with the installed versions, and the environment is left as it was. The conflict:
 
@@ -110,14 +138,19 @@ function add_keeping_versions(Pkg::Module, sources)
 	""")
 end
 
+"""The versions from `minimum` on, within its major version, as a range Pkg reads: `"0.1.6-0"` for 0.1.6."""
+least_range(minimum::VersionNumber) = "$(minimum)-$(minimum.major)"
+
 """
-The specs to add `sources` with. A name already in the manifest, as another package's dependency, is given its
-version there: named without one, it would be free to move.
+The specs to add `sources` with. A name in `least` is given its range of versions from its minimum, which upgrades
+it; any other name already in the manifest, as another package's dependency, is given its version there: named
+without one, it would be free to move.
 """
-function kept_specs(Pkg::Module, sources)
+function kept_specs(Pkg::Module, sources, least = Dict{String, VersionNumber}())
 	entries = values(Pkg.Types.EnvCache().manifest.deps)
 	return map(sources) do (name, link)
 		isempty(link) || return Pkg.PackageSpec(url = link)
+		haskey(least, name) && return Pkg.PackageSpec(name = name, version = Pkg.Types.VersionSpec(least_range(least[name])))
 		for entry in entries
 			if entry.name == name && entry.version !== nothing && entry.path === nothing && entry.repo.source === nothing
 				return Pkg.PackageSpec(name = name, version = entry.version)

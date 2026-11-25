@@ -31,6 +31,8 @@ export interface IModelPackage {
 	readonly github: string;
 	/** A fork of a registered package: install from `github` instead of the registry. */
 	readonly fork?: boolean;
+	/** The oldest version the code works with, such as "0.1.6": `Pollis.packages` upgrades an older one. */
+	readonly minimum?: string;
 	readonly papers: IModelPaper[];
 	readonly videos?: IModelVideo[];
 	readonly license?: string;

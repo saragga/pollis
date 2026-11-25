@@ -335,19 +335,25 @@ function juliaRawString(text: string): string {
  * installs whichever of the packages the running Julia cannot load, and does nothing when all are
  * there. Julia itself decides what is missing, so it is exact for whatever environment is active. A
  * package with a Powered-by link is passed with it, for when no registry has it; forks always come
- * from their link.
+ * from their link. A package with a `minimum` version is upgraded when an older one is installed.
  */
-function juliaPackageCheck(packages: ReadonlyArray<{ readonly name: string; readonly github?: string; readonly fork?: boolean }>): string {
+function juliaPackageCheck(packages: ReadonlyArray<{ readonly name: string; readonly github?: string; readonly fork?: boolean; readonly minimum?: string }>): string {
 	const names = packages.map(p => p.github ? `"${juliaPackageName(p.name)}" => "${p.github}"` : `"${juliaPackageName(p.name)}"`);
 	const forks = packages.filter(p => p.fork).map(p => `"${juliaPackageName(p.name)}"`);
-	return `Pollis.packages(${names.join(', ')}${forks.length ? `; forks = [${forks.join(', ')}]` : ''})`;
+	// Only a version Julia reads, so that the line cannot carry anything else
+	const minimum = packages.filter(p => p.minimum && /^\d+\.\d+\.\d+$/.test(p.minimum)).map(p => `"${juliaPackageName(p.name)}" => "${p.minimum}"`);
+	const keywords = [
+		...(forks.length ? [`forks = [${forks.join(', ')}]`] : []),
+		...(minimum.length ? [`minimum = [${minimum.join(', ')}]`] : []),
+	];
+	return `Pollis.packages(${names.join(', ')}${keywords.length ? `; ${keywords.join(', ')}` : ''})`;
 }
 
 /**
  * Install the given packages (display names accepted) in the Julia REPL with `Pollis.packages`: a
  * registered package by name, an unregistered one or a fork from its Powered-by link.
  */
-export async function installJuliaPackages(packages: ReadonlyArray<{ readonly name: string; readonly github?: string; readonly fork?: boolean }>, commandService: ICommandService): Promise<void> {
+export async function installJuliaPackages(packages: ReadonlyArray<{ readonly name: string; readonly github?: string; readonly fork?: boolean; readonly minimum?: string }>, commandService: ICommandService): Promise<void> {
 	if (!packages.length) { return; }
 	await sendToJuliaRepl(juliaPackageCheck(packages), commandService);
 }
@@ -401,13 +407,13 @@ export function createPackageStatusWiring(
 			if (allInstalled) { rechecking = false; } else { scheduleRecheck(attempt + 1); }
 		}, 5000));
 	};
-	const missingPackages = async (): Promise<Array<{ name: string; github?: string; fork?: boolean }>> => {
+	const missingPackages = async (): Promise<Array<{ name: string; github?: string; fork?: boolean; minimum?: string }>> => {
 		const { statuses } = await checkJuliaPackagesInstalled(packageDisplayNames, fileService, pathService, workspaceContextService);
 		// A fork may already be present from the registry, so it is always (re)added from its link when anything is installed
 		const anyMissing = statuses.some(s => !s.installed);
 		return statuses.filter(s => !s.installed || (anyMissing && packages.some(p => p.name === s.name && p.fork))).map(s => {
 			const pkg = packages.find(p => p.name === s.name);
-			return { name: s.name, github: pkg?.github, fork: pkg?.fork };
+			return { name: s.name, github: pkg?.github, fork: pkg?.fork, minimum: pkg?.minimum };
 		});
 	};
 	const handleInstall = async (): Promise<void> => {
@@ -422,7 +428,7 @@ export function createPackageStatusWiring(
 		scheduleRecheck(0);
 		return juliaPackageCheck(packageDisplayNames.map(name => {
 			const pkg = packages.find(p => p.name === name);
-			return { name, github: pkg?.github, fork: pkg?.fork };
+			return { name, github: pkg?.github, fork: pkg?.fork, minimum: pkg?.minimum };
 		})) + '\n' + code;
 	};
 	return { postStatus, scheduleRecheck, handleInstall, withPackageCheck };
