@@ -28,7 +28,6 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IQuickInputService, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
@@ -206,12 +205,13 @@ function parseSource(source: string): { readonly archive?: string; readonly gute
 	return archive ? { archive } : undefined;
 }
 
-/** What the open page does when asked by a menu item: open a source, a PDF, or add the work to the workspace. */
+/** Where in a step the page goes: the field of a source in Open a Work, or the glossary in Translate. */
+type OcrPlace = 'source' | 'glossary';
+
+/** What the open page does when asked by a menu item: show a step, or add the work to the workspace. */
 interface IOcrPageActions {
-	readonly openSource: (source: string) => Promise<void>;
-	readonly openPdf: () => Promise<void>;
 	readonly addToWorkspace: () => Promise<void>;
-	readonly show: (step: OcrStep, glossary?: boolean) => Promise<void>;
+	readonly show: (step: OcrStep, place?: OcrPlace) => Promise<void>;
 }
 
 /**
@@ -291,7 +291,7 @@ async function openOcrFilesPage(services: IOcrPageServices, step: OcrStep, then?
 	let models: readonly IInstalledModel[] = [];
 	let ready = false;
 	const whenReady = new DeferredPromise<void>();
-	let pendingStep: { step: OcrStep; glossary: boolean } = { step, glossary: false };
+	let pendingStep: { step: OcrStep; place?: OcrPlace } = { step };
 
 	const sourceFolder = (id: string) => joinPath(worksRoot, id, 'source');
 	const check = () => ({ languages: current?.work.languages ?? [], year: current?.work.year, words: current?.work.words ?? [] });
@@ -371,8 +371,8 @@ async function openOcrFilesPage(services: IOcrPageServices, step: OcrStep, then?
 		});
 	};
 
-	const showStep = (target: OcrStep, glossary = false) => {
-		post({ command: 'step', step: target, glossary });
+	const showStep = (target: OcrStep, place?: OcrPlace) => {
+		post({ command: 'step', step: target, place });
 	};
 
 	const selectWork = async (id: string | undefined) => {
@@ -986,12 +986,12 @@ async function openOcrFilesPage(services: IOcrPageServices, step: OcrStep, then?
 
 	// ---- Messages
 
-	const show = async (target: OcrStep, glossary = false) => {
+	const show = async (target: OcrStep, place?: OcrPlace) => {
 		if (!ready) {
-			pendingStep = { step: target, glossary };
+			pendingStep = { step: target, place };
 			return;
 		}
-		showStep(target, glossary);
+		showStep(target, place);
 		if (target === 'read' && current) {
 			await showPage(shownPage);
 		}
@@ -1008,7 +1008,7 @@ async function openOcrFilesPage(services: IOcrPageServices, step: OcrStep, then?
 					ready = true;
 					await sendState();
 					await sendScanSize();
-					await show(pendingStep.step, pendingStep.glossary);
+					await show(pendingStep.step, pendingStep.place);
 					if (!whenReady.isSettled) {
 						whenReady.complete();
 					}
@@ -1203,7 +1203,7 @@ async function openOcrFilesPage(services: IOcrPageServices, step: OcrStep, then?
 		disposables.dispose();
 	}));
 
-	const actions: IOcrPageActions = { openSource, openPdf, addToWorkspace, show };
+	const actions: IOcrPageActions = { addToWorkspace, show };
 	openPage = { input: webviewInput, actions };
 	if (then) {
 		await whenReady.p;
@@ -1492,18 +1492,25 @@ function pageHtml(): string {
 	// ---- 1. Open a Work
 	function drawOpen() {
 		const box = document.getElementById('open');
+		// The source typed, and the cursor in its field, kept when the step is drawn again
+		const previous = document.getElementById('sourceInput');
+		const typed = previous ? previous.value : '';
+		const focused = previous !== null && document.activeElement === previous;
 		box.textContent = '';
 		box.appendChild(element('div', 'label', TEXT.sourceLabel));
 		const bar = element('div', 'bar');
 		const input = element('input', 'wide');
 		input.type = 'text';
 		input.placeholder = TEXT.sourcePlaceholder;
+		input.id = 'sourceInput';
+		input.value = typed;
 		const send = () => { if (input.value.trim()) { errorText = ''; vscode.postMessage({ command: 'openSource', source: input.value.trim() }); } };
 		input.addEventListener('keydown', event => { if (event.key === 'Enter') { send(); } });
 		bar.appendChild(input);
 		bar.appendChild(button(TEXT.open, send));
 		bar.appendChild(button(TEXT.openPdf, () => { errorText = ''; vscode.postMessage({ command: 'openPdf' }); }));
 		box.appendChild(bar);
+		if (focused) { input.focus(); }
 		if (busy) { box.appendChild(element('p', 'status', busy)); }
 		const progressLine = progressText();
 		if (progressLine && progress && progress.phase !== 'images') {
@@ -2123,7 +2130,8 @@ function pageHtml(): string {
 				break;
 			case 'step':
 				openStep(message.step);
-				if (message.glossary) { const glossary = document.getElementById('glossary'); if (glossary) { glossary.scrollIntoView({ block: 'start' }); } }
+				if (message.place === 'glossary') { const glossary = document.getElementById('glossary'); if (glossary) { glossary.scrollIntoView({ block: 'start' }); } }
+				if (message.place === 'source') { const source = document.getElementById('sourceInput'); if (source) { source.focus(); } }
 				break;
 			case 'opening':
 				busy = format(TEXT.opening, message.source);
@@ -2247,41 +2255,9 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({ id: OCR_FILES_COMMANDS.openWork, title: localize2('ocrFiles.openWorkAction', "Open Work..."), category: CATEGORY, f1: true });
 	}
-	async run(accessor: ServicesAccessor): Promise<void> {
-		const quickInputService = accessor.get(IQuickInputService);
-		// The services taken now, while the accessor is valid: the page opens once the source is chosen
-		const open = ocrFilesPageOpener(accessor);
-		const pdfItem: IQuickPickItem = { label: localize('ocrFiles.pdfItem', "A Local PDF..."), description: localize('ocrFiles.pdfItemDescription', "A scanned book or article on this computer") };
-		const picked = await new Promise<{ readonly source?: string; readonly pdf?: boolean } | undefined>(resolve => {
-			const store = new DisposableStore();
-			const pick = store.add(quickInputService.createQuickPick<IQuickPickItem>());
-			pick.title = localize('ocrFiles.openWorkTitle', "Open Work");
-			pick.placeholder = localize('ocrFiles.openWorkPlaceholder', "An Internet Archive identifier or link, or a Project Gutenberg number or link");
-			const update = () => {
-				const value = pick.value.trim();
-				const parsed = value ? parseSource(value) : undefined;
-				const sourceItem: IQuickPickItem | undefined = parsed ? { id: value, label: parsed.archive ? localize('ocrFiles.archiveItem', "Internet Archive: {0}", parsed.archive) : localize('ocrFiles.gutenbergItem', "Project Gutenberg: ebook {0}", parsed.gutenberg!) } : undefined;
-				pick.items = sourceItem ? [sourceItem, pdfItem] : [pdfItem];
-			};
-			update();
-			store.add(pick.onDidChangeValue(update));
-			store.add(pick.onDidAccept(() => {
-				const item = pick.selectedItems[0];
-				resolve(item === pdfItem ? { pdf: true } : item?.id ? { source: item.id } : undefined);
-				pick.hide();
-			}));
-			store.add(pick.onDidHide(() => {
-				resolve(undefined);
-				store.dispose();
-			}));
-			pick.show();
-		});
-		if (picked) {
-			await open('open', async page => {
-				await page.show('open');
-				await (picked.pdf ? page.openPdf() : page.openSource(picked.source!));
-			});
-		}
+	run(accessor: ServicesAccessor): Promise<void> {
+		// The page at Open a Work, the cursor in the field of its source
+		return ocrFilesPageOpener(accessor)('open', page => page.show('open', 'source'));
 	}
 });
 
@@ -2308,7 +2284,7 @@ registerAction2(class extends Action2 {
 		super({ id: OCR_FILES_COMMANDS.glossary, title: localize2('ocrFiles.glossaryAction', "Glossary"), category: CATEGORY, f1: true });
 	}
 	run(accessor: ServicesAccessor): Promise<void> {
-		return ocrFilesPageOpener(accessor)('translate', page => page.show('translate', true));
+		return ocrFilesPageOpener(accessor)('translate', page => page.show('translate', 'glossary'));
 	}
 });
 
