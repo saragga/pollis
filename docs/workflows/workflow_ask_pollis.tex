@@ -632,7 +632,7 @@ A column for each model, the best first:
 Below them, each question with the place of its passage for each model, among the eight and by meaning alone.
 \textbf{Use for Ask Pollis}, under a model, makes it the embedding model of Ask Pollis, with its prefixes
 (\file{pollis.ask.embeddingModel}, \file{pollis.ask.passagePrefix} and \file{pollis.ask.queryPrefix}), and makes the
-index again, from the embeddings the run kept. The runs are kept in \file{~/.pollis/ask/Comparisons.duckdb}.
+index again, from the embeddings the run kept. The runs are kept in \file{~/.pollis/ask/ModelEvaluations.duckdb}.
 
 \section{Comparing the rerankers}\label{sec:compareRerankers}
 
@@ -662,7 +662,7 @@ A column for each reranker and for No Reranker, the best first:
 Above them, the share of the questions whose passage was among those found at all, which no reranker can exceed;
 below them, each question with the place of its passage in the order of each reranker. \textbf{Use for Ask Pollis},
 under a reranker, makes it the reranker of Ask Pollis (\file{pollis.ask.reranker}); under No Reranker, it sets none.
-The runs are kept in \file{~/.pollis/ask/Comparisons.duckdb}.
+The runs are kept in \file{~/.pollis/ask/ModelEvaluations.duckdb}.
 
 \section{Keeping the index up to date}\label{sec:fresh}
 
@@ -787,7 +787,7 @@ No DuckDB Manual in \textbf{Search In} & Its pages have not been downloaded yet,
 \file{~/.pollis/ask/sets} & Your test sets, one file of RAGTools.jl each\\
 \file{~/.pollis/documents/embeddings.duckdb} & The embeddings, by model and text, for the index and Evaluate
   Embedding Models\\
-\file{~/.pollis/ask/Comparisons.duckdb} & The runs of both pages: the answers and scores, the places found\\
+\file{~/.pollis/ask/ModelEvaluations.duckdb} & The runs of both pages: the answers and scores, the places found\\
 \bottomrule
 \end{tabularx}
 \end{center}

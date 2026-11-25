@@ -22,7 +22,7 @@ import { CompareSampler, CompareTestSets, ICompareSample, ICompareSamples } from
 // and alone in memory (the embedding model of the search and the chat model stopped before), puts the same passages in
 // its order. Where the passage a question was made from is then shows each reranker; the order of the search, with no
 // reranker, is measured too. The memory a reranker's server takes is the memory free before it started less the memory
-// free when it was done. The run is kept in Comparisons.duckdb.
+// free when it was done. The run is kept in ModelEvaluations.duckdb.
 
 /** What a run ends with, or why it could not be done. */
 export interface IRerankEnd {

@@ -97,7 +97,7 @@
  },
  {
   "source": "Drill-down: Data Packages and Databases, page 2, The principle: Pollis's data is replaceable, yours never",
-  "context": "Three rules, and everything else follows from them.\n1. What a package brings is a copy that an update may replace. Pollis never asks you to look after it.\n2. What you do is written to files of yours that no update writes. They are JSON Lines, appended to and never rewritten: a change is a new line, and for each key the last line wins. The one database among them is Comparisons, where Pollis keeps your runs of the Evaluate and Benchmark pages.\n3. The databases Pollis builds are builds over both, read-only, rebuilt when what they come from changes. Deleting one loses nothing: it is made again at the next start of the Julia REPL.",
+  "context": "Three rules, and everything else follows from them.\n1. What a package brings is a copy that an update may replace. Pollis never asks you to look after it.\n2. What you do is written to files of yours that no update writes. They are JSON Lines, appended to and never rewritten: a change is a new line, and for each key the last line wins. The one database among them is ModelEvaluations, where Pollis keeps your runs of the Evaluate and Benchmark pages.\n3. The databases Pollis builds are builds over both, read-only, rebuilt when what they come from changes. Deleting one loses nothing: it is made again at the next start of the Julia REPL.",
   "question": "How does Pollis keep what I do apart from the data its packages bring?",
   "answer": "What a package brings is a copy an update may replace; what you do is written to files of yours that no update writes, JSON Lines appended to and never rewritten, the last line winning for each key; the databases Pollis builds are read-only builds over both."
  },
@@ -121,9 +121,9 @@
  },
  {
   "source": "Drill-down: Data Packages and Databases, page 11, Your data beside Pollis's › Back up, move, start again",
-  "context": "To keep everything you did, keep ~/.pollis/references, ~/.pollis/rss, ~/.pollis/journals/metrics, ~/.pollis/journals/articles.jsonl, ~/.pollis/databases/Comparisons.duckdb and your own databases. On another computer, put them in the same places and start the Julia REPL: the packages are installed, and the databases built over your files. Deleting a database that Pollis builds is always safe, as it is made again at the next start; Comparisons is the one that holds your runs, and is not made again.",
+  "context": "To keep everything you did, keep ~/.pollis/references, ~/.pollis/rss, ~/.pollis/journals/metrics, ~/.pollis/journals/articles.jsonl, ~/.pollis/databases/ModelEvaluations.duckdb and your own databases. On another computer, put them in the same places and start the Julia REPL: the packages are installed, and the databases built over your files. Deleting a database that Pollis builds is always safe, as it is made again at the next start; ModelEvaluations is the one that holds your runs, and is not made again.",
   "question": "Which folders should I keep to move my Pollis data to another computer?",
-  "answer": "~/.pollis/references, ~/.pollis/rss, ~/.pollis/journals/metrics, ~/.pollis/journals/articles.jsonl, ~/.pollis/databases/Comparisons.duckdb and your own databases; put them in the same places and start the Julia REPL."
+  "answer": "~/.pollis/references, ~/.pollis/rss, ~/.pollis/journals/metrics, ~/.pollis/journals/articles.jsonl, ~/.pollis/databases/ModelEvaluations.duckdb and your own databases; put them in the same places and start the Julia REPL."
  },
  {
   "source": "Drill-down: Literature Radar, page 3, The two indexes › Keys",

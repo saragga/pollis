@@ -2533,7 +2533,7 @@ PollisCompetitions & \texttt{competitions} & The catalogue of PollisCompetitions
 PollisDocuments & \texttt{documents} & The passages of Pollis's documents, the panel wikis, the package vignettes and the toolbox vignettes, with their embeddings, that Ask Pollis searches (\pg{Ask Pollis}).\\
 \multicolumn{3}{@{}l}{\textbf{Pollis Activity}}\\
 PollisRSS & \texttt{rss} & Every item of the feeds you follow, kept by month; empty until feeds are read (RSS Feeds, \pg{RSS Feeds}).\\
-Comparisons & \texttt{comparisons} & Every run of the Evaluate and Benchmark pages, with each question, answer, rating and score; empty until a page first opens.\\
+ModelEvaluations & \texttt{modelEvaluations} & Every run of the Evaluate and Benchmark pages, with each question, answer, rating and score; empty until a page first opens.\\
 \end{tabularx}
 \end{center}
 
@@ -2618,17 +2618,21 @@ the views of a dataset downloaded read its files in \texttt{\textasciitilde/.pol
 itself is small. Pollis makes it again when the package is updated, after a download, and when the Julia REPL
 starts.
 
-\subhead{Comparisons}
+\subhead{ModelEvaluations}
+The same six tables hold the runs of every kind of model, each run marked with its kind: \texttt{answering},
+\texttt{embedding}, \texttt{reranking} or \texttt{benchmark}.
 \begin{center}\small
 \renewcommand{\arraystretch}{1.2}
-\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.3\linewidth}X@{}}
-\texttt{runs}, \texttt{questions}, \texttt{answers}, \texttt{scores}, \texttt{unrated} & Evaluate Answering Models: each run, its questions, each answer with its timings, each judge's ratings, and the answers a judge did not rate.\\
-\texttt{embeddingRuns}, \texttt{embeddingQuestions}, \texttt{embeddingFound} & Evaluate Embedding Models, and Benchmark Embedding and Reranking Models for its embedding models: each run, its questions, and what each model found for each, with nDCG@10 and Recall@10 for a benchmark.\\
-\texttt{rerankRuns}, \texttt{rerankQuestions}, \texttt{rerankFound} & Evaluate Reranking Models, and Benchmark Embedding and Reranking Models for its rerankers, in the same way.\\
-\texttt{benchmarkRuns}, \texttt{benchmarkModels}, \texttt{benchmarkAnswers} & Benchmark Answering Models: each run with its sample and settings, each model with its figures, and each answer with its grade and timings.\\
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}X@{}}
+\texttt{runs} & Each run: its kind, the page that made it, when it started and ended, the benchmark with its revision and seed, the repeats, and its other settings as JSON.\\
+\texttt{models} & Each model of a run, by its role (evaluated, judge, or the embedder of a run of rerankers) and its place: its label, size, the memory it took and why it failed.\\
+\texttt{cases} & The questions of a run: the source, context and stratum of each, its text, the options of a closed question, the right answer, and the passages given.\\
+\texttt{outputs} & What each model gave for each question and repeat: the answer, the option it chose as a letter, why it failed, and its timings and tokens.\\
+\texttt{scores} & The scores, one per row, a \texttt{metric} and its \texttt{value}: each criterion of a judge, with the rationale in \texttt{note}; a measure of an answer or of a search, as \texttt{similarity}, \texttt{correct}, \texttt{ndcg@10} or \texttt{recall@10}; and, with no question, a figure of a model over the whole run, by stratum where it has one.\\
+\texttt{searchCache} & The passages found for each question with a search stamp, which a run with the same stamp reuses.\\
 \end{tabularx}
 \end{center}
-Pollis writes the runs to \texttt{\textasciitilde/.pollis/ask/Comparisons.duckdb} and copies it to
+Pollis writes the runs to \texttt{\textasciitilde/.pollis/ask/ModelEvaluations.duckdb} and copies it to
 \texttt{\textasciitilde/.pollis/databases} after each change: the Databases view connects the copy, so that reading it
 never keeps a page from saving a run. A connection shows the runs as they were when it was made; connect again for
 those made since.

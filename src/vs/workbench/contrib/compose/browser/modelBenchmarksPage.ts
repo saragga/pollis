@@ -470,7 +470,7 @@ async function openModelBenchmarksPage(accessor: ServicesAccessor): Promise<void
 			post({ command: 'settings', settings });
 			await postBenchmarks();
 			await postModels();
-			// The runs that have ended since, of a notebook or of a window closed while it ran, moved into Comparisons.duckdb
+			// The runs that have ended since, of a notebook or of a window closed while it ran, moved into ModelEvaluations.duckdb
 			await run.importRuns();
 			await showRun(shown?.id ?? (await run.runs())[0]?.id);
 			post({ command: 'running', running: run.running });

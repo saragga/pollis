@@ -8,7 +8,7 @@
 | **Input** | Chat models on this computer or in the cloud, a test set of questions, and a judge model if wanted |
 | **Core packages** | [RAGTools.jl](https://github.com/Trumpingtons/RAGTools.jl), [PromptingTools.jl](https://github.com/Trumpingtons/PromptingTools.jl) |
 | **Steps** | Models, Questions, Run, Results |
-| **Output** | A column of figures for each model, and each question's answers side by side with their scores and ratings, kept in ~/.pollis/ask/Comparisons.duckdb |
+| **Output** | A column of figures for each model, and each question's answers side by side with their scores and ratings, kept in ~/.pollis/ask/ModelEvaluations.duckdb |
 | **Key choice** | The test set, whose questions every comparison rests on, and whether the passages are found or given |
 
 ## When to Use Evaluate Answering Models

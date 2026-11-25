@@ -78,7 +78,7 @@ Three rules, and everything else follows from them.
   \item \textbf{What a package brings is a copy that an update may replace.} Pollis never asks you to look after it.
   \item \textbf{What you do is written to files of yours that no update writes.} They are JSON Lines, appended to and
     never rewritten: a change is a new line, and for each key \emph{the last line wins}. The one database among them is
-    Comparisons, where Pollis keeps your runs of the Evaluate and Benchmark pages.
+    ModelEvaluations, where Pollis keeps your runs of the Evaluate and Benchmark pages.
   \item \textbf{The databases Pollis builds are builds over both}, read-only, rebuilt when what they come from
     changes. Deleting one loses nothing: it is made again at the next start of the Julia REPL.
 \end{enumerate}
@@ -95,7 +95,7 @@ the installed packages, in \file{~/.pollis/julia/environments/v1.13} & your own 
 \file{~/.pollis/journals/scores.csv} & \file{~/.pollis/references/references.jsonl}, \file{counts.jsonl}, \file{versions.jsonl}, \file{panels.jsonl}\\
 \file{~/.pollis/references/pollis.json}, \file{package.json} & \file{~/.pollis/rss/feeds.jsonl}, \file{items/*.jsonl}, \file{zotero.jsonl}, \file{episodes.jsonl}\\
 \file{~/.pollis/rss/catalogue.json} & the RSS settings: unsubscribed, removed, hidden, welcome page\\
-& \file{~/.pollis/databases/Comparisons.duckdb}, your runs of the Evaluate and Benchmark pages\\
+& \file{~/.pollis/databases/ModelEvaluations.duckdb}, your runs of the Evaluate and Benchmark pages\\
 & \file{~/.pollis/duckdb/query_log.jsonl}, the queries the History lists (\S\ref{sec:history})\\
 \file{~/.pollis/duckdb/served/*.json}, the address of each Shared Session & \\
 \bottomrule
@@ -324,7 +324,7 @@ examples and, for SciFact and SCIDOCS, its documents, told apart by the column \
 has its description. Its stamp is the installed package and the SQL that makes it.
 
 \textbf{Who reads it.} Benchmark Answering Models, in \menupath{Compose\gt Local AI Models}, and Benchmark Embedding
-and Reranking Models, in \menupath{Compose\gt Knowledge for AI Models}. Their runs go to Comparisons, which is yours
+and Reranking Models, in \menupath{Compose\gt Knowledge for AI Models}. Their runs go to ModelEvaluations, which is yours
 (\S\ref{sec:principle}).
 
 \section{The install road: from GitHub to five databases}\label{sec:install}
@@ -466,7 +466,7 @@ It has four sections, one under the other.
 \begin{itemize}
   \item \textbf{Pollis Built-In}: PollisBenchmarks, PollisDatasets, PollisDocuments, PollisJournals and
     PollisReferences, in alphabetical order, read-only.
-  \item \textbf{Pollis Activity}: PollisRSS, the views over your feeds, and Comparisons, your runs of the Evaluate and
+  \item \textbf{Pollis Activity}: PollisRSS, the views over your feeds, and ModelEvaluations, your runs of the Evaluate and
     Benchmark pages.
   \item \textbf{User}: your saved connections, and those the Julia REPL holds. PollisDB writes each connection of the
     REPL, with its schemas, tables and columns, to a JSON file in \file{~/.pollis/databases/sessions}, marked with the
@@ -671,10 +671,10 @@ gives each item once.
 
 \subsection{Back up, move, start again}
 To keep everything you did, keep \file{~/.pollis/references}, \file{~/.pollis/rss}, \file{~/.pollis/journals/metrics},
-\file{~/.pollis/journals/articles.jsonl}, \file{~/.pollis/databases/Comparisons.duckdb} and your own databases. On
+\file{~/.pollis/journals/articles.jsonl}, \file{~/.pollis/databases/ModelEvaluations.duckdb} and your own databases. On
 another computer, put them in the same places and start the Julia REPL: the packages are installed, and the databases
 built over your files. Deleting a database that Pollis builds is always safe, as it is made again at the next start;
-Comparisons is the one that holds your runs, and is not made again.
+ModelEvaluations is the one that holds your runs, and is not made again.
 
 \subsection{Giving your data to everyone}
 A dataset, a feed or a correction that others would want can go into the package itself, through an issue or a pull

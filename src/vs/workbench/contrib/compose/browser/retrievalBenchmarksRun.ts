@@ -22,7 +22,7 @@ import { CompareSampler, ICompareSample, ICompareSamples } from './compareShared
 // RETRIEVAL_CANDIDATES documents BM25 finds for each query (IAskPollisService.rerankRetrieval), and the order of BM25 is
 // scored too. Each query is scored by the first RETRIEVAL_CUT documents, nDCG@10 and Recall@10. The memory a model's
 // server takes is the memory free before it started less the memory free when it was done. The runs are kept in
-// Comparisons.duckdb, with those of Evaluate Embedding Models and Evaluate Reranking Models, marked with their benchmark.
+// ModelEvaluations.duckdb, with those of Evaluate Embedding Models and Evaluate Reranking Models, marked with their benchmark.
 
 /** What a run ends with: the run of the embedding models or of the rerankers, or why it could not be done. */
 export interface IRetrievalEnd {

@@ -632,7 +632,7 @@ export interface ICompareRunUnrated {
 	readonly error: string;
 }
 
-/** A run of Evaluate Answering Models, kept in `~/.pollis/ask/Comparisons.duckdb`. */
+/** A run of Evaluate Answering Models, kept in `~/.pollis/ask/ModelEvaluations.duckdb`. */
 export interface ICompareRun {
 	readonly summary: ICompareRunSummary;
 	readonly questions: readonly ICompareRunQuestion[];
@@ -838,7 +838,7 @@ export interface IEmbeddingRunFound extends IEmbeddingFound {
 	readonly model: string;
 }
 
-/** A run of Evaluate Embedding Models, kept in `~/.pollis/ask/Comparisons.duckdb`. */
+/** A run of Evaluate Embedding Models, kept in `~/.pollis/ask/ModelEvaluations.duckdb`. */
 export interface IEmbeddingRun {
 	readonly summary: IEmbeddingRunSummary;
 	readonly questions: readonly IAskPollisEvalItem[];
@@ -889,7 +889,7 @@ export interface IRerankRunFound {
 	readonly among?: number;
 }
 
-/** A run of Evaluate Reranking Models, kept in `~/.pollis/ask/Comparisons.duckdb`. */
+/** A run of Evaluate Reranking Models, kept in `~/.pollis/ask/ModelEvaluations.duckdb`. */
 export interface IRerankRun {
 	readonly summary: IRerankRunSummary;
 	readonly questions: readonly IAskPollisEvalItem[];
@@ -936,7 +936,7 @@ export interface IBenchmarkFigures {
 
 /**
  * A run of Benchmark Answering Models: as PollisBenchmarks.jl keeps it in ~/.pollis/benchmarks/runs/<id>.json while it goes, and as
- * Comparisons.duckdb keeps it once it has ended.
+ * ModelEvaluations.duckdb keeps it once it has ended.
  */
 export interface IBenchmarkRun {
 	readonly id: string;
@@ -1047,12 +1047,12 @@ export interface IAskPollisIndex {
 	loadRerankRun(id: string): Promise<IRerankRun | undefined>;
 	deleteRerankRun(id: string): Promise<void>;
 	/**
-	 * Moves the runs `ids` of Benchmark Answering Models from ~/.pollis/benchmarks/runs into Comparisons.duckdb, their files
+	 * Moves the runs `ids` of Benchmark Answering Models from ~/.pollis/benchmarks/runs into ModelEvaluations.duckdb, their files
 	 * removed; without `ids`, every run there that has ended: one PollisBenchmarks.jl marked ended, or one whose files
 	 * have not changed for a day.
 	 */
 	importBenchmarkRuns(ids?: readonly string[]): Promise<void>;
-	/** The runs of Benchmark Answering Models in Comparisons.duckdb, the latest first. */
+	/** The runs of Benchmark Answering Models in ModelEvaluations.duckdb, the latest first. */
 	benchmarkRuns(): Promise<readonly IBenchmarkRun[]>;
 	loadBenchmarkRun(id: string): Promise<IBenchmarkRun | undefined>;
 	/** The answers of the run `id` of Benchmark Answering Models, in the order they were written. */
@@ -1100,7 +1100,7 @@ export interface IAskPollisService {
 	 * model need not load and every run gets the same passages.
 	 */
 	searchStamp(): Promise<IAskPollisSearchStamp | undefined>;
-	/** The passages found before for each of `questions` with the search stamp `key`, in `~/.pollis/ask/Comparisons.duckdb`. */
+	/** The passages found before for each of `questions` with the search stamp `key`, in `~/.pollis/ask/ModelEvaluations.duckdb`. */
 	foundBefore(key: string, questions: readonly string[]): Promise<readonly (readonly IAskPollisPassage[] | undefined)[]>;
 	keepFound(key: string, found: readonly IAskPollisFound[]): Promise<void>;
 	/**
@@ -1125,7 +1125,7 @@ export interface IAskPollisService {
 	matches(texts: readonly string[]): Promise<readonly (IAskPassageMatch | undefined)[] | undefined>;
 	/** The passages of the wiki `wikiFile` of a panel, as the Panel FAQ names it (`boot/assumptions.md`), in their order; none when the index does not hold it. */
 	wikiPassages(wikiFile: string): Promise<readonly IAskPollisPassage[]>;
-	/** The runs of Evaluate Answering Models, in `~/.pollis/ask/Comparisons.duckdb`. */
+	/** The runs of Evaluate Answering Models, in `~/.pollis/ask/ModelEvaluations.duckdb`. */
 	saveRun(run: ICompareRun): Promise<void>;
 	runs(): Promise<readonly ICompareRunSummary[]>;
 	loadRun(id: string): Promise<ICompareRun | undefined>;
@@ -1144,7 +1144,7 @@ export interface IAskPollisService {
 	embeddingRuns(): Promise<readonly IEmbeddingRunSummary[]>;
 	loadEmbeddingRun(id: string): Promise<IEmbeddingRun | undefined>;
 	deleteEmbeddingRun(id: string): Promise<void>;
-	/** The runs of Evaluate Reranking Models, in `~/.pollis/ask/Comparisons.duckdb`. */
+	/** The runs of Evaluate Reranking Models, in `~/.pollis/ask/ModelEvaluations.duckdb`. */
 	saveRerankRun(run: IRerankRun): Promise<void>;
 	rerankRuns(): Promise<readonly IRerankRunSummary[]>;
 	loadRerankRun(id: string): Promise<IRerankRun | undefined>;

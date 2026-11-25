@@ -11,10 +11,10 @@
 // it names them; each is searched by words (BM25) and by meaning (cosine distance), the two lists merged by
 // reciprocal rank fusion; with two or more, the nearest gives most of the passages. The answer is written here too, by
 // the chat model's server or a cloud model's API, its text sent as it comes: the renderer may not reach a server of
-// this computer. The runs of Evaluate Answering Models are kept here too, in Comparisons.duckdb, attached the same way, so that
+// this computer. The runs of Evaluate Answering Models are kept here too, in ModelEvaluations.duckdb, attached the same way, so that
 // two windows can each keep theirs, and the passages found for each question with a search stamp, which a run with the same stamp reuses.
 // Evaluate Embedding Models embeds the passages here, into the cache of embeddings ask_index.jl takes them from, and
-// searches the questions of a test set with each model's embeddings as Ask Pollis would; its runs are kept in Comparisons.duckdb too.
+// searches the questions of a test set with each model's embeddings as Ask Pollis would; its runs are kept in ModelEvaluations.duckdb too.
 // Benchmark Embedding and Reranking Models runs the retrieval benchmarks of PollisBenchmarks.duckdb here, on their own
 // documents: their runs are kept with those of the two Evaluate pages, marked with their benchmark.
 // So are the runs of Benchmark Answering Models, once they have ended: PollisBenchmarks.jl writes a run to files while it goes, and they are moved in here.
@@ -41,13 +41,13 @@ const EMBEDDINGS = join(os.homedir(), '.pollis', 'documents', 'embeddings.duckdb
 /** The passages embedded a request, as ask_index.jl does. */
 const BATCH = 32;
 /** The runs of the Evaluate pages and of the two Benchmarks pages. */
-const COMPARISONS = join(os.homedir(), '.pollis', 'ask', 'Comparisons.duckdb');
+const MODEL_EVALUATIONS = join(os.homedir(), '.pollis', 'ask', 'ModelEvaluations.duckdb');
 /**
- * The copy of COMPARISONS that the Databases view and the duckdb> terminal read, as the database Comparisons of the
+ * The copy of MODEL_EVALUATIONS that the Databases view and the duckdb> terminal read, as the database Model Evaluations of the
  * activity of Pollis: a reader of the copy never holds the file Pollis writes, which DuckDB lets no other process open
  * while it is written.
  */
-const COMPARISONS_COPY = join(os.homedir(), '.pollis', 'databases', 'Comparisons.duckdb');
+const MODEL_EVALUATIONS_COPY = join(os.homedir(), '.pollis', 'databases', 'ModelEvaluations.duckdb');
 /** The fts extension, which the Julia extension of Pollis unpacks here at install. */
 const FTS = join(os.homedir(), '.pollis', 'duckdb', 'fts.duckdb_extension');
 /** The published benchmarks, which PollisBenchmarks.jl makes when the Julia REPL starts: of retrieval, a table of the queries and the documents of each. */
@@ -167,24 +167,9 @@ function errorMessage(status: number, body: string): string {
 	return `${status} ${body}`;
 }
 
-/** What Search In chose, as a run keeps it, a JSON list of names; Auto, empty, when it cannot be read. */
-function storedChoice(text: string): string[] {
-	try {
-		const kept: unknown = JSON.parse(text);
-		return Array.isArray(kept) ? kept.filter(name => typeof name === 'string') : [];
-	} catch {
-		return [];
-	}
-}
-
-/** The collections Auto leaves out, as a run keeps them, a JSON list; none when it cannot be read. */
-function storedSources(text: string): AskOptionalSource[] {
-	try {
-		const kept: unknown = JSON.parse(text);
-		return Array.isArray(kept) ? (Object.keys(ASK_OPTIONAL_SOURCES) as AskOptionalSource[]).filter(source => kept.includes(source)) : [];
-	} catch {
-		return [];
-	}
+/** The collections Auto leaves out, as a run keeps them in its settings, a list; none when it is not one. */
+function storedSources(kept: unknown): AskOptionalSource[] {
+	return Array.isArray(kept) ? (Object.keys(ASK_OPTIONAL_SOURCES) as AskOptionalSource[]).filter(source => kept.includes(source)) : [];
 }
 
 function sqlString(text: string): string {
@@ -398,56 +383,124 @@ function words(text: string): Set<string> {
 const TOPIC = `CASE WHEN d.kind = 'julia' THEN 'julia' WHEN d.kind = 'duckdb' THEN 'duckdb' WHEN d.kind = 'document' AND coalesce(d.toolbox, '') = '' THEN 'pollis' WHEN d.kind = 'article' THEN 'articles' WHEN d.kind = 'api' THEN 'packageApis' ELSE 'panels' END`;
 
 /**
- * The tables of Comparisons.duckdb: a run, the passages found for each of its questions, the answers, the judges'
- * scores and why a judge did not rate an answer; the passages found for a question with a search stamp, those of
- * the latest stamp only; a run of Evaluate Embedding Models, its questions and what each model found for them; and a
- * run of Evaluate Reranking Models, its questions and where each reranker put the passage of each; and a run of
- * Benchmark Answering Models, its models with their figures and their answers.
+ * The tables of ModelEvaluations.duckdb, the same for every kind of model: a run, its models (evaluated, judges, the
+ * embedder of a run of rerankers), the cases it asked about, what each model gave for each case, and the scores, one
+ * a row; and the passages found for a question with a search stamp, those of the latest stamp only.
  */
-const COMPARISONS_TABLES = [
-	'CREATE TABLE IF NOT EXISTS Comparisons.runs(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, judges VARCHAR, repeats INTEGER, questions INTEGER)',
-	// The answering strategy of a run: a run without one was Base
-	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS strategy VARCHAR',
-	// Open Book Answering: each model given the question's own passage, with no search
-	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS open_book BOOLEAN',
-	// Closed Book Answering: each model given no passage
-	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS closed_book BOOLEAN',
-	// What Search In chose for Open Library Answering, as a JSON list; Auto when null
-	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS search_in VARCHAR',
-	'CREATE TABLE IF NOT EXISTS Comparisons.questions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR, passages VARCHAR, rank INTEGER)',
-	'CREATE TABLE IF NOT EXISTS Comparisons.answers(run VARCHAR, id VARCHAR, question INTEGER, model VARCHAR, repeat INTEGER, answer VARCHAR, error VARCHAR, first_word DOUBLE, seconds DOUBLE, reading DOUBLE, writing DOUBLE, tokens_read INTEGER, tokens_written INTEGER)',
-	// The answer score of an answer, added with it: an answer before it has none
-	'ALTER TABLE Comparisons.answers ADD COLUMN IF NOT EXISTS similarity DOUBLE',
-	// A closed question: its options in the order asked, as JSON, why the right one is right, and the option each answer chose
-	'ALTER TABLE Comparisons.questions ADD COLUMN IF NOT EXISTS choices VARCHAR',
-	'ALTER TABLE Comparisons.questions ADD COLUMN IF NOT EXISTS explanation VARCHAR',
-	'ALTER TABLE Comparisons.answers ADD COLUMN IF NOT EXISTS choice INTEGER',
-	'CREATE TABLE IF NOT EXISTS Comparisons.scores(run VARCHAR, answer VARCHAR, judge VARCHAR, relevance INTEGER, completeness INTEGER, clarity INTEGER, consistency INTEGER, helpfulness INTEGER, final DOUBLE, rationale VARCHAR)',
-	'CREATE TABLE IF NOT EXISTS Comparisons.unrated(run VARCHAR, answer VARCHAR, judge VARCHAR, error VARCHAR)',
-	'CREATE TABLE IF NOT EXISTS Comparisons.found(stamp VARCHAR, question VARCHAR, passages VARCHAR, PRIMARY KEY(stamp, question))',
-	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingRuns(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, questions INTEGER, passages INTEGER)',
-	// A run of a retrieval benchmark: its id, and the nDCG@10 and Recall@10 of each query for each model
-	'ALTER TABLE Comparisons.embeddingRuns ADD COLUMN IF NOT EXISTS benchmark VARCHAR',
-	'ALTER TABLE Comparisons.embeddingRuns ADD COLUMN IF NOT EXISTS sources VARCHAR',
-	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingQuestions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR)',
-	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingFound(run VARCHAR, question INTEGER, model VARCHAR, hybrid INTEGER, meaning INTEGER, query_ms DOUBLE, search_ms DOUBLE)',
-	'ALTER TABLE Comparisons.embeddingFound ADD COLUMN IF NOT EXISTS ndcg DOUBLE',
-	'ALTER TABLE Comparisons.embeddingFound ADD COLUMN IF NOT EXISTS recall DOUBLE',
-	'CREATE TABLE IF NOT EXISTS Comparisons.rerankRuns(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, questions INTEGER, found INTEGER, kept INTEGER, embedder VARCHAR)',
-	// A run of a retrieval benchmark: its id, the nDCG@10 and Recall@10 of each query for each reranker, and the share of its relevant documents BM25 found
-	'ALTER TABLE Comparisons.rerankRuns ADD COLUMN IF NOT EXISTS benchmark VARCHAR',
-	'CREATE TABLE IF NOT EXISTS Comparisons.rerankQuestions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR)',
-	'CREATE TABLE IF NOT EXISTS Comparisons.rerankFound(run VARCHAR, question INTEGER, model VARCHAR, place INTEGER, ms DOUBLE)',
-	'ALTER TABLE Comparisons.rerankFound ADD COLUMN IF NOT EXISTS ndcg DOUBLE',
-	'ALTER TABLE Comparisons.rerankFound ADD COLUMN IF NOT EXISTS recall DOUBLE',
-	'ALTER TABLE Comparisons.rerankFound ADD COLUMN IF NOT EXISTS among DOUBLE',
-	// A run of Benchmark Answering Models: its sample's strata, as JSON, and the ids of its questions in the order drawn, as JSON
-	'CREATE TABLE IF NOT EXISTS Comparisons.benchmarkRuns(id VARCHAR PRIMARY KEY, started BIGINT, ended BIGINT, pollis VARCHAR, benchmark VARCHAR, revision VARCHAR, shots INTEGER, reasoning BOOLEAN, thinking BOOLEAN, max_tokens INTEGER, seed BIGINT, allocation VARCHAR, size INTEGER, strata VARCHAR, questions VARCHAR)',
-	// Each model of a run, in the order it ran, and the figures PollisBenchmarks.jl computed of it: its strata as JSON
-	'CREATE TABLE IF NOT EXISTS Comparisons.benchmarkModels(run VARCHAR, place INTEGER, model VARCHAR, label VARCHAR, size VARCHAR, started BIGINT, ended BIGINT, free_before BIGINT, lowest_free BIGINT, error VARCHAR, questions INTEGER, failed INTEGER, score DOUBLE, half DOUBLE, right_answers INTEGER, by_chance DOUBLE, strata VARCHAR, unread INTEGER, cut_off INTEGER, first_token_ms DOUBLE, reading_speed DOUBLE, writing_speed DOUBLE, seconds DOUBLE, written_tokens DOUBLE, memory BIGINT)',
-	// Each answer of a run, in the order it was written, with its grade and its timings
-	'CREATE TABLE IF NOT EXISTS Comparisons.benchmarkAnswers(run VARCHAR, place INTEGER, model VARCHAR, question VARCHAR, stratum VARCHAR, extracted VARCHAR, correct BOOLEAN, error VARCHAR, text VARCHAR, finish VARCHAR, seconds DOUBLE, prompt_tokens INTEGER, written_tokens INTEGER, prompt_ms DOUBLE, reading_speed DOUBLE, writing_speed DOUBLE, token_ms DOUBLE)',
+const MODEL_EVALUATIONS_TABLES = [
+	'CREATE TABLE IF NOT EXISTS ModelEvaluations.runs(id VARCHAR PRIMARY KEY, kind VARCHAR, source VARCHAR, started BIGINT, ended BIGINT, pollis VARCHAR, benchmark VARCHAR, revision VARCHAR, seed BIGINT, repeats INTEGER, folds INTEGER, settings JSON)',
+	'CREATE TABLE IF NOT EXISTS ModelEvaluations.models(run VARCHAR, model VARCHAR, role VARCHAR, place INTEGER, label VARCHAR, class VARCHAR, size VARCHAR, specification VARCHAR, settings JSON, started BIGINT, ended BIGINT, memory BIGINT, free_before BIGINT, lowest_free BIGINT, error VARCHAR)',
+	'CREATE TABLE IF NOT EXISTS ModelEvaluations.cases(run VARCHAR, "case" VARCHAR, source VARCHAR, ref VARCHAR, stratum VARCHAR, context VARCHAR, input_text VARCHAR, choices JSON, explanation VARCHAR, target_text VARCHAR, target_label VARCHAR, target_value DOUBLE, passages JSON)',
+	'CREATE TABLE IF NOT EXISTS ModelEvaluations.outputs(run VARCHAR, model VARCHAR, "case" VARCHAR, repeat INTEGER, fold INTEGER, output_text VARCHAR, output_label VARCHAR, output_value DOUBLE, error VARCHAR, finish VARCHAR, seconds DOUBLE, first_token_ms DOUBLE, reading_ms DOUBLE, tokens_read INTEGER, tokens_written INTEGER, reading_speed DOUBLE, writing_speed DOUBLE)',
+	'CREATE TABLE IF NOT EXISTS ModelEvaluations.scores(run VARCHAR, model VARCHAR, "case" VARCHAR, repeat INTEGER, fold INTEGER, stratum VARCHAR, judge VARCHAR, metric VARCHAR, value DOUBLE, note VARCHAR, error VARCHAR)',
+	'CREATE TABLE IF NOT EXISTS ModelEvaluations.searchCache(stamp VARCHAR, question VARCHAR, passages JSON, PRIMARY KEY(stamp, question))',
 ];
+
+/** What the Databases view shows of each table of ModelEvaluations.duckdb, written when the tables are made. */
+const MODEL_EVALUATIONS_COMMENTS: Readonly<Record<string, string>> = {
+	runs: 'One row per run: the kind of models it evaluated (answering, embedding, reranking, benchmark), the page that made it, when it started and ended, the version of Pollis, the benchmark, its revision and seed, the repeats and folds, and its other settings as JSON.',
+	models: 'Each model of a run, by its role (evaluated, judge, embedder) and its place in the run: its label, class, size, settings as JSON, when it started and ended, the memory it took and the least memory free while it ran, and why it failed.',
+	cases: 'The cases of a run: the source, context, stratum and input text of each question, the options of a closed question as JSON, the target (the right answer, as a text, the letter of an option or a value), and the passages given, as JSON.',
+	outputs: 'What each model gave for each case, repeat and fold: its text, the option it chose as a letter, or a value, why it failed, how it finished, and its timings and tokens.',
+	scores: 'The scores, one per row, each a metric and its value: a judge\'s rubric with its rationale in note, a measure of an output, or, with no case, a figure of a model over the whole run, by stratum where it has one.',
+	searchCache: 'The passages found for each question with a search stamp, those of the latest stamp only, which a run with the same stamp reuses.',
+};
+
+/** The columns of each table of ModelEvaluations.duckdb that its rows are written with, in their order. */
+const MODEL_EVALUATIONS_COLUMNS = {
+	runs: ['id', 'kind', 'source', 'started', 'ended', 'pollis', 'benchmark', 'revision', 'seed', 'repeats', 'folds', 'settings'],
+	models: ['run', 'model', 'role', 'place', 'label', 'class', 'size', 'specification', 'settings', 'started', 'ended', 'memory', 'free_before', 'lowest_free', 'error'],
+	cases: ['run', 'case', 'source', 'ref', 'stratum', 'context', 'input_text', 'choices', 'explanation', 'target_text', 'target_label', 'target_value', 'passages'],
+	outputs: ['run', 'model', 'case', 'repeat', 'fold', 'output_text', 'output_label', 'output_value', 'error', 'finish', 'seconds', 'first_token_ms', 'reading_ms', 'tokens_read', 'tokens_written', 'reading_speed', 'writing_speed'],
+	scores: ['run', 'model', 'case', 'repeat', 'fold', 'stratum', 'judge', 'metric', 'value', 'note', 'error'],
+} as const;
+
+type EvaluationTable = keyof typeof MODEL_EVALUATIONS_COLUMNS;
+/** A row to write into a table of ModelEvaluations.duckdb, by its columns: a column left out is NULL. */
+type EvaluationRow<T extends EvaluationTable> = { readonly [column in typeof MODEL_EVALUATIONS_COLUMNS[T][number]]?: string | number | boolean | null };
+
+/** The kinds of run of ModelEvaluations.runs. */
+type EvaluationKind = 'answering' | 'embedding' | 'reranking' | 'benchmark';
+
+/** The rubric of a judge, each criterion a metric of ModelEvaluations.scores; `final`, with the rationale, is its last row. */
+const RUBRIC = ['relevance', 'completeness', 'clarity', 'consistency', 'helpfulness'] as const;
+
+/** The figures of a model over a run of Benchmark Answering Models, each a metric of ModelEvaluations.scores with no case. */
+const BENCHMARK_FIGURES = [
+	['questions', 'questions'], ['failed', 'failed'], ['score', 'score'], ['half', 'half'], ['right', 'right_answers'], ['byChance', 'by_chance'],
+	['unread', 'unread'], ['cutOff', 'cut_off'], ['firstTokenMs', 'first_token_ms'], ['readingSpeed', 'reading_speed'], ['writingSpeed', 'writing_speed'],
+	['seconds', 'seconds'], ['writtenTokens', 'written_tokens'],
+] as const;
+
+/** The fields of a model of a run kept in the columns of ModelEvaluations.models; the others are kept in its settings. */
+const MODEL_FIELDS = new Set(['value', 'label', 'size', 'memory', 'error', 'started', 'ended', 'freeBefore', 'lowestFree']);
+
+/** A model of a run, as each kind has it. */
+interface IEvaluatedModel {
+	readonly value: string;
+	readonly label: string;
+	readonly size?: string;
+	readonly memory?: number;
+	readonly error?: string;
+	readonly started?: number;
+	readonly ended?: number;
+	readonly freeBefore?: number;
+	readonly lowestFree?: number;
+}
+
+/** The row of ModelEvaluations.models of `model`, in its `role` and at its `place` from 1, its fields without a column of their own in its settings. */
+function modelRow(run: string, model: IEvaluatedModel, role: string, modelClass: string, place: number): EvaluationRow<'models'> {
+	const settings = Object.fromEntries(Object.entries(model).filter(([field, value]) => !MODEL_FIELDS.has(field) && value !== undefined));
+	return {
+		run, model: model.value, role, place, label: model.label, class: modelClass, size: model.size ?? null,
+		settings: Object.keys(settings).length ? JSON.stringify(settings) : null,
+		started: model.started ?? null, ended: model.ended ?? null, memory: model.memory ?? null, free_before: model.freeBefore ?? null, lowest_free: model.lowestFree ?? null, error: model.error ?? null,
+	};
+}
+
+/** The fields of a model read back from its row of ModelEvaluations.models, those of its columns that are set. */
+function storedModel(row: Row): IEvaluatedModel {
+	return {
+		value: String(row.model),
+		label: String(row.label ?? row.model),
+		...(row.size === null ? {} : { size: String(row.size) }),
+		...(row.memory === null ? {} : { memory: Number(row.memory) }),
+		...(row.error === null ? {} : { error: String(row.error) }),
+		...(row.started === null ? {} : { started: Number(row.started) }),
+		...(row.ended === null ? {} : { ended: Number(row.ended) }),
+		...(row.free_before === null ? {} : { freeBefore: Number(row.free_before) }),
+		...(row.lowest_free === null ? {} : { lowestFree: Number(row.lowest_free) }),
+	};
+}
+
+/** The settings of a run or a model, as JSON kept in its column `settings`; none when it has none or they cannot be read. */
+function storedSettings(row: Row): Readonly<Record<string, unknown>> {
+	try {
+		const settings: unknown = typeof row.settings === 'string' ? JSON.parse(row.settings) : undefined;
+		return settings && typeof settings === 'object' && !Array.isArray(settings) ? settings as Record<string, unknown> : {};
+	} catch {
+		return {};
+	}
+}
+
+/** The option of a closed question at `index`, from 0, as ModelEvaluations keeps it: A, B, C and on. */
+function choiceLetter(index: number): string {
+	return String.fromCharCode(65 + index);
+}
+
+/** The place of the option `letter`, from 0; nothing for no letter. */
+function choiceIndex(letter: unknown): number | undefined {
+	return typeof letter === 'string' && letter ? letter.charCodeAt(0) - 65 : undefined;
+}
+
+/** The id of an answer of a run of Evaluate Answering Models read back, from its question, model and repeat, which are its key. */
+function answerId(question: unknown, model: unknown, repeat: unknown): string {
+	return `${question}:${repeat}:${model}`;
+}
+
+/** The metrics of a row of a found list of a run of embedding models or rerankers, by their names in ModelEvaluations.scores. */
+const EMBEDDING_METRICS = [['hybrid', 'hybrid_rank'], ['meaning', 'meaning_rank'], ['queryMs', 'query_ms'], ['searchMs', 'search_ms'], ['ndcg', 'ndcg@10'], ['recall', 'recall@10']] as const;
+const RERANK_METRICS = [['place', 'place'], ['ms', 'rerank_ms'], ['ndcg', 'ndcg@10'], ['recall', 'recall@10'], ['among', 'bm25_share']] as const;
 
 /** The runs of Benchmark Answering Models while they go, as PollisBenchmarks.jl writes them: <id>.json and <id>.jsonl. */
 const BENCHMARK_RUNS = join(os.homedir(), '.pollis', 'benchmarks', 'runs');
@@ -1179,331 +1232,432 @@ class AskPollisIndex implements IAskPollisIndex {
 		return texts.map(text => found.get(text));
 	}
 
-	/** Runs `task` with Comparisons.duckdb attached, its tables made the first time. */
-	private withComparisons<T>(task: (connection: DuckDBConnection) => Promise<T>): Promise<T> {
+	/** Runs `task` with ModelEvaluations.duckdb attached, its tables made the first time. */
+	private withModelEvaluations<T>(task: (connection: DuckDBConnection) => Promise<T>): Promise<T> {
 		return this.sequencer.queue(async () => {
-			fs.mkdirSync(join(os.homedir(), '.pollis', 'ask'), { recursive: true });
+			fs.mkdirSync(dirname(MODEL_EVALUATIONS), { recursive: true });
 			const connection = await this.connect();
-			await connection.run(`ATTACH ${sqlString(COMPARISONS)} AS Comparisons`);
+			await connection.run(`ATTACH ${sqlString(MODEL_EVALUATIONS)} AS ModelEvaluations`);
 			try {
-				for (const table of COMPARISONS_TABLES) {
+				const made = (await connection.runAndReadAll(`SELECT 1 FROM duckdb_tables() WHERE database_name = 'ModelEvaluations' AND table_name = 'runs'`)).getRowObjectsJson().length > 0;
+				for (const table of MODEL_EVALUATIONS_TABLES) {
 					await connection.run(table);
 				}
-				// A run kept in the column style keeps its answering strategy
-				if ((await connection.runAndReadAll(`SELECT 1 FROM duckdb_columns() WHERE database_name = 'Comparisons' AND table_name = 'runs' AND column_name = 'style'`)).getRowObjectsJson().length) {
-					await connection.run('UPDATE Comparisons.runs SET strategy = coalesce(strategy, style)');
-					await connection.run('ALTER TABLE Comparisons.runs DROP COLUMN style');
+				if (!made) {
+					for (const [table, comment] of Object.entries(MODEL_EVALUATIONS_COMMENTS)) {
+						await connection.run(`COMMENT ON TABLE ModelEvaluations.${table} IS ${sqlString(comment)}`);
+					}
 				}
-				await connection.run(`UPDATE Comparisons.runs SET strategy = 'base' WHERE strategy = 'classical'`);
 				return await task(connection);
 			} finally {
 				// Its changes written into the file itself, then the file let go and copied
-				await connection.run('CHECKPOINT Comparisons').catch(() => undefined);
-				await connection.run('DETACH Comparisons');
-				this.copyComparisons();
+				await connection.run('CHECKPOINT ModelEvaluations').catch(() => undefined);
+				await connection.run('DETACH ModelEvaluations');
+				this.copyModelEvaluations();
 			}
 		});
 	}
 
-	/** The modification time of Comparisons.duckdb when it was last copied; none before the first copy of this process. */
-	private comparisonsCopied: number | undefined;
+	/** The modification time of ModelEvaluations.duckdb when it was last copied; none before the first copy of this process. */
+	private modelEvaluationsCopied: number | undefined;
 
 	/**
-	 * Copies Comparisons.duckdb to COMPARISONS_COPY when it has changed since the last copy, or has not been copied by
-	 * this process: written beside it, then renamed over it, so that a reader of the old copy keeps reading it whole.
-	 * Where the old copy cannot be replaced while it is open, as on Windows, it stays until the next change.
+	 * Copies ModelEvaluations.duckdb to MODEL_EVALUATIONS_COPY when it has changed since the last copy, or has not been
+	 * copied by this process: written beside it, then renamed over it, so that a reader of the old copy keeps reading it
+	 * whole. Where the old copy cannot be replaced while it is open, as on Windows, it stays until the next change.
 	 */
-	private copyComparisons(): void {
+	private copyModelEvaluations(): void {
 		try {
-			const changed = fs.statSync(COMPARISONS).mtimeMs;
-			if (changed === this.comparisonsCopied && fs.existsSync(COMPARISONS_COPY)) {
+			const changed = fs.statSync(MODEL_EVALUATIONS).mtimeMs;
+			if (changed === this.modelEvaluationsCopied && fs.existsSync(MODEL_EVALUATIONS_COPY)) {
 				return;
 			}
-			fs.mkdirSync(dirname(COMPARISONS_COPY), { recursive: true });
-			const partial = `${COMPARISONS_COPY}.${process.pid}.partial`;
-			fs.copyFileSync(COMPARISONS, partial);
+			fs.mkdirSync(dirname(MODEL_EVALUATIONS_COPY), { recursive: true });
+			const partial = `${MODEL_EVALUATIONS_COPY}.${process.pid}.partial`;
+			fs.copyFileSync(MODEL_EVALUATIONS, partial);
 			try {
-				fs.renameSync(partial, COMPARISONS_COPY);
-				this.comparisonsCopied = changed;
+				fs.renameSync(partial, MODEL_EVALUATIONS_COPY);
+				this.modelEvaluationsCopied = changed;
 			} finally {
 				fs.rmSync(partial, { force: true });
 			}
 		} catch {
-			// The runs stay in Comparisons.duckdb; the copy is made again at the next change
+			// The runs stay in ModelEvaluations.duckdb; the copy is made again at the next change
+		}
+	}
+
+	/** Writes `rows` into the table `table` of ModelEvaluations, by one statement prepared for them all. */
+	private async insertRows<T extends EvaluationTable>(connection: DuckDBConnection, table: T, rows: readonly EvaluationRow<T>[]): Promise<void> {
+		if (!rows.length) {
+			return;
+		}
+		const columns: readonly string[] = MODEL_EVALUATIONS_COLUMNS[table];
+		const statement = await connection.prepare(`INSERT INTO ModelEvaluations.${table} (${columns.map(column => `"${column}"`).join(', ')}) VALUES (${columns.map((_, index) => `$${index + 1}`).join(', ')})`);
+		try {
+			for (const row of rows) {
+				const fields: Readonly<Record<string, string | number | boolean | null | undefined>> = row;
+				statement.bind(columns.map(column => fields[column] ?? null));
+				await statement.run();
+			}
+		} finally {
+			statement.destroySync();
+		}
+	}
+
+	/** Writes a run in one transaction, in place of the run of the same id, if any. */
+	private async writeRun(connection: DuckDBConnection, run: EvaluationRow<'runs'> & { readonly id: string }, rows: { readonly models: EvaluationRow<'models'>[]; readonly cases: EvaluationRow<'cases'>[]; readonly outputs?: EvaluationRow<'outputs'>[]; readonly scores: EvaluationRow<'scores'>[] }): Promise<void> {
+		await connection.run('BEGIN TRANSACTION');
+		try {
+			await this.removeRun(connection, run.id);
+			await this.insertRows(connection, 'runs', [run]);
+			await this.insertRows(connection, 'models', rows.models);
+			await this.insertRows(connection, 'cases', rows.cases);
+			await this.insertRows(connection, 'outputs', rows.outputs ?? []);
+			await this.insertRows(connection, 'scores', rows.scores);
+			await connection.run('COMMIT');
+		} catch (err) {
+			await connection.run('ROLLBACK');
+			throw err;
 		}
 	}
 
 	/** Takes away the run `run` from each table. */
 	private async removeRun(connection: DuckDBConnection, run: string): Promise<void> {
-		for (const table of ['runs', 'questions', 'answers', 'scores', 'unrated']) {
-			await connection.run(`DELETE FROM Comparisons.${table} WHERE ${table === 'runs' ? 'id' : 'run'} = $run`, { run });
+		for (const table of ['runs', 'models', 'cases', 'outputs', 'scores']) {
+			await connection.run(`DELETE FROM ModelEvaluations.${table} WHERE ${table === 'runs' ? 'id' : 'run'} = $run`, { run });
 		}
 	}
 
+	/**
+	 * The runs of the kind `kind`, the latest first, or the one whose id is `id`: each its row, the rows of its models
+	 * in their order, and the number of its cases.
+	 */
+	private async readRuns(connection: DuckDBConnection, kind: EvaluationKind, id?: string): Promise<{ readonly row: Row; readonly models: readonly Row[]; readonly cases: number }[]> {
+		const where = `WHERE kind = $kind${id === undefined ? '' : ' AND id = $id'}`;
+		const values: Record<string, string> = id === undefined ? { kind } : { kind, id };
+		const runs = (await connection.runAndReadAll(`SELECT r.*, (SELECT count(*) FROM ModelEvaluations.cases c WHERE c.run = r.id) AS cases FROM ModelEvaluations.runs r ${where} ORDER BY started DESC`, values)).getRowObjectsJson();
+		const models = new Map<string, Row[]>();
+		for (const model of (await connection.runAndReadAll(`SELECT * FROM ModelEvaluations.models WHERE run IN (SELECT id FROM ModelEvaluations.runs ${where}) ORDER BY place`, values)).getRowObjectsJson()) {
+			models.set(String(model.run), [...models.get(String(model.run)) ?? [], model]);
+		}
+		return runs.map(row => ({ row, models: models.get(String(row.id)) ?? [], cases: Number(row.cases) }));
+	}
+
+	/** The rows of the table `table` of the run `run`, in the order `order`. */
+	private async rowsOf(connection: DuckDBConnection, table: EvaluationTable, run: string, order = ''): Promise<Row[]> {
+		return (await connection.runAndReadAll(`SELECT * FROM ModelEvaluations.${table} WHERE run = $run${order ? ` ORDER BY ${order}` : ''}`, { run })).getRowObjectsJson();
+	}
+
+	/** The rows of the cases of a run of Evaluate Answering Models, or of a run of embedding models or rerankers. */
+	private caseRows(run: string, items: readonly IAskPollisEvalItem[], passages?: readonly (readonly IAskPollisPassage[])[], indices?: readonly number[]): EvaluationRow<'cases'>[] {
+		return items.map((item, place) => ({
+			run, case: String(indices?.[place] ?? place), source: item.source, context: item.context, input_text: item.question, target_text: item.answer,
+			choices: item.choices ? JSON.stringify(item.choices) : null, explanation: item.explanation ?? null,
+			target_label: item.choices && item.choices.indexOf(item.answer) >= 0 ? choiceLetter(item.choices.indexOf(item.answer)) : null,
+			passages: passages ? JSON.stringify(passages[place]) : null,
+		}));
+	}
+
+	/** A question of a run read back from its row of ModelEvaluations.cases. */
+	private itemOf(row: Row): IAskPollisEvalItem {
+		return closedItem({ source: String(row.source ?? ''), context: String(row.context ?? ''), question: String(row.input_text ?? ''), answer: String(row.target_text ?? '') }, row.choices, row.explanation);
+	}
+
 	async saveRun(run: ICompareRun): Promise<void> {
-		await this.withComparisons(async connection => {
+		await this.withModelEvaluations(async connection => {
 			const { summary } = run;
-			await connection.run('BEGIN TRANSACTION');
-			try {
-				await this.removeRun(connection, summary.id);
-				await connection.run('INSERT INTO Comparisons.runs (id, started, pollis, models, judges, repeats, questions, strategy, open_book, closed_book, search_in) VALUES ($id, $started, $pollis, $models, $judges, $repeats, $questions, $strategy::VARCHAR, $openBook, $closedBook, $searchIn::VARCHAR)', {
-					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), judges: JSON.stringify(summary.judges), repeats: summary.repeats, questions: summary.questions, strategy: summary.strategy ?? null, openBook: !!summary.openBook, closedBook: !!summary.closedBook, searchIn: summary.searchIn?.length ? JSON.stringify(summary.searchIn) : null,
-				});
-				for (const question of run.questions) {
-					await connection.run('INSERT INTO Comparisons.questions (run, question, source, context, text, answer, passages, rank, choices, explanation) VALUES ($run, $question, $source, $context, $text, $answer, $passages, $rank::INTEGER, $choices::VARCHAR, $explanation::VARCHAR)', {
-						run: summary.id, question: question.index, source: question.item.source, context: question.item.context, text: question.item.question, answer: question.item.answer, passages: JSON.stringify(question.passages), rank: question.rank ?? null,
-						choices: question.item.choices ? JSON.stringify(question.item.choices) : null, explanation: question.item.explanation ?? null,
-					});
+			const id = summary.id;
+			const scores: EvaluationRow<'scores'>[] = [];
+			for (const question of run.questions) {
+				if (question.rank !== undefined) {
+					scores.push({ run: id, case: String(question.index), metric: 'passage_rank', value: question.rank });
 				}
-				for (const answer of run.answers) {
-					const timings = answer.timings;
-					await connection.run('INSERT INTO Comparisons.answers (run, id, question, model, repeat, answer, error, first_word, seconds, reading, writing, tokens_read, tokens_written, similarity, choice) VALUES ($run, $id, $question, $model, $repeat, $answer, $error::VARCHAR, $firstWord::DOUBLE, $seconds::DOUBLE, $reading::DOUBLE, $writing::DOUBLE, $tokensRead::INTEGER, $tokensWritten::INTEGER, $similarity::DOUBLE, $choice::INTEGER)', {
-						run: summary.id, id: answer.id, question: answer.question, model: answer.model, repeat: answer.repeat, answer: answer.answer, error: answer.error ?? null,
-						firstWord: timings?.firstWord ?? null, seconds: timings?.seconds ?? null, reading: timings?.reading ?? null, writing: timings?.writing ?? null, tokensRead: timings?.tokensRead ?? null, tokensWritten: timings?.tokensWritten ?? null,
-						similarity: answer.similarity ?? null, choice: answer.choice ?? null,
-					});
-				}
-				for (const score of run.scores) {
-					await connection.run('INSERT INTO Comparisons.scores VALUES ($run, $answer, $judge, $relevance::INTEGER, $completeness::INTEGER, $clarity::INTEGER, $consistency::INTEGER, $helpfulness::INTEGER, $final, $rationale)', {
-						run: summary.id, answer: score.answer, judge: score.judge, final: score.final, rationale: score.rationale,
-						relevance: score.relevance ?? null, completeness: score.completeness ?? null, clarity: score.clarity ?? null, consistency: score.consistency ?? null, helpfulness: score.helpfulness ?? null,
-					});
-				}
-				for (const unrated of run.unrated) {
-					await connection.run('INSERT INTO Comparisons.unrated VALUES ($run, $answer, $judge, $error)', { run: summary.id, ...unrated });
-				}
-				await connection.run('COMMIT');
-			} catch (err) {
-				await connection.run('ROLLBACK');
-				throw err;
 			}
+			for (const answer of run.answers) {
+				if (answer.similarity !== undefined) {
+					scores.push({ run: id, model: answer.model, case: String(answer.question), repeat: answer.repeat, metric: 'similarity', value: answer.similarity });
+				}
+			}
+			// The scores of a judge, and why it did not rate an answer, by the answer's model, question and repeat
+			const answers = new Map(run.answers.map(answer => [answer.id, answer]));
+			for (const score of run.scores) {
+				const answer = answers.get(score.answer);
+				if (answer) {
+					const key = { run: id, model: answer.model, case: String(answer.question), repeat: answer.repeat, judge: score.judge };
+					for (const criterion of RUBRIC) {
+						if (score[criterion] !== undefined) {
+							scores.push({ ...key, metric: criterion, value: score[criterion] });
+						}
+					}
+					scores.push({ ...key, metric: 'final', value: score.final, note: score.rationale });
+				}
+			}
+			for (const unrated of run.unrated) {
+				const answer = answers.get(unrated.answer);
+				if (answer) {
+					scores.push({ run: id, model: answer.model, case: String(answer.question), repeat: answer.repeat, judge: unrated.judge, metric: 'final', error: unrated.error });
+				}
+			}
+			await this.writeRun(connection, {
+				id, kind: 'answering', source: 'evaluateAnsweringModels', started: summary.started, pollis: summary.pollis, repeats: summary.repeats,
+				settings: JSON.stringify({ strategy: summary.strategy, open_book: summary.openBook || undefined, closed_book: summary.closedBook || undefined, search_in: summary.searchIn?.length ? summary.searchIn : undefined }),
+			}, {
+				models: [
+					...summary.models.map((model, place) => modelRow(id, model, 'evaluated', 'llm', place + 1)),
+					...summary.judges.map((judge, place) => modelRow(id, { value: judge, label: judge }, 'judge', 'llm', place + 1)),
+				],
+				cases: this.caseRows(id, run.questions.map(question => question.item), run.questions.map(question => question.passages), run.questions.map(question => question.index)),
+				outputs: run.answers.map(answer => ({
+					run: id, model: answer.model, case: String(answer.question), repeat: answer.repeat, output_text: answer.answer, error: answer.error ?? null,
+					output_label: answer.choice === undefined ? null : choiceLetter(answer.choice),
+					seconds: answer.timings?.seconds ?? null, first_token_ms: answer.timings?.firstWord ?? null, reading_speed: answer.timings?.reading ?? null, writing_speed: answer.timings?.writing ?? null,
+					tokens_read: answer.timings?.tokensRead ?? null, tokens_written: answer.timings?.tokensWritten ?? null,
+				})),
+				scores,
+			});
 		});
 	}
 
-	private summaryOf(row: Row): ICompareRunSummary {
+	private summaryOf(row: Row, models: readonly Row[], cases: number): ICompareRunSummary {
+		const settings = storedSettings(row);
 		return {
 			id: String(row.id),
 			started: Number(row.started),
 			pollis: String(row.pollis ?? ''),
-			models: JSON.parse(String(row.models ?? '[]')),
-			judges: JSON.parse(String(row.judges ?? '[]')),
+			models: models.filter(model => model.role === 'evaluated').map(model => ({ ...storedModel(model), local: storedSettings(model).local === true })),
+			judges: models.filter(model => model.role === 'judge').map(model => String(model.label ?? model.model)),
 			repeats: Number(row.repeats),
-			questions: Number(row.questions),
-			...(row.strategy ? { strategy: String(row.strategy) } : {}),
-			...(row.open_book ? { openBook: true } : {}),
-			...(row.closed_book ? { closedBook: true } : {}),
-			...(typeof row.search_in === 'string' ? { searchIn: storedChoice(row.search_in) } : {}),
+			questions: cases,
+			...(typeof settings.strategy === 'string' ? { strategy: settings.strategy } : {}),
+			...(settings.open_book ? { openBook: true } : {}),
+			...(settings.closed_book ? { closedBook: true } : {}),
+			...(Array.isArray(settings.search_in) ? { searchIn: settings.search_in.filter(name => typeof name === 'string') } : {}),
 		};
 	}
 
 	async runs(): Promise<readonly ICompareRunSummary[]> {
-		return this.withComparisons(async connection =>
-			(await connection.runAndReadAll('SELECT * FROM Comparisons.runs ORDER BY started DESC')).getRowObjectsJson().map(row => this.summaryOf(row)));
+		return this.withModelEvaluations(async connection =>
+			(await this.readRuns(connection, 'answering')).map(({ row, models, cases }) => this.summaryOf(row, models, cases)));
 	}
 
 	async loadRun(id: string): Promise<ICompareRun | undefined> {
-		return this.withComparisons(async connection => {
-			const read = async (sql: string) => (await connection.runAndReadAll(sql, { run: id })).getRowObjectsJson();
-			const [run] = await read('SELECT * FROM Comparisons.runs WHERE id = $run');
+		return this.withModelEvaluations(async connection => {
+			const [run] = await this.readRuns(connection, 'answering', id);
 			if (!run) {
 				return undefined;
 			}
-			const questions = await read('SELECT * FROM Comparisons.questions WHERE run = $run ORDER BY question');
-			const answers = await read('SELECT * FROM Comparisons.answers WHERE run = $run ORDER BY question, model, repeat');
-			const scores = await read('SELECT * FROM Comparisons.scores WHERE run = $run');
-			const unrated = await read('SELECT * FROM Comparisons.unrated WHERE run = $run');
+			const scores = await this.rowsOf(connection, 'scores', id);
+			const ranks = new Map(scores.filter(score => score.metric === 'passage_rank' && score.model === null).map(score => [String(score.case), optionalNumber(score.value)]));
+			const similarities = new Map(scores.filter(score => score.metric === 'similarity').map(score => [answerId(score.case, score.model, score.repeat), optionalNumber(score.value)]));
+			// A judge's scores of an answer, its final score last
+			const judged = new Map<string, { readonly answer: string; readonly judge: string; readonly rows: Row[] }>();
+			for (const score of scores) {
+				if (score.judge !== null) {
+					const answer = answerId(score.case, score.model, score.repeat);
+					const key = `${answer}\u0000${score.judge}`;
+					const entry = judged.get(key) ?? { answer, judge: String(score.judge), rows: [] };
+					entry.rows.push(score);
+					judged.set(key, entry);
+				}
+			}
+			const rated = [...judged.values()].map(entry => ({ ...entry, final: entry.rows.find(row => row.metric === 'final') }));
 			return {
-				summary: this.summaryOf(run),
-				questions: questions.map(row => ({
-					index: Number(row.question),
-					item: closedItem({ source: String(row.source ?? ''), context: String(row.context ?? ''), question: String(row.text ?? ''), answer: String(row.answer ?? '') }, row.choices, row.explanation),
+				summary: this.summaryOf(run.row, run.models, run.cases),
+				questions: (await this.rowsOf(connection, 'cases', id, 'try_cast("case" AS INTEGER)')).map(row => ({
+					index: Number(row.case),
+					item: this.itemOf(row),
 					passages: JSON.parse(String(row.passages ?? '[]')),
-					rank: optionalNumber(row.rank),
+					rank: ranks.get(String(row.case)),
 				})),
-				answers: answers.map(row => ({
-					id: String(row.id),
-					question: Number(row.question),
+				answers: (await this.rowsOf(connection, 'outputs', id, 'try_cast("case" AS INTEGER), model, repeat')).map(row => ({
+					id: answerId(row.case, row.model, row.repeat),
+					question: Number(row.case),
 					model: String(row.model),
 					repeat: Number(row.repeat),
-					answer: String(row.answer ?? ''),
+					answer: String(row.output_text ?? ''),
 					error: row.error === null ? undefined : String(row.error),
 					timings: row.seconds === null ? undefined : {
-						firstWord: optionalNumber(row.first_word),
+						firstWord: optionalNumber(row.first_token_ms),
 						seconds: Number(row.seconds),
-						reading: optionalNumber(row.reading),
-						writing: optionalNumber(row.writing),
+						reading: optionalNumber(row.reading_speed),
+						writing: optionalNumber(row.writing_speed),
 						tokensRead: optionalNumber(row.tokens_read),
 						tokensWritten: optionalNumber(row.tokens_written),
 					},
-					similarity: optionalNumber(row.similarity),
-					choice: optionalNumber(row.choice),
+					similarity: similarities.get(answerId(row.case, row.model, row.repeat)),
+					choice: choiceIndex(row.output_label),
 				})),
-				scores: scores.map(row => ({
-					answer: String(row.answer),
-					judge: String(row.judge),
-					relevance: optionalNumber(row.relevance),
-					completeness: optionalNumber(row.completeness),
-					clarity: optionalNumber(row.clarity),
-					consistency: optionalNumber(row.consistency),
-					helpfulness: optionalNumber(row.helpfulness),
-					final: Number(row.final),
-					rationale: String(row.rationale ?? ''),
-				})),
-				unrated: unrated.map(row => ({ answer: String(row.answer), judge: String(row.judge), error: String(row.error ?? '') })),
+				scores: rated.filter(entry => entry.final && entry.final.error === null).map(entry => {
+					const criterion = (name: string) => optionalNumber(entry.rows.find(row => row.metric === name)?.value);
+					return {
+						answer: entry.answer,
+						judge: entry.judge,
+						relevance: criterion('relevance'),
+						completeness: criterion('completeness'),
+						clarity: criterion('clarity'),
+						consistency: criterion('consistency'),
+						helpfulness: criterion('helpfulness'),
+						final: Number(entry.final?.value),
+						rationale: String(entry.final?.note ?? ''),
+					};
+				}),
+				unrated: rated.filter(entry => entry.final && entry.final.error !== null).map(entry => ({ answer: entry.answer, judge: entry.judge, error: String(entry.final?.error ?? '') })),
 			};
 		});
 	}
 
 	async deleteRun(id: string): Promise<void> {
-		await this.withComparisons(connection => this.removeRun(connection, id));
+		await this.withModelEvaluations(connection => this.removeRun(connection, id));
 	}
 
-	/** Takes away the run `run` of Evaluate Embedding Models from its tables. */
-	private async removeEmbeddingRun(connection: DuckDBConnection, run: string): Promise<void> {
-		for (const table of ['embeddingRuns', 'embeddingQuestions', 'embeddingFound']) {
-			await connection.run(`DELETE FROM Comparisons.${table} WHERE ${table === 'embeddingRuns' ? 'id' : 'run'} = $run`, { run });
+	/** The rows of ModelEvaluations.scores of a found list of a run of embedding models or rerankers, one a metric that is set. */
+	private foundScores<T extends { readonly question: number; readonly model: string }>(run: string, found: readonly T[], metrics: readonly (readonly [keyof T & string, string])[]): EvaluationRow<'scores'>[] {
+		const scores: EvaluationRow<'scores'>[] = [];
+		for (const entry of found) {
+			const key = { run, model: entry.model, case: String(entry.question) };
+			const set = metrics.filter(([field]) => entry[field] !== undefined && entry[field] !== null);
+			for (const [field, metric] of set) {
+				scores.push({ ...key, metric, value: Number(entry[field]) });
+			}
+			// An entry with no metric set is kept all the same, as the first metric with no value
+			if (!set.length) {
+				scores.push({ ...key, metric: metrics[0][1] });
+			}
 		}
+		return scores;
+	}
+
+	/** A found list of a run of embedding models or rerankers read back: each question and model, and its metrics by their fields. */
+	private async foundOf(connection: DuckDBConnection, run: string, metrics: readonly (readonly [string, string])[]): Promise<{ readonly question: number; readonly model: string; readonly values: ReadonlyMap<string, number | undefined> }[]> {
+		const rows = (await connection.runAndReadAll(`SELECT s.* FROM ModelEvaluations.scores s LEFT JOIN ModelEvaluations.models m ON m.run = s.run AND m.model = s.model AND m.role = 'evaluated' WHERE s.run = $run AND s.model IS NOT NULL ORDER BY try_cast(s."case" AS INTEGER), m.place`, { run })).getRowObjectsJson();
+		const fields = new Map(metrics.map(([field, metric]) => [metric, field]));
+		const found = new Map<string, { readonly question: number; readonly model: string; readonly values: Map<string, number | undefined> }>();
+		for (const row of rows) {
+			const key = `${row.case}\u0000${row.model}`;
+			const entry = found.get(key) ?? { question: Number(row.case), model: String(row.model), values: new Map() };
+			const field = fields.get(String(row.metric));
+			if (field) {
+				entry.values.set(field, optionalNumber(row.value));
+			}
+			found.set(key, entry);
+		}
+		return [...found.values()];
 	}
 
 	async saveEmbeddingRun(run: IEmbeddingRun): Promise<void> {
-		await this.withComparisons(async connection => {
+		await this.withModelEvaluations(async connection => {
 			const { summary } = run;
-			await connection.run('BEGIN TRANSACTION');
-			try {
-				await this.removeEmbeddingRun(connection, summary.id);
-				await connection.run('INSERT INTO Comparisons.embeddingRuns(id, started, pollis, models, questions, passages, benchmark, sources) VALUES ($id, $started, $pollis, $models, $questions, $passages, $benchmark::VARCHAR, $sources::VARCHAR)', {
-					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), questions: summary.questions, passages: summary.passages, benchmark: summary.benchmark ?? null, sources: summary.sources ? JSON.stringify(summary.sources) : null,
-				});
-				for (const [question, item] of run.questions.entries()) {
-					await connection.run('INSERT INTO Comparisons.embeddingQuestions VALUES ($run, $question, $source, $context, $text, $answer)', {
-						run: summary.id, question, source: item.source, context: item.context, text: item.question, answer: item.answer,
-					});
-				}
-				for (const found of run.found) {
-					await connection.run('INSERT INTO Comparisons.embeddingFound(run, question, model, hybrid, meaning, query_ms, search_ms, ndcg, recall) VALUES ($run, $question, $model, $hybrid::INTEGER, $meaning::INTEGER, $queryMs, $searchMs, $ndcg::DOUBLE, $recall::DOUBLE)', {
-						run: summary.id, question: found.question, model: found.model, hybrid: found.hybrid ?? null, meaning: found.meaning ?? null, queryMs: found.queryMs, searchMs: found.searchMs, ndcg: found.ndcg ?? null, recall: found.recall ?? null,
-					});
-				}
-				await connection.run('COMMIT');
-			} catch (err) {
-				await connection.run('ROLLBACK');
-				throw err;
-			}
+			await this.writeRun(connection, {
+				id: summary.id, kind: 'embedding', source: summary.benchmark ? 'benchmarkRetrievalModels' : 'evaluateEmbeddingModels', started: summary.started, pollis: summary.pollis, benchmark: summary.benchmark ?? null,
+				settings: JSON.stringify({ passages: summary.passages, sources: summary.sources }),
+			}, {
+				models: summary.models.map((model, place) => modelRow(summary.id, model, 'evaluated', 'embedding', place + 1)),
+				cases: this.caseRows(summary.id, run.questions),
+				scores: this.foundScores(summary.id, run.found, EMBEDDING_METRICS),
+			});
 		});
 	}
 
-	private embeddingSummaryOf(row: Row): IEmbeddingRunSummary {
+	private embeddingSummaryOf(row: Row, models: readonly Row[], cases: number): IEmbeddingRunSummary {
+		const settings = storedSettings(row);
 		return {
 			id: String(row.id),
 			started: Number(row.started),
 			pollis: String(row.pollis ?? ''),
-			models: JSON.parse(String(row.models ?? '[]')),
-			questions: Number(row.questions),
-			passages: Number(row.passages),
+			models: models.filter(model => model.role === 'evaluated').map(model => {
+				const own = storedSettings(model);
+				return {
+					...storedModel(model),
+					passage: String(own.passage ?? ''),
+					query: String(own.query ?? ''),
+					...(typeof own.dimensions === 'number' ? { dimensions: own.dimensions } : {}),
+					...(typeof own.perSecond === 'number' ? { perSecond: own.perSecond } : {}),
+				};
+			}),
+			questions: cases,
+			passages: Number(settings.passages ?? 0),
 			...(typeof row.benchmark === 'string' ? { benchmark: row.benchmark } : {}),
-			...(typeof row.sources === 'string' ? { sources: storedSources(row.sources) } : {}),
+			...(Array.isArray(settings.sources) ? { sources: storedSources(settings.sources) } : {}),
 		};
 	}
 
 	async embeddingRuns(): Promise<readonly IEmbeddingRunSummary[]> {
-		return this.withComparisons(async connection =>
-			(await connection.runAndReadAll('SELECT * FROM Comparisons.embeddingRuns ORDER BY started DESC')).getRowObjectsJson().map(row => this.embeddingSummaryOf(row)));
+		return this.withModelEvaluations(async connection =>
+			(await this.readRuns(connection, 'embedding')).map(({ row, models, cases }) => this.embeddingSummaryOf(row, models, cases)));
 	}
 
 	async loadEmbeddingRun(id: string): Promise<IEmbeddingRun | undefined> {
-		return this.withComparisons(async connection => {
-			const row = (await connection.runAndReadAll('SELECT * FROM Comparisons.embeddingRuns WHERE id = $id', { id })).getRowObjectsJson()[0];
-			if (!row) {
+		return this.withModelEvaluations(async connection => {
+			const [run] = await this.readRuns(connection, 'embedding', id);
+			if (!run) {
 				return undefined;
 			}
-			const questions = (await connection.runAndReadAll('SELECT * FROM Comparisons.embeddingQuestions WHERE run = $id ORDER BY question', { id })).getRowObjectsJson()
-				.map(question => ({ source: String(question.source), context: String(question.context), question: String(question.text), answer: String(question.answer) }));
-			const found = (await connection.runAndReadAll('SELECT * FROM Comparisons.embeddingFound WHERE run = $id ORDER BY question', { id })).getRowObjectsJson()
-				.map(found => ({ question: Number(found.question), model: String(found.model), hybrid: optionalNumber(found.hybrid), meaning: optionalNumber(found.meaning), queryMs: Number(found.query_ms), searchMs: Number(found.search_ms), ndcg: optionalNumber(found.ndcg), recall: optionalNumber(found.recall) }));
-			return { summary: this.embeddingSummaryOf(row), questions, found };
+			const questions = (await this.rowsOf(connection, 'cases', id, 'try_cast("case" AS INTEGER)')).map(row => this.itemOf(row));
+			const found = (await this.foundOf(connection, id, EMBEDDING_METRICS)).map(({ question, model, values }) => ({
+				question, model, hybrid: values.get('hybrid'), meaning: values.get('meaning'), queryMs: Number(values.get('queryMs')), searchMs: Number(values.get('searchMs')), ndcg: values.get('ndcg'), recall: values.get('recall'),
+			}));
+			return { summary: this.embeddingSummaryOf(run.row, run.models, run.cases), questions, found };
 		});
 	}
 
 	async deleteEmbeddingRun(id: string): Promise<void> {
-		await this.withComparisons(connection => this.removeEmbeddingRun(connection, id));
-	}
-
-	/** Takes away the run `run` of Evaluate Reranking Models from its tables. */
-	private async removeRerankRun(connection: DuckDBConnection, run: string): Promise<void> {
-		for (const table of ['rerankRuns', 'rerankQuestions', 'rerankFound']) {
-			await connection.run(`DELETE FROM Comparisons.${table} WHERE ${table === 'rerankRuns' ? 'id' : 'run'} = $run`, { run });
-		}
+		await this.withModelEvaluations(connection => this.removeRun(connection, id));
 	}
 
 	async saveRerankRun(run: IRerankRun): Promise<void> {
-		await this.withComparisons(async connection => {
+		await this.withModelEvaluations(async connection => {
 			const { summary } = run;
-			await connection.run('BEGIN TRANSACTION');
-			try {
-				await this.removeRerankRun(connection, summary.id);
-				await connection.run('INSERT INTO Comparisons.rerankRuns(id, started, pollis, models, questions, found, kept, embedder, benchmark) VALUES ($id, $started, $pollis, $models, $questions, $found, $kept, $embedder, $benchmark::VARCHAR)', {
-					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), questions: summary.questions, found: summary.found, kept: summary.kept, embedder: summary.embedder, benchmark: summary.benchmark ?? null,
-				});
-				for (const [question, item] of run.questions.entries()) {
-					await connection.run('INSERT INTO Comparisons.rerankQuestions VALUES ($run, $question, $source, $context, $text, $answer)', {
-						run: summary.id, question, source: item.source, context: item.context, text: item.question, answer: item.answer,
-					});
-				}
-				for (const found of run.found) {
-					await connection.run('INSERT INTO Comparisons.rerankFound(run, question, model, place, ms, ndcg, recall, among) VALUES ($run, $question, $model, $place::INTEGER, $ms::DOUBLE, $ndcg::DOUBLE, $recall::DOUBLE, $among::DOUBLE)', {
-						run: summary.id, question: found.question, model: found.model, place: found.place ?? null, ms: found.ms ?? null, ndcg: found.ndcg ?? null, recall: found.recall ?? null, among: found.among ?? null,
-					});
-				}
-				await connection.run('COMMIT');
-			} catch (err) {
-				await connection.run('ROLLBACK');
-				throw err;
-			}
+			await this.writeRun(connection, {
+				id: summary.id, kind: 'reranking', source: summary.benchmark ? 'benchmarkRetrievalModels' : 'evaluateRerankingModels', started: summary.started, pollis: summary.pollis, benchmark: summary.benchmark ?? null,
+				settings: JSON.stringify({ found: summary.found, kept: summary.kept }),
+			}, {
+				models: [
+					...summary.models.map((model, place) => modelRow(summary.id, model, 'evaluated', 'reranker', place + 1)),
+					...summary.embedder ? [modelRow(summary.id, { value: summary.embedder, label: summary.embedder }, 'embedder', 'embedding', 1)] : [],
+				],
+				cases: this.caseRows(summary.id, run.questions),
+				scores: this.foundScores(summary.id, run.found, RERANK_METRICS),
+			});
 		});
 	}
 
-	private rerankSummaryOf(row: Row): IRerankRunSummary {
+	private rerankSummaryOf(row: Row, models: readonly Row[], cases: number): IRerankRunSummary {
+		const settings = storedSettings(row);
+		const embedder = models.find(model => model.role === 'embedder');
 		return {
 			id: String(row.id),
 			started: Number(row.started),
 			pollis: String(row.pollis ?? ''),
-			models: JSON.parse(String(row.models ?? '[]')),
-			questions: Number(row.questions),
-			found: Number(row.found),
-			kept: Number(row.kept),
-			embedder: String(row.embedder ?? ''),
+			models: models.filter(model => model.role === 'evaluated').map(model => storedModel(model)),
+			questions: cases,
+			found: Number(settings.found ?? 0),
+			kept: Number(settings.kept ?? 0),
+			embedder: embedder ? String(embedder.model) : '',
 			...(typeof row.benchmark === 'string' ? { benchmark: row.benchmark } : {}),
 		};
 	}
 
 	async rerankRuns(): Promise<readonly IRerankRunSummary[]> {
-		return this.withComparisons(async connection =>
-			(await connection.runAndReadAll('SELECT * FROM Comparisons.rerankRuns ORDER BY started DESC')).getRowObjectsJson().map(row => this.rerankSummaryOf(row)));
+		return this.withModelEvaluations(async connection =>
+			(await this.readRuns(connection, 'reranking')).map(({ row, models, cases }) => this.rerankSummaryOf(row, models, cases)));
 	}
 
 	async loadRerankRun(id: string): Promise<IRerankRun | undefined> {
-		return this.withComparisons(async connection => {
-			const row = (await connection.runAndReadAll('SELECT * FROM Comparisons.rerankRuns WHERE id = $id', { id })).getRowObjectsJson()[0];
-			if (!row) {
+		return this.withModelEvaluations(async connection => {
+			const [run] = await this.readRuns(connection, 'reranking', id);
+			if (!run) {
 				return undefined;
 			}
-			const questions = (await connection.runAndReadAll('SELECT * FROM Comparisons.rerankQuestions WHERE run = $id ORDER BY question', { id })).getRowObjectsJson()
-				.map(question => ({ source: String(question.source), context: String(question.context), question: String(question.text), answer: String(question.answer) }));
-			const found = (await connection.runAndReadAll('SELECT * FROM Comparisons.rerankFound WHERE run = $id ORDER BY question', { id })).getRowObjectsJson()
-				.map(found => ({ question: Number(found.question), model: String(found.model), place: optionalNumber(found.place), ms: optionalNumber(found.ms), ndcg: optionalNumber(found.ndcg), recall: optionalNumber(found.recall), among: optionalNumber(found.among) }));
-			return { summary: this.rerankSummaryOf(row), questions, found };
+			const questions = (await this.rowsOf(connection, 'cases', id, 'try_cast("case" AS INTEGER)')).map(row => this.itemOf(row));
+			const found = (await this.foundOf(connection, id, RERANK_METRICS)).map(({ question, model, values }) => ({
+				question, model, place: values.get('place'), ms: values.get('ms'), ndcg: values.get('ndcg'), recall: values.get('recall'), among: values.get('among'),
+			}));
+			return { summary: this.rerankSummaryOf(run.row, run.models, run.cases), questions, found };
 		});
 	}
 
 	async deleteRerankRun(id: string): Promise<void> {
-		await this.withComparisons(connection => this.removeRerankRun(connection, id));
-	}
-
-	/** Takes away the run `run` of Benchmark Answering Models from its tables. */
-	private async removeBenchmarkRun(connection: DuckDBConnection, run: string): Promise<void> {
-		for (const table of ['benchmarkRuns', 'benchmarkModels', 'benchmarkAnswers']) {
-			await connection.run(`DELETE FROM Comparisons.${table} WHERE ${table === 'benchmarkRuns' ? 'id' : 'run'} = $run`, { run });
-		}
+		await this.withModelEvaluations(connection => this.removeRun(connection, id));
 	}
 
 	async importBenchmarkRuns(ids?: readonly string[]): Promise<void> {
@@ -1549,45 +1703,58 @@ class AskPollisIndex implements IAskPollisIndex {
 		if (!runs.length) {
 			return;
 		}
-		await this.withComparisons(async connection => {
+		await this.withModelEvaluations(async connection => {
 			for (const { run, answers } of runs) {
-				await connection.run('BEGIN TRANSACTION');
-				try {
-					await this.removeBenchmarkRun(connection, run.id);
-					await connection.run('INSERT INTO Comparisons.benchmarkRuns VALUES ($id, $started, $ended::BIGINT, $pollis, $benchmark, $revision::VARCHAR, $shots, $reasoning, $thinking, $maxTokens, $seed, $allocation, $size, $strata, $questions)', {
-						id: run.id, started: run.started, ended: run.ended ?? null, pollis: run.pollis ?? '', benchmark: run.benchmark, revision: run.revision ?? null,
-						shots: run.settings.shots, reasoning: run.settings.reasoning, thinking: run.settings.thinking, maxTokens: run.settings.maxTokens,
-						seed: run.sample.seed, allocation: run.sample.allocation, size: run.sample.size, strata: JSON.stringify(run.sample.strata), questions: JSON.stringify(run.sample.questions),
-					});
-					for (const [place, model] of run.models.entries()) {
-						const figures = run.figures?.find(candidate => candidate.value === model.value);
-						await connection.run('INSERT INTO Comparisons.benchmarkModels VALUES ($run, $place, $model, $label, $size::VARCHAR, $started::BIGINT, $ended::BIGINT, $freeBefore::BIGINT, $lowestFree::BIGINT, $error::VARCHAR, $questions::INTEGER, $failed::INTEGER, $score::DOUBLE, $half::DOUBLE, $right::INTEGER, $byChance::DOUBLE, $strata::VARCHAR, $unread::INTEGER, $cutOff::INTEGER, $firstTokenMs::DOUBLE, $readingSpeed::DOUBLE, $writingSpeed::DOUBLE, $seconds::DOUBLE, $writtenTokens::DOUBLE, $memory::BIGINT)', {
-							run: run.id, place: place + 1, model: model.value, label: model.label, size: model.size ?? null, started: model.started ?? null, ended: model.ended ?? null,
-							freeBefore: model.freeBefore ?? null, lowestFree: model.lowestFree ?? null, error: model.error ?? figures?.error ?? null,
-							questions: figures?.questions ?? null, failed: figures?.failed ?? null, score: figures?.score ?? null, half: figures?.half ?? null, right: figures?.right ?? null,
-							byChance: figures?.byChance ?? null, strata: figures ? JSON.stringify(figures.strata) : null, unread: figures?.unread ?? null, cutOff: figures?.cutOff ?? null,
-							firstTokenMs: figures?.firstTokenMs ?? null, readingSpeed: figures?.readingSpeed ?? null, writingSpeed: figures?.writingSpeed ?? null,
-							seconds: figures?.seconds ?? null, writtenTokens: figures?.writtenTokens ?? null, memory: figures?.memory ?? null,
-						});
+				const scores: EvaluationRow<'scores'>[] = [];
+				const models: EvaluationRow<'models'>[] = [];
+				for (const [place, model] of run.models.entries()) {
+					const figures = run.figures?.find(candidate => candidate.value === model.value);
+					models.push(modelRow(run.id, { ...model, error: model.error ?? figures?.error ?? undefined, memory: figures?.memory ?? undefined }, 'evaluated', 'llm', place + 1));
+					if (figures) {
+						for (const [field, metric] of BENCHMARK_FIGURES) {
+							if (figures[field] !== undefined) {
+								scores.push({ run: run.id, model: model.value, metric, value: figures[field] });
+							}
+						}
+						for (const stratum of figures.strata) {
+							scores.push({ run: run.id, model: model.value, stratum: stratum.name, metric: 'asked', value: stratum.asked });
+							scores.push({ run: run.id, model: model.value, stratum: stratum.name, metric: 'right', value: stratum.right });
+						}
 					}
-					for (const [place, answer] of answers.entries()) {
-						await connection.run('INSERT INTO Comparisons.benchmarkAnswers VALUES ($run, $place, $model, $question, $stratum, $extracted::VARCHAR, $correct::BOOLEAN, $error::VARCHAR, $text::VARCHAR, $finish::VARCHAR, $seconds::DOUBLE, $promptTokens::INTEGER, $writtenTokens::INTEGER, $promptMs::DOUBLE, $readingSpeed::DOUBLE, $writingSpeed::DOUBLE, $tokenMs::DOUBLE)', {
-							run: run.id, place: place + 1, model: answer.model, question: answer.id, stratum: answer.stratum,
-							// The answer as read: a letter, or a number for a benchmark whose answers are numbers
-							extracted: answer.extracted === null || answer.extracted === undefined ? null : String(answer.extracted),
-							correct: answer.correct ?? null, error: answer.error ?? null, text: answer.text ?? null, finish: answer.finish ?? null, seconds: answer.seconds ?? null,
-							promptTokens: answer.promptTokens ?? null, writtenTokens: answer.writtenTokens ?? null, promptMs: answer.promptMs ?? null,
-							readingSpeed: answer.readingSpeed ?? null, writingSpeed: answer.writingSpeed ?? null, tokenMs: answer.tokenMs ?? null,
-						});
-					}
-					await connection.run('COMMIT');
-				} catch (err) {
-					await connection.run('ROLLBACK');
-					throw err;
 				}
+				// Each question answered, with its stratum, and each answer: as read, a letter, or a number for a benchmark whose answers are numbers
+				const cases = new Map<string, EvaluationRow<'cases'>>();
+				for (const answer of answers) {
+					cases.set(answer.id, { run: run.id, case: answer.id, stratum: answer.stratum });
+					const key = { run: run.id, model: answer.model, case: answer.id, repeat: 0 };
+					if (answer.correct !== undefined && answer.correct !== null) {
+						scores.push({ ...key, metric: 'correct', value: answer.correct ? 1 : 0 });
+					}
+					if (answer.tokenMs !== undefined && answer.tokenMs !== null) {
+						scores.push({ ...key, metric: 'token_ms', value: answer.tokenMs });
+					}
+				}
+				await this.writeRun(connection, {
+					id: run.id, kind: 'benchmark', source: 'benchmarkAnsweringModels', started: run.started, ended: run.ended ?? null, pollis: run.pollis ?? '', benchmark: run.benchmark, revision: run.revision ?? null, seed: run.sample.seed,
+					settings: JSON.stringify({
+						shots: run.settings.shots, reasoning: run.settings.reasoning, thinking: run.settings.thinking, max_tokens: run.settings.maxTokens,
+						allocation: run.sample.allocation, size: run.sample.size, strata: run.sample.strata, questions: run.sample.questions,
+					}),
+				}, {
+					models,
+					cases: [...cases.values()],
+					outputs: answers.map(answer => ({
+						run: run.id, model: answer.model, case: answer.id, repeat: 0,
+						output_label: answer.extracted === null || answer.extracted === undefined ? null : String(answer.extracted),
+						output_text: answer.text ?? null, error: answer.error ?? null, finish: answer.finish ?? null, seconds: answer.seconds ?? null,
+						tokens_read: answer.promptTokens ?? null, tokens_written: answer.writtenTokens ?? null, reading_ms: answer.promptMs ?? null,
+						reading_speed: answer.readingSpeed ?? null, writing_speed: answer.writingSpeed ?? null,
+					})),
+					scores,
+				});
 			}
 		});
-		// The files once the run is kept in Comparisons.duckdb
+		// The files once the run is kept in ModelEvaluations.duckdb
 		for (const { files } of runs) {
 			for (const file of files) {
 				await fs.promises.rm(file, { force: true });
@@ -1597,16 +1764,19 @@ class AskPollisIndex implements IAskPollisIndex {
 
 	/** The runs of Benchmark Answering Models whose id is `id`, or all of them, the latest first, each with its models and their figures. */
 	private async readBenchmarkRuns(connection: DuckDBConnection, id?: string): Promise<IBenchmarkRun[]> {
-		const where = id === undefined ? '' : 'WHERE id = $id';
-		const values = id === undefined ? undefined : { id };
-		const runs = (await connection.runAndReadAll(`SELECT * FROM Comparisons.benchmarkRuns ${where} ORDER BY started DESC`, values)).getRowObjectsJson();
-		const models = new Map<string, Row[]>();
-		for (const model of (await connection.runAndReadAll(`SELECT * FROM Comparisons.benchmarkModels WHERE run IN (SELECT id FROM Comparisons.benchmarkRuns ${where}) ORDER BY place`, values)).getRowObjectsJson()) {
-			models.set(String(model.run), [...models.get(String(model.run)) ?? [], model]);
+		const runs = await this.readRuns(connection, 'benchmark', id);
+		const figures = new Map<string, Row[]>();
+		const where = id === undefined ? `run IN (SELECT id FROM ModelEvaluations.runs WHERE kind = 'benchmark')` : 'run = $id';
+		for (const score of (await connection.runAndReadAll(`SELECT * FROM ModelEvaluations.scores WHERE ${where} AND "case" IS NULL`, id === undefined ? undefined : { id })).getRowObjectsJson()) {
+			const key = `${score.run}\u0000${score.model}`;
+			figures.set(key, [...figures.get(key) ?? [], score]);
 		}
 		const text = (value: unknown) => value === null || value === undefined ? undefined : String(value);
-		return runs.map(row => {
-			const mine = models.get(String(row.id)) ?? [];
+		return runs.map(({ row, models }) => {
+			const settings = storedSettings(row);
+			const strata = Array.isArray(settings.strata) ? settings.strata : [];
+			const figuresOf = (model: Row) => figures.get(`${row.id}\u0000${model.model}`) ?? [];
+			const figure = (rows: readonly Row[], metric: string, stratum: unknown = null) => numberOrNull(rows.find(score => score.metric === metric && score.stratum === stratum)?.value);
 			return {
 				id: String(row.id),
 				started: Number(row.started),
@@ -1614,59 +1784,86 @@ class AskPollisIndex implements IAskPollisIndex {
 				pollis: String(row.pollis ?? ''),
 				benchmark: String(row.benchmark),
 				revision: text(row.revision),
-				settings: { shots: Number(row.shots), reasoning: Boolean(row.reasoning), thinking: Boolean(row.thinking), maxTokens: Number(row.max_tokens) },
-				sample: { seed: Number(row.seed), allocation: String(row.allocation), size: Number(row.size), strata: JSON.parse(String(row.strata ?? '[]')), questions: JSON.parse(String(row.questions ?? '[]')) },
-				models: mine.map(model => ({
-					value: String(model.model), label: String(model.label), size: text(model.size), started: optionalNumber(model.started), ended: optionalNumber(model.ended),
-					freeBefore: optionalNumber(model.free_before), lowestFree: optionalNumber(model.lowest_free), error: text(model.error),
-				})),
-				figures: mine.filter(model => model.questions !== null).map(model => ({
-					value: String(model.model), label: String(model.label), questions: Number(model.questions), failed: Number(model.failed),
-					score: numberOrNull(model.score), half: numberOrNull(model.half), right: Number(model.right_answers), byChance: numberOrNull(model.by_chance),
-					strata: JSON.parse(String(model.strata ?? '[]')), unread: Number(model.unread), cutOff: Number(model.cut_off),
-					firstTokenMs: numberOrNull(model.first_token_ms), readingSpeed: numberOrNull(model.reading_speed), writingSpeed: numberOrNull(model.writing_speed),
-					seconds: numberOrNull(model.seconds), writtenTokens: numberOrNull(model.written_tokens), memory: numberOrNull(model.memory), error: text(model.error) ?? null,
-				})),
+				settings: { shots: Number(settings.shots), reasoning: Boolean(settings.reasoning), thinking: Boolean(settings.thinking), maxTokens: Number(settings.max_tokens) },
+				sample: { seed: Number(row.seed), allocation: String(settings.allocation ?? ''), size: Number(settings.size), strata, questions: Array.isArray(settings.questions) ? settings.questions.map(String) : [] },
+				// The memory a model took is one of its figures
+				models: models.map(model => {
+					const { memory: _memory, ...stored } = storedModel(model);
+					return stored;
+				}),
+				figures: models.filter(model => figuresOf(model).some(score => score.metric === 'questions')).map(model => {
+					const rows = figuresOf(model);
+					const names = [...new Set(rows.filter(score => score.stratum !== null).map(score => String(score.stratum)))];
+					// The strata of the sample first, in its order, then any other
+					const order = strata.map(stratum => String(stratum?.name));
+					names.sort((a, b) => (order.indexOf(a) + 1 || Infinity) - (order.indexOf(b) + 1 || Infinity));
+					return {
+						value: String(model.model), label: String(model.label), questions: Number(figure(rows, 'questions')), failed: Number(figure(rows, 'failed')),
+						score: figure(rows, 'score'), half: figure(rows, 'half'), right: Number(figure(rows, 'right_answers')), byChance: figure(rows, 'by_chance'),
+						strata: names.map(name => ({ name, asked: Number(figure(rows, 'asked', name)), right: Number(figure(rows, 'right', name)) })),
+						unread: Number(figure(rows, 'unread')), cutOff: Number(figure(rows, 'cut_off')),
+						firstTokenMs: figure(rows, 'first_token_ms'), readingSpeed: figure(rows, 'reading_speed'), writingSpeed: figure(rows, 'writing_speed'),
+						seconds: figure(rows, 'seconds'), writtenTokens: figure(rows, 'written_tokens'), memory: numberOrNull(model.memory), error: text(model.error) ?? null,
+					};
+				}),
 			};
 		});
 	}
 
 	async benchmarkRuns(): Promise<readonly IBenchmarkRun[]> {
-		return this.withComparisons(connection => this.readBenchmarkRuns(connection));
+		return this.withModelEvaluations(connection => this.readBenchmarkRuns(connection));
 	}
 
 	async loadBenchmarkRun(id: string): Promise<IBenchmarkRun | undefined> {
-		return this.withComparisons(async connection => (await this.readBenchmarkRuns(connection, id))[0]);
+		return this.withModelEvaluations(async connection => (await this.readBenchmarkRuns(connection, id))[0]);
 	}
 
 	async loadBenchmarkAnswers(id: string): Promise<readonly IBenchmarkAnswer[]> {
-		return this.withComparisons(async connection =>
-			(await connection.runAndReadAll('SELECT * FROM Comparisons.benchmarkAnswers WHERE run = $id ORDER BY place', { id })).getRowObjectsJson().map(row => ({
+		return this.withModelEvaluations(async connection => {
+			const [run] = await this.readRuns(connection, 'benchmark', id);
+			const questions = storedSettings(run?.row ?? {}).questions;
+			const order = new Map((Array.isArray(questions) ? questions : []).map((question, place) => [String(question), place]));
+			const rows = (await connection.runAndReadAll(`SELECT o.*, c.stratum, m.place,
+				(SELECT any_value(s.value) FROM ModelEvaluations.scores s WHERE s.run = o.run AND s.model = o.model AND s."case" = o."case" AND s.repeat = o.repeat AND s.metric = 'correct') AS correct,
+				(SELECT any_value(s.value) FROM ModelEvaluations.scores s WHERE s.run = o.run AND s.model = o.model AND s."case" = o."case" AND s.repeat = o.repeat AND s.metric = 'token_ms') AS token_ms
+				FROM ModelEvaluations.outputs o
+				LEFT JOIN ModelEvaluations.cases c ON c.run = o.run AND c."case" = o."case"
+				LEFT JOIN ModelEvaluations.models m ON m.run = o.run AND m.model = o.model AND m.role = 'evaluated'
+				WHERE o.run = $id`, { id })).getRowObjectsJson();
+			// In the order they were written: model by model, each in the order its questions were drawn
+			const place = (row: Row) => [Number(row.place ?? Infinity), order.get(String(row.case)) ?? Infinity];
+			rows.sort((a, b) => {
+				const [modelA, questionA] = place(a);
+				const [modelB, questionB] = place(b);
+				return modelA - modelB || questionA - questionB;
+			});
+			return rows.map(row => ({
 				model: String(row.model),
-				id: String(row.question),
+				id: String(row.case),
 				stratum: String(row.stratum ?? ''),
-				extracted: row.extracted === null ? null : String(row.extracted),
-				correct: row.correct === null ? undefined : Boolean(row.correct),
-				text: row.text === null ? undefined : String(row.text),
+				extracted: row.output_label === null ? null : String(row.output_label),
+				correct: row.correct === null ? undefined : Number(row.correct) === 1,
+				text: row.output_text === null ? undefined : String(row.output_text),
 				finish: row.finish === null ? undefined : String(row.finish),
 				error: row.error === null ? undefined : String(row.error),
 				seconds: optionalNumber(row.seconds),
-				promptTokens: optionalNumber(row.prompt_tokens),
-				writtenTokens: optionalNumber(row.written_tokens),
-				promptMs: optionalNumber(row.prompt_ms),
+				promptTokens: optionalNumber(row.tokens_read),
+				writtenTokens: optionalNumber(row.tokens_written),
+				promptMs: optionalNumber(row.reading_ms),
 				readingSpeed: optionalNumber(row.reading_speed),
 				writingSpeed: optionalNumber(row.writing_speed),
 				tokenMs: optionalNumber(row.token_ms),
-			})));
+			}));
+		});
 	}
 
 	async deleteBenchmarkRun(id: string): Promise<void> {
-		await this.withComparisons(connection => this.removeBenchmarkRun(connection, id));
+		await this.withModelEvaluations(connection => this.removeRun(connection, id));
 	}
 
 	async foundBefore(key: string, questions: readonly string[]): Promise<readonly (readonly IAskPollisPassage[] | undefined)[]> {
-		return this.withComparisons(async connection => {
-			const rows = (await connection.runAndReadAll('SELECT question, passages FROM Comparisons.found WHERE stamp = $key', { key })).getRowObjectsJson();
+		return this.withModelEvaluations(async connection => {
+			const rows = (await connection.runAndReadAll('SELECT question, passages FROM ModelEvaluations.searchCache WHERE stamp = $key', { key })).getRowObjectsJson();
 			const found = new Map(rows.map(row => [String(row.question), String(row.passages ?? '[]')]));
 			return questions.map(question => {
 				const passages = found.get(question);
@@ -1676,12 +1873,12 @@ class AskPollisIndex implements IAskPollisIndex {
 	}
 
 	async keepFound(key: string, found: readonly IAskPollisFound[]): Promise<void> {
-		await this.withComparisons(async connection => {
+		await this.withModelEvaluations(async connection => {
 			await connection.run('BEGIN TRANSACTION');
 			try {
-				await connection.run('DELETE FROM Comparisons.found WHERE stamp <> $key', { key });
+				await connection.run('DELETE FROM ModelEvaluations.searchCache WHERE stamp <> $key', { key });
 				for (const { question, passages } of found) {
-					await connection.run('INSERT OR REPLACE INTO Comparisons.found VALUES ($key, $question, $passages)', { key, question, passages: JSON.stringify(passages) });
+					await connection.run('INSERT OR REPLACE INTO ModelEvaluations.searchCache VALUES ($key, $question, $passages)', { key, question, passages: JSON.stringify(passages) });
 				}
 				await connection.run('COMMIT');
 			} catch (err) {

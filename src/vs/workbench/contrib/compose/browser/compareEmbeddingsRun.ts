@@ -20,7 +20,7 @@ import { CompareSampler, CompareTestSets, ICompareSample, ICompareSamples } from
 // index that embeddings.duckdb does not have yet with it, so that each passage is embedded once by each model, ever;
 // then the questions of the test set are searched with its embeddings as Ask Pollis would (IAskPollisService.evaluateEmbedding):
 // where each question's own passage is among those given, and among all passages by meaning only. The memory its
-// server takes is the memory free before it started less the memory free when it was done. The run is kept in Comparisons.duckdb.
+// server takes is the memory free before it started less the memory free when it was done. The run is kept in ModelEvaluations.duckdb.
 
 /** What a run ends with, or why it could not be done. */
 export interface IEmbeddingEnd {

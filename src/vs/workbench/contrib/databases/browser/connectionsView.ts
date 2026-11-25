@@ -44,7 +44,7 @@ import { IWorkbenchLayoutService } from '../../../services/layout/browser/layout
 import { IDataPackageUpdate, JULIA_REPL_VERSION_KEY, PollisDataPackages } from '../../compose/browser/pollisDataPackages.js';
 import { IDatabaseColumn, IDatabaseConnectionsService, IDatabaseSchema, IDatabaseSession, IDatabaseTable } from '../common/databaseConnections.js';
 import './media/connectionsView.css';
-import { BENCHMARKS_DATABASE_ID, COMPARISONS_DATABASE_ID, COMPETITIONS_DATABASE_ID, databaseGroupOf, DatabaseGroup, describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, NEW_CONNECTION_COMMAND_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { BENCHMARKS_DATABASE_ID, COMPETITIONS_DATABASE_ID, databaseGroupOf, DatabaseGroup, describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, MODEL_EVALUATIONS_DATABASE_ID, NEW_CONNECTION_COMMAND_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 
 /** The Databases container of the secondary side bar, with its Pollis Built-In and User views. */
 export const DATABASES_VIEW_CONTAINER_ID = 'workbench.view.pollis.databases';
@@ -256,10 +256,10 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 					hover = session
 						? localize('connection.rss.hover.connected', "{0} (DuckDB)\nRecorded by Pollis: every item of the RSS feeds received, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its views.", name, describeConnection(profile), profile.variable)
 						: localize('connection.rss.hover', "{0} (DuckDB)\nRecorded by Pollis: every item of the RSS feeds received, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
-				} else if (profile?.builtin && profile.id === COMPARISONS_DATABASE_ID) {
+				} else if (profile?.builtin && profile.id === MODEL_EVALUATIONS_DATABASE_ID) {
 					hover = session
-						? localize('connection.comparisons.hover.connected', "{0} (DuckDB)\nRecorded by Pollis: the runs of the Evaluate and Benchmark pages, read-only, in {1}, a copy Pollis makes after each run. Connect again for the runs made since.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
-						: localize('connection.comparisons.hover', "{0} (DuckDB)\nRecorded by Pollis: the runs of the Evaluate and Benchmark pages, read-only, in {1}, a copy Pollis makes after each run.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
+						? localize('connection.modelEvaluations.hover.connected', "{0} (DuckDB)\nRecorded by Pollis: the runs of the Evaluate and Benchmark pages, read-only, in {1}, a copy Pollis makes after each run. Connect again for the runs made since.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
+						: localize('connection.modelEvaluations.hover', "{0} (DuckDB)\nRecorded by Pollis: the runs of the Evaluate and Benchmark pages, read-only, in {1}, a copy Pollis makes after each run.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
 				} else if (profile?.builtin && profile.id === JOURNALS_DATABASE_ID) {
 					hover = session
 						? localize('connection.journals.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the journals of OpenAlex and the journal metrics you imported, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
@@ -762,7 +762,7 @@ export class BuiltinDatabasesView extends DatabaseConnectionsView {
 	}
 }
 
-/** The databases of the activity of Pollis, which it records as you work: PollisRSS and Comparisons. */
+/** The databases of the activity of Pollis, which it records as you work: PollisRSS and ModelEvaluations. */
 export class ActivityDatabasesView extends DatabaseConnectionsView {
 
 	static readonly ID = 'pollis.databases.activity';

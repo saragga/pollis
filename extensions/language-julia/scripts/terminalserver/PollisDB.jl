@@ -179,11 +179,11 @@ const COMPETITIONS_DB = joinpath(homedir(), ".pollis", "databases", "PollisCompe
 """The PollisDocuments database: the passages of Pollis' documents that Ask Pollis searches, made by ask_index.jl when the REPL starts."""
 const DOCUMENTS_DB = joinpath(homedir(), ".pollis", "documents", "PollisDocuments.duckdb")
 """
-The Comparisons database, of the activity of Pollis: the runs of the Evaluate and Benchmark pages, a copy Pollis makes
-after each change of `~/.pollis/ask/Comparisons.duckdb`, which it writes, so that reading the copy never keeps it from
-saving a run.
+The ModelEvaluations database, of the activity of Pollis: the runs of the Evaluate and Benchmark pages, a copy Pollis
+makes after each change of `~/.pollis/ask/ModelEvaluations.duckdb`, which it writes, so that reading the copy never keeps
+it from saving a run.
 """
-const COMPARISONS_DB = joinpath(homedir(), ".pollis", "databases", "Comparisons.duckdb")
+const MODEL_EVALUATIONS_DB = joinpath(homedir(), ".pollis", "databases", "ModelEvaluations.duckdb")
 
 """The folder of the snapshots, one `<id>.<window>.json` per connection, watched by the Databases view."""
 const SESSIONS = joinpath(homedir(), ".pollis", "databases", "sessions")
@@ -546,7 +546,7 @@ excel, which the Julia extension installs where DuckDB keeps its extensions, are
 const DUCKDB_CONFIG = ["autoinstall_known_extensions" => "false", "autoload_known_extensions" => "true"]
 
 """The databases of Pollis, built in and of its activity, that `connect` attaches, read-only, under their own names."""
-builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB, BENCHMARKS_DB, COMPETITIONS_DB, DOCUMENTS_DB, COMPARISONS_DB])
+builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB, BENCHMARKS_DB, COMPETITIONS_DB, DOCUMENTS_DB, MODEL_EVALUATIONS_DB])
 
 """
     connect(path = ":memory:"; name = "DuckDB", builtins = true, fts = true, show = true)

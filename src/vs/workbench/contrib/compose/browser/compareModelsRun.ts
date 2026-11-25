@@ -33,7 +33,7 @@ import { askFolder, CompareSampler, CompareTestSets, evalItem, ICompareSample, I
 // answer score, how near each answer is to the right answer by the embedding model of the search. The judges, if any,
 // then rate each answer against the right answer, in a Julia process of the Julia extension (language-julia.pollisCompareModels,
 // ask_compare.jl), given the keys of the cloud providers it needs from Secret Storage; two judges on this computer in one process each, one after
-// the other, so that each is alone in memory too. The run is kept in Comparisons.duckdb. There is one runner
+// the other, so that each is alone in memory too. The run is kept in ModelEvaluations.duckdb. There is one runner
 // per window, so that a run goes on when the page is closed, and the page opened again shows how far it has come.
 
 /** How many passages of each topic Make Questions asks about, at first: the user changes them beside Make Questions... */

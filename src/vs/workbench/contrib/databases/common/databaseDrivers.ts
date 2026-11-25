@@ -67,10 +67,10 @@ export const COMPETITIONS_DATABASE_ID = 'polliscompetitions';
 export const DOCUMENTS_DATABASE_ID = 'pollisdocuments';
 
 /**
- * The id of the Comparisons database, of the activity of Pollis: the runs of the Evaluate and Benchmark pages, read
- * from the copy of ~/.pollis/ask/Comparisons.duckdb that Pollis makes in ~/.pollis/databases after each change.
+ * The id of the ModelEvaluations database, of the activity of Pollis: the runs of the Evaluate and Benchmark pages, read
+ * from the copy of ~/.pollis/ask/ModelEvaluations.duckdb that Pollis makes in ~/.pollis/databases after each change.
  */
-export const COMPARISONS_DATABASE_ID = 'polliscomparisons';
+export const MODEL_EVALUATIONS_DATABASE_ID = 'pollismodelevaluations';
 
 /** The command of the Journal Metrics page, the sources of PollisJournals' levels and metrics, to import or remove. */
 export const JOURNAL_METRICS_COMMAND_ID = 'pollis.databases.journalMetrics';
@@ -360,15 +360,15 @@ export function generateConnectionCode(profile: IDatabaseConnectionProfile): str
  * and the built-in database first makes its file from the PollisDatasets, when they have changed (PollisRSS, its views
  * over the archive of the RSS feeds, when missing; PollisJournals, from the journals of PollisJournals.jl; PollisReferences,
  * from the references of Pollis; PollisBenchmarks, from the benchmarks of PollisBenchmarks.jl; PollisCompetitions, from the catalogue of PollisCompetitions.jl, its built-in datasets and those downloaded). PollisDocuments is made when the Julia REPL starts, after the documents are compiled,
- * and needs nothing here; nor does Comparisons, the copy of the runs of the Evaluate and Benchmark pages, which needs only to be there.
+ * and needs nothing here; nor does ModelEvaluations, the copy of the runs of the Evaluate and Benchmark pages, which needs only to be there.
  */
 export function generateSessionConnectCode(profile: IDatabaseConnectionProfile, connected: boolean): string {
 	const id = juliaString(profile.id);
 	return [
 		...(connected ? [`PollisDB.disconnect(${id})`] : []),
 		...(profile.driver === 'duckdb' ? ['PollisDB.install()'] : []),
-		...(profile.builtin && profile.id === COMPARISONS_DATABASE_ID ? [`isfile(${juliaString(stringValue(profile, 'path'))}) || error(${juliaString(localize('comparisons.noCopy', "Comparisons has no runs yet: Pollis makes it when an Evaluate or Benchmark page first opens."))})`] : []),
-		...(profile.builtin && profile.id !== DOCUMENTS_DATABASE_ID && profile.id !== COMPARISONS_DATABASE_ID ? [profile.id === RSS_DATABASE_ID ? 'PollisDB.build_rss()' : profile.id === JOURNALS_DATABASE_ID ? 'PollisDB.build_journals()' : profile.id === REFERENCES_DATABASE_ID ? 'PollisDB.build_references()' : profile.id === BENCHMARKS_DATABASE_ID ? 'PollisDB.build_benchmarks()' : profile.id === COMPETITIONS_DATABASE_ID ? 'PollisDB.build_competitions()' : 'PollisDB.build()'] : []),
+		...(profile.builtin && profile.id === MODEL_EVALUATIONS_DATABASE_ID ? [`isfile(${juliaString(stringValue(profile, 'path'))}) || error(${juliaString(localize('modelEvaluations.noCopy', "ModelEvaluations has no runs yet: Pollis makes it when an Evaluate or Benchmark page first opens."))})`] : []),
+		...(profile.builtin && profile.id !== DOCUMENTS_DATABASE_ID && profile.id !== MODEL_EVALUATIONS_DATABASE_ID ? [profile.id === RSS_DATABASE_ID ? 'PollisDB.build_rss()' : profile.id === JOURNALS_DATABASE_ID ? 'PollisDB.build_journals()' : profile.id === REFERENCES_DATABASE_ID ? 'PollisDB.build_references()' : profile.id === BENCHMARKS_DATABASE_ID ? 'PollisDB.build_benchmarks()' : profile.id === COMPETITIONS_DATABASE_ID ? 'PollisDB.build_competitions()' : 'PollisDB.build()'] : []),
 		generateConnectionCode(profile),
 		`PollisDB.register(${id}, ${profile.variable}; name = ${juliaString(profile.name)})`,
 	].join('\n');
