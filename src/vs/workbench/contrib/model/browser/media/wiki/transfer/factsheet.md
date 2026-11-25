@@ -33,8 +33,8 @@ ResNet-18 with a new last layer of ten outputs has 11,181,642 weights: 2,782,784
 |---|---|
 | Network | ResNet-18 ([He, Zhang, Ren and Sun (2016)](#ref-HZRS2016a)) with torchvision's weights, trained on ImageNet ([Deng, Dong, Socher, Li, Li and Fei-Fei (2009)](#ref-DDSLL...2009a)), about 45 MB from Hugging Face |
 | Training and test images | MNIST ([LeCun, Bottou, Bengio and Haffner (1998)](#ref-LBBH1998a)), 60,000 training and 10,000 test images of 28 by 28 pixels in grey, about 11 MB |
-| Another dataset | SVHN's test split ([Netzer, Wang, Coates, Bissacco, Wu and Ng (2011)](#ref-NWCBW...2011a)), 26,032 images of 32 by 32 pixels in colour; MLDatasets.jl downloads SVHN's three splits, about 1.6 GB |
-| Read with | `MNIST(:train)`, `MNIST(:test)` and `SVHN2(:test)` of MLDatasets.jl |
+| Another dataset | SVHN's test split ([Netzer, Wang, Coates, Bissacco, Wu and Ng (2011)](#ref-NWCBW...2011a)), 26,032 images of 32 by 32 pixels in colour, about 64 MB |
+| Read with | `MNIST(:train)` and `MNIST(:test)` of MLDatasets.jl; `matread` of MAT.jl for SVHN's `test_32x32.mat` |
 
 The three are downloaded the first time and kept on the computer. None needs a key.
 

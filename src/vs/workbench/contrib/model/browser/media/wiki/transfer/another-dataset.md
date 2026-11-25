@@ -6,7 +6,7 @@ Why a model is scored on a second dataset of the same classes, what the two data
 
 MNIST is a database of handwritten digits described by [LeCun, Bottou, Bengio and Haffner (1998)](#ref-LBBH1998a): 60,000 training images and 10,000 test images, each a digit from 0 to 9 written by hand, centred in a grey image of 28 by 28 pixels. SVHN, the Street View House Numbers, is a dataset of digits cropped from photographs of house numbers taken in Google Street View, introduced by [Netzer, Wang, Coates, Bissacco, Wu and Ng (2011)](#ref-NWCBW...2011a), with over 600,000 labelled digits. Its cropped digits are colour images of 32 by 32 pixels, centred on one digit with parts of its neighbours at the sides.
 
-Both have the same ten classes. MLDatasets.jl reads both: `MNIST(:train)`, `MNIST(:test)` and `SVHN2(:test)`, whose labels give the digit 0 as 10.
+Both have the same ten classes. MLDatasets.jl reads MNIST with `MNIST(:train)` and `MNIST(:test)`; SVHN's test split is a MATLAB file, `test_32x32.mat`, read with `matread` of MAT.jl, whose labels give the digit 0 as 10.
 
 ## Why score a model on another dataset of the same digits?
 

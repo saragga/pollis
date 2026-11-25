@@ -22,7 +22,7 @@ name = "MLDatasets.jl"
 github = "https://github.com/JuliaML/MLDatasets.jl"
 
 [requires]
-packages = ["Plots.jl"]
+packages = ["MAT.jl", "Plots.jl"]
 
 [[wikis]]
 name = "Factsheet"
@@ -223,13 +223,13 @@ models = ["last", "full"]
 [[inputs]]
 id = "other"
 label = "SVHN Images"
-tooltip = "How many of SVHN's 26,032 test images, drawn at random, On Another Dataset and Three Tabs and From Scratch score each model on. MLDatasets.jl downloads SVHN's three splits the first time, about 1.6 GB, and reads only its test split."
+tooltip = "How many of SVHN's 26,032 test images, drawn at random, On Another Dataset and Three Tabs and From Scratch score each model on. SVHN's test split, about 64 MB, is downloaded the first time."
 default = "1000"
 
 [[codeBranches]]
 model = "*"
 code = '''
-using Flux, Metalhead, MLDatasets, Statistics, Random
+using Flux, Metalhead, MLDatasets, MAT, Downloads, Statistics, Random
 ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"  # MLDatasets downloads MNIST the first time without asking
 Random.seed!({{seed}})  # the new last layer's first weights
 rng = Xoshiro({{seed}})  # the images sampled and the order of the batches
@@ -250,6 +250,19 @@ i = randperm(rng, length(mnist_train.targets))[1:{{train}}]
 j = randperm(rng, length(mnist_test.targets))[1:{{test}}]
 x_train, y_train = prepare(mnist_train.features[:, :, i]), mnist_train.targets[i]
 x_test, y_test = prepare(mnist_test.features[:, :, j]), mnist_test.targets[j]
+
+# A sample of n of SVHN's photographed house numbers, for On Another Dataset: its test split, about 64 MB, downloaded the first time
+function svhn_test(n)
+    file = joinpath(first(DEPOT_PATH), "datadeps", "SVHN-test", "test_32x32.mat")
+    if !isfile(file)
+        mkpath(dirname(file))
+        Downloads.download("https://ufldl.stanford.edu/housenumbers/test_32x32.mat", file * ".part")
+        mv(file * ".part", file)
+    end
+    svhn = matread(file)  # X: height, width, channel and image, as bytes; y: the digit, 10 for the digit 0
+    k = randperm(rng, size(svhn["X"], 4))[1:n]
+    return prepare(permutedims(svhn["X"][:, :, :, k], (2, 1, 3, 4)) ./ 255.0f0), mod.(Int.(vec(svhn["y"])[k]), 10)
+end
 
 # ResNet-18 trained on ImageNet (torchvision's weights), with a new last layer for the ten digits
 model = create_model("timm/resnet18.tv_in1k"; num_classes = 10)
@@ -343,9 +356,7 @@ id = "another-dataset"
 label = "On Another Dataset"
 desc = "The model trained on MNIST's handwritten digits applied to SVHN's photographed house numbers, which it has not seen, beside its accuracy on MNIST"
 code = '''
-svhn = SVHN2(:test)  # SVHN's three splits, about 1.6 GB, downloaded the first time
-k = randperm(rng, length(svhn.targets))[1:{{other}}]
-x_svhn, y_svhn = prepare(svhn.features[:, :, :, k]), mod.(svhn.targets[k], 10)  # SVHN labels the digit 0 as 10
+x_svhn, y_svhn = svhn_test({{other}})
 predicted = predict(model, x_svhn)
 println("Accuracy on MNIST's test images: ", round(accuracy(model, x_test, y_test); digits = 3))
 println("Accuracy on SVHN's test images:  ", round(mean(predicted .== y_svhn); digits = 3), " (chance: 0.1)")
@@ -365,9 +376,7 @@ desc = "The three tabs and ResNet-18 trained from random weights, each on the sa
 code = '''
 using Printf
 if !@isdefined(x_svhn)  # SVHN's images, unless On Another Dataset has read them
-    svhn = SVHN2(:test)
-    k = randperm(rng, length(svhn.targets))[1:{{other}}]
-    x_svhn, y_svhn = prepare(svhn.features[:, :, :, k]), mod.(svhn.targets[k], 10)
+    x_svhn, y_svhn = svhn_test({{other}})
 end
 results = []
 m = create_model("timm/resnet18.tv_in1k"; num_classes = 10)
@@ -416,9 +425,7 @@ desc = "A new last layer trained on the averaged output of each of the four stag
 code = '''
 using Printf
 if !@isdefined(x_svhn)  # SVHN's images, unless On Another Dataset has read them
-    svhn = SVHN2(:test)
-    k = randperm(rng, length(svhn.targets))[1:{{other}}]
-    x_svhn, y_svhn = prepare(svhn.features[:, :, :, k]), mod.(svhn.targets[k], 10)
+    x_svhn, y_svhn = svhn_test({{other}})
 end
 imagenet = create_model("timm/resnet18.tv_in1k"; num_classes = 10)  # as trained on ImageNet, whatever the tab trained
 stages(x) = in_batches(x -> reduce(vcat, [dropdims(mean(f; dims = (1, 2)); dims = (1, 2)) for f in forward_intermediates(imagenet, x; indices = 2:5, intermediates_only = true)]), x)
