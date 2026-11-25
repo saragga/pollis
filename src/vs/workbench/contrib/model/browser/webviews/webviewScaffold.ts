@@ -277,6 +277,8 @@ export interface WebviewParts {
 	readonly omitPoweredBy?: boolean;
 	/** Leave Next Steps out, for a Time Arrow or Minimal page whose last step is its end, Learn More alone below it. Default: shown. */
 	readonly omitNextSteps?: boolean;
+	/** Leave Learn More out, for a Minimal page without wikis, notebooks, references or questions. Default: shown. */
+	readonly omitLearnMore?: boolean;
 	/** The Key Points. A page without them has `introHtml` instead. */
 	readonly bullets?: string;
 	/** A text in place of Key Points. */
@@ -1046,7 +1048,7 @@ ${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${
 					<li><button class="list-btn panel-toggle" id="btn-predict">${nextStepIcon('predict')}Predict</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-compare">${nextStepIcon('compare')}Compare</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-interpret">${nextStepIcon('interpret')}Interpret</button></li>`)) + sqlStepsHtml(sqlSteps), parts.steps ? parts.steps.length + 1 : undefined)}
-				${learnMoreSectionHtml}
+				${parts.omitLearnMore ? `<div style="display: none;">${learnMoreSectionHtml}</div>` : learnMoreSectionHtml}
 				<div class="paper-links" id="paper-links"></div>
 			</div>
 			<div class="right-panel" id="right-panel"></div>

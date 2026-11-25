@@ -30,7 +30,7 @@ import { panelFaqItems, panelKeyPoints, parseToml, TomlValue, tomlToPanelData } 
 import { IApiKeyField, IApiKeyProvider } from '../../model/browser/handlers/model.handler.js';
 import { buildScaffoldHtml } from '../../model/browser/webviews/scaffoldParts.js';
 import { IAskPollisEvalItem } from '../common/askPollis.js';
-import { IToolboxDocumentInfo, IToolboxInfo, IToolboxTextInfo, IToolboxTopicInfo, IToolboxTopicMapsInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
+import { IToolboxDocumentInfo, IToolboxInfo, IToolboxTextInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
 
 /** A panel of a toolbox contributed by an extension. */
 interface IToolboxPanelContribution {
@@ -49,7 +49,7 @@ interface IToolboxPanelContribution {
 	readonly submenu?: string;
 	/** The panel's TOML, relative to the extension folder. */
 	readonly data: string;
-	/** The model toggle shown first; a panel whose TOML says style = "timeArrow" has none. */
+	/** The model toggle shown first, of a Classical panel; a Time Arrow or Minimal panel has none. */
 	readonly defaultModel?: string;
 	/** The first column header of the decision table. Default: "Plot". */
 	readonly decisionFirstColumn?: string;
@@ -126,31 +126,12 @@ interface IToolboxContribution {
 	readonly games?: IToolboxGameContribution[];
 	/** Its forecasting datasets file, relative to the extension folder, which Manage Challenge Datasets lists. */
 	readonly forecastingDatasets?: string;
-	/** Its topic maps, which the Topic Maps page lists, and the topics its menu opens that page on. */
-	readonly topicMaps?: IToolboxTopicMapsContribution;
 	/**
 	 * The extensions of DuckDB its panels use, for example spatial, which the Julia extension of Pollis downloads from
 	 * DuckDB's repository (extensions/language-julia/src/pollisDuckDB.ts).
 	 */
 	readonly duckdbExtensions?: string[];
 }
-
-/** The topic maps of a toolbox, as its package.json gives them. */
-interface IToolboxTopicMapsContribution {
-	/** The maps file, relative to the extension folder, for example maps/maps.toml: its [[maps]] tables. */
-	readonly file: string;
-	/** Its topics, each a menu item of the toolbox's menu, which opens the Topic Maps page on it. */
-	readonly topics: readonly IToolboxTopicContribution[];
-}
-
-/** A topic of a toolbox's topic maps, and the place of its menu item in the toolbox's menu. */
-interface IToolboxTopicContribution extends IToolboxTopicInfo {
-	readonly group: string;
-	readonly order: number;
-}
-
-/** The command that opens the Topic Maps page (topicMapsPage.ts), on the topic of the id it is given. */
-export const TOPIC_MAPS_COMMAND_ID = 'pollis.topicMaps.open';
 
 /** A Simulation Games case of a toolbox: a folder with case.toml and model.jl. */
 interface IToolboxGameContribution {
@@ -256,7 +237,7 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 							order: { type: 'number', description: localize('pollisToolboxes.panel.order', "The order in that group.") },
 							submenu: { type: 'string', description: localize('pollisToolboxes.panel.submenu', "The id of the submenu of the toolbox's menu the panel is in. Default: straight in the toolbox's menu.") },
 							data: { type: 'string', description: localize('pollisToolboxes.panel.data', "The panel's TOML, relative to the extension folder.") },
-							defaultModel: { type: 'string', description: localize('pollisToolboxes.panel.defaultModel', "The model toggle shown first. A panel whose TOML says style = \"timeArrow\" in its [meta] has numbered steps instead, and no models.") },
+							defaultModel: { type: 'string', description: localize('pollisToolboxes.panel.defaultModel', "The model toggle shown first, of a Classical panel. A panel whose TOML says style = \"timeArrow\" or style = \"minimal\" in its [meta] has no models.") },
 							decisionFirstColumn: { type: 'string', description: localize('pollisToolboxes.panel.decisionFirstColumn', "The first column header of the decision table.") },
 							tabs: {
 								type: 'array',
@@ -335,28 +316,6 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 					type: 'string',
 					description: localize('pollisToolboxes.forecastingDatasets', "The toolbox's datasets file, relative to the extension folder, for example metadata/datasets.toml: [[datasets]] tables of the Dataset Catalog, with the fields of its schema and their [[datasets.references]], which Compose > Prediction Challenges > Manage Challenge Datasets lists with those of PollisCompetitions.jl and the other toolboxes."),
 				},
-				topicMaps: {
-					type: 'object',
-					description: localize('pollisToolboxes.topicMaps', "The toolbox's topic maps: maps of a work under a topic, such as the battles of a war under At War or the places a text names under Places, which the Topic Maps page lists with those of the other toolboxes. Each topic is a menu item of the toolbox's menu that opens the page on it."),
-					required: ['file', 'topics'],
-					properties: {
-						file: { type: 'string', description: localize('pollisToolboxes.topicMaps.file', "The maps file, relative to the extension folder, for example maps/maps.toml: one [[maps]] table per map, with its id, topic, title, work, kind, years, region, source, licence and the Julia code that draws it.") },
-						topics: {
-							type: 'array',
-							items: {
-								type: 'object',
-								required: ['id', 'title', 'description', 'group', 'order'],
-								properties: {
-									id: { type: 'string', pattern: '^[a-z][a-z0-9-]*$', description: localize('pollisToolboxes.topic.id', "The topic's id, which the maps file names. Toolboxes that give the same id share the topic.") },
-									title: { type: 'string', description: localize('pollisToolboxes.topic.title', "The topic's menu item and title, such as At War.") },
-									description: { type: 'string', description: localize('pollisToolboxes.topic.description', "What the topic's maps show, in a sentence, under the page's title.") },
-									group: { type: 'string', description: localize('pollisToolboxes.topic.group', "The group of its menu item in the toolbox's menu.") },
-									order: { type: 'number', description: localize('pollisToolboxes.topic.order', "The order of its menu item in that group.") },
-								},
-							},
-						},
-					},
-				},
 				texts: {
 					type: 'array',
 					description: localize('pollisToolboxes.texts', "The texts the toolbox adds to the Knowledge Base: PDFs their authors share under an open licence, which Pollis downloads from where they keep them, at a fixed version, the first time the user switches one on."),
@@ -417,8 +376,6 @@ interface ILoadedToolbox {
 	readonly courses: readonly IToolboxCourseContribution[];
 	readonly games: readonly URI[];
 	readonly forecastingDatasets: URI | undefined;
-	/** Its topic maps, with the places of the topics' menu items. */
-	readonly topicMaps: { readonly info: IToolboxTopicMapsInfo; readonly topics: readonly IToolboxTopicContribution[] } | undefined;
 	/** Its planned items, those whose submenu, if they name one, the toolbox has. */
 	readonly planned: readonly IToolboxPlannedContribution[];
 	/** The pages of Pollis its menu opens, those whose submenu, if they name one, the toolbox has. */
@@ -533,7 +490,6 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					texts: loaded.texts,
 					games: loaded.games,
 					forecastingDatasets: loaded.forecastingDatasets,
-					topicMaps: loaded.topicMaps?.info,
 					panels: inMenuOrder(loaded.toolbox, loaded.panels).map(({ contribution, panel, faq, tabs }) => ({
 						id: contribution.id,
 						command: contribution.command,
@@ -591,8 +547,8 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					try {
 						const parsed = parseToml((await this.fileService.readFile(toml)).value.toString());
 						const data = tomlToPanelData(parsed);
-						if (data.style !== 'timeArrow' && !contribution.defaultModel) {
-							extension.collector.error(localize('pollisToolboxes.noDefaultModel', "Panel {0} needs defaultModel, the model toggle shown first, unless its TOML says style = \"timeArrow\" in its [meta].", contribution.id));
+						if (!data.style && !contribution.defaultModel) {
+							extension.collector.error(localize('pollisToolboxes.noDefaultModel', "Panel {0} needs defaultModel, the model toggle shown first, unless its TOML says style = \"timeArrow\" or style = \"minimal\" in its [meta].", contribution.id));
 						}
 						const tabs = (contribution.tabs ?? []).filter(tab => {
 							const known = data.models?.some(model => model.id === tab.model) ?? false;
@@ -683,24 +639,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 						extension.collector.error(localize('pollisToolboxes.forecastingDatasetsFile', "The forecasting datasets file {0} must be inside the extension folder.", String(toolbox.forecastingDatasets)));
 					}
 				}
-				let topicMaps: ILoadedToolbox['topicMaps'];
-				if (toolbox.topicMaps !== undefined) {
-					const file = typeof toolbox.topicMaps.file === 'string' ? joinPath(location, toolbox.topicMaps.file) : undefined;
-					const topics: IToolboxTopicContribution[] = [];
-					for (const topic of Array.isArray(toolbox.topicMaps.topics) ? toolbox.topicMaps.topics : []) {
-						if (typeof topic.id !== 'string' || !/^[a-z][a-z0-9-]*$/.test(topic.id) || topics.some(other => other.id === topic.id) || typeof topic.title !== 'string' || !topic.title || typeof topic.description !== 'string' || typeof topic.group !== 'string' || typeof topic.order !== 'number') {
-							extension.collector.error(localize('pollisToolboxes.topic', "Topic {0} must have a unique id of lower-case letters, digits and hyphens, its title, description, group and order.", String(topic.id)));
-							continue;
-						}
-						topics.push({ id: topic.id, title: topic.title, description: topic.description, group: topic.group, order: topic.order });
-					}
-					if (file && isEqualOrParent(file, location) && !isEqual(file, location)) {
-						topicMaps = { info: { file, topics: topics.map(({ id, title, description }) => ({ id, title, description })) }, topics };
-					} else {
-						extension.collector.error(localize('pollisToolboxes.topicMapsFile', "The topic maps file {0} must be inside the extension folder.", String(toolbox.topicMaps.file)));
-					}
-				}
-				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts, courses, games, forecastingDatasets, topicMaps, planned, pages });
+				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts, courses, games, forecastingDatasets, planned, pages });
 			}
 		}
 		if (generation !== this.generation) {
@@ -758,7 +697,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			const placement = entry ? placementOf(loaded, entry) : defaultPlacement(loaded);
 			const submenu = this.submenus.get(toolbox.id) ?? MenuId.for(`${TOOLBOX_SUBMENU_PREFIX}${toolbox.id}`);
 			this.submenus.set(toolbox.id, submenu);
-			if (placement.menu && (loaded.planned.length || loaded.pages.length || loaded.topicMaps?.topics.length || loaded.panels.some(({ contribution }) => placement.panels[contribution.id]?.menu === TOOLBOX_MENU))) {
+			if (placement.menu && (loaded.planned.length || loaded.pages.length || loaded.panels.some(({ contribution }) => placement.panels[contribution.id]?.menu === TOOLBOX_MENU))) {
 				const { menu, group, order } = placement.menu;
 				append(MenuId.for(menu), { group, order, submenu, title: toolbox.title });
 			}
@@ -816,14 +755,6 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 				for (const page of loaded.pages) {
 					const inSubmenu = page.submenu ? toolbox.submenus?.find(({ id }) => id === page.submenu) : undefined;
 					append(inSubmenu ? nestedMenu(inSubmenu) : submenu, { group: page.group, order: page.order, title: page.title, command: { id: page.command, title: page.title } });
-				}
-			}
-			// Its topics, each opening the Topic Maps page on it, in the toolbox's own menu while that menu is placed
-			for (const topic of loaded.topicMaps?.topics ?? []) {
-				const command = { id: `pollis.topicMaps.${toolbox.id}.${topic.id}`, title: topic.title };
-				store.add(CommandsRegistry.registerCommand(command.id, accessor => accessor.get(ICommandService).executeCommand(TOPIC_MAPS_COMMAND_ID, topic.id)));
-				if (placement.menu) {
-					append(submenu, { group: topic.group, order: topic.order, title: topic.title, command });
 				}
 			}
 			// Its notebook courses, whatever the menus the user published it in

@@ -7,7 +7,7 @@ import { localize } from '../../../../../nls.js';
 import { compareCss } from '../../../compose/browser/compareShared.js';
 import { stepCodeBoxHtml, stepCodeCss, stepCodeJs, stepSetupJs } from './scaffoldSteps.js';
 import { buildWebviewHtml, nextStepIcon, WebviewParts } from './webviewScaffold.js';
-import { IModelInput, IModelMatrix, IModelStep, IModelToggle, IScaffoldPanelData } from '../common/model.types.js';
+import { IModelInput, IModelMatrix, IModelRow, IModelStep, IModelToggle, IScaffoldPanelData } from '../common/model.types.js';
 
 /**
  * The parts of a scaffold panel that are not in its TOML data: at least the title and the
@@ -280,15 +280,137 @@ function buildTimeArrowHtml(panelId: string, data: IScaffoldPanelData, title: st
 	});
 }
 
+const MINIMAL_CSS = `${compareCss}
+		.minimal-search { width: 100%; max-width: 420px; margin: 4px 0 8px 0; padding: 4px 6px; font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
+		.minimal-search:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		table.minimal-table { border-collapse: collapse; width: 100%; margin: 4px 0 18px 0; font-size: 13px; }
+		table.minimal-table th, table.minimal-table td { text-align: left; vertical-align: top; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--vscode-widget-border); }
+		table.minimal-table th { font-size: 12px; font-weight: 600; color: var(--vscode-descriptionForeground); }
+		.row-title { font: inherit; font-weight: 600; color: var(--vscode-foreground); background: none; border: none; padding: 0; text-align: left; }
+		button.row-title { cursor: pointer; }
+		button.row-title:hover { text-decoration: underline; }
+		.row-sub { color: var(--vscode-descriptionForeground); margin: 2px 0 0 0; }
+		.row-desc { color: var(--vscode-descriptionForeground); margin: 4px 0 0 0; line-height: 1.4; max-width: 720px; }
+		tr.row-details > td { padding: 0 0 12px 0; }
+		button.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; text-align: left; }
+		button.link:hover { text-decoration: underline; }
+`;
+
+/** The script of a Minimal panel's table: the search, a row's code opened under it, and the links of its values. */
+const MINIMAL_JS = `
+	document.addEventListener('click', event => {
+		const link = event.target.closest('button[data-url]');
+		if (link) {
+			vscode.postMessage({ command: 'openUrl', url: link.dataset.url });
+			return;
+		}
+		const title = event.target.closest('button[data-row]');
+		const details = title && document.querySelector('tr.row-details[data-details="' + CSS.escape(title.dataset.row) + '"]');
+		if (details) {
+			details.hidden = !details.hidden;
+			title.setAttribute('aria-expanded', String(!details.hidden));
+		}
+	});
+	const minimalSearch = document.querySelector('.minimal-search');
+	if (minimalSearch) {
+		minimalSearch.addEventListener('input', () => {
+			const query = minimalSearch.value.trim().toLowerCase();
+			let shown = 0;
+			document.querySelectorAll('tr.row').forEach(row => {
+				const match = !query || row.dataset.search.includes(query);
+				row.hidden = !match;
+				shown += match ? 1 : 0;
+				const details = row.nextElementSibling;
+				if (!match && details && details.classList.contains('row-details')) {
+					details.hidden = true;
+					const title = row.querySelector('button[data-row]');
+					if (title) { title.setAttribute('aria-expanded', 'false'); }
+				}
+			});
+			document.querySelector('.minimal-none').hidden = shown > 0;
+		});
+	}
+`;
+
+/** The key of a row's code box, apart from those of steps and actions. */
+function rowKey(row: IModelRow): string {
+	return `row-${row.id}`;
+}
+
+/**
+ * The table of a Minimal panel: a search box, then a row per `[[rows]]`, its title (which opens its code under it, in
+ * a code box as that of a step), the line under it and its description, and its values in the columns.
+ */
+function buildRowsHtml(data: IScaffoldPanelData): string {
+	const rows = data.rows ?? [];
+	if (!rows.length) {
+		return '';
+	}
+	const columns = data.columns ?? [];
+	const search = htmlEsc(localize('scaffold.minimal.search', "Search"));
+	const head = `<tr><th>${htmlEsc(data.rowTitle || localize('scaffold.minimal.name', "Name"))}</th>${columns.map(column => `<th>${htmlEsc(column.label)}</th>`).join('')}</tr>`;
+	const body = rows.map(row => {
+		const searched = [row.title, row.subtitle, row.description, ...row.cells.map(cell => cell.text)].join(' ').toLowerCase();
+		const title = row.code
+			? `<button class="row-title" data-row="${htmlEsc(row.id)}" aria-expanded="false">${htmlEsc(row.title)}</button>`
+			: `<span class="row-title">${htmlEsc(row.title)}</span>`;
+		const name = `<td>${title}${row.subtitle ? `<div class="row-sub">${htmlEsc(row.subtitle)}</div>` : ''}${row.description ? `<p class="row-desc">${htmlEsc(row.description)}</p>` : ''}</td>`;
+		const cells = row.cells.map(cell => `<td>${cell.url ? `<button class="link" data-url="${htmlEsc(cell.url)}">${htmlEsc(cell.text)}</button>` : htmlEsc(cell.text)}</td>`).join('');
+		const details = row.code
+			? `\n\t\t\t<tr class="row-details" data-details="${htmlEsc(row.id)}" hidden><td colspan="${columns.length + 1}">${stepCodeBoxHtml(htmlEsc(rowKey(row)), htmlEsc(localize('scaffold.minimal.code', "Code")), '')}</td></tr>`
+			: '';
+		return `\t\t\t<tr class="row" data-search="${htmlEsc(searched)}">${name}${cells}</tr>${details}`;
+	});
+	return `<input class="minimal-search" type="search" placeholder="${search}" aria-label="${search}">
+		<table class="minimal-table">
+			<thead>${head}</thead>
+			<tbody>
+${body.join('\n')}
+			</tbody>
+		</table>
+		<p class="hint minimal-none" hidden>${htmlEsc(localize('scaffold.minimal.noMatch', "Nothing matches the search."))}</p>`;
+}
+
+/**
+ * Build the HTML of a Minimal panel from its TOML data: introduction and table, then Next Steps when it has action
+ * groups and Learn More when it has wikis, notebooks, references or questions. A row's code box sends its code alone.
+ */
+function buildMinimalHtml(panelId: string, data: IScaffoldPanelData, title: string): string {
+	const rows = (data.rows ?? []).filter(row => row.code);
+	const hasNextSteps = !!data.actionGroups?.length;
+	const hasLearnMore = !!(data.wikis.length || data.notebooks.length || data.references.length || data.faq?.length);
+	const hasCode = hasNextSteps || rows.length > 0;
+	const entries = rows.map(row => `\t\t\t{ key: '${jsEscape(rowKey(row))}', step: 0, own: false, name: '${jsEscape(row.title)}', when: '', code: function() { return ${codeLinesJs(row.code)}; } }`);
+	return buildWebviewHtml({
+		title: htmlEsc(title),
+		omitPoweredBy: !data.packages.length,
+		...(hasNextSteps ? { actionsJs: buildActionsJs(data), ...buildNextSteps(panelId, data) } : { omitNextSteps: true }),
+		omitLearnMore: !hasLearnMore,
+		introHtml: htmlEsc(data.intro ?? ''),
+		bodyHtml: buildRowsHtml(data),
+		extraCss: hasCode ? MINIMAL_CSS + stepCodeCss : MINIMAL_CSS,
+		...(hasCode ? {
+			stepSetupJs,
+			inputsChangedJs: '\t\t\trefreshStepCode();\n',
+			extraJs: `\t\tvar STEP_CODE = [\n${entries.join(',\n')}\n\t\t];\n${stepCodeJs()}`,
+		} : {}),
+		pageScriptJs: MINIMAL_JS,
+	});
+}
+
 /**
  * Build the HTML of a panel on the shared scaffold from its TOML data, in the style it names. Classical, the default:
  * key points, decision table, model toggles, parameter inputs, declarative code and Next Steps. Time Arrow
- * (`style = "timeArrow"`): introduction, table, numbered steps with their inputs and code, and Next Steps, of
- * `options` only the title being used.
+ * (`style = "timeArrow"`): introduction, table, numbered steps with their inputs and code, and Next Steps. Minimal
+ * (`style = "minimal"`): introduction and a table of rows, each with its code, Next Steps and Learn More only when the
+ * TOML has them. Time Arrow and Minimal use only the title of `options`.
  */
 export function buildScaffoldHtml(panelId: string, data: IScaffoldPanelData, options: ScaffoldPanelOptions): string {
 	if (data.style === 'timeArrow') {
 		return buildTimeArrowHtml(panelId, data, options.title);
+	}
+	if (data.style === 'minimal') {
+		return buildMinimalHtml(panelId, data, options.title);
 	}
 	const models = panelModels(data);
 	return buildWebviewHtml({

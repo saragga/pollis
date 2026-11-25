@@ -289,10 +289,16 @@ export interface IScaffoldPanelData {
 	readonly faq?: IModelFaq[];
 	/** Its curated collections, for a page that lists datasets. */
 	readonly collections?: IModelCollection[];
-	/** The style its `[meta]` names: Time Arrow. Default: Classical. */
-	readonly style?: 'timeArrow';
-	/** Time Arrow: the text in place of Key Points. */
+	/** The style its `[meta]` names: Time Arrow or Minimal. Default: Classical. */
+	readonly style?: 'timeArrow' | 'minimal';
+	/** Time Arrow and Minimal: the text in place of Key Points. */
 	readonly intro?: string;
+	/** Minimal: the heading of the table's first column, that of the rows' titles. */
+	readonly rowTitle?: string;
+	/** Minimal: the table's other columns. */
+	readonly columns?: IModelColumn[];
+	/** Minimal: the rows of the table. */
+	readonly rows?: IModelRow[];
 	/** Time Arrow: the table between the introduction and the steps. */
 	readonly matrix?: IModelMatrix;
 	/** Time Arrow: the numbered steps. */
@@ -303,6 +309,31 @@ export interface IScaffoldPanelData {
 export interface IModelMatrix {
 	readonly columns: string[];
 	readonly rows: string[][];
+}
+
+/** A column of the table of a Minimal panel (`[[columns]]`): its `id` names the value of each row in it. */
+export interface IModelColumn {
+	readonly id: string;
+	readonly label: string;
+}
+
+/** A value of a row of a Minimal panel in one of its columns, a link when the row gives `<column>Url`. */
+export interface IModelCell {
+	readonly text: string;
+	readonly url: string;
+}
+
+/**
+ * A row of the table of a Minimal panel (`[[rows]]`): its title, with a line under it and a description, its values in
+ * the columns, and its code, which opens under the row in a code box as that of a step.
+ */
+export interface IModelRow {
+	readonly id: string;
+	readonly title: string;
+	readonly subtitle: string;
+	readonly description: string;
+	readonly cells: IModelCell[];
+	readonly code: string;
 }
 
 /** A step of a Time Arrow panel (`[[steps]]`): a numbered pane. */

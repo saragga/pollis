@@ -40,7 +40,6 @@ import './pollisUpdate.js';
 import './pollisDataPackages.js';
 import './vignettesPage.js';
 import './toolboxDocumentsPage.js';
-import './topicMapsPage.js';
 import './panelWikisPage.js';
 import { MODELS_INSTALLED_COMMAND_ID } from '../common/askPollis.js';
 import './modelsInstalledPage.js';
