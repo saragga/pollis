@@ -475,7 +475,8 @@ OpenFreeMap's vector tiles, with layers on it, drawn in the order given. Each la
 GeoJSON features, a [`Pollis.tiles`](@ref) of raster tiles, or a GeoJSON text or file drawn with the defaults.
 `style` is `"positron"` (light grey), `"bright"`, `"liberty"`, `"dark"` or `"fiord"`, or the address of a MapLibre
 style. Without `center` (longitude, latitude) the map fits the GeoJSON layers; `zoom` runs from 0 (the world) to
-about 18 (a street). Clicking a feature shows its attributes.
+about 18 (a street). Clicking a feature shows its attributes, with the picture of an attribute `image` that is
+the address of one (`https://...`), such as a painting of a stage of a journey, above them.
 
 When a layer has `years`, a slider under the map moves through them, with Play, and opens on `year`, by
 default the first. `labels = false` takes the names and borders of today off the base map.

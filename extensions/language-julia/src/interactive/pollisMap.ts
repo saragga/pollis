@@ -43,6 +43,7 @@ export const MAP_CSS = `
 .pollis-map .maplibregl-popup-content table { border-collapse: collapse; font-size: 12px; }
 .pollis-map .maplibregl-popup-content td { padding: 1px 6px 1px 0; vertical-align: top; }
 .pollis-map .maplibregl-popup-content td:first-child { color: #666; }
+.pollis-map .maplibregl-popup-content .pollis-map-popup-image { display: block; max-width: 100%; max-height: 260px; margin: 0 auto 6px; }
 .pollis-map .pollis-streetview { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; }
 .pollis-map .pollis-streetview-half { width: 55%; }
 .pollis-map .pollis-streetview-map { position: absolute; top: 0; bottom: 0; right: 0; width: 45%; overflow: hidden;
@@ -471,9 +472,18 @@ export function drawPollisMap(maplibregl: any, holder: MapHolder, spec: any, sty
         clickable.forEach(id => {
             target.on('click', id, e => {
                 const properties = e.features[0].properties || {}
-                const rows = Object.keys(properties).map(k => '<tr><td>' + escape(k) + '</td><td>' + escape(properties[k]) + '</td></tr>').join('')
+                // an attribute image that is the address of a picture, such as a painting of the place, is drawn above the others
+                const image = typeof properties.image === 'string' && /^https:\/\//.test(properties.image) ? properties.image : null
+                const rows = Object.keys(properties).filter(k => !(k === 'image' && image)).map(k => '<tr><td>' + escape(k) + '</td><td>' + escape(properties[k]) + '</td></tr>').join('')
                 hover.remove()
-                pinned = new maplibregl.Popup({ maxWidth: '320px' }).setLngLat(e.lngLat).setHTML('<table>' + (rows || '<tr><td>No attributes</td></tr>') + '</table>').addTo(target)
+                pinned = new maplibregl.Popup({ maxWidth: '320px' }).setLngLat(e.lngLat)
+                    .setHTML((image ? '<img class="pollis-map-popup-image" alt="" src="' + escape(image) + '">' : '') + '<table>' + (rows || '<tr><td>No attributes</td></tr>') + '</table>').addTo(target)
+                // once the picture has loaded, the popup is placed again for its height
+                const picture = pinned.getElement().querySelector('img')
+                if (picture) {
+                    const opened = pinned
+                    picture.addEventListener('load', () => { if (opened.isOpen()) { opened.setLngLat(e.lngLat) } })
+                }
             })
             target.on('mouseenter', id, () => { target.getCanvas().style.cursor = 'pointer' })
             target.on('mouseleave', id, () => { target.getCanvas().style.cursor = '' })
