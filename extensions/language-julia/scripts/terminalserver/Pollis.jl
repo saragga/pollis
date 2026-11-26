@@ -275,6 +275,27 @@ function browse(pages::AbstractVector{<:AbstractString}; page::Integer = 1, titl
 end
 
 """
+    Pollis.pdf(file; page = 1)
+
+Opens the PDF `file` in Pollis' PDF Viewer at page `page`, counted from 1. Outside Pollis, prints where the PDF is.
+
+```julia
+Pollis.pdf("kba-BN0047.pdf"; page = 13)
+```
+"""
+function pdf(file::AbstractString; page::Integer = 1)
+	isfile(file) || error("Pollis.pdf: there is no file $file.")
+	page >= 1 || error("Pollis.pdf: the pages are counted from 1.")
+	server = isdefined(Main, :VSCodeServer) ? Main.VSCodeServer : nothing
+	if server === nothing || server.conn_endpoint[] === nothing
+		println("Open ", abspath(file), ", page ", page)
+	else
+		server.JSONRPC.send_notification(server.conn_endpoint[], "pollis/pdf", Dict("file" => abspath(file), "page" => page))
+	end
+	return nothing
+end
+
+"""
     Pollis.step_links(rows, column => input; values = column)
 
 The rows with the values of `column` written as links to a step of the page in Pollis that made the table: shown by
@@ -297,25 +318,29 @@ end
 
 """
     Pollis.pills(rows, column, label => input; values = nothing, done = nothing, done_label = "Done")
+    Pollis.pills(rows, column, [label => input, ...]; values = nothing, done = nothing, done_label = "Done")
 
-The rows with a pill under each value of `column`, shown by `vscodedisplay`: `label`, as Save, a link to a step of the
+The rows with pills under each value of `column`, shown by `vscodedisplay`: `label`, as Save, a link to a step of the
 page in Pollis that made the table, as those of [`Pollis.step_links`](@ref), which puts the value into the field
-`input` and runs the step; or `done_label` in green, as Saved, for a row where `done(row)` is true. The value is that
+`input` and runs the step, a pill for each of several; or, in place of them, `done_label` in green, as Saved, for a
+row where `done(row)` is true, `done_label` being a text or a function of the row that gives one. The value is that
 of `values` in the row, by default the text the cell shows.
 
 ```julia
-Pollis.pills(table, :manuscript, "Save" => :ecodicesSave; done = r -> r.saved, done_label = "Saved")
+Pollis.pills(table, :manuscript, ["Save" => :ecodicesSave, "Save as PDF" => :ecodicesCollate];
+	done = r -> r.saved, done_label = r -> r.collated ? "Saved as PDF" : "Saved")
 ```
 """
-function pills(rows, column::Symbol, pill::Pair{<:AbstractString, Symbol}; values::Union{Symbol, Nothing} = nothing,
-		done = nothing, done_label::AbstractString = "Done")
-	label, input = pill
+pills(rows, column::Symbol, pill::Pair{<:AbstractString, Symbol}; options...) = pills(rows, column, [pill]; options...)
+function pills(rows, column::Symbol, links::AbstractVector{<:Pair{<:AbstractString, Symbol}}; values::Union{Symbol, Nothing} = nothing,
+		done = nothing, done_label::Union{AbstractString, Function} = "Done")
 	return map(rows) do row
 		cell = string(getproperty(row, column))
 		shown = something(match(r"^\[([^\]]*)\]\(", cell), (captures = [cell],)).captures[1]
 		value = values === nothing ? shown : string(getproperty(row, values))
-		line = done !== nothing && done(row) ? "[$(done_label)]" : "[$(label)](pollis:step?$(input)=$(escape_link(value)))"
-		merge(row, NamedTuple{(column,)}((cell * "\n" * line,)))
+		lines = done !== nothing && done(row) ? ["[$(done_label isa Function ? done_label(row) : done_label)]"] :
+			["[$(label)](pollis:step?$(input)=$(escape_link(value)))" for (label, input) in links]
+		merge(row, NamedTuple{(column,)}((join([cell; lines], "\n"),)))
 	end
 end
 
