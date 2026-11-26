@@ -8,7 +8,7 @@ import { Disposable } from '../../../../base/common/lifecycle.js';
 import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { IUtilityProcessWorkerWorkbenchService } from '../../../services/utilityProcess/electron-browser/utilityProcessWorkerWorkbenchService.js';
-import { IOcrCheck, IOcrCopy, IOcrDisagreement, IOcrExtract, IOcrFiles, IOcrFilesService, IOcrFlagged, IOcrPage, IOcrProgress, IOcrScanSize, IOcrSourceInfo } from '../common/ocrFiles.js';
+import { IOcrCheck, IOcrCopy, IOcrDisagreement, IOcrEbookPages, IOcrExtract, IOcrFiles, IOcrFilesService, IOcrFlagged, IOcrPage, IOcrProgress, IOcrScanSize, IOcrSourceInfo } from '../common/ocrFiles.js';
 
 /** The downloads and checks of OCR Files and Snippets, which a utility process does: started when first asked, and again when it has ended. */
 class OcrFilesService extends Disposable implements IOcrFilesService {
@@ -92,6 +92,10 @@ class OcrFilesService extends Disposable implements IOcrFilesService {
 
 	async printedPages(folder: string): Promise<readonly string[]> {
 		return (await this.get()).proxy.printedPages(folder);
+	}
+
+	async ebookPages(folder: string): Promise<IOcrEbookPages | undefined> {
+		return (await this.get()).proxy.ebookPages(folder);
 	}
 }
 

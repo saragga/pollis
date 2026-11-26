@@ -66,6 +66,11 @@ export interface IBrowserTabPages {
 	 * numbered from 1 in the title and on the bar, and from 0 in their addresses.
 	 */
 	readonly offset?: number;
+	/**
+	 * What `{text}` in the address of a page stands for, page by page from the first, written as it goes in an address: the
+	 * words that begin each page of an ebook, say, in a text fragment (`#:~:text=`) that takes the browser to them.
+	 */
+	readonly texts?: readonly string[];
 }
 
 /** POLLIS: an address or title of the pages of a tab, for one page. */
@@ -75,16 +80,18 @@ export function browserTabPageText(template: string, page: number): string {
 
 /** POLLIS: the address of a page of a tab's pages. */
 export function browserTabPageUrl(pages: IBrowserTabPages, page: number): string {
-	return browserTabPageText(pages.url, page + (pages.offset ?? 0));
+	return browserTabPageText(pages.url, page + (pages.offset ?? 0)).replace(/\{text\}/g, pages.texts?.[page - pages.first] ?? '');
 }
 
 /**
  * POLLIS: the number of the page of a tab's pages that an address is, or undefined when it is none of them. The address of
- * the pages is written as the browser writes addresses, with a number in place of `{page}`, so that the two compare.
+ * the pages is written as the browser writes addresses, with a number in place of `{page}` and letters in place of `{text}`,
+ * so that the two compare; any text stands where `{text}` is.
  */
 function pageOfUrl(template: string, url: string): number | undefined {
 	const marker = 987654321;
-	const pattern = normalizeUrl(browserTabPageText(template, marker)).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(String(marker), '(?<page>\\d+)');
+	const textMarker = 'pollistextmarker';
+	const pattern = normalizeUrl(browserTabPageText(template, marker).replace(/\{text\}/g, textMarker)).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(String(marker), '(?<page>\\d+)').replace(new RegExp(textMarker, 'g'), '.*');
 	const page = new RegExp(`^${pattern}$`).exec(normalizeUrl(url))?.groups?.page;
 	return page === undefined ? undefined : Number(page);
 }

@@ -1194,6 +1194,15 @@ async function openOcrFilesPage(services: IOcrPageServices, step: OcrStep, then?
 						await commandService.executeCommand('workbench.action.browser.open', images
 							? { pages: { url: images, title, first: 1, last: pages || undefined, page: shownPage, offset: -1 } }
 							: archiveReaderUrl(archive, undefined, shownPage - 1));
+					} else if (current?.work.scan.gutenberg) {
+						// The ebook's HTML version, at the words that begin the page read, where Previous Page and Next Page go
+						// through the pages of OCR Files and Snippets; its page at Project Gutenberg when it has no HTML version
+						const ebook = current.work.scan.gutenberg;
+						const html = await ocrFilesService.ebookPages(sourceFolder(current.work.id).fsPath);
+						const title = localize('ocrFiles.ebookTitle', "{0}, Page {1} of the Ebook", current.work.title ?? current.work.id, '{page}');
+						await commandService.executeCommand('workbench.action.browser.open', html
+							? { pages: { url: html.url, texts: html.texts, title, first: 1, last: html.texts.length, page: Math.min(shownPage, html.texts.length) } }
+							: `https://www.gutenberg.org/ebooks/${ebook}`);
 					}
 					break;
 				case 'addToWorkspace':
@@ -1263,9 +1272,10 @@ function pageHtml(): string {
 		scanFetched: localize('ocrFiles.scanFetched', "{0} of {1} pages on this computer."),
 		downloadScan: localize('ocrFiles.downloadScan', "Download the Whole Scan"),
 		stopDownload: localize('ocrFiles.stopDownload', "Stop"),
-		openOnline: localize('ocrFiles.openOnline', "Open the Source Online"),
 		openScan: localize('ocrFiles.openScan', "Open the Scan"),
 		openArchive: localize('ocrFiles.openArchive', "Open in the Internet Archive"),
+		openEbook: localize('ocrFiles.openEbook', "Open the Ebook"),
+		openGutenberg: localize('ocrFiles.openGutenberg', "Open in Project Gutenberg"),
 		addToWorkspace: localize('ocrFiles.addToWorkspace', "Add to Workspace"),
 		// Read
 		noWork: localize('ocrFiles.noWorkOpen', "Open a work first, in Open a Work."),
@@ -1622,7 +1632,8 @@ function pageHtml(): string {
 			saveBar.appendChild(button(TEXT.openScan, () => vscode.postMessage({ command: 'openScan' })));
 			saveBar.appendChild(button(TEXT.openArchive, () => vscode.postMessage({ command: 'openOnline' })));
 		} else if (work.scan.gutenberg) {
-			saveBar.appendChild(button(TEXT.openOnline, () => vscode.postMessage({ command: 'openOnline' })));
+			saveBar.appendChild(button(TEXT.openEbook, () => vscode.postMessage({ command: 'openScan' })));
+			saveBar.appendChild(button(TEXT.openGutenberg, () => vscode.postMessage({ command: 'openOnline' })));
 		}
 		if (!state.inWorkspace) { saveBar.appendChild(button(TEXT.addToWorkspace, () => vscode.postMessage({ command: 'addToWorkspace' }))); }
 		recordBox.appendChild(saveBar);

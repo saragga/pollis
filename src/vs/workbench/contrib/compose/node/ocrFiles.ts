@@ -23,7 +23,7 @@ import { homedir } from 'os';
 import { gunzipSync } from 'zlib';
 import { Emitter } from '../../../../base/common/event.js';
 import { join } from '../../../../base/common/path.js';
-import { IOcrCheck, IOcrContentsEntry, IOcrCopy, IOcrDisagreement, IOcrExtract, IOcrFiles, IOcrFlagged, IOcrPage, IOcrProgress, IOcrScanSize, IOcrSourceInfo, IOcrWord, OcrFlag } from '../common/ocrFiles.js';
+import { IOcrCheck, IOcrContentsEntry, IOcrCopy, IOcrDisagreement, IOcrEbookPages, IOcrExtract, IOcrFiles, IOcrFlagged, IOcrPage, IOcrProgress, IOcrScanSize, IOcrSourceInfo, IOcrWord, OcrFlag } from '../common/ocrFiles.js';
 import { Hunspell } from './hunspell.js';
 
 const ARCHIVE = 'https://archive.org';
@@ -224,7 +224,7 @@ export class OcrFiles implements IOcrFiles {
 		await fs.mkdir(join(folder, 'pages'), { recursive: true });
 		// The Gutenberg site, and its mirror when the site is down for maintenance
 		const digits = String(ebook);
-		const mirror = `https://gutenberg.pglaf.org/${digits.length > 1 ? digits.slice(0, -1).split('').join('/') : '0'}/${digits}`;
+		const mirror = gutenbergMirror(digits);
 		const addresses = [`https://www.gutenberg.org/cache/epub/${digits}/pg${digits}.txt`, `${mirror}/${digits}-0.txt`, `${mirror}/${digits}.txt`];
 		let content: string | undefined;
 		for (const address of addresses) {
@@ -353,6 +353,33 @@ export class OcrFiles implements IOcrFiles {
 
 	async printedPages(folder: string): Promise<readonly string[]> {
 		return JSON.parse(await fs.readFile(join(folder, 'printed.json'), 'utf8').catch(() => '[]'));
+	}
+
+	async ebookPages(folder: string): Promise<IOcrEbookPages | undefined> {
+		const source = await sourceOf(folder);
+		if (source.kind !== 'gutenberg') {
+			return undefined;
+		}
+		// The HTML version, at the Gutenberg site, or at its mirror when the site is down for maintenance
+		const digits = source.identifier;
+		let html: string | undefined;
+		for (const address of [`https://www.gutenberg.org/cache/epub/${digits}/pg${digits}-images.html`, `${gutenbergMirror(digits)}/${digits}-h/${digits}-h.htm`]) {
+			if (await reachable(address)) {
+				html = address;
+				break;
+			}
+		}
+		if (!html) {
+			return undefined;
+		}
+		const texts: string[] = [];
+		for (let page = 1; page <= source.info.pages; page++) {
+			const stored = JSON.parse(await fs.readFile(pageFile(folder, page), 'utf8').catch(() => '{"words":[]}')) as IStoredPage;
+			texts.push(fragmentWords(stored.words).map(encodeURIComponent).join('&text='));
+		}
+		// The page's number in the query makes each page a page of its own to the browser, which goes to the words of a text
+		// fragment when it loads a page, and not always when only the fragment changes
+		return { url: `${html}?page={page}#:~:text={text}`, texts };
 	}
 
 	async extract(folder: string, pages: readonly number[], check: IOcrCheck): Promise<IOcrExtract> {
@@ -709,6 +736,72 @@ function imageFile(folder: string, page: number): string {
 
 async function exists(path: string): Promise<boolean> {
 	return fs.access(path).then(() => true, () => false);
+}
+
+/** Where the mirror of Project Gutenberg keeps an ebook's files: gutenberg.pglaf.org/1/3/4/1342 for ebook 1342. */
+function gutenbergMirror(digits: string): string {
+	return `https://gutenberg.pglaf.org/${digits.length > 1 ? digits.slice(0, -1).split('').join('/') : '0'}/${digits}`;
+}
+
+/** Whether there is a file at `url`. */
+async function reachable(url: string): Promise<boolean> {
+	try {
+		return (await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(30_000), redirect: 'follow' })).ok;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Words that begin a page, as a text fragment finds them in the HTML version of an ebook: of the first three runs of six to
+ * ten words of one paragraph that are letters only, from its second word on, the two longest, the longer first. Without
+ * punctuation, the quotes and underscores of the plain text, which the HTML version writes otherwise, are not in them, nor,
+ * without a paragraph's first word, the first letter of a chapter, which an illustrated edition draws as a picture. The
+ * browser goes to the first it finds: the longer, as the less likely to be found earlier in the ebook, and the other for a
+ * page whose first is broken in the HTML version by a printed page's number. A page without such a run has its longest run
+ * of three words or more, and a page without that has none.
+ */
+function fragmentWords(words: readonly IStoredWord[]): string[] {
+	const runs: string[] = [];
+	let run: string[] = [];
+	let longest: string[] = [];
+	let paragraph: number | undefined;
+	const end = () => {
+		if (run.length >= 6) {
+			runs.push(run.join(' '));
+		} else if (run.length > longest.length) {
+			longest = run;
+		}
+		run = [];
+	};
+	for (const word of words) {
+		const clean = /^\p{L}+$/u.test(word.t);
+		if (!clean || word.p !== paragraph) {
+			end();
+			if (runs.length === 3) {
+				break;
+			}
+			if (word.p !== paragraph) {
+				paragraph = word.p;
+				continue;
+			}
+		}
+		if (clean) {
+			run.push(word.t);
+			if (run.length === 10) {
+				end();
+				if (runs.length === 3) {
+					break;
+				}
+			}
+		}
+	}
+	end();
+	if (!runs.length) {
+		return longest.length >= 3 ? [longest.join(' ')] : [];
+	}
+	// The longest first, and of two as long, the one nearer the page's start
+	return runs.slice(0, 3).map((text, index) => ({ text, index, length: text.split(' ').length })).sort((x, y) => y.length - x.length || x.index - y.index).slice(0, 2).map(entry => entry.text);
 }
 
 async function text(url: string): Promise<string> {

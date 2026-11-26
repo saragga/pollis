@@ -265,6 +265,19 @@ export interface IOcrFiles {
 	stopDownload(folder: string): Promise<void>;
 	/** The printed page numbers of the scan, by scan page from 1: '' where none is known. */
 	printedPages(folder: string): Promise<readonly string[]>;
+	/** The pages of a Project Gutenberg ebook in its HTML version, at Project Gutenberg or its mirror; undefined when neither has one. */
+	ebookPages(folder: string): Promise<IOcrEbookPages | undefined>;
+}
+
+/**
+ * The pages of a Project Gutenberg ebook in its HTML version, which has no pages of its own: the address of a page, with
+ * `{page}` where its number goes and `{text}` where words that begin it go, in a text fragment that takes the browser to
+ * them; and those words, page by page from 1, written as they go in an address: two runs of words joined by `&text=`,
+ * the browser going to the first it finds, one run, or '' for a page with none to find.
+ */
+export interface IOcrEbookPages {
+	readonly url: string;
+	readonly texts: readonly string[];
 }
 
 export const IOcrFilesService = createDecorator<IOcrFilesService>('ocrFilesService');
