@@ -1985,7 +1985,7 @@ function britannica_sql(folder::AbstractString)
         "CREATE TABLE editions AS SELECT * FROM read_parquet('$(file("editions.parquet"))')",
         "CREATE TABLE articles AS SELECT * FROM read_parquet('$(file("articles.parquet"))') ORDER BY key, edition",
         "COMMENT ON TABLE editions IS 'The editions of the Encyclopaedia Britannica from 1771 to 1929: the volumes read, the articles found and their characters. Source: the scans of the Internet Archive'",
-        "COMMENT ON TABLE articles IS 'The articles of the Encyclopaedia Britannica from 1771 to 1929, a row per article of each edition, read from the scans of the Internet Archive; the scan of an article is https://archive.org/details/<item>/page/n<page>'",
+        "COMMENT ON TABLE articles IS 'The articles of the Encyclopaedia Britannica from 1771 to 1929, a row per article of each edition, read from the scans of the Internet Archive; the scan of an article is https://archive.org/details/<item>/<file>/page/n<page>, without <file> in an item of one volume'",
         "COMMENT ON COLUMN articles.key IS 'The headword in the capital letters A to Z only, to look an article up in every edition'",
         "COMMENT ON COLUMN articles.chars IS 'The length of the article in characters of its text'",
         "COMMENT ON COLUMN articles.signature IS 'The initials of the contributor, where the article is signed'",

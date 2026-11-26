@@ -418,7 +418,7 @@ function pageHtml(): string {
 			const volume = first.volume.split('.')[0];
 			facts.appendChild(element('span', '', first.page === null ? format(TEXT.volume, volume) : format(TEXT.volumePage, volume, first.page)));
 			const scan = element('button', 'link', TEXT.openScan);
-			scan.addEventListener('click', () => vscode.postMessage({ command: 'openScan', url: SCAN + encodeURIComponent(first.item) + (first.page === null ? '' : '/page/n' + first.page) }));
+			scan.addEventListener('click', () => vscode.postMessage({ command: 'openScan', url: SCAN + encodeURIComponent(first.item) + (first.file ? '/' + encodeURIComponent(first.file) : '') + (first.page === null ? '' : '/page/n' + first.page) }));
 			facts.appendChild(scan);
 			const toggle = element('button', 'link', opened.has(first.id) ? TEXT.hideText : TEXT.showText);
 			facts.appendChild(toggle);

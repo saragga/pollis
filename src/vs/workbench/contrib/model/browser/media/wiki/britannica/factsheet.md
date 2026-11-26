@@ -25,13 +25,14 @@ The `articles` table of PollisBritannica has a row for each article of each edit
 | `edition` | The key of the edition |
 | `volume` | The volume, with a or b for the two parts of a volume bound apart |
 | `item`, `page`, `end_page` | The item of the Internet Archive and the pages of its scan where the article starts and ends |
+| `file` | The file of the volume, in an item of the Internet Archive that holds several volumes |
 | `printing` | In the fourteenth edition, the printing of the copy read, 1929 or 1930 |
 | `key` | The headword in the capital letters A to Z only, to look the article up in every edition |
 | `headword`, `title` | The headword, and the title with its qualifiers, as the scan reads them |
 | `chars` | The length of the article in characters |
 | `signature` | The initials of the contributor, where the article is signed |
 
-The page of an article's scan is `https://archive.org/details/<item>/page/n<page>`.
+The page of an article's scan is `https://archive.org/details/<item>/<file>/page/n<page>`, without `<file>` in an item of one volume.
 
 ## How PollisBritannica Finds the Articles in the Scans
 The articles are found in the text that the Internet Archive read from the scan of each volume. A headword opens a paragraph, or follows the full stop that ends the article before it, in capital letters, followed by a comma, a bracket, a full stop or a dash. Of the headwords found in a volume, the longest sequence in alphabetical order is kept, which leaves out capitals within articles and the running heads at the top of the pages. The earliest editions file I with J and U with V, which the order allows for. An article runs to the next headword; its signature is the initials in brackets at its end. The fourteenth edition is read from several copies of some volumes: each headword is taken from the copy with the most of its text.

@@ -76,7 +76,8 @@ export class Britannica implements IBritannica {
 		if (!this.attached && (await this.state()).kind === 'missing') {
 			return { entries: [], suggestions: [] };
 		}
-		const columns = 'a.id, a.edition, a.volume, a.item, a.page, a.headword, a.title, a.chars, a.signature';
+		// file, the volume's file in an item of several volumes, is read where PollisBritannica.jl gives it (0.1.2 on)
+		const columns = `COLUMNS('^(id|edition|volume|item|file|page|headword|title|chars|signature)$')`;
 		// The headword before the first comma is the key; the words after it, if any, must be in the title
 		const [head, ...rest] = lookup.headword.split(',');
 		const key = letters(head);
@@ -101,6 +102,7 @@ export class Britannica implements IBritannica {
 				edition: String(row.edition),
 				volume: String(row.volume),
 				item: String(row.item),
+				file: typeof row.file === 'string' ? row.file : null,
 				page: row.page === null ? null : Number(row.page),
 				headword: String(row.headword),
 				title: String(row.title),

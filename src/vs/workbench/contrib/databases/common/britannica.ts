@@ -39,7 +39,9 @@ export interface IBritannicaArticle {
 	readonly volume: string;
 	/** The item of the Internet Archive that holds its scan. */
 	readonly item: string;
-	/** The page of the scan where it starts, https://archive.org/details/<item>/page/n<page>; null in a scan without a page index. */
+	/** The file of its volume, in an item that holds several volumes; null in an item of one volume. */
+	readonly file: string | null;
+	/** The page of the scan where it starts, https://archive.org/details/<item>/<file>/page/n<page>; null in a scan without a page index. */
 	readonly page: number | null;
 	readonly headword: string;
 	readonly title: string;
