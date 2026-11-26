@@ -23,7 +23,7 @@ using Base64
 auth = ["Authorization" => "Basic " * base64encode(ENV["KAGGLE_USERNAME"] * ":" * ENV["KAGGLE_KEY"])]
 ```
 
-> **Editor and Notebook do not inject the credentials.** Those persist to disk, so you must set the environment variables in that session yourself.
+> **Editor and Jupyter do not inject the credentials.** Those persist to disk, so you must set the environment variables in that session yourself.
 
 ## See Also
 - [Factsheet](factsheet.md) — endpoints and the Julia stack

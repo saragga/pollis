@@ -26,7 +26,7 @@ Click **Set token** on the *Powered by* line of the Hugging Face Datasets panel.
 auth = haskey(ENV, "HUGGING_FACE_HUB_TOKEN") ? ["Authorization" => "Bearer $(ENV["HUGGING_FACE_HUB_TOKEN"])"] : Pair{String, String}[]
 ```
 
-> **Editor and Notebook do not inject the token.** Those persist to disk, so you must set the environment variable in that session yourself.
+> **Editor and Jupyter do not inject the token.** Those persist to disk, so you must set the environment variable in that session yourself.
 
 ## See Also
 - [Factsheet](factsheet.md) — endpoints and the Julia stack

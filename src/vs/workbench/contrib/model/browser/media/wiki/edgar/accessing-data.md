@@ -28,7 +28,7 @@ using EDGAR
 set_user_agent("Your Name your.email@example.com")   # or rely on the injected ENV["SEC_USER_AGENT"]
 ```
 
-**Notebook** and **Editor** carry the contact along by prepending a line that sets `ENV["SEC_USER_AGENT"]` (a setup cell for the notebook, a leading line for the file), because those run in their own process rather than the injected REPL. Only the non-secret contact is written this way, never a masked API key. To have it everywhere without this, set `ENV["SEC_USER_AGENT"]` in `~/.julia/config/startup.jl`.
+**Jupyter** and **Editor** carry the contact along by prepending a line that sets `ENV["SEC_USER_AGENT"]` (a setup cell for the notebook, a leading line for the file), because those run in their own process rather than the injected REPL. Only the non-secret contact is written this way, never a masked API key. To have it everywhere without this, set `ENV["SEC_USER_AGENT"]` in `~/.julia/config/startup.jl`.
 
 ## Fetch and Read
 

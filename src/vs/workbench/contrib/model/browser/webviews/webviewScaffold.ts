@@ -1033,7 +1033,7 @@ ${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${
 					<button class="code-action-btn" id="btn-copy">Copy</button>
 					<button class="code-action-btn" id="btn-julia-repl">Julia REPL</button>
 					<button class="code-action-btn" id="btn-new-file" title="Send the code to a new file in the editor">Editor</button>
-					<button class="code-action-btn" id="btn-notebook" title="Send the code to a notebook">Notebook</button>
+					<button class="code-action-btn" id="btn-notebook" title="Send the code to a Jupyter notebook">Jupyter</button>
 					<button class="code-action-btn" id="btn-pluto" title="Send the code to a Pluto notebook">Pluto</button>
 				</span>
 			</div>
@@ -1642,7 +1642,7 @@ ${parts.inputsChangedJs ?? ''}			if (panelAction && !panelEditing && document.ge
 					+ '<button class="code-action-btn" data-act="newFile" title="Open the query in a new SQL file, to change it before running it">Editor</button>'
 					: '<button class="code-action-btn" data-act="juliaRepl">Julia REPL</button>'
 					+ '<button class="code-action-btn" data-act="newFile" title="Send the code to a new file in the editor">Editor</button>'
-					+ '<button class="code-action-btn" data-act="notebook" title="Send the code to a notebook">Notebook</button>'
+					+ '<button class="code-action-btn" data-act="notebook" title="Send the code to a Jupyter notebook">Jupyter</button>'
 					+ '<button class="code-action-btn" data-act="pluto" title="Send the code to a Pluto notebook">Pluto</button>')
 				+ '</span>'
 				+ '</div>'

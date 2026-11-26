@@ -42,8 +42,8 @@ export function stepCodeBoxHtml(key: string, titleHtml: string, descHtml: string
 		replTip: localize('scaffoldSteps.replTip', "Run the code in the Julia REPL, after the steps before it that have not run there as they are now"),
 		editor: localize('scaffoldSteps.editor', "Editor"),
 		editorTip: localize('scaffoldSteps.editorTip', "Send the code to a new file in the editor, after that of the steps before it"),
-		notebook: localize('scaffoldSteps.notebook', "Notebook"),
-		notebookTip: localize('scaffoldSteps.notebookTip', "Send the code to a notebook, after that of the steps before it"),
+		notebook: localize('scaffoldSteps.notebook', "Jupyter"),
+		notebookTip: localize('scaffoldSteps.notebookTip', "Send the code to a Jupyter notebook, after that of the steps before it"),
 		pluto: localize('scaffoldSteps.pluto', "Pluto"),
 		plutoTip: localize('scaffoldSteps.plutoTip', "Send the code to a Pluto notebook, after that of the steps before it"),
 	};
