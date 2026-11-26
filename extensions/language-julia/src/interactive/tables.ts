@@ -201,6 +201,39 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
         }
         const lazyTable = ${isLazy}
 
+        // POLLIS: where the rows are all at hand, each column is as wide as most of its values, which wrap onto a second
+        // line beyond that: the narrower of the width of four values in five and half that of nineteen in twenty, at most
+        // 360 pixels and no narrower than its header; a column of long texts, such as a summary, is 640 pixels wide, so
+        // that its texts take fewer lines
+        function fitColumns(event) {
+            const cell = document.querySelector('.ag-center-cols-container .ag-cell')
+            const header = document.querySelector('.ag-header-cell-text')
+            const cellFont = cell ? getComputedStyle(cell).font : '12px sans-serif'
+            const headerFont = header ? getComputedStyle(header).font : cellFont
+            const context = document.createElement('canvas').getContext('2d')
+            const measure = (text, font) => {
+                context.font = font
+                return context.measureText(text).width
+            }
+            const quantile = (sorted, q) => sorted.length ? sorted[Math.floor(q * (sorted.length - 1))] : 0
+            const rows = payload.data
+            const stride = Math.max(1, Math.floor(rows.length / 1000))
+            const widths = payload.schema.fields.map(f => {
+                const texts = []
+                for (let i = 0; i < rows.length; i += stride) {
+                    const value = cellText(rows[i][f.name])
+                    texts.push(value === undefined || value === null ? 0 : measure(String(value), cellFont))
+                }
+                texts.sort((a, b) => a - b)
+                const heading = Math.max(measure(f.name, headerFont), f.jl_label ? measure(String(f.jl_label), headerFont) : 0) + 48
+                const width = quantile(texts, 0.5) > 360 ? 640 : Math.min(360, quantile(texts, 0.8), quantile(texts, 0.95) / 2) + 26
+                return { key: f.name, newWidth: Math.ceil(Math.max(heading, width)) }
+            })
+            event.columnApi.setColumnWidths(widths)
+            event.columnApi.autoSizeColumns(['__row__'])
+            event.api.resetRowHeights()
+        }
+
         const coldefs = payload.schema.fields.map(f => {
             return {
                 field: f.name,
@@ -210,8 +243,8 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
                 filter: f.ag_filter,
                 sortable: true,
                 resizable: true,
-                // POLLIS: no column wider than 360 pixels; a longer text wraps onto more lines, where the rows are all at hand
-                maxWidth: 360,
+                // POLLIS: where the rows are not all at hand, no column wider than 360 pixels; where they are, fitColumns sets the widths
+                maxWidth: lazyTable ? 360 : undefined,
                 wrapText: !lazyTable,
                 autoHeight: !lazyTable,
                 cellRenderer: linkCell,
@@ -386,7 +419,7 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
                     rowData: payload.data,
                     rowSelection: 'multiple',
                     enableCellTextSelection: true,
-                    onFirstDataRendered: event => event.columnApi.autoSizeAllColumns(),
+                    onFirstDataRendered: event => fitColumns(event),
                     components: {
                         rowNumberRenderer: RowNumberRenderer
                     },
