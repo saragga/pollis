@@ -77,6 +77,23 @@ type ScaffoldWebviewMessage =
  * and videos, and Ask Pollis beside the title. `panelId` names the panel's folder under ~/.pollis (saved examples,
  * references, videos); a question asked there is answered from the wikis titled `panelTitle` first. `apiKey`, when given, fills the Credentials line below Powered by and sets the credentials in the Julia REPL.
  */
+/** The scaffold panels open, the one opened last at the end: the inputs of their steps, and their webviews. */
+const openPanels: { readonly inputs: ReadonlySet<string>; readonly webview: { postMessage(message: unknown): void } }[] = [];
+
+/**
+ * Fills the field `input` of a step with `value` and runs the step in the Julia REPL, as its button runs it, in the open
+ * scaffold panel opened last whose steps, or those of its rows, have that field: what a link of a table that
+ * Pollis.step_links made asks for. Returns whether a panel has the field.
+ */
+export function runScaffoldStepWith(input: string, value: string): boolean {
+	const panel = openPanels.findLast(open => open.inputs.has(input));
+	if (!panel) {
+		return false;
+	}
+	panel.webview.postMessage({ command: 'runStepWith', input, value });
+	return true;
+}
+
 /** Sends what Powered by and Learn More show: the links of the packages, and the references, notebooks, wikis and FAQ there are. */
 export function postLearnMoreData(webview: { postMessage(message: unknown): void }, data: IScaffoldPanelData): void {
 	const packages = data.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
@@ -176,6 +193,19 @@ export function registerScaffoldWebviewHandlers(
 		void postFolderDefaults();
 	}, 0);
 
+	const open = {
+		inputs: new Set([...(data.steps ?? []), ...(data.rows ?? []).flatMap(row => row.steps)].flatMap(step => step.inputs.map(input => input.id))),
+		webview: webviewInput.webview,
+	};
+	openPanels.push(open);
+	disposables.add({
+		dispose: () => {
+			const at = openPanels.indexOf(open);
+			if (at >= 0) {
+				openPanels.splice(at, 1);
+			}
+		}
+	});
 	disposables.add(webviewInput.webview.onDidDispose(() => disposables.dispose()));
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: ScaffoldWebviewMessage }) => {
 		const msg = e.message;

@@ -115,12 +115,26 @@ import { MPCVX_PANEL } from './commands/mpcvx.command.js';
 import { MPSDP_PANEL } from './commands/mpsdp.command.js';
 import { MPMICP_PANEL } from './commands/mpmicp.command.js';
 import { MPSOS_PANEL } from './commands/mpsos.command.js';
+import { runScaffoldStepWith } from './handlers/scaffold.handler.js';
 
 // ============================================
 // COMMAND REGISTRATION
 // ============================================
 
 const MODEL_COMMAND_ID = 'workbench.action.showModel';
+
+/**
+ * A link of a table that Pollis.step_links made (`pollis:step?<input>=<value>`): the field `input` of the step of an open
+ * panel that has it takes `value`, and the step runs. The value goes into the step's code, in quotes or not, so it can
+ * only be a plain name, code or number: letters, digits, spaces and . , : ' / - _, and brackets after a space, which
+ * cannot call a function.
+ */
+CommandsRegistry.registerCommand('pollis.scaffold.runStepWith', (_accessor, input: unknown, value: unknown) => {
+	if (typeof input !== 'string' || !/^[A-Za-z][A-Za-z0-9]*$/.test(input) || typeof value !== 'string' || !/^[\p{L}\p{N} .,:'()\/_-]{1,100}$/u.test(value) || /[^ ]\(/.test(value)) {
+		return false;
+	}
+	return runScaffoldStepWith(input, value);
+});
 
 CommandsRegistry.registerCommand(MODEL_COMMAND_ID, () => {
 	console.log('Model command executed!');

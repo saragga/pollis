@@ -300,7 +300,10 @@ const MINIMAL_CSS = `${compareCss}
 		.row-desc { color: var(--vscode-descriptionForeground); margin: 4px 0 0 0; line-height: 1.4; max-width: 720px; }
 		tr.row-details > td { padding: 0 0 12px 0; }
 		.row-step { margin: 10px 0 0 0; }
-		.row-step-head { display: flex; align-items: center; gap: 8px; margin: 0 0 4px 0; font-weight: 600; }
+		.row-step-head { display: flex; align-items: center; gap: 8px; margin: 0 0 4px 0; padding: 0; font: inherit; font-weight: 600; color: var(--vscode-foreground); background: none; border: none; cursor: pointer; text-align: left; }
+		.row-step-head:hover .row-step-title { text-decoration: underline; }
+		.row-step-head .illus-chevron { color: var(--vscode-descriptionForeground); }
+		.row-step-head[aria-expanded="false"] .illus-chevron { transform: rotate(-90deg); }
 		.row-step-number { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; border-radius: 10px; font-size: 11px; color: var(--vscode-badge-foreground); background: var(--vscode-badge-background); }
 		.row-step .scaffold-inputs { margin: 4px 0 6px 0; }
 		.see-also { margin: 8px 0 20px 0; }
@@ -315,12 +318,37 @@ const MINIMAL_JS = `
 			vscode.postMessage({ command: 'openSeeAlso', target: sister.dataset.seeAlso });
 			return;
 		}
+		const stepHead = event.target.closest('button[data-row-step]');
+		if (stepHead) {
+			showRowStep(stepHead.closest('.row-step'), stepHead.getAttribute('aria-expanded') !== 'true');
+			return;
+		}
 		const title = event.target.closest('button[data-row]');
 		const details = title && document.querySelector('tr.row-details[data-details="' + CSS.escape(title.dataset.row) + '"]');
 		if (details) {
 			details.hidden = !details.hidden;
 			title.setAttribute('aria-expanded', String(!details.hidden));
 		}
+	});
+	// A step of a row, folded under its title or shown
+	function showRowStep(step, shown) {
+		const head = step.querySelector('button[data-row-step]');
+		step.querySelector('.row-step-body').hidden = !shown;
+		head.setAttribute('aria-expanded', String(shown));
+	}
+	// A table's link to a step (Pollis.step_links) shows the step, its row open, while the step's code runs
+	window.addEventListener('message', event => {
+		const msg = event.data;
+		const field = msg && msg.command === 'runStepWith' ? document.getElementById('in-' + msg.input) : null;
+		const step = field && field.closest('.row-step');
+		const details = step && step.closest('tr.row-details');
+		if (!details) {
+			return;
+		}
+		details.hidden = false;
+		const title = document.querySelector('button[data-row="' + CSS.escape(details.dataset.details) + '"]');
+		if (title) { title.setAttribute('aria-expanded', 'true'); }
+		showRowStep(step, true);
 	});
 	const minimalSearch = document.querySelector('.minimal-search');
 	if (minimalSearch) {
@@ -353,11 +381,11 @@ function rowStepKey(row: IModelRow, step: IModelStep): string {
 	return `row-${row.id}-step-${step.id}`;
 }
 
-/** The steps of a row, numbered, each with its title and body as a step of a Time Arrow panel. */
+/** The steps of a row, numbered, each with its body as a step of a Time Arrow panel, folded under its title at first. */
 function buildRowStepsHtml(row: IModelRow): string {
 	return row.steps.map((step, index) => `<div class="row-step">
-				<div class="row-step-head"><span class="row-step-number">${index + 1}</span><span class="row-step-title">${htmlEsc(step.title)}</span></div>
-				${buildStepBodyHtml(step, index + 1, rowStepKey(row, step))}
+				<button class="row-step-head" data-row-step aria-expanded="false"><span class="illus-chevron" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span><span class="row-step-number">${index + 1}</span><span class="row-step-title">${htmlEsc(step.title)}</span></button>
+				<div class="row-step-body" hidden>${buildStepBodyHtml(step, index + 1, rowStepKey(row, step))}</div>
 			</div>`).join('\n');
 }
 

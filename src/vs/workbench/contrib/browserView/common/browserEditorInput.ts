@@ -52,8 +52,9 @@ export interface IBrowserEditorInputData extends IBrowserEditorViewState {
 
 /**
  * POLLIS: the pages of a tab, given by its opener, such as the pages of a scan: the address of a page and its title, each
- * with `{page}` where the number of the page goes, the first page, the last when it is known, and the page to open at.
- * Previous Page and Next Page on the bar go from one to the next while the tab is at one of them.
+ * with `{page}` where the number of the page goes (or the address of each page, and `{label}` in the title for its own),
+ * the first page, the last when it is known, and the page to open at. Previous Page and Next Page on the bar go from one
+ * to the next while the tab is at one of them.
  */
 export interface IBrowserTabPages {
 	readonly url: string;
@@ -71,6 +72,13 @@ export interface IBrowserTabPages {
 	 * words that begin each page of an ebook, say, in a text fragment (`#:~:text=`) that takes the browser to them.
 	 */
 	readonly texts?: readonly string[];
+	/**
+	 * The address of each page, from the first, for pages whose addresses have no form in common, such as the images of
+	 * the leaves of a manuscript: `url` is then the first of them, and `offset` and `texts` are not used.
+	 */
+	readonly urls?: readonly string[];
+	/** What `{label}` in the title stands for, page by page from the first: the folio of a leaf of a manuscript, say. */
+	readonly labels?: readonly string[];
 }
 
 /** POLLIS: an address or title of the pages of a tab, for one page. */
@@ -80,6 +88,9 @@ export function browserTabPageText(template: string, page: number): string {
 
 /** POLLIS: the address of a page of a tab's pages. */
 export function browserTabPageUrl(pages: IBrowserTabPages, page: number): string {
+	if (pages.urls) {
+		return pages.urls[page - pages.first] ?? pages.url;
+	}
 	return browserTabPageText(pages.url, page + (pages.offset ?? 0)).replace(/\{text\}/g, pages.texts?.[page - pages.first] ?? '');
 }
 
@@ -94,6 +105,16 @@ function pageOfUrl(template: string, url: string): number | undefined {
 	const pattern = normalizeUrl(browserTabPageText(template, marker).replace(/\{text\}/g, textMarker)).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(String(marker), '(?<page>\\d+)').replace(new RegExp(textMarker, 'g'), '.*');
 	const page = new RegExp(`^${pattern}$`).exec(normalizeUrl(url))?.groups?.page;
 	return page === undefined ? undefined : Number(page);
+}
+
+/** POLLIS: the number of the page of a tab's pages that an address is, as in its address, or undefined when it is none of them. */
+function pageOfPages(pages: IBrowserTabPages, url: string): number | undefined {
+	if (pages.urls) {
+		const address = normalizeUrl(url);
+		const index = pages.urls.findIndex(page => normalizeUrl(page) === address);
+		return index < 0 ? undefined : pages.first + index + (pages.offset ?? 0);
+	}
+	return pageOfUrl(pages.url, url);
 }
 
 /**
@@ -191,7 +212,7 @@ export class BrowserEditorInput extends EditorInput {
 	private get openerTitle(): string | undefined {
 		const page = this.page;
 		if (page !== undefined && this._pages?.title) {
-			return browserTabPageText(this._pages.title, page);
+			return browserTabPageText(this._pages.title, page).replace(/\{label\}/g, this._pages.labels?.[page - this._pages.first] ?? '');
 		}
 		return this._label && this.url && normalizeUrl(this.url) === this._label.url ? this._label.title : undefined;
 	}
@@ -212,7 +233,7 @@ export class BrowserEditorInput extends EditorInput {
 
 	/** POLLIS: the number of the page the tab is at, of the pages its opener gave it, or undefined when it is at none. */
 	get page(): number | undefined {
-		const page = this._pages && this.url ? pageOfUrl(this._pages.url, this.url) : undefined;
+		const page = this._pages && this.url ? pageOfPages(this._pages, this.url) : undefined;
 		if (page === undefined) {
 			return undefined;
 		}

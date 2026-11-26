@@ -130,10 +130,15 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
             : undefined,
     })
     onEvent(panel.onDidDispose, () => tableSources.delete(panel))
-    // POLLIS: a link of the table opens in Pollis' browser
-    onEvent(panel.webview.onDidReceiveMessage, (message) => {
+    // POLLIS: a link of the table opens in Pollis' browser; a link to a step (Pollis.step_links) fills in its field in the
+    // open page that has it and runs the step
+    onEvent(panel.webview.onDidReceiveMessage, async (message) => {
         if (message?.type === 'openLink' && typeof message.url === 'string' && /^https?:\/\//i.test(message.url)) {
             browse(message.url).catch((error) => vscode.window.showErrorMessage(`Pollis could not open ${message.url}: ${error instanceof Error ? error.message : String(error)}`))
+        } else if (message?.type === 'runStep' && typeof message.input === 'string' && typeof message.value === 'string') {
+            if (!await vscode.commands.executeCommand<boolean>('pollis.scaffold.runStepWith', message.input, message.value)) {
+                vscode.window.showInformationMessage(`No open page has the field ${message.input} for ${message.value}: open the page whose code made this table, and click it again.`)
+            }
         }
     })
 
@@ -172,14 +177,21 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
             \`
         }
 
-        // POLLIS: a cell written [text](https://...) shows text as a link, as does a cell that is a web address alone;
-        // sorting, filtering and copying read the text
-        const LINK = /^\\[([^\\]]*)\\]\\((https?:\\/\\/[^\\s)]+)\\)$/
+        // POLLIS: a cell written [text](https://...) shows text as a link, as does a cell that is a web address alone, and
+        // one written [text](pollis:step?input=value) a link to a step (Pollis.step_links); sorting, filtering and copying
+        // read the text
+        const LINK = /^\\[([^\\]]*)\\]\\((https?:\\/\\/[^\\s)]+|pollis:step\\?[^\\s)]+)\\)$/
         function linkOf(value) {
             if (typeof value !== 'string') { return undefined }
             const link = LINK.exec(value)
             if (link) { return { text: link[1], url: link[2] } }
             return /^https?:\\/\\/\\S+$/.test(value) ? { text: value, url: value } : undefined
+        }
+        // The field and value of a link to a step, or undefined for a web address
+        function stepOf(url) {
+            if (!url.startsWith('pollis:step?')) { return undefined }
+            const fields = Array.from(new URLSearchParams(url.slice('pollis:step?'.length)))
+            return fields.length === 1 ? { input: fields[0][0], value: fields[0][1] } : undefined
         }
         function cellText(value) {
             const link = linkOf(value)
@@ -188,15 +200,20 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
         function linkCell(params) {
             const link = linkOf(params.value)
             if (!link) { return params.value === undefined || params.value === null ? '' : String(params.value) }
+            // Without an href, which the webview would open in the system's browser before this listener runs
+            const step = stepOf(link.url)
             const anchor = document.createElement('a')
             anchor.textContent = link.text
-            anchor.href = link.url
-            anchor.title = link.url
+            anchor.title = step ? \`\${step.input}: \${step.value}\` : link.url
             anchor.className = 'table-link'
-            anchor.addEventListener('click', event => {
+            anchor.setAttribute('role', 'link')
+            anchor.tabIndex = 0
+            const follow = event => {
                 event.preventDefault()
-                vscodeAPI.postMessage({ type: 'openLink', url: link.url })
-            })
+                vscodeAPI.postMessage(step ? { type: 'runStep', input: step.input, value: step.value } : { type: 'openLink', url: link.url })
+            }
+            anchor.addEventListener('click', follow)
+            anchor.addEventListener('keydown', event => { if (event.key === 'Enter') { follow(event) } })
             return anchor
         }
         const lazyTable = ${isLazy}
@@ -249,7 +266,12 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
                 autoHeight: !lazyTable,
                 cellRenderer: linkCell,
                 comparator: (a, b) => {
-                    const x = cellText(a), y = cellText(b)
+                    // A number written as a link sorts as a number
+                    let x = cellText(a), y = cellText(b)
+                    if (typeof x === 'string' && typeof y === 'string' && x.trim() && y.trim() && isFinite(x) && isFinite(y)) {
+                        x = Number(x)
+                        y = Number(y)
+                    }
                     return x === y ? 0 : x === undefined || x === null ? -1 : y === undefined || y === null ? 1 : x < y ? -1 : 1
                 },
                 filterValueGetter: params => cellText(params.data ? params.data[f.name] : undefined),
@@ -343,7 +365,7 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
                 } catch (err) {
                     console.debug('Error while processing message: ', err)
                 }
-            } else if (message?.type !== 'openLink') {
+            } else if (message?.type !== 'openLink' && message?.type !== 'runStep') {
                 console.debug('invalid message received: ', message)
             }
         })

@@ -217,10 +217,25 @@ export function stepCodeJs(): string {
 			clearTimeout(note.hideTimer);
 			note.hideTimer = setTimeout(function() { note.hidden = true; }, 6000);
 		}
+		// A table's link to a step (Pollis.step_links): the field takes the value, and the step's code runs in the Julia
+		// REPL as its button runs it, after the steps before it that have not run
+		function runStepWith(input, value) {
+			var field = document.getElementById('in-' + input);
+			var box = null;
+			for (var node = field && field.parentElement; node && !box; node = node.parentElement) {
+				var root = node.querySelector('.step-code');
+				box = root ? stepBoxes.find(function(b) { return b.root === root; }) || null : null;
+			}
+			if (!box || box.editing) { return; }
+			field.value = value;
+			onInputsChanged();
+			stepButton(box, 'juliaRepl').click();
+		}
 		// After the scaffold's own listener, which takes the user's versions into customSteps
 		window.addEventListener('message', function(event) {
 			var msg = event.data;
 			if (!msg) { return; }
+			if (msg.command === 'runStepWith' && typeof msg.input === 'string' && typeof msg.value === 'string') { runStepWith(msg.input, msg.value); }
 			if (msg.command === 'customExamples') { refreshStepCode(); }
 			if (msg.command === 'stepsFirst') { showStepsNote(msg); }
 			if (msg.command === 'colorizedCode' && typeof msg.target === 'string' && msg.target.indexOf('step:') === 0) {

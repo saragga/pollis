@@ -237,6 +237,64 @@ function browse(page::AbstractString)
 	return nothing
 end
 
+"""
+    Pollis.browse(pages; page = 1, title = nothing, labels = nothing)
+
+Opens `pages`, the addresses or files of pages to go through in order, such as the images of the leaves of a
+manuscript, in one tab of Pollis' browser at page number `page`, with Previous Page, the page and Next Page on the
+browser's bar. `title` is the tab's title, with `{page}` for the number of the page and `{label}` for its label, one
+of `labels` per page, such as the folio of a leaf. The same pages opened again open in their tab.
+
+```julia
+Pollis.browse(["https://example.org/1.jpg", "https://example.org/2.jpg"]; title = "Leaf {label}", labels = ["1r", "1v"])
+```
+"""
+function browse(pages::AbstractVector{<:AbstractString}; page::Integer = 1, title::Union{AbstractString, Nothing} = nothing,
+		labels::Union{AbstractVector{<:AbstractString}, Nothing} = nothing)
+	isempty(pages) && error("Pollis.browse: there are no pages.")
+	1 <= page <= length(pages) || error("Pollis.browse: there is no page $page of $(length(pages)).")
+	labels === nothing || length(labels) == length(pages) || error("Pollis.browse: $(length(labels)) labels for $(length(pages)) pages.")
+	targets = map(pages) do p
+		link = occursin(r"^https?://"i, p)
+		!link && !isfile(p) && error("Pollis.browse: there is no file $p.")
+		link ? String(p) : abspath(p)
+	end
+	server = isdefined(Main, :VSCodeServer) ? Main.VSCodeServer : nothing
+	if server === nothing || server.conn_endpoint[] === nothing
+		println("Open ", targets[page])
+	else
+		options = Dict{String, Any}("urls" => targets, "page" => page)
+		title === nothing || (options["title"] = String(title))
+		labels === nothing || (options["labels"] = String.(labels))
+		server.JSONRPC.send_notification(server.conn_endpoint[], "pollis/browse", Dict("page" => targets[page], "pages" => options))
+	end
+	return nothing
+end
+
+"""
+    Pollis.step_links(rows, column => input; values = column)
+
+The rows with the values of `column` written as links to a step of the page in Pollis that made the table: shown by
+`vscodedisplay`, a click on one puts the value of `values` in that row into the field `input` of the step that has it,
+and runs the step, as its button does. The value can be a name, a code or a number: letters, digits, spaces and
+`. , : ' / - _`, with brackets only after a space, as `Ms. 12 (2)`.
+
+```julia
+vscodedisplay(Pollis.step_links(libraries, :library => :ecodicesLibrary), "e-codices: Libraries and Their Codes")
+```
+"""
+function step_links(rows, link::Pair{Symbol, Symbol}; values::Symbol = first(link))
+	column, input = link
+	return map(rows) do row
+		value = string(getproperty(row, values))
+		text = "[$(getproperty(row, column))](pollis:step?$(input)=$(escape_link(value)))"
+		merge(row, NamedTuple{(column,)}((text,)))
+	end
+end
+
+"""A value written for a link, every character but letters, digits and `-._~` as `%` and its bytes in hexadecimal."""
+escape_link(value::AbstractString) = join(occursin(r"^[A-Za-z0-9._~-]$", string(c)) ? string(c) : join("%" * uppercase(string(b; base = 16, pad = 2)) for b in codeunits(string(c))) for c in value)
+
 """A map of [`Pollis.webmap`](@ref) or [`Pollis.streetview`](@ref): its JSON, which a page in Pollis' browser and notebook outputs draw."""
 struct WebMap
 	json::String
