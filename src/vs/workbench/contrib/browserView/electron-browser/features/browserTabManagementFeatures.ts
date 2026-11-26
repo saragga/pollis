@@ -18,7 +18,7 @@ import { Codicon } from '../../../../../base/common/codicons.js';
 import { ThemeIcon } from '../../../../../base/common/themables.js';
 import { BrowserViewUri } from '../../../../../platform/browserView/common/browserViewUri.js';
 import { generateUuid } from '../../../../../base/common/uuid.js';
-import { BrowserEditorInput, browserTabPageText, IBrowserTabPages } from '../../common/browserEditorInput.js';
+import { BrowserEditorInput, browserTabPageUrl, IBrowserTabPages } from '../../common/browserEditorInput.js';
 import { BROWSER_EDITOR_ACTIVE, BrowserActionCategory, BrowserActionGroup } from '../browserViewActions.js';
 import { logBrowserOpen } from '../../../../../platform/browserView/common/browserViewTelemetry.js';
 import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
@@ -313,7 +313,7 @@ class OpenIntegratedBrowserAction extends Action2 {
 		// Parse arguments
 		const given = typeof urlOrOptions === 'string' ? { url: urlOrOptions } : (urlOrOptions ?? {});
 		// POLLIS: a tab with pages opens at its page
-		const options: IOpenBrowserOptions = given.pages ? { ...given, url: browserTabPageText(given.pages.url, given.pages.page) } : given;
+		const options: IOpenBrowserOptions = given.pages ? { ...given, url: browserTabPageUrl(given.pages, given.pages.page) } : given;
 		const resource = BrowserViewUri.forId(generateUuid());
 		const group = options.openToSide ? SIDE_GROUP : ACTIVE_GROUP;
 

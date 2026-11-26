@@ -9,7 +9,6 @@
 // is asked for, by the Julia extension (language-julia.pollisBritannicaTexts). The Historical Geography and Archaeology
 // Toolbox's menu opens it.
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
@@ -19,10 +18,11 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { asJson, IRequestService } from '../../../../platform/request/common/request.js';
+import { IRequestService } from '../../../../platform/request/common/request.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
+import { archivePageImages, archiveReaderUrl } from '../../browserView/common/internetArchive.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { BRITANNICA_METADATA } from '../../model/browser/webviews/britannica.data.js';
 import { buildWebviewHtml, IScaffoldSqlStep, ONE_BLUE_BUTTON_CSS, ONE_BLUE_BUTTON_JS } from '../../model/browser/webviews/webviewScaffold.js';
@@ -58,12 +58,6 @@ interface IScanPage {
 	readonly page: number | null;
 }
 
-/** Where the scans are: a page of an item of the Internet Archive, in the archive's reader. */
-const SCAN_PREFIX = 'https://archive.org/details/';
-
-/** Where the metadata of an item are, field by field. */
-const METADATA_PREFIX = 'https://archive.org/metadata/';
-
 /** Whether a message from the page names a page of a scan. */
 function isScanPage(message: object): message is IScanPage {
 	const scan = message as Partial<IScanPage>;
@@ -72,39 +66,9 @@ function isScanPage(message: object): message is IScanPage {
 		&& (scan.page === null || (typeof scan.page === 'number' && Number.isInteger(scan.page) && scan.page >= 0));
 }
 
-/** A part of an address of the Internet Archive, with its brackets encoded too: the archive finds no file whose name has them unencoded. */
-function encodeArchivePart(value: string): string {
-	return encodeURIComponent(value).replace(/\(/g, '%28').replace(/\)/g, '%29');
-}
-
 /** The page in the Internet Archive's reader, or the item when the page is not known. */
 function archivePage(scan: IScanPage): string {
-	return SCAN_PREFIX + encodeArchivePart(scan.item) + (scan.file ? '/' + encodeArchivePart(scan.file) : '') + (scan.page === null ? '' : '/page/n' + scan.page);
-}
-
-/**
- * The pages of the volume as images, at the size they were scanned, from the server that holds the item, which the item's
- * metadata name: the address of a page with `{page}` where its number goes, as Pollis's browser takes it to go from page
- * to page. The archive's shorter address of a page's image, /download/<item>/<file>/page/n<page>.jpg, encodes the name of
- * the file once more on its way to that server, and so finds no file whose name has a comma or a letter outside ASCII.
- */
-async function pageImages(requestService: IRequestService, scan: IScanPage): Promise<string | undefined> {
-	if (scan.page === null) {
-		return undefined;
-	}
-	const field = async (name: string) => {
-		const context = await requestService.request({ type: 'GET', url: METADATA_PREFIX + encodeURIComponent(scan.item) + '/' + name, callSite: 'pollis.britannica.scan' }, CancellationToken.None);
-		return (await asJson<{ readonly result?: string }>(context))?.result;
-	};
-	try {
-		const [server, dir] = await Promise.all([field('server'), field('dir')]);
-		if (typeof server !== 'string' || !/^[a-z0-9.-]+\.archive\.org$/.test(server) || typeof dir !== 'string') {
-			return undefined;
-		}
-		return `https://${server}/BookReader/BookReaderImages.php?id=${encodeURIComponent(scan.item)}&itemPath=${encodeURIComponent(dir)}&server=${server}` + (scan.file ? '&subPrefix=' + encodeURIComponent(scan.file) : '') + '&page=n{page}';
-	} catch {
-		return undefined;
-	}
+	return archiveReaderUrl(scan.item, scan.file ?? undefined, scan.page ?? undefined);
 }
 
 /** The Next Steps: queries of PollisBritannica, in the duckdb> terminal. */
@@ -267,7 +231,7 @@ async function openBritannicaPage(accessor: ServicesAccessor): Promise<void> {
 				// and page, with Previous Page and Next Page on the browser's bar, in a new tab or in the tab of the scan opened
 				// last; or in the archive's reader when there is no image
 				if (isScanPage(message)) {
-					const images = await pageImages(requestService, message);
+					const images = message.page === null ? undefined : await archivePageImages(requestService, message.item, message.file ?? undefined, 'pollis.britannica.scan');
 					const reuseKey = scanTab() === 'same' ? SCAN_TAB_REUSE_KEY : undefined;
 					const title = typeof message.title === 'string' && message.title.includes('{page}') ? message.title.slice(0, 200) : undefined;
 					await commandService.executeCommand('workbench.action.browser.open', images && message.page !== null

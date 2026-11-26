@@ -61,11 +61,21 @@ export interface IBrowserTabPages {
 	readonly first: number;
 	readonly last?: number;
 	readonly page: number;
+	/**
+	 * The number in the address of a page less the page's own number, when they differ: -1 for a scan whose pages are
+	 * numbered from 1 in the title and on the bar, and from 0 in their addresses.
+	 */
+	readonly offset?: number;
 }
 
 /** POLLIS: an address or title of the pages of a tab, for one page. */
 export function browserTabPageText(template: string, page: number): string {
 	return template.replace(/\{page\}/g, String(page));
+}
+
+/** POLLIS: the address of a page of a tab's pages. */
+export function browserTabPageUrl(pages: IBrowserTabPages, page: number): string {
+	return browserTabPageText(pages.url, page + (pages.offset ?? 0));
 }
 
 /**
@@ -193,7 +203,8 @@ export class BrowserEditorInput extends EditorInput {
 
 	/** POLLIS: the number of the page the tab is at, of the pages its opener gave it, or undefined when it is at none. */
 	get page(): number | undefined {
-		return this._pages && this.url ? pageOfUrl(this._pages.url, this.url) : undefined;
+		const page = this._pages && this.url ? pageOfUrl(this._pages.url, this.url) : undefined;
+		return page === undefined ? undefined : page - (this._pages?.offset ?? 0);
 	}
 
 	/** POLLIS: goes to a page of the tab's pages, kept between the first and the last. */
@@ -204,7 +215,7 @@ export class BrowserEditorInput extends EditorInput {
 		const last = this._pages.last ?? Number.MAX_SAFE_INTEGER;
 		const target = Math.max(this._pages.first, Math.min(page, last));
 		this._pages = { ...this._pages, page: target };
-		this.navigate(browserTabPageText(this._pages.url, target));
+		this.navigate(browserTabPageUrl(this._pages, target));
 	}
 
 	navigate(url: string): void {

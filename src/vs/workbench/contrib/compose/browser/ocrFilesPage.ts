@@ -28,10 +28,12 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IRequestService } from '../../../../platform/request/common/request.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
+import { archivePageImages, archiveReaderUrl } from '../../browserView/common/internetArchive.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { parseToml } from '../../model/browser/common/tomlPanelData.js';
 import { OCRFILES_METADATA } from '../../model/browser/webviews/ocrFiles.data.js';
@@ -87,7 +89,8 @@ type OcrMessage =
 	| { readonly command: 'saveGlossary'; readonly language: string; readonly terms: readonly { readonly term: string; readonly translation: string }[] }
 	| { readonly command: 'snippet'; readonly work: string; readonly name: string; readonly action: 'copy' | 'citation' | 'notebook' | 'open' | 'translate' | 'aloud' }
 	| { readonly command: 'addToWorkspace' }
-	| { readonly command: 'openOnline' };
+	| { readonly command: 'openOnline' }
+	| { readonly command: 'openScan' };
 
 /** A work as the page knows it: its record, and the folder of its record and snippets. */
 interface IWorkEntry {
@@ -111,8 +114,6 @@ const WORK_KEY = 'pollis.ocrFiles.work';
 const MODEL_KEY = 'pollis.ocrFiles.model';
 const LANGUAGE_KEY = 'pollis.ocrFiles.language';
 
-const ARCHIVE_DETAILS = 'https://archive.org/details/';
-
 /** The open page, so a second request shows it again. */
 let openPage: { readonly input: WebviewInput; readonly actions: IOcrPageActions } | undefined;
 
@@ -134,6 +135,7 @@ interface IOcrPageServices {
 	readonly fileDialogService: IFileDialogService;
 	readonly contextService: IWorkspaceContextService;
 	readonly configurationService: IConfigurationService;
+	readonly requestService: IRequestService;
 }
 
 /** A short name for a folder, of letters, digits and hyphens. */
@@ -235,11 +237,12 @@ function ocrFilesPageOpener(accessor: ServicesAccessor): (step: OcrStep, then?: 
 	const fileDialogService = accessor.get(IFileDialogService);
 	const contextService = accessor.get(IWorkspaceContextService);
 	const configurationService = accessor.get(IConfigurationService);
-	return (step, then) => openOcrFilesPage({ webviewWorkbenchService, ocrFilesService, askPollisService, commandService, openerService, editorService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService, clipboardService, fileDialogService, contextService, configurationService }, step, then);
+	const requestService = accessor.get(IRequestService);
+	return (step, then) => openOcrFilesPage({ webviewWorkbenchService, ocrFilesService, askPollisService, commandService, openerService, editorService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService, clipboardService, fileDialogService, contextService, configurationService, requestService }, step, then);
 }
 
 async function openOcrFilesPage(services: IOcrPageServices, step: OcrStep, then?: (page: IOcrPageActions) => Promise<void>): Promise<void> {
-	const { webviewWorkbenchService, ocrFilesService, askPollisService, commandService, openerService, editorService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService, clipboardService, fileDialogService, contextService, configurationService } = services;
+	const { webviewWorkbenchService, ocrFilesService, askPollisService, commandService, openerService, editorService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService, clipboardService, fileDialogService, contextService, configurationService, requestService } = services;
 	if (openPage && !openPage.input.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage.input, openPage.input.group ?? -1, false);
 		await then?.(openPage.actions);
@@ -1181,12 +1184,24 @@ async function openOcrFilesPage(services: IOcrPageServices, step: OcrStep, then?
 						await snippetAction(message.work, message.name, message.action);
 					}
 					break;
+				case 'openScan':
+					if (current?.work.scan.archive) {
+						// The page read, as an image, in Pollis's browser, where Previous Page and Next Page go through the scan; the
+						// scan's pages are numbered from 1 there, as here, and from 0 in their addresses
+						const archive = current.work.scan.archive;
+						const images = await archivePageImages(requestService, archive, undefined, 'pollis.ocrFiles.scan');
+						const title = localize('ocrFiles.scanTitle', "{0}, Page {1} of the Scan", current.work.title ?? current.work.id, '{page}');
+						await commandService.executeCommand('workbench.action.browser.open', images
+							? { pages: { url: images, title, first: 1, last: pages || undefined, page: shownPage, offset: -1 } }
+							: archiveReaderUrl(archive, undefined, shownPage - 1));
+					}
+					break;
 				case 'addToWorkspace':
 					await addToWorkspace();
 					break;
 				case 'openOnline':
 					if (current?.work.scan.archive) {
-						await commandService.executeCommand('workbench.action.browser.open', `${ARCHIVE_DETAILS}${current.work.scan.archive}/page/n${shownPage - 1}`);
+						await commandService.executeCommand('workbench.action.browser.open', archiveReaderUrl(current.work.scan.archive, undefined, shownPage - 1));
 					} else if (current?.work.scan.gutenberg) {
 						await commandService.executeCommand('workbench.action.browser.open', `https://www.gutenberg.org/ebooks/${current.work.scan.gutenberg}`);
 					}
@@ -1249,6 +1264,8 @@ function pageHtml(): string {
 		downloadScan: localize('ocrFiles.downloadScan', "Download the Whole Scan"),
 		stopDownload: localize('ocrFiles.stopDownload', "Stop"),
 		openOnline: localize('ocrFiles.openOnline', "Open the Source Online"),
+		openScan: localize('ocrFiles.openScan', "Open the Scan"),
+		openArchive: localize('ocrFiles.openArchive', "Open in the Internet Archive"),
 		addToWorkspace: localize('ocrFiles.addToWorkspace', "Add to Workspace"),
 		// Read
 		noWork: localize('ocrFiles.noWorkOpen', "Open a work first, in Open a Work."),
@@ -1601,7 +1618,12 @@ function pageHtml(): string {
 			for (const key of Object.keys(inputs)) { record[key] = inputs[key].value; }
 			vscode.postMessage({ command: 'saveRecord', record });
 		}));
-		if (!work || work.scan.archive || work.scan.gutenberg) { saveBar.appendChild(button(TEXT.openOnline, () => vscode.postMessage({ command: 'openOnline' }))); }
+		if (!work || work.scan.archive) {
+			saveBar.appendChild(button(TEXT.openScan, () => vscode.postMessage({ command: 'openScan' })));
+			saveBar.appendChild(button(TEXT.openArchive, () => vscode.postMessage({ command: 'openOnline' })));
+		} else if (work.scan.gutenberg) {
+			saveBar.appendChild(button(TEXT.openOnline, () => vscode.postMessage({ command: 'openOnline' })));
+		}
 		if (!state.inWorkspace) { saveBar.appendChild(button(TEXT.addToWorkspace, () => vscode.postMessage({ command: 'addToWorkspace' }))); }
 		recordBox.appendChild(saveBar);
 		recordBox.appendChild(element('span', 'small', '')).id = 'recordStatus';
