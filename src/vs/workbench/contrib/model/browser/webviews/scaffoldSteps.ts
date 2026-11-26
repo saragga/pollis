@@ -82,8 +82,9 @@ export const stepSetupJs = `before: stepsBefore(Infinity), box: 'panel', name: '
 /**
  * The script of the code boxes, inside that of the scaffold, whose functions it uses. It needs `STEP_CODE`, one entry a
  * box in the order of the page: `key`, `step` (its number), `own` (the step's own code, not an action), `group` (the
- * row of a Minimal panel whose steps it is among, or empty for those of the panel), `name` (what
- * Julia calls it), `when` and `code`, a function that gives its lines as the scaffold's `codeLine` does.
+ * row of a Minimal panel whose steps it is among, or empty for those of the panel), `needs` (the numbers of the steps
+ * that run before it, or null for all those before it), `name` (what Julia calls it), `when` and `code`, a function that
+ * gives its lines as the scaffold's `codeLine` does.
  */
 export function stepCodeJs(): string {
 	// `</` cannot end the script element from inside a JSON text
@@ -111,9 +112,10 @@ export function stepCodeJs(): string {
 			var custom = customSteps[entry.key];
 			return typeof custom === 'string' ? custom : plainCode(entry.code());
 		}
-		// The code of the steps before step number step, in their order: those of the panel, or of a row of a Minimal panel
-		function stepsBefore(step, group) {
-			return STEP_CODE.filter(function(entry) { return entry.own && entry.step < step && (entry.group || '') === (group || ''); }).map(function(entry) {
+		// The code of the steps before step number step, in their order: those of the panel, or of a row of a Minimal panel;
+		// only the steps numbered in needs, for a step that names those it needs
+		function stepsBefore(step, group, needs) {
+			return STEP_CODE.filter(function(entry) { return entry.own && entry.step < step && (entry.group || '') === (group || '') && (!needs || needs.indexOf(entry.step) >= 0); }).map(function(entry) {
 				return { step: entry.step, code: currentStepCode(entry) };
 			});
 		}
@@ -200,7 +202,7 @@ export function stepCodeJs(): string {
 					vscode.postMessage({
 						command: 'runCode', target: act, code: box.shown, box: box.entry.key, stepCode: box.entry.own,
 						// An action uses the code of its own step too
-						before: stepsBefore(box.entry.own ? box.entry.step : box.entry.step + 1, box.entry.group), name: box.entry.name,
+						before: stepsBefore(box.entry.own ? box.entry.step : box.entry.step + 1, box.entry.group, box.entry.needs), name: box.entry.name,
 					});
 				}
 			});

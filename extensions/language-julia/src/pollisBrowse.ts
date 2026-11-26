@@ -8,13 +8,15 @@ import { MessageConnection, NotificationType } from 'vscode-jsonrpc/node'
 /**
  * Pages to go through in one tab with Previous Page and Next Page, such as the images of the leaves of a manuscript: the
  * address of each, the one to open at (from 1), the tab's title with `{page}` for the number of a page and `{label}` for
- * its label, and the labels.
+ * its label, the labels, and what Save on the browser's bar runs.
  */
 interface IBrowsePages {
     readonly urls: string[]
     readonly page: number
     readonly title?: string
     readonly labels?: string[]
+    /** The field of a step of the page that opened the pages, and its value, for Save on the browser's bar. */
+    readonly save?: { readonly input: string, readonly value: string }
 }
 
 const notifyTypeBrowse = new NotificationType<{ page: string, pages?: IBrowsePages }>('pollis/browse')
@@ -34,7 +36,7 @@ export async function browse(page: string, pages?: IBrowsePages) {
     const urls = pages.urls.map(address)
     await vscode.commands.executeCommand('workbench.action.browser.open', {
         url, atEnd: true, reuseKey: `pollis-pages:${urls[0]}`,
-        pages: { url: urls[0], urls, first: 1, last: urls.length, page: Math.min(Math.max(1, Math.round(pages.page)), urls.length), title: pages.title, labels: pages.labels },
+        pages: { url: urls[0], urls, first: 1, last: urls.length, page: Math.min(Math.max(1, Math.round(pages.page)), urls.length), title: pages.title, labels: pages.labels, save: pages.save },
     })
 }
 

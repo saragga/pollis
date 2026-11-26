@@ -564,6 +564,7 @@ function modelSteps(value: unknown): IModelStep[] {
 		id: asName(step.id) || String(index + 1),
 		inputs: stepInputs(step.inputs),
 		code: asText(step.code),
+		...(asTexts(step.needs).length ? { needs: asTexts(step.needs) } : {}),
 		actions: stepActions(step.actions),
 	}));
 }

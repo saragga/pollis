@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 // POLLIS: Previous Page, the page and Next Page on the browser's bar, as a reader's toolbar has them, for a tab whose
-// opener gave it pages (workbench.action.browser.open, `pages`), such as a scan that Britannica Through the Editions opens.
+// opener gave it pages (workbench.action.browser.open, `pages`), such as a scan that Britannica Through the Editions opens,
+// and Save when the opener can save them.
 // They are on the bar while the tab is at one of its pages. For pages that are places in one page, such as those of a
 // Gutenberg ebook, the page on the bar follows the scroll, and Previous Page and Next Page scroll to the page.
 
@@ -19,6 +20,8 @@ import { Action2, MenuId, registerAction2 } from '../../../../../platform/action
 import { ContextKeyExpr, IContextKey, IContextKeyService, RawContextKey } from '../../../../../platform/contextkey/common/contextkey.js';
 import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
+import { ICommandService } from '../../../../../platform/commands/common/commands.js';
+import { INotificationService } from '../../../../../platform/notification/common/notification.js';
 import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../common/contributions.js';
 import { IEditorService } from '../../../../services/editor/common/editorService.js';
 import { BrowserEditorInput } from '../../common/browserEditorInput.js';
@@ -29,6 +32,7 @@ import { BROWSER_EDITOR_ACTIVE, BrowserActionCategory, BrowserActionGroup } from
 const CONTEXT_BROWSER_HAS_PAGES = new RawContextKey<boolean>('browserHasPages', false, localize('browser.hasPages', "Whether the browser tab is at one of the pages its opener gave it"));
 const CONTEXT_BROWSER_CAN_GO_TO_PREVIOUS_PAGE = new RawContextKey<boolean>('browserCanGoToPreviousPage', false, localize('browser.canGoToPreviousPage', "Whether the browser tab has a page before the one it is at"));
 const CONTEXT_BROWSER_CAN_GO_TO_NEXT_PAGE = new RawContextKey<boolean>('browserCanGoToNextPage', false, localize('browser.canGoToNextPage', "Whether the browser tab has a page after the one it is at"));
+const CONTEXT_BROWSER_CAN_SAVE_PAGES = new RawContextKey<boolean>('browserCanSavePages', false, localize('browser.canSavePages', "Whether the page that opened the browser tab's pages can save them"));
 
 /** The browser tab an editor shows. */
 function browserTab(editor: unknown): BrowserEditorInput | undefined {
@@ -40,6 +44,7 @@ class BrowserEditorPagesSupport extends BrowserEditorContribution {
 	private readonly _hasPages: IContextKey<boolean>;
 	private readonly _canGoToPreviousPage: IContextKey<boolean>;
 	private readonly _canGoToNextPage: IContextKey<boolean>;
+	private readonly _canSavePages: IContextKey<boolean>;
 
 	constructor(
 		editor: BrowserEditor,
@@ -49,6 +54,7 @@ class BrowserEditorPagesSupport extends BrowserEditorContribution {
 		this._hasPages = CONTEXT_BROWSER_HAS_PAGES.bindTo(contextKeyService);
 		this._canGoToPreviousPage = CONTEXT_BROWSER_CAN_GO_TO_PREVIOUS_PAGE.bindTo(contextKeyService);
 		this._canGoToNextPage = CONTEXT_BROWSER_CAN_GO_TO_NEXT_PAGE.bindTo(contextKeyService);
+		this._canSavePages = CONTEXT_BROWSER_CAN_SAVE_PAGES.bindTo(contextKeyService);
 	}
 
 	protected override subscribeToModel(model: IBrowserViewModel, store: DisposableStore): void {
@@ -80,6 +86,7 @@ class BrowserEditorPagesSupport extends BrowserEditorContribution {
 		this._hasPages.reset();
 		this._canGoToPreviousPage.reset();
 		this._canGoToNextPage.reset();
+		this._canSavePages.reset();
 	}
 
 	private _update(tab: BrowserEditorInput | undefined): void {
@@ -88,6 +95,7 @@ class BrowserEditorPagesSupport extends BrowserEditorContribution {
 		this._hasPages.set(page !== undefined);
 		this._canGoToPreviousPage.set(page !== undefined && pages !== undefined && page > pages.first);
 		this._canGoToNextPage.set(page !== undefined && pages !== undefined && (pages.last === undefined || page < pages.last));
+		this._canSavePages.set(page !== undefined && pages?.save !== undefined);
 	}
 }
 
@@ -192,9 +200,44 @@ class NextPageAction extends Action2 {
 	}
 }
 
+/**
+ * Save on the bar, for pages whose opener can save them, such as the images of a manuscript of e-codices: the opener's
+ * step that saves them runs, as a link of a table to it runs it (pollis.scaffold.runStepWith).
+ */
+class SavePagesAction extends Action2 {
+	static readonly ID = 'workbench.action.browser.savePages';
+
+	constructor() {
+		super({
+			id: SavePagesAction.ID,
+			title: localize2('browser.savePagesAction', "Save"),
+			category: BrowserActionCategory,
+			icon: Codicon.save,
+			f1: true,
+			precondition: ContextKeyExpr.and(BROWSER_EDITOR_ACTIVE, CONTEXT_BROWSER_CAN_SAVE_PAGES),
+			menu: {
+				id: MenuId.BrowserActionsToolbar,
+				group: BrowserActionGroup.BarPages,
+				order: 4,
+				when: CONTEXT_BROWSER_CAN_SAVE_PAGES,
+			},
+		});
+	}
+
+	async run(accessor: ServicesAccessor, browserEditor = accessor.get(IEditorService).activeEditorPane): Promise<void> {
+		const commandService = accessor.get(ICommandService);
+		const notificationService = accessor.get(INotificationService);
+		const save = browserTab(browserEditor)?.pages?.save;
+		if (save && !await commandService.executeCommand<boolean>('pollis.scaffold.runStepWith', save.input, save.value)) {
+			notificationService.info(localize('browser.savePagesClosed', "The page that opened these pages is not open: open it again to save them."));
+		}
+	}
+}
+
 registerAction2(PreviousPageAction);
 registerAction2(GoToPageAction);
 registerAction2(NextPageAction);
+registerAction2(SavePagesAction);
 
 /**
  * The page on the bar, between Previous Page and Next Page: "Page", a field with the number of the page the tab is at,

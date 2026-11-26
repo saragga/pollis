@@ -93,16 +93,22 @@ export async function shareActiveTable() {
     await vscode.commands.executeCommand('pollis.collaboration.shareDataset', { fileName, content: lines.join('\n') + '\n' })
 }
 
+// POLLIS: the tables open with a title, by title, so that a table shown again replaces the one open, in its place
+const tablesByTitle = new Map<string, vscode.WebviewPanel>()
+
 export function displayTable(payload, context, isLazy = false, kernel?: JuliaKernel) {
     const parsedPayload = JSON.parse(payload)
     const title = parsedPayload.name
 
+    const shown = title ? tablesByTitle.get(title) : undefined
+    const viewColumn = shown?.viewColumn ?? vscode.ViewColumn.Active
+    shown?.dispose()
     const panel = vscode.window.createWebviewPanel(
         'jlgrid',
         title ? 'Julia Table: ' + title : 'Julia Table',
         {
             preserveFocus: true,
-            viewColumn: vscode.ViewColumn.Active,
+            viewColumn,
         },
         {
             enableScripts: true,
@@ -130,6 +136,14 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
             : undefined,
     })
     onEvent(panel.onDidDispose, () => tableSources.delete(panel))
+    if (title) {
+        tablesByTitle.set(title, panel)
+        onEvent(panel.onDidDispose, () => {
+            if (tablesByTitle.get(title) === panel) {
+                tablesByTitle.delete(title)
+            }
+        })
+    }
     // POLLIS: a link of the table opens in Pollis' browser; a link to a step (Pollis.step_links) fills in its field in the
     // open page that has it and runs the step
     onEvent(panel.webview.onDidReceiveMessage, async (message) => {
@@ -193,19 +207,23 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
             const fields = Array.from(new URLSearchParams(url.slice('pollis:step?'.length)))
             return fields.length === 1 ? { input: fields[0][0], value: fields[0][1] } : undefined
         }
-        function cellText(value) {
-            const link = linkOf(value)
-            return link ? link.text : value
+        // A cell of more than one line (Pollis.pills) shows its first line, and each further line as a pill under it:
+        // [label](link) a pill to click, [label] alone a pill in green, a state such as Saved
+        function firstLine(value) {
+            return typeof value === 'string' && value.includes('\\n') ? value.slice(0, value.indexOf('\\n')) : value
         }
-        function linkCell(params) {
-            const link = linkOf(params.value)
-            if (!link) { return params.value === undefined || params.value === null ? '' : String(params.value) }
-            // Without an href, which the webview would open in the system's browser before this listener runs
+        function cellText(value) {
+            const first = firstLine(value)
+            const link = linkOf(first)
+            return link ? link.text : first
+        }
+        // A link drawn without an href, which the webview would open in the system's browser before this listener runs
+        function linkElement(link, className) {
             const step = stepOf(link.url)
             const anchor = document.createElement('a')
             anchor.textContent = link.text
             anchor.title = step ? \`\${step.input}: \${step.value}\` : link.url
-            anchor.className = 'table-link'
+            anchor.className = className
             anchor.setAttribute('role', 'link')
             anchor.tabIndex = 0
             const follow = event => {
@@ -215,6 +233,30 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
             anchor.addEventListener('click', follow)
             anchor.addEventListener('keydown', event => { if (event.key === 'Enter') { follow(event) } })
             return anchor
+        }
+        function linkCell(params) {
+            if (params.value === undefined || params.value === null) { return '' }
+            const lines = typeof params.value === 'string' ? params.value.split('\\n') : [params.value]
+            const link = linkOf(lines[0])
+            if (lines.length === 1) { return link ? linkElement(link, 'table-link') : String(params.value) }
+            const holder = document.createElement('div')
+            holder.append(link ? linkElement(link, 'table-link') : String(lines[0]))
+            const pills = document.createElement('div')
+            pills.className = 'table-pills'
+            for (const line of lines.slice(1)) {
+                const pill = linkOf(line)
+                const state = /^\\[([^\\]]+)\\]$/.exec(line)
+                if (pill) {
+                    pills.append(linkElement(pill, 'table-pill'))
+                } else if (state) {
+                    const mark = document.createElement('span')
+                    mark.className = 'table-pill done'
+                    mark.textContent = state[1]
+                    pills.append(mark)
+                }
+            }
+            holder.append(pills)
+            return holder
         }
         const lazyTable = ${isLazy}
 
@@ -476,6 +518,31 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
                     }
                     .row-number-cell {
                         background-color: var(--ag-header-background-color);
+                    }
+                    .table-pills {
+                        display: flex;
+                        gap: 4px;
+                        margin: 2px 0 1px 0;
+                    }
+                    .table-pill {
+                        display: inline-block;
+                        padding: 0 7px;
+                        font-size: 0.85em;
+                        line-height: 1.5;
+                        border-radius: 8px;
+                        border: 1px solid var(--vscode-textLink-foreground);
+                        color: var(--vscode-textLink-foreground);
+                        text-decoration: none;
+                        cursor: pointer;
+                    }
+                    .table-pill:hover {
+                        color: var(--vscode-textLink-activeForeground);
+                        border-color: var(--vscode-textLink-activeForeground);
+                    }
+                    .table-pill.done {
+                        color: var(--vscode-testing-iconPassed, #388a34);
+                        border-color: var(--vscode-testing-iconPassed, #388a34);
+                        cursor: default;
                     }
                     .table-link {
                         color: var(--vscode-textLink-foreground);

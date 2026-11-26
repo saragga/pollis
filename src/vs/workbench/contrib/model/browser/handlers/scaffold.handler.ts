@@ -166,7 +166,7 @@ export function registerScaffoldWebviewHandlers(
 	createCodeHoverWiring(webviewInput.webview, disposables, commandService);
 	// The folder inputs' defaults in the open Pollis Workspace, as programs/executables; without one, the TOML's default
 	const postFolderDefaults = async (): Promise<void> => {
-		const folderInputs = [...data.inputs ?? [], ...(data.steps ?? []).flatMap(step => step.inputs)].filter(input => input.folder);
+		const folderInputs = [...data.inputs ?? [], ...[...data.steps ?? [], ...(data.rows ?? []).flatMap(row => row.steps)].flatMap(step => step.inputs)].filter(input => input.folder);
 		const workspace = folderInputs.length ? await findPollisWorkspace(workspaceContextService, fileService, configurationService) : undefined;
 		if (!workspace) {
 			return;

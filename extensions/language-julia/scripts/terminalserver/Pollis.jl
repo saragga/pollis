@@ -238,19 +238,21 @@ function browse(page::AbstractString)
 end
 
 """
-    Pollis.browse(pages; page = 1, title = nothing, labels = nothing)
+    Pollis.browse(pages; page = 1, title = nothing, labels = nothing, save = nothing)
 
 Opens `pages`, the addresses or files of pages to go through in order, such as the images of the leaves of a
 manuscript, in one tab of Pollis' browser at page number `page`, with Previous Page, the page and Next Page on the
 browser's bar. `title` is the tab's title, with `{page}` for the number of the page and `{label}` for its label, one
-of `labels` per page, such as the folio of a leaf. The same pages opened again open in their tab.
+of `labels` per page, such as the folio of a leaf. The same pages opened again open in their tab. With `save`, a field
+of a step of the page in Pollis that opened them and a value, as `:ecodicesSave => "MsBN 47"`, the bar has Save,
+which puts the value into the field and runs the step, as a link of [`Pollis.step_links`](@ref) does.
 
 ```julia
 Pollis.browse(["https://example.org/1.jpg", "https://example.org/2.jpg"]; title = "Leaf {label}", labels = ["1r", "1v"])
 ```
 """
 function browse(pages::AbstractVector{<:AbstractString}; page::Integer = 1, title::Union{AbstractString, Nothing} = nothing,
-		labels::Union{AbstractVector{<:AbstractString}, Nothing} = nothing)
+		labels::Union{AbstractVector{<:AbstractString}, Nothing} = nothing, save::Union{Pair{Symbol, <:AbstractString}, Nothing} = nothing)
 	isempty(pages) && error("Pollis.browse: there are no pages.")
 	1 <= page <= length(pages) || error("Pollis.browse: there is no page $page of $(length(pages)).")
 	labels === nothing || length(labels) == length(pages) || error("Pollis.browse: $(length(labels)) labels for $(length(pages)) pages.")
@@ -266,6 +268,7 @@ function browse(pages::AbstractVector{<:AbstractString}; page::Integer = 1, titl
 		options = Dict{String, Any}("urls" => targets, "page" => page)
 		title === nothing || (options["title"] = String(title))
 		labels === nothing || (options["labels"] = String.(labels))
+		save === nothing || (options["save"] = Dict("input" => String(first(save)), "value" => String(last(save))))
 		server.JSONRPC.send_notification(server.conn_endpoint[], "pollis/browse", Dict("page" => targets[page], "pages" => options))
 	end
 	return nothing
@@ -289,6 +292,30 @@ function step_links(rows, link::Pair{Symbol, Symbol}; values::Symbol = first(lin
 		value = string(getproperty(row, values))
 		text = "[$(getproperty(row, column))](pollis:step?$(input)=$(escape_link(value)))"
 		merge(row, NamedTuple{(column,)}((text,)))
+	end
+end
+
+"""
+    Pollis.pills(rows, column, label => input; values = nothing, done = nothing, done_label = "Done")
+
+The rows with a pill under each value of `column`, shown by `vscodedisplay`: `label`, as Save, a link to a step of the
+page in Pollis that made the table, as those of [`Pollis.step_links`](@ref), which puts the value into the field
+`input` and runs the step; or `done_label` in green, as Saved, for a row where `done(row)` is true. The value is that
+of `values` in the row, by default the text the cell shows.
+
+```julia
+Pollis.pills(table, :manuscript, "Save" => :ecodicesSave; done = r -> r.saved, done_label = "Saved")
+```
+"""
+function pills(rows, column::Symbol, pill::Pair{<:AbstractString, Symbol}; values::Union{Symbol, Nothing} = nothing,
+		done = nothing, done_label::AbstractString = "Done")
+	label, input = pill
+	return map(rows) do row
+		cell = string(getproperty(row, column))
+		shown = something(match(r"^\[([^\]]*)\]\(", cell), (captures = [cell],)).captures[1]
+		value = values === nothing ? shown : string(getproperty(row, values))
+		line = done !== nothing && done(row) ? "[$(done_label)]" : "[$(label)](pollis:step?$(input)=$(escape_link(value)))"
+		merge(row, NamedTuple{(column,)}((cell * "\n" * line,)))
 	end
 end
 

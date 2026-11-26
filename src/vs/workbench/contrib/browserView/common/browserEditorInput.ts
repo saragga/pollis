@@ -79,6 +79,11 @@ export interface IBrowserTabPages {
 	readonly urls?: readonly string[];
 	/** What `{label}` in the title stands for, page by page from the first: the folio of a leaf of a manuscript, say. */
 	readonly labels?: readonly string[];
+	/**
+	 * What Save on the bar does: puts `value` into the field `input` of a step of the page that opened the pages and runs
+	 * the step (pollis.scaffold.runStepWith), as the step that saves a manuscript whole saves it.
+	 */
+	readonly save?: { readonly input: string; readonly value: string };
 }
 
 /** POLLIS: an address or title of the pages of a tab, for one page. */

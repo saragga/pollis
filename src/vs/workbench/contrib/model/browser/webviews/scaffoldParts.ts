@@ -248,8 +248,11 @@ function stepKey(step: IModelStep): string {
  */
 function stepCodeEntries(steps: readonly IModelStep[], group = '', keyOf: (step: IModelStep) => string = stepKey): string[] {
 	return steps.flatMap((step, index) => {
+		// The numbers of the steps it needs, when it names them; its actions need it too
+		const needed = step.needs?.map(id => steps.findIndex(other => other.id === id) + 1).filter(number => number > 0 && number <= index);
+		const needs = (own: boolean) => needed ? `[${(own ? needed : [...needed, index + 1]).join(', ')}]` : 'null';
 		const entry = (key: string, own: boolean, name: string, code: string, when = '') =>
-			`\t\t\t{ key: '${jsEscape(key)}', step: ${index + 1}, own: ${own}, group: '${jsEscape(group)}', name: '${jsEscape(name)}', when: '${jsEscape(when)}', code: function() { return ${codeLinesJs(code)}; } }`;
+			`\t\t\t{ key: '${jsEscape(key)}', step: ${index + 1}, own: ${own}, group: '${jsEscape(group)}', needs: ${needs(own)}, name: '${jsEscape(name)}', when: '${jsEscape(when)}', code: function() { return ${codeLinesJs(code)}; } }`;
 		return [
 			...(step.code.trim() ? [entry(keyOf(step), true, `Step ${index + 1}`, step.code)] : []),
 			...step.actions.map(action => entry(action.id, false, action.label, action.code, action.when)),

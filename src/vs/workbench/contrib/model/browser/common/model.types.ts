@@ -365,6 +365,11 @@ export interface IModelStep {
 	 * it, unless the Julia REPL has run it as it is now.
 	 */
 	readonly code: string;
+	/**
+	 * The ids of the steps before it whose code its own uses, when not all of them: only those run before it, so that a
+	 * step that saves what an earlier one found does not first run the one that shows it.
+	 */
+	readonly needs?: readonly string[];
 	/** Further code of the step, as looking at or saving its results: no later step runs it. */
 	readonly actions: readonly IModelAction[];
 }
