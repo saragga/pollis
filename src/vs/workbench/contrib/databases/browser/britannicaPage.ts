@@ -9,6 +9,7 @@
 // is asked for, by the Julia extension (language-julia.pollisBritannicaTexts). The Historical Geography and Archaeology
 // Toolbox's menu opens it.
 
+import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
@@ -18,6 +19,7 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { asJson, IRequestService } from '../../../../platform/request/common/request.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
@@ -36,10 +38,62 @@ type BritannicaMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'headword'; readonly headword: string }
 	| { readonly command: 'text'; readonly id: number }
-	| { readonly command: 'openScan'; readonly url: string };
+	| ({ readonly command: 'openScan' | 'openArchive' } & IScanPage);
 
-/** Where the scans are: a page of an item of the Internet Archive. */
+/** A page of a scan: an item of the Internet Archive, the file of its volume when the item holds more than one, and the page's index in the scan. */
+interface IScanPage {
+	readonly item: string;
+	readonly file: string | null;
+	readonly page: number | null;
+}
+
+/** Where the scans are: a page of an item of the Internet Archive, in the archive's reader. */
 const SCAN_PREFIX = 'https://archive.org/details/';
+
+/** Where the metadata of an item are, field by field. */
+const METADATA_PREFIX = 'https://archive.org/metadata/';
+
+/** Whether a message from the page names a page of a scan. */
+function isScanPage(message: object): message is IScanPage {
+	const scan = message as Partial<IScanPage>;
+	return typeof scan.item === 'string' && scan.item.length > 0
+		&& (scan.file === null || typeof scan.file === 'string')
+		&& (scan.page === null || (typeof scan.page === 'number' && Number.isInteger(scan.page) && scan.page >= 0));
+}
+
+/** A part of an address of the Internet Archive, with its brackets encoded too: the archive finds no file whose name has them unencoded. */
+function encodeArchivePart(value: string): string {
+	return encodeURIComponent(value).replace(/\(/g, '%28').replace(/\)/g, '%29');
+}
+
+/** The page in the Internet Archive's reader, or the item when the page is not known. */
+function archivePage(scan: IScanPage): string {
+	return SCAN_PREFIX + encodeArchivePart(scan.item) + (scan.file ? '/' + encodeArchivePart(scan.file) : '') + (scan.page === null ? '' : '/page/n' + scan.page);
+}
+
+/**
+ * The page as an image, at the size it was scanned, from the server that holds the item, which the item's metadata name.
+ * The archive's shorter address of a page's image, /download/<item>/<file>/page/n<page>.jpg, encodes the name of the file
+ * once more on its way to that server, and so finds no file whose name has a comma or a letter outside ASCII.
+ */
+async function pageImage(requestService: IRequestService, scan: IScanPage): Promise<string | undefined> {
+	if (scan.page === null) {
+		return undefined;
+	}
+	const field = async (name: string) => {
+		const context = await requestService.request({ type: 'GET', url: METADATA_PREFIX + encodeURIComponent(scan.item) + '/' + name, callSite: 'pollis.britannica.scan' }, CancellationToken.None);
+		return (await asJson<{ readonly result?: string }>(context))?.result;
+	};
+	try {
+		const [server, dir] = await Promise.all([field('server'), field('dir')]);
+		if (typeof server !== 'string' || !/^[a-z0-9.-]+\.archive\.org$/.test(server) || typeof dir !== 'string') {
+			return undefined;
+		}
+		return `https://${server}/BookReader/BookReaderImages.php?id=${encodeURIComponent(scan.item)}&itemPath=${encodeURIComponent(dir)}&server=${server}` + (scan.file ? '&subPrefix=' + encodeURIComponent(scan.file) : '') + '&page=n' + scan.page;
+	} catch {
+		return undefined;
+	}
+}
 
 /** The Next Steps: queries of PollisBritannica, in the duckdb> terminal. */
 function nextSteps(): IScaffoldSqlStep[] {
@@ -100,6 +154,7 @@ async function openBritannicaPage(accessor: ServicesAccessor): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const britannicaService = accessor.get(IBritannicaService);
 	const commandService = accessor.get(ICommandService);
+	const requestService = accessor.get(IRequestService);
 	const openerService = accessor.get(IOpenerService);
 	const editorService = accessor.get(IEditorService);
 	const notificationService = accessor.get(INotificationService);
@@ -189,9 +244,14 @@ async function openBritannicaPage(accessor: ServicesAccessor): Promise<void> {
 				}
 				break;
 			case 'openScan':
-				// The page of the scan opens in Pollis's own browser, beside the page
-				if (typeof message.url === 'string' && message.url.startsWith(SCAN_PREFIX)) {
-					await commandService.executeCommand('workbench.action.browser.open', message.url);
+				// The page of the scan opens as an image in Pollis's own browser, beside the page, or in the archive's reader when there is no image
+				if (isScanPage(message)) {
+					await commandService.executeCommand('workbench.action.browser.open', await pageImage(requestService, message) ?? archivePage(message));
+				}
+				break;
+			case 'openArchive':
+				if (isScanPage(message)) {
+					await commandService.executeCommand('workbench.action.browser.open', archivePage(message));
 				}
 				break;
 		}
@@ -222,6 +282,7 @@ function pageHtml(): string {
 		volumePage: localize('britannica.volumePage', "Volume {0}, page {1} of the scan"),
 		volume: localize('britannica.volume', "Volume {0}"),
 		openScan: localize('britannica.openScan', "Open the Scan"),
+		openArchive: localize('britannica.openArchive', "Open in the Internet Archive"),
 		showText: localize('britannica.showText', "Show the Text"),
 		hideText: localize('britannica.hideText', "Hide the Text"),
 		readingText: localize('britannica.readingText', "Reading the text..."),
@@ -287,7 +348,6 @@ function pageHtml(): string {
 		pageScriptJs: `
 	(() => {
 	const TEXT = ${JSON.stringify(text)};
-	const SCAN = ${JSON.stringify(SCAN_PREFIX)};
 	const main = document.getElementById('main');
 	let editions = [];
 	// The texts read, by article, and the articles whose text is shown
@@ -417,9 +477,15 @@ function pageHtml(): string {
 			facts.appendChild(element('span', '', first.signature ? format(TEXT.signed, first.signature) : TEXT.unsigned));
 			const volume = first.volume.split('.')[0];
 			facts.appendChild(element('span', '', first.page === null ? format(TEXT.volume, volume) : format(TEXT.volumePage, volume, first.page)));
-			const scan = element('button', 'link', TEXT.openScan);
-			scan.addEventListener('click', () => vscode.postMessage({ command: 'openScan', url: SCAN + encodeURIComponent(first.item) + (first.file ? '/' + encodeURIComponent(first.file) : '') + (first.page === null ? '' : '/page/n' + first.page) }));
-			facts.appendChild(scan);
+			const page = { item: first.item, file: first.file, page: first.page };
+			if (first.page !== null) {
+				const scan = element('button', 'link', TEXT.openScan);
+				scan.addEventListener('click', () => vscode.postMessage({ command: 'openScan', ...page }));
+				facts.appendChild(scan);
+			}
+			const archive = element('button', 'link', TEXT.openArchive);
+			archive.addEventListener('click', () => vscode.postMessage({ command: 'openArchive', ...page }));
+			facts.appendChild(archive);
 			const toggle = element('button', 'link', opened.has(first.id) ? TEXT.hideText : TEXT.showText);
 			facts.appendChild(toggle);
 			article.appendChild(facts);
