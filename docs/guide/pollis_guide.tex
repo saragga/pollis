@@ -553,7 +553,7 @@ given, such as 1-3, 7, in one new PDF, or one file per page or per range), \ui{M
 (\ui{Select Area} on) and \ui{Convert} (that tool open in the sidebar), and the markup tools \ui{Highlight}, \ui{Add or Edit Text},
 \ui{Add or Edit Images} and \ui{Draw}. Every item opens the same viewer,
 whose toolbar always has \ui{Select Area}, \ui{Print} and \ui{Save}; \ui{Open a PDF...}, in its title bar,
-opens a PDF of yours. \ui{Tools: Show | Hide}, at the right end of the toolbar, shows or hides the sidebar at the right of
+opens a PDF of yours, and \ui{Edit the LaTeX Source}, beside it for a PDF Pollis compiled, a copy of its sources (\pg{Reports}). \ui{Tools: Show | Hide}, at the right end of the toolbar, shows or hides the sidebar at the right of
 the pages, with the area of \ui{Select Area} and the Poppler tools, those that read the PDF and those that
 make files from it; the viewer keeps the choice for the next PDF.
 \begin{enumerate}[label=\arabic*.]
@@ -1191,7 +1191,7 @@ name (it starts as Pollis Workspace, in your Documents), and click \ui{Create}. 
 puts a \texttt{pollis.toml} file in it and a folder for each kind of file, each with a README: \texttt{data}
 (your datasets and saved copies), \texttt{knowledge\_base} (your books, articles and reports, and your references), \texttt{reports},
 \texttt{methods}, \texttt{workflows}, \texttt{panels}, \texttt{toolboxes} (the toolboxes you make to share your
-panels), \texttt{programs} (the programs and libraries compiled in Compilation Lab) and \texttt{changes}, and opens it. Pollis looks in these
+panels), \texttt{programs} (the programs and libraries compiled in Compilation Lab), \texttt{documents} (your own documents in LaTeX, which \ui{Help > Documentation > User Documents} lists and compiles) and \texttt{changes}, and opens it. Pollis looks in these
 folders first; \texttt{pollis.toml} names them, so a folder you rename is renamed there too. Next time, choose
 \ui{File > Open Pollis Workspace...}, or \ui{File > Open Recent}. Opened with it, a folder that is not a
 Pollis Workspace yet becomes one if you agree, keeping what it has.
@@ -1243,6 +1243,17 @@ Polish runs on the Light tier of Model Tasks and Routing (Orchestration, \pg{Orc
 The menu item with the sparkle runs your coding agent, on your account. Read the result: an agent can
 still misplace a value, so check the numbers against the draft.
 \end{caution}
+
+\subhead{Your own documents}
+\ui{Help > Documentation > User Documents} lists the LaTeX documents in the \texttt{documents} folder of the
+workspace, a \texttt{.tex} file there or in a folder of its own, and compiles one with PollisTeX when you open it;
+\ui{New Document...} starts one. A PDF that Pollis compiled, a guide, a drill-down or a vignette, has \ui{Edit the
+LaTeX Source} in the PDF Viewer's title bar: it copies the document's sources into \texttt{documents} and opens them,
+yours from then on. \ui{Help > Documentation > Collate Documents...} joins documents of Help into one PDF: number them
+under \ui{PDF Order}, give a title and where to save it, and choose \ui{Collate PDF}. Pollis compiles those not
+compiled yet, and adds a title page, the contents and a bookmark for each. \ui{Collate LaTeX}, with the numbers
+under \ui{LaTeX Order}, makes one book in LaTeX instead, a chapter for each document, in a folder of
+\texttt{documents}, for you to edit; a Tour goes in as its PDF pages.
 
 \begin{trouble}
 \textbf{\emph{Reports are written in the reports folder of a Pollis Workspace}} & Click \ui{New Pollis Workspace...}, or open your workspace folder. \\

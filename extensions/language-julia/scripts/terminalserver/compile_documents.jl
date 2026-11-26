@@ -13,15 +13,20 @@
 # new computer takes a few minutes; after that each document takes seconds. It writes a line of JSON on stdout as it
 # goes: {"status": "installing"} while it installs PollisTeX, {"total"} when it starts compiling, {"done", "total",
 # "document"} as each document is ready, {"failed"} for one that is not, its log beside where the PDF would be. Beside
-# each PDF goes its .labels, the page of each of its headings, which ask_index.jl cuts the document by.
+# each PDF goes its .labels, the page of each of its headings, which ask_index.jl cuts the document by, and NAME.source/,
+# a copy of its sources, which the PDF names as its source for Edit the LaTeX Source in the PDF Viewer
+# (document_source.jl).
 import Pkg
 include(joinpath(@__DIR__, "pollis_registry.jl"))
+include(joinpath(@__DIR__, "document_source.jl"))
 
 const SOURCES = abspath(ARGS[1])
 const OUTPUT = joinpath(homedir(), ".pollis", "documents")
 const BUILD = joinpath(OUTPUT, "build")
 const STAMP = joinpath(OUTPUT, "stamp")
 const ENVIRONMENT = joinpath(OUTPUT, "julia", "v$(VERSION.major).$(VERSION.minor)")
+"""What the documents hold besides their sources, in the stamp: a change compiles them again (2: their source copies)."""
+const FORMAT = "2"
 
 """A document: its source, relative to docs/, and the name of its PDF in ~/.pollis/documents ("" for a figure)."""
 const GROUPS = [
@@ -66,13 +71,16 @@ const TECTONIC = PollisTeX.tectonic()
 # What the documents are made from: the sources and the version of Tectonic
 stamp = let context = SHA.SHA256_CTX()
 	SHA.update!(context, codeunits(string(PollisTeX.version())))
+	SHA.update!(context, codeunits(FORMAT))
 	for file in sources()
 		SHA.update!(context, codeunits(file))
 		SHA.update!(context, read(joinpath(SOURCES, file)))
 	end
 	bytes2hex(SHA.digest!(context))
 end
-isfile(STAMP) && readchomp(STAMP) == stamp && all(name -> isfile(joinpath(OUTPUT, name)), DOCUMENTS) && exit()
+isfile(STAMP) && readchomp(STAMP) == stamp && all(DOCUMENTS) do name
+	isfile(joinpath(OUTPUT, name)) && isdir(joinpath(OUTPUT, splitext(name)[1] * ".source"))
+end && exit()
 
 rm(BUILD; force = true, recursive = true)
 for file in sources()
@@ -88,9 +96,18 @@ failed = Threads.Atomic{Int}(0)
 function compile(source, name)
 	folder = joinpath(BUILD, dirname(source))
 	file = basename(source)
-	ok = success(pipeline(Cmd(`$TECTONIC --keep-logs $file`; dir = folder); stdout = devnull, stderr = devnull))
-	isempty(name) && return
+	if isempty(name)
+		success(pipeline(Cmd(`$TECTONIC --keep-logs $file`; dir = folder); stdout = devnull, stderr = devnull))
+		return
+	end
+	# The PDF names the copy of its sources as its source, and Tectonic lists the files it reads for the copy
+	source_copy = joinpath(OUTPUT, splitext(name)[1] * ".source")
+	original = read(joinpath(SOURCES, source), String)
+	write(joinpath(folder, file), source_docinfo(joinpath(source_copy, file)) * original)
+	rules = splitext(file)[1] * ".deps"
+	ok = success(pipeline(Cmd(`$TECTONIC --keep-logs --makefile-rules $rules $file`; dir = folder); stdout = devnull, stderr = devnull))
 	if ok
+		save_source(folder, file, original, joinpath(folder, rules), source_copy)
 		# Copied beside it, then moved, so that Help never opens half a PDF
 		partial = joinpath(OUTPUT, name * ".partial")
 		cp(joinpath(folder, splitext(file)[1] * ".pdf"), partial; force = true)

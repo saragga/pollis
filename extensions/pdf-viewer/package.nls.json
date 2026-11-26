@@ -4,5 +4,6 @@
 	"customEditor.displayName": "PDF Viewer",
 	"command.open": "Open a PDF...",
 	"command.openSample": "Open the Sample PDF",
-	"command.openInMode": "PDF Files"
+	"command.openInMode": "PDF Files",
+	"command.editSource": "Edit the LaTeX Source"
 }

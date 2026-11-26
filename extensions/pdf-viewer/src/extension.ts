@@ -9,6 +9,12 @@
 import * as vscode from 'vscode';
 import { datasetsFileInDepot, IAddTable, PDF_VIEWER_VIEW_TYPE, PdfViewerProvider, ViewerMode } from './pdfViewer';
 
+/**
+ * The command of the workbench that copies a document's LaTeX source into the documents folder of the Pollis Workspace,
+ * or opens it there (compose/browser/userDocumentsPage.ts): (source: string), as the PDF names it.
+ */
+const EDIT_SOURCE_COMMAND_ID = 'pollis.documents.editSource';
+
 /** The command of the Julia extension that runs pdf_tools.jl, which gives the path of the sample PDF of PollisDatasets. */
 const PDF_SAMPLE_COMMAND_ID = 'language-julia.pollisPdfSample';
 
@@ -124,6 +130,14 @@ export function activate(context: vscode.ExtensionContext): void {
 			if (target) {
 				provider.showMode(target, viewerMode);
 				await openInViewer(target, false, shown?.column);
+			}
+		}),
+		// The viewer's title bar, for a PDF that names its LaTeX source: Pollis's copy of the source, or the user's own
+		vscode.commands.registerCommand('pollis.pdfViewer.editSource', async (resource?: vscode.Uri) => {
+			const shown = resource ?? shownPdf()?.uri;
+			const source = shown && provider.sourceOf(shown);
+			if (source) {
+				await vscode.commands.executeCommand(EDIT_SOURCE_COMMAND_ID, source);
 			}
 		}),
 		// The viewer's title bar, which passes the PDF shown: the dialog opens another one

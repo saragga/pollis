@@ -41,7 +41,8 @@ type ViewerMessage =
 	| { readonly command: 'colorize'; readonly token: number; readonly code: string }
 	| { readonly command: 'addTable'; readonly cells: readonly (readonly string[])[]; readonly page: number }
 	| { readonly command: 'normalise'; readonly token: number; readonly cells: readonly (readonly string[])[] }
-	| { readonly command: 'editRules' };
+	| { readonly command: 'editRules' }
+	| { readonly command: 'source'; readonly source?: string };
 
 /**
  * A button of the area's table that the workbench asked for: its label, and the command it runs with `args`, the
@@ -52,6 +53,9 @@ export interface IAddTable {
 	readonly command: string;
 	readonly args?: Readonly<Record<string, string>>;
 }
+
+/** The context key that shows Edit the LaTeX Source in the title bar: the PDF shown names its LaTeX source. */
+const HAS_SOURCE_CONTEXT_KEY = 'pollis.pdfViewer.hasSource';
 
 /** The command of Pollis that shows a menu of the webview as the workbench's menu (native on macOS), and gives back the chosen item's id. */
 const SHOW_MENU_COMMAND_ID = '_pollis.webview.showMenu';
@@ -435,6 +439,8 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 	private readonly pendingCaptions = new Map<string, string>();
 	/** The button of the area's table that the workbench asked for, by the URI of the PDF. */
 	private readonly addTables = new Map<string, IAddTable>();
+	/** The LaTeX source each PDF names (PollisSource of its document information), by its URI. */
+	private readonly sources = new Map<string, string>();
 
 	constructor(private readonly extensionUri: vscode.Uri, private readonly globalState: vscode.Memento) { }
 
@@ -505,6 +511,11 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 		}
 	}
 
+	/** The LaTeX source a PDF shown names, as `~/...` or a full path, for Edit the LaTeX Source; undefined when none. */
+	sourceOf(uri: vscode.Uri): string | undefined {
+		return this.sources.get(uri.toString());
+	}
+
 	/**
 	 * A PDF no longer on the disk, as in a tab restored after its file was moved or deleted: a file of PollisDatasets,
 	 * such as the sample, from a copy of the package Julia has deleted, opens from the current copy in place of the tab;
@@ -540,6 +551,7 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 				panels.delete(panel);
 				if (!panels.size) {
 					this.panels.delete(key);
+					this.sources.delete(key);
 				}
 			}
 		});
@@ -578,6 +590,14 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 			reload = setTimeout(() => send(true), 300);
 		};
 		disposables.push(watcher, watcher.onDidChange(changed), watcher.onDidCreate(changed), { dispose: () => clearTimeout(reload) });
+
+		// Edit the LaTeX Source is in the title bar while a PDF that names its source is the active editor
+		const showSource = () => vscode.commands.executeCommand('setContext', HAS_SOURCE_CONTEXT_KEY, this.sources.has(key));
+		disposables.push(panel.onDidChangeViewState(() => {
+			if (panel.active) {
+				showSource();
+			}
+		}));
 
 		// The Julia code of the tools is coloured again in the colours of another theme
 		disposables.push(vscode.window.onDidChangeActiveColorTheme(() => post({ command: 'themeChanged' })));
@@ -686,6 +706,16 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 					}
 					break;
 				}
+				case 'source':
+					if (message.source) {
+						this.sources.set(key, message.source);
+					} else {
+						this.sources.delete(key);
+					}
+					if (panel.active) {
+						showSource();
+					}
+					break;
 				case 'editRules': {
 					try {
 						await vscode.workspace.fs.stat(RULES_FILE);

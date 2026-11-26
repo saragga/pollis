@@ -31,7 +31,9 @@
 // Help > Documentation > Packages (scripts/terminalserver/compile_vignette.jl): from the vignette/ folder of an
 // installed package, or from its repository on GitHub, into the file `pdf`; it answers {pdf}, or {error}. It compiles the
 // vignettes of the installed toolboxes too, for Help > Documentation > Toolbox Vignettes, from their folders. Beside each PDF
-// goes its .labels, the page of each heading (docs/ask_labels.tex), which ask_index.jl cuts it by.
+// goes its .labels, the page of each heading (docs/ask_labels.tex), which ask_index.jl cuts it by. With {own: true}, for a
+// document of the user's (Help > Documentation > User Documents), the PDF names the user's own main file as its source,
+// for Edit the LaTeX Source in the PDF Viewer; any other names a copy of its sources beside it (document_source.jl).
 // The command `language-julia.pollisIndexCollection`, with {name, database, documents, words, model, prefix}, makes the
 // index of a collection of Compose > Retrieval-Augmented Generation with the same script, into the file `database`;
 // it answers {passages, embedded}, or {error}, and `language-julia.pollisCollectionProgress`, with that file, how far it
@@ -505,7 +507,7 @@ async function indexCollection(
     }
 }
 
-type VignetteRequest = { source: string; name: string; pdf: string }
+type VignetteRequest = { source: string; name: string; pdf: string; own?: boolean }
 type VignetteAnswer = { pdf?: string; error?: string }
 
 /** Compiles the vignettes of `sources` for Ask Pollis, one at a time, with the status bar counting them; whether any was. */
@@ -566,7 +568,7 @@ function runVignette(
         const labels = path.join(vscode.env.appRoot, 'docs', 'ask_labels.tex')
         const julia = child_process.spawn(
             juliaExecutable.command,
-            [...juliaExecutable.args, '--startup-file=no', '--history-file=no', script, request.source, request.name, request.pdf, labels],
+            [...juliaExecutable.args, '--startup-file=no', '--history-file=no', script, request.source, request.name, request.pdf, labels, ...(request.own ? ['own'] : [])],
             { env: { ...process.env, ...getPackageEnvironment() }, stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true }
         )
         try {

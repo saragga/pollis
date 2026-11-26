@@ -210,6 +210,7 @@ async function openDocument(message) {
 		return;
 	}
 	poppler.documentOpened();
+	sendSource(viewer.pdfDocument);
 	applyMode();
 	if (message.caption) {
 		await showCaption(message.caption);
@@ -219,6 +220,18 @@ async function openDocument(message) {
 	} else if (area) {
 		await computeArea();
 	}
+}
+
+/**
+ * Tells the extension the LaTeX source the PDF names, PollisSource in its document information, which Pollis writes in
+ * the PDFs it compiles, for Edit the LaTeX Source in the title bar; or that it names none.
+ */
+async function sendSource(documentProxy) {
+	const metadata = await documentProxy?.getMetadata().catch(() => undefined);
+	// A Map in this pdf.js, an object in earlier ones
+	const custom = metadata?.info?.Custom;
+	const source = custom instanceof Map ? custom.get('PollisSource') : custom?.PollisSource;
+	post({ command: 'source', source: typeof source === 'string' && source ? source : undefined });
 }
 
 /** Goes to page `page` (from 1), or to the last one; once the pages are laid out, when the document is still opening. */

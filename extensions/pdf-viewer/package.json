@@ -66,6 +66,12 @@
         "title": "%command.open%",
         "category": "PDF",
         "icon": "$(folder-opened)"
+      },
+      {
+        "command": "pollis.pdfViewer.editSource",
+        "title": "%command.editSource%",
+        "category": "PDF",
+        "icon": "$(edit)"
       }
     ],
     "menus": {
@@ -77,9 +83,18 @@
         {
           "command": "pollis.pdfViewer.openAnother",
           "when": "false"
+        },
+        {
+          "command": "pollis.pdfViewer.editSource",
+          "when": "false"
         }
       ],
       "editor/title": [
+        {
+          "command": "pollis.pdfViewer.editSource",
+          "when": "activeCustomEditorId == pollis.pdfViewer && pollis.pdfViewer.hasSource",
+          "group": "navigation@0"
+        },
         {
           "command": "pollis.pdfViewer.openAnother",
           "when": "activeCustomEditorId == pollis.pdfViewer",
