@@ -249,6 +249,10 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 		return this._getBrowserView(id).onDidFindInPage;
 	}
 
+	onDynamicDidChangePageInView(id: string) {
+		return this._getBrowserView(id).onDidChangePageInView;
+	}
+
 	onDynamicDidClose(id: string) {
 		return this._getBrowserView(id).onDidClose;
 	}
@@ -319,6 +323,14 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 
 	async getSelectedText(id: string): Promise<string> {
 		return this._getBrowserView(id).getSelectedText();
+	}
+
+	async watchPageStarts(id: string, starts: readonly (readonly string[])[]): Promise<void> {
+		return this._getBrowserView(id).watchPageStarts(starts);
+	}
+
+	async showPageStart(id: string, index: number): Promise<boolean> {
+		return this._getBrowserView(id).showPageStart(index);
 	}
 
 	async clearStorage(id: string): Promise<void> {

@@ -227,6 +227,8 @@ export interface IBrowserViewService {
 	onDynamicDidChangeFavicon(id: string): Event<IBrowserViewFaviconChangeEvent>;
 	onDynamicDidRequestNewPage(id: string): Event<IBrowserViewNewPageRequest>;
 	onDynamicDidFindInPage(id: string): Event<IBrowserViewFindInPageResult>;
+	/** POLLIS: the page in view, as an index of the starts given to {@link watchPageStarts}, when scrolling brings another into view. */
+	onDynamicDidChangePageInView(id: string): Event<number>;
 	onDynamicDidClose(id: string): Event<void>;
 
 	/**
@@ -351,6 +353,25 @@ export interface IBrowserViewService {
 	 * @returns The selected text, or empty string if no selection or page is loading
 	 */
 	getSelectedText(id: string): Promise<string>;
+
+	/**
+	 * POLLIS: finds where pages begin in the page loaded, such as the pages of OCR Files and Snippets in a Gutenberg ebook,
+	 * and from then on tells, by {@link onDynamicDidChangePageInView}, which of them is in view as the page is scrolled: the
+	 * last whose start is above the middle of the view. Each page is given by runs of its first words, any of which marks
+	 * its start, the earliest found after the start of the page before. Again after each load.
+	 * @param id The browser view identifier
+	 * @param starts The runs of words of each page
+	 */
+	watchPageStarts(id: string, starts: readonly (readonly string[])[]): Promise<void>;
+
+	/**
+	 * POLLIS: scrolls the page loaded to the start of one of the pages given to {@link watchPageStarts}, in the middle of
+	 * the view, and highlights its first words.
+	 * @param id The browser view identifier
+	 * @param index The index of the page, of the starts given
+	 * @returns Whether the start of the page was found in the page loaded
+	 */
+	showPageStart(id: string, index: number): Promise<boolean>;
 
 	/**
 	 * Clear all storage data for the global browser session

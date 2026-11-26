@@ -125,6 +125,8 @@ export class BrowserEditorInput extends EditorInput {
 	private _modelPromise: Promise<IBrowserViewModel> | undefined;
 	private _label: IBrowserTabLabel | undefined;
 	private _pages: IBrowserTabPages | undefined;
+	/** POLLIS: the page in view, scrolled to in the page loaded, which is at the address given. */
+	private _pageInView: { readonly url: string; readonly page: number } | undefined;
 
 	/** POLLIS: the key by which the tab's opener reuses it (workbench.action.browser.open, `reuseKey`). */
 	reuseKey: string | undefined;
@@ -211,7 +213,31 @@ export class BrowserEditorInput extends EditorInput {
 	/** POLLIS: the number of the page the tab is at, of the pages its opener gave it, or undefined when it is at none. */
 	get page(): number | undefined {
 		const page = this._pages && this.url ? pageOfUrl(this._pages.url, this.url) : undefined;
-		return page === undefined ? undefined : page - (this._pages?.offset ?? 0);
+		if (page === undefined) {
+			return undefined;
+		}
+		return this._pageInView && this._pageInView.url === normalizeUrl(this.url!) ? this._pageInView.page : page - (this._pages?.offset ?? 0);
+	}
+
+	/**
+	 * POLLIS: the starts of the tab's pages in the page loaded, as runs of their first words, for a tab whose pages are
+	 * places in one page (`texts`), such as the pages of a Gutenberg ebook; undefined for another.
+	 */
+	get pageStarts(): string[][] | undefined {
+		return this.page === undefined ? undefined : this._pages?.texts?.map(text => text ? text.split('&text=').map(run => decodeURIComponent(run)) : []);
+	}
+
+	/** POLLIS: the page in view, as an index of the tab's pages, when the page loaded is scrolled to another. */
+	setPageInView(index: number): void {
+		const url = this.url;
+		if (!this._pages || !url || this.page === undefined) {
+			return;
+		}
+		const page = Math.max(this._pages.first, Math.min(this._pages.first + index, this._pages.last ?? Number.MAX_SAFE_INTEGER));
+		if (page !== this.page) {
+			this._pageInView = { url: normalizeUrl(url), page };
+			this._onDidChangeLabel.fire();
+		}
 	}
 
 	/** POLLIS: goes to a page of the tab's pages, kept between the first and the last. */
@@ -222,7 +248,24 @@ export class BrowserEditorInput extends EditorInput {
 		const last = this._pages.last ?? Number.MAX_SAFE_INTEGER;
 		const target = Math.max(this._pages.first, Math.min(page, last));
 		this._pages = { ...this._pages, page: target };
-		this.navigate(browserTabPageUrl(this._pages, target));
+		const url = browserTabPageUrl(this._pages, target);
+		const model = this._model;
+		const loaded = this.url;
+		// Pages that are places in one page: scrolled to in the page loaded, without loading it again
+		if (this._pages.texts && model && loaded && this.page !== undefined) {
+			void model.showPageStart(target - this._pages.first).then(shown => {
+				if (shown && this.url === loaded) {
+					this._pageInView = { url: normalizeUrl(loaded), page: target };
+					this._onDidChangeLabel.fire();
+				} else if (!shown) {
+					this._pageInView = undefined;
+					this.navigate(url);
+				}
+			});
+			return;
+		}
+		this._pageInView = undefined;
+		this.navigate(url);
 	}
 
 	navigate(url: string): void {
@@ -444,7 +487,8 @@ export class BrowserEditorInput extends EditorInput {
 	serialize(): IBrowserEditorInputData {
 		return {
 			id: this._id,
-			url: this.url,
+			// POLLIS: the page in view, when it is another than the page loaded, so that Pollis opens again at it
+			url: this._pageInView && this._pages && this.page !== undefined ? browserTabPageUrl(this._pages, this.page) : this.url,
 			title: this.title,
 			favicon: this.favicon,
 			ephemeral: this._initialData.ephemeral,

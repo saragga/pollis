@@ -370,7 +370,8 @@ const AGENT_TASKS: { readonly [command: string]: string } = {
 
 type MethodMessage =
 	| ArticleDataMessage
-	| { readonly command: 'ready' | 'openPdf' }
+	// Not `openPdf`, which the page's Ask Pollis answers by asking for a PDF to open in the PDF Viewer
+	| { readonly command: 'ready' | 'openVignettePdf' }
 	| { readonly command: 'writeMethod' | 'writeVignette' | 'prepareRegistration' }
 	| { readonly command: 'setTitle' | 'setVignetteTitle'; readonly title: string }
 	| { readonly command: 'setName'; readonly name: string }
@@ -648,7 +649,7 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 			articleData.handle(message);
 		} else if (message.command === 'package') {
 			submit('package', () => instantiationService.invokeFunction(packageMethod, current, message.action, message.owner.trim()));
-		} else if (message.command === 'openPdf') {
+		} else if (message.command === 'openVignettePdf') {
 			if (current.vignettePdf) {
 				const pdf = joinPath(folder, ...current.vignettePdf.split('/'));
 				run(async () => { await editorService.openEditor({ resource: pdf, options: { revealIfOpened: true } }); });
@@ -785,7 +786,7 @@ function pageHtml(): string {
 		<div class="actions">
 			<button class="action primary" data-command="writeVignette">${text.writeVignette}</button>
 			<button class="action" id="editVignette" data-command="open">${text.editVignette}</button>
-			<button class="action" id="openPdf" data-command="openPdf">${text.openPdf}</button>
+			<button class="action" id="openPdf" data-command="openVignettePdf">${text.openPdf}</button>
 		</div>
 		<p class="small" id="noVignette">${text.noVignette}</p>
 `,

@@ -191,6 +191,8 @@ export interface IBrowserViewModel extends IDisposable {
 	readonly onDidChangeFavicon: Event<IBrowserViewFaviconChangeEvent>;
 	readonly onDidRequestNewPage: Event<IBrowserViewNewPageRequest>;
 	readonly onDidFindInPage: Event<IBrowserViewFindInPageResult>;
+	/** POLLIS: the page in view, of the starts given to watchPageStarts, when scrolling brings another into view. */
+	readonly onDidChangePageInView: Event<number>;
 	readonly onDidChangeVisibility: Event<IBrowserViewVisibilityEvent>;
 	readonly onDidClose: Event<void>;
 	readonly onWillDispose: Event<void>;
@@ -210,6 +212,10 @@ export interface IBrowserViewModel extends IDisposable {
 	findInPage(text: string, options?: IBrowserViewFindInPageOptions): Promise<void>;
 	stopFindInPage(keepSelection?: boolean): Promise<void>;
 	getSelectedText(): Promise<string>;
+	/** POLLIS: finds where pages begin in the page loaded, by runs of their first words, and tells which is in view as it is scrolled. */
+	watchPageStarts(starts: readonly (readonly string[])[]): Promise<void>;
+	/** POLLIS: scrolls to the start of one of the pages given to watchPageStarts; false when it was not found. */
+	showPageStart(index: number): Promise<boolean>;
 	clearStorage(): Promise<void>;
 	setSharedWithAgent(shared: boolean): Promise<void>;
 	trustCertificate(host: string, fingerprint: string): Promise<void>;
@@ -320,6 +326,10 @@ export class BrowserViewModel extends Disposable implements IBrowserViewModel {
 
 	get onDidFindInPage(): Event<IBrowserViewFindInPageResult> {
 		return this.browserViewService.onDynamicDidFindInPage(this.id);
+	}
+
+	get onDidChangePageInView(): Event<number> {
+		return this.browserViewService.onDynamicDidChangePageInView(this.id);
 	}
 
 	get onDidChangeVisibility(): Event<IBrowserViewVisibilityEvent> {
@@ -512,6 +522,14 @@ export class BrowserViewModel extends Disposable implements IBrowserViewModel {
 
 	async getSelectedText(): Promise<string> {
 		return this.browserViewService.getSelectedText(this.id);
+	}
+
+	async watchPageStarts(starts: readonly (readonly string[])[]): Promise<void> {
+		return this.browserViewService.watchPageStarts(this.id, starts);
+	}
+
+	async showPageStart(index: number): Promise<boolean> {
+		return this.browserViewService.showPageStart(this.id, index);
 	}
 
 	async clearStorage(): Promise<void> {

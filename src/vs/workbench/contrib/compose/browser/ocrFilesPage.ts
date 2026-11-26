@@ -33,6 +33,7 @@ import { IStorageService, StorageScope, StorageTarget } from '../../../../platfo
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
+import { openPdfInViewer } from '../../../common/pdfViewer.js';
 import { archivePageImages, archiveReaderUrl } from '../../browserView/common/internetArchive.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { parseToml } from '../../model/browser/common/tomlPanelData.js';
@@ -67,7 +68,8 @@ interface IRecordFields {
 type OcrMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'openSource'; readonly source: string }
-	| { readonly command: 'openPdf' }
+	// Not `openPdf`, which the page's Ask Pollis answers by opening a PDF in the PDF Viewer
+	| { readonly command: 'openScannedPdf' }
 	| { readonly command: 'selectWork'; readonly id: string }
 	| { readonly command: 'saveRecord'; readonly record: IRecordFields }
 	| { readonly command: 'downloadScan' }
@@ -1022,7 +1024,7 @@ async function openOcrFilesPage(services: IOcrPageServices, step: OcrStep, then?
 						await openSource(message.source);
 					}
 					break;
-				case 'openPdf':
+				case 'openScannedPdf':
 					await openPdf();
 					break;
 				case 'selectWork':
@@ -1203,6 +1205,10 @@ async function openOcrFilesPage(services: IOcrPageServices, step: OcrStep, then?
 						await commandService.executeCommand('workbench.action.browser.open', html
 							? { pages: { url: html.url, texts: html.texts, title, first: 1, last: html.texts.length, page: Math.min(shownPage, html.texts.length) } }
 							: `https://www.gutenberg.org/ebooks/${ebook}`);
+					} else if (current?.work.scan.sha256) {
+						// The PDF read, the copy in the work's folder, at the page read, in the PDF Viewer, whose toolbar goes
+						// through its pages, numbered from 1 there, as here
+						await openPdfInViewer(commandService, joinPath(sourceFolder(current.work.id), 'source.pdf'), { page: shownPage });
 					}
 					break;
 				case 'addToWorkspace':
@@ -1276,6 +1282,7 @@ function pageHtml(): string {
 		openArchive: localize('ocrFiles.openArchive', "Open in the Internet Archive"),
 		openEbook: localize('ocrFiles.openEbook', "Open the Ebook"),
 		openGutenberg: localize('ocrFiles.openGutenberg', "Open in Project Gutenberg"),
+		openPdfViewer: localize('ocrFiles.openPdfViewer', "Open the PDF"),
 		addToWorkspace: localize('ocrFiles.addToWorkspace', "Add to Workspace"),
 		// Read
 		noWork: localize('ocrFiles.noWorkOpen', "Open a work first, in Open a Work."),
@@ -1560,7 +1567,7 @@ function pageHtml(): string {
 		input.addEventListener('keydown', event => { if (event.key === 'Enter') { send(); } });
 		bar.appendChild(input);
 		bar.appendChild(button(TEXT.open, send));
-		bar.appendChild(button(TEXT.openPdf, () => { errorText = ''; vscode.postMessage({ command: 'openPdf' }); }));
+		bar.appendChild(button(TEXT.openPdf, () => { errorText = ''; vscode.postMessage({ command: 'openScannedPdf' }); }));
 		box.appendChild(bar);
 		if (focused) { input.focus(); }
 		if (busy) { box.appendChild(element('p', 'status', busy)); }
@@ -1634,6 +1641,8 @@ function pageHtml(): string {
 		} else if (work.scan.gutenberg) {
 			saveBar.appendChild(button(TEXT.openEbook, () => vscode.postMessage({ command: 'openScan' })));
 			saveBar.appendChild(button(TEXT.openGutenberg, () => vscode.postMessage({ command: 'openOnline' })));
+		} else if (work.scan.sha256) {
+			saveBar.appendChild(button(TEXT.openPdfViewer, () => vscode.postMessage({ command: 'openScan' })));
 		}
 		if (!state.inWorkspace) { saveBar.appendChild(button(TEXT.addToWorkspace, () => vscode.postMessage({ command: 'addToWorkspace' }))); }
 		recordBox.appendChild(saveBar);

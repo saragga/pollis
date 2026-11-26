@@ -5,7 +5,8 @@
 
 // POLLIS: Previous Page, the page and Next Page on the browser's bar, as a reader's toolbar has them, for a tab whose
 // opener gave it pages (workbench.action.browser.open, `pages`), such as a scan that Britannica Through the Editions opens.
-// They are on the bar while the tab is at one of its pages.
+// They are on the bar while the tab is at one of its pages. For pages that are places in one page, such as those of a
+// Gutenberg ebook, the page on the bar follows the scroll, and Previous Page and Next Page scroll to the page.
 
 import { $, addDisposableListener, append, EventLike, EventType } from '../../../../../base/browser/dom.js';
 import { BaseActionViewItem, IBaseActionViewItemOptions } from '../../../../../base/browser/ui/actionbar/actionViewItems.js';
@@ -50,11 +51,27 @@ class BrowserEditorPagesSupport extends BrowserEditorContribution {
 		this._canGoToNextPage = CONTEXT_BROWSER_CAN_GO_TO_NEXT_PAGE.bindTo(contextKeyService);
 	}
 
-	protected override subscribeToModel(_model: IBrowserViewModel, store: DisposableStore): void {
+	protected override subscribeToModel(model: IBrowserViewModel, store: DisposableStore): void {
 		const tab = browserTab(this.editor);
 		if (tab) {
+			// Pages that are places in one page, such as those of a Gutenberg ebook: the page in view follows the scroll. The
+			// starts of the pages go to the browser view once, and each page loaded takes them from there
+			let watched: readonly string[] | undefined;
+			const watch = () => {
+				const texts = tab.pages?.texts;
+				const starts = tab.pageStarts;
+				if (texts && starts && texts !== watched) {
+					watched = texts;
+					void model.watchPageStarts(starts);
+				}
+			};
 			// A new page, or another address, changes the tab's title too
-			store.add(tab.onDidChangeLabel(() => this._update(tab)));
+			store.add(tab.onDidChangeLabel(() => {
+				watch();
+				this._update(tab);
+			}));
+			store.add(model.onDidChangePageInView(index => tab.setPageInView(index)));
+			watch();
 		}
 		this._update(tab);
 	}

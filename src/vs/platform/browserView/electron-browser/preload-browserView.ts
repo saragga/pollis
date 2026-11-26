@@ -112,6 +112,181 @@
 		});
 	});
 
+	// POLLIS: where the pages of the tab begin in the page loaded, such as the pages of OCR Files and Snippets in a Gutenberg
+	// ebook, and which is in view as it is scrolled
+	interface IPageStart {
+		readonly range: Range;
+	}
+	let pageStarts: (IPageStart | undefined)[] = [];
+	let pageInView: number | undefined;
+	let quietUntil = 0;
+	let scrollPending = false;
+	/** The style of the highlight of a page's first words, once in the page. */
+	let highlightStyle: HTMLStyleElement | undefined;
+
+	/** The text of the page, its text nodes and where each begins in it. */
+	function pageText(): { text: string; nodes: Text[]; offsets: number[] } {
+		const nodes: Text[] = [];
+		const offsets: number[] = [];
+		let text = '';
+		const walker = window.document.createTreeWalker(window.document.body, NodeFilter.SHOW_TEXT);
+		for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+			const parent = node.parentElement?.tagName;
+			if (parent === 'SCRIPT' || parent === 'STYLE') {
+				continue;
+			}
+			nodes.push(node as Text);
+			offsets.push(text.length);
+			text += (node as Text).data;
+		}
+		return { text, nodes, offsets };
+	}
+
+	/** The text node, and the offset in it, of an offset in the text of the page. */
+	function nodeAt(nodes: Text[], offsets: number[], offset: number): [Text, number] {
+		let low = 0;
+		let high = offsets.length - 1;
+		while (low < high) {
+			const middle = (low + high + 1) >> 1;
+			if (offsets[middle] <= offset) {
+				low = middle;
+			} else {
+				high = middle - 1;
+			}
+		}
+		return [nodes[low], offset - offsets[low]];
+	}
+
+	/** The page whose start is the last above the middle of the view, or the first page when none is. */
+	function computePageInView(): number | undefined {
+		const middle = window.innerHeight / 2;
+		let found: number | undefined;
+		for (let index = 0; index < pageStarts.length; index++) {
+			const start = pageStarts[index];
+			if (!start) {
+				continue;
+			}
+			found ??= index;
+			if (start.range.getBoundingClientRect().top <= middle + 1) {
+				found = index;
+			} else {
+				break;
+			}
+		}
+		return found;
+	}
+
+	function onScroll(): void {
+		if (scrollPending) {
+			return;
+		}
+		scrollPending = true;
+		requestAnimationFrame(() => {
+			scrollPending = false;
+			// The scroll of showPageStart puts its page in view, whatever page is above the middle
+			if (performance.now() < quietUntil) {
+				return;
+			}
+			const index = computePageInView();
+			if (index !== undefined && index !== pageInView) {
+				pageInView = index;
+				ipcRenderer.send('vscode:browserView:pageInView', index);
+			}
+		});
+	}
+
+	/**
+	 * Finds where each page given begins, the earliest of its runs of words found after the start of the page before, and
+	 * from then on tells which page is in view as the page is scrolled.
+	 */
+	function watchPageStarts(starts: readonly (readonly string[])[]): void {
+		window.removeEventListener('scroll', onScroll);
+		pageStarts = [];
+		pageInView = undefined;
+		if (!starts.length || !window.document.body) {
+			return;
+		}
+		try {
+			const { text, nodes, offsets } = pageText();
+			let cursor = 0;
+			pageStarts = starts.map(runs => {
+				let best: { index: number; length: number } | undefined;
+				for (const run of runs) {
+					const words = run.split(/\s+/).filter(Boolean).map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+					if (!words.length) {
+						continue;
+					}
+					const pattern = new RegExp(`(?<![\\p{L}])${words.join('\\s+')}(?![\\p{L}])`, 'giu');
+					pattern.lastIndex = cursor;
+					const match = pattern.exec(text);
+					if (match && (!best || match.index < best.index)) {
+						best = { index: match.index, length: match[0].length };
+					}
+				}
+				if (!best) {
+					return undefined;
+				}
+				cursor = best.index;
+				const range = window.document.createRange();
+				range.setStart(...nodeAt(nodes, offsets, best.index));
+				range.setEnd(...nodeAt(nodes, offsets, best.index + best.length));
+				return { range };
+			});
+			window.addEventListener('scroll', onScroll, { passive: true });
+		} catch {
+			pageStarts = [];
+		}
+	}
+
+	/**
+	 * Scrolls to the start of a page given to watchPageStarts, in the middle of the view, and highlights its first words;
+	 * false when the start of the page is not known.
+	 */
+	function showPageStart(index: number): boolean {
+		const start = pageStarts[index];
+		if (!start) {
+			return false;
+		}
+		try {
+			const top = start.range.getBoundingClientRect().top;
+			window.scrollBy({ top: top - window.innerHeight / 2, behavior: 'instant' });
+			quietUntil = performance.now() + 300;
+			pageInView = index;
+			if (typeof Highlight === 'function' && CSS.highlights) {
+				CSS.highlights.set('pollis-page-start', new Highlight(start.range));
+				if (!highlightStyle?.isConnected) {
+					highlightStyle = window.document.createElement('style');
+					highlightStyle.textContent = '::highlight(pollis-page-start) { background-color: rgba(255, 213, 79, 0.6); }';
+					window.document.head.appendChild(highlightStyle);
+				}
+			}
+			return true;
+		} catch {
+			return false;
+		}
+	}
+
+	// The starts of the pages are the tab's, kept by the main process: each page loaded asks for them once its text is
+	// there, without waiting for its pictures, and the main process sends them again when the tab gives new ones
+	ipcRenderer.on('vscode:browserView:pageStarts', (_event: unknown, starts: readonly (readonly string[])[]) => {
+		if (window.document.readyState !== 'loading') {
+			watchPageStarts(starts);
+		}
+	});
+	ipcRenderer.on('vscode:browserView:showPageStart', (_event: unknown, request: number, index: number) => {
+		ipcRenderer.send('vscode:browserView:pageStartShown', request, showPageStart(index));
+	});
+	window.document.addEventListener('DOMContentLoaded', async () => {
+		try {
+			const starts = await ipcRenderer.invoke('vscode:browserView:pageStarts');
+			if (Array.isArray(starts)) {
+				watchPageStarts(starts);
+			}
+		} catch {
+			// No starts for this page
+		}
+	});
+
 	const globals = {
 		/**
 		 * Get the currently selected text in the page.

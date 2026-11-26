@@ -76,6 +76,15 @@ export class BrowserView extends Disposable implements ICDPTarget {
 	private readonly _onDidFindInPage = this._register(new Emitter<IBrowserViewFindInPageResult>());
 	readonly onDidFindInPage: Event<IBrowserViewFindInPageResult> = this._onDidFindInPage.event;
 
+	/** POLLIS: the page in view, of the starts given to watchPageStarts. */
+	private readonly _onDidChangePageInView = this._register(new Emitter<number>());
+	readonly onDidChangePageInView: Event<number> = this._onDidChangePageInView.event;
+	/** POLLIS: the starts of the tab's pages, which each page loaded asks for (watchPageStarts). */
+	private _pageStarts: readonly (readonly string[])[] = [];
+	/** POLLIS: the requests of showPageStart that the page has not answered yet. */
+	private readonly _pageStartRequests = new Map<number, (shown: boolean) => void>();
+	private _pageStartRequest = 0;
+
 	private readonly _onDidClose = this._register(new Emitter<void>());
 	readonly onDidClose: Event<void> = this._onDidClose.event;
 
@@ -332,6 +341,21 @@ export class BrowserView extends Disposable implements ICDPTarget {
 		// Forward key down events that weren't handled by the page to the workbench for shortcut handling.
 		webContents.ipc.on('vscode:browserView:keydown', (_event, keyEvent: IBrowserViewKeyDownEvent) => {
 			this._onDidKeyCommand.fire(keyEvent);
+		});
+		// POLLIS: the starts of the tab's pages, for the preload script of each page loaded, which tells the page in view as
+		// the page is scrolled and answers showPageStart (watchPageStarts)
+		webContents.ipc.handle('vscode:browserView:pageStarts', () => this._pageStarts);
+		webContents.ipc.on('vscode:browserView:pageInView', (_event, index: unknown) => {
+			if (typeof index === 'number' && Number.isInteger(index) && index >= 0) {
+				this._onDidChangePageInView.fire(index);
+			}
+		});
+		webContents.ipc.on('vscode:browserView:pageStartShown', (_event, request: unknown, shown: unknown) => {
+			const resolve = typeof request === 'number' ? this._pageStartRequests.get(request) : undefined;
+			if (resolve) {
+				this._pageStartRequests.delete(request as number);
+				resolve(shown === true);
+			}
 		});
 		// If the page won't be able to handle events, forward key down events directly.
 		webContents.on('before-input-event', (event, input) => {
@@ -664,6 +688,32 @@ export class BrowserView extends Disposable implements ICDPTarget {
 		} catch {
 			return '';
 		}
+	}
+
+	/**
+	 * POLLIS: finds where the pages given begin in the page loaded, and tells which is in view as it is scrolled.
+	 */
+	async watchPageStarts(starts: readonly (readonly string[])[]): Promise<void> {
+		this._pageStarts = starts;
+		// The page loaded, if its text is there; one still loading asks for them
+		this._view.webContents.send('vscode:browserView:pageStarts', starts);
+	}
+
+	/**
+	 * POLLIS: scrolls to the start of one of the pages given to watchPageStarts, and says whether it was found; false
+	 * when the page does not answer within a second, being still without its text, say.
+	 */
+	async showPageStart(index: number): Promise<boolean> {
+		const request = ++this._pageStartRequest;
+		return new Promise<boolean>(resolve => {
+			this._pageStartRequests.set(request, resolve);
+			this._view.webContents.send('vscode:browserView:showPageStart', request, index);
+			setTimeout(() => {
+				if (this._pageStartRequests.delete(request)) {
+					resolve(false);
+				}
+			}, 1000);
+		});
 	}
 
 	/**

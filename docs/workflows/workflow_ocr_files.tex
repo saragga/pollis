@@ -1,6 +1,6 @@
 % Pollis drill-down: OCR Files and Snippets, reading scanned works in other languages: a record for each work, a reader
 % that shows each page of the scan beside its text, passages cut out and corrected as snippets, their translation by a
-% local model and their reading aloud (25 November 2026). Its examples are those Pollis gives for volume 3 of Van
+% local model and their reading aloud (26 November 2026). Its examples are those Pollis gives for volume 3 of Van
 % Gogh's letters to his brother.
 % Compile with: latexmk -pdf workflow_ocr_files.tex
 \input{workflow_style}
@@ -44,8 +44,8 @@ Many sources are old printed books in other languages, read from scans whose tex
 in \ui{Explore}\gt\ui{OCR Files and Snippets}, below \ui{PDF Files}, keeps a record for each scanned work, shows each page of the scan beside its text, cuts passages out
 and corrects them as snippets, and translates them with a local model you choose, without the internet.
 
-This drill-down describes each part: the work's record (\S\ref{sec:record}), its contents (\S\ref{sec:contents}), the
-checks that find misread words (\S\ref{sec:correct}), snippets (\S\ref{sec:snippets}), translation
+This drill-down describes each part: the work's record (\S\ref{sec:record}), its contents (\S\ref{sec:contents}),
+opening the source at the page read (\S\ref{sec:source}), the checks that find misread words (\S\ref{sec:correct}), snippets (\S\ref{sec:snippets}), translation
 (\S\ref{sec:translation}), reading aloud (\S\ref{sec:aloud}), where works are kept (\S\ref{sec:where}) and the menu
 items (\S\ref{sec:menu}).
 \end{nbox}
@@ -109,6 +109,10 @@ Every field but \file{id} and the scan is optional, since some works have no kno
 \bottomrule
 \end{tabularx}
 \end{center}
+
+Pollis fills the record from what the source gives: an Internet Archive item's metadata; for a Gutenberg ebook, the
+header of its text and Project Gutenberg's catalogue record (its RDF file, at the site or its mirror), which also gives
+a summary; for a PDF, its document details.
 
 The record of the third volume of Van Gogh's letters to Theo. Pollis filled the title, author, year and contents
 from the Internet Archive. The archive's metadata gives the language as German (\file{ger}), so the languages were
@@ -183,6 +187,47 @@ An entry's pages end where the next entry's begin. An entry that names a range o
 Arles. \ldots\ Brief 463---590'', holds the entries of the letters in that range, and ends where the first entry
 outside it begins: Arles reads \file{6-314}, up to the section on Saint-R\'emy at page 315. When the next entry has no
 page, the range stays open, \file{280-}, and runs to the next entry that has one.
+
+\needspace{16\baselineskip}
+\section{Opening the source}\label{sec:source}
+Under The Work's Record, each kind of source has buttons that open the work itself at the page being read, its pages
+numbered as in OCR Files and Snippets, from 1.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}p{0.17\linewidth}>{\raggedright\arraybackslash}p{0.22\linewidth}L@{}}
+\toprule
+\textbf{Source} & \textbf{Button} & \textbf{What opens} \\
+\midrule
+Internet Archive & \ui{Open the Scan} & The page as an image in Pollis's browser, at the size it was scanned, from the
+  archive's server that the item's metadata name, in a tab titled with the work and the page \\
+ & \ui{Open in the Internet Archive} & The same page in the archive's own reader \\
+Project Gutenberg & \ui{Open the Ebook} & The ebook's HTML version in Pollis's browser, from Project Gutenberg or,
+  when the site is down, its mirror \file{gutenberg.pglaf.org}, at the first words of the page being read, highlighted \\
+ & \ui{Open in Project Gutenberg} & The ebook's page at Project Gutenberg, which Open the Ebook also opens for an ebook
+  without an HTML version \\
+A local PDF & \ui{Open the PDF} & The copy of the PDF in the work's folder, the one its pages were read from, in the
+  PDF Viewer \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+For a scan or an ebook, \ui{Previous Page}, the page number and \ui{Next Page} on the browser's bar go through the
+pages, and the tab's title follows them; the PDF Viewer's toolbar does the same for a PDF.
+
+\subsection{The pages of an ebook}
+A Gutenberg ebook has no pages of its own: Pollis cuts its text into pages of about 3,000 characters, a heading
+beginning a new one. To find a page in the HTML version, Pollis takes from the page's text up to three runs of six to
+ten words of letters only, each within one paragraph and leaving out the paragraph's first word, which an illustrated
+edition may draw as a picture, and keeps the two longest, the longest first. The browser opens at them as a text
+fragment and highlights them; the second run finds the page where the HTML breaks the first, with a page number of the
+printed edition, say.
+
+Once the HTML's text has loaded, Pollis finds the runs of every page in it, each page after the one before, and the
+number on the bar follows the reading: it is the page whose first words are above the middle of the view.
+\ui{Previous Page}, \ui{Next Page} and a typed number scroll to the page's first words and highlight them, without
+loading the ebook again, and the tab opens again at the page in view when Pollis starts. In \emph{Pride and Prejudice}
+(ebook 1342, 227 pages) and \emph{Frankenstein} (ebook 84, 129 pages), the words of every page are found in the HTML,
+in order.
 
 \needspace{24\baselineskip}
 \section{Extracting and correcting}\label{sec:correct}

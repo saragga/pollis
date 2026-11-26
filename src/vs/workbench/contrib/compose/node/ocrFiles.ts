@@ -226,6 +226,8 @@ export class OcrFiles implements IOcrFiles {
 		const digits = String(ebook);
 		const mirror = gutenbergMirror(digits);
 		const addresses = [`https://www.gutenberg.org/cache/epub/${digits}/pg${digits}.txt`, `${mirror}/${digits}-0.txt`, `${mirror}/${digits}.txt`];
+		// Its catalogue record, for the title, authors and languages that a text from the mirror, without its header, lacks
+		const catalogue = gutenbergCatalogue(digits);
 		let content: string | undefined;
 		for (const address of addresses) {
 			content = await text(address).catch(() => undefined);
@@ -274,15 +276,18 @@ export class OcrFiles implements IOcrFiles {
 		}
 		await fs.writeFile(join(folder, 'printed.json'), JSON.stringify(printed));
 		const release = header('Release Date');
+		const record = await catalogue;
+		const languages = languageCodes((header('Language') ?? '').split(/\s*(?:,|and)\s*/));
 		const info: IOcrSourceInfo = {
-			title: header('Title'),
-			author: header('Author'),
+			title: header('Title') ?? record?.title,
+			author: header('Author') ?? record?.author,
 			year: yearOf(header('Original publication')),
-			languages: languageCodes((header('Language') ?? '').split(/\s*(?:,|and)\s*/)),
+			languages: languages.length ? languages : record?.languages ?? [],
 			pages: pages.length,
 			contents: rangesOf(contents, pages.length),
 			images: false,
-			summarySource: release ? `https://www.gutenberg.org/ebooks/${ebook}` : undefined,
+			summary: record?.summary,
+			summarySource: release || record ? `https://www.gutenberg.org/ebooks/${ebook}` : undefined,
 		};
 		await fs.writeFile(join(folder, 'source.json'), JSON.stringify({ kind: 'gutenberg', identifier: digits, info } satisfies ISourceRecord));
 		return info;
@@ -738,9 +743,44 @@ async function exists(path: string): Promise<boolean> {
 	return fs.access(path).then(() => true, () => false);
 }
 
+/** The mirror of Project Gutenberg, for when the site is down for maintenance. */
+const GUTENBERG_MIRROR = 'https://gutenberg.pglaf.org';
+
+/** What Project Gutenberg's catalogue says of an ebook. */
+interface IGutenbergRecord {
+	readonly title?: string;
+	readonly author?: string;
+	readonly languages: string[];
+	readonly summary?: string;
+}
+
+/**
+ * An ebook's record in Project Gutenberg's catalogue (its RDF file), at the Gutenberg site, or at its mirror when the site
+ * is down for maintenance; undefined when neither can be reached. The authors are written given names first, joined by "and".
+ */
+async function gutenbergCatalogue(digits: string): Promise<IGutenbergRecord | undefined> {
+	for (const address of [`https://www.gutenberg.org/cache/epub/${digits}/pg${digits}.rdf`, `${GUTENBERG_MIRROR}/cache/epub/${digits}/pg${digits}.rdf`]) {
+		const rdf = await text(address).catch(() => undefined);
+		if (!rdf || !/<rdf:RDF/.test(rdf)) {
+			continue;
+		}
+		const values = (tag: string) => [...rdf.matchAll(new RegExp(`<${tag}(?:\\s[^>]*)?>(?<value>[^<]*)</${tag}>`, 'g'))].map(match => decodeEntities(match.groups!.value).replace(/\s+/g, ' ').trim()).filter(Boolean);
+		const creators = [...rdf.matchAll(/<dcterms:creator>[\s\S]*?<\/dcterms:creator>/g)].flatMap(match => /<pgterms:name>(?<name>[^<]*)<\/pgterms:name>/.exec(match[0])?.groups?.name ?? []);
+		const authors = creators.map(name => authorName(decodeEntities(name))).filter((name): name is string => !!name);
+		const languages = [...rdf.matchAll(/<dcterms:language>[\s\S]*?<rdf:value[^>]*>(?<code>[^<]*)<\/rdf:value>/g)].map(match => match.groups!.code.trim());
+		return {
+			title: values('dcterms:title')[0],
+			author: authors.length ? authors.join(' and ') : undefined,
+			languages: languageCodes(languages),
+			summary: values('pgterms:marc520')[0],
+		};
+	}
+	return undefined;
+}
+
 /** Where the mirror of Project Gutenberg keeps an ebook's files: gutenberg.pglaf.org/1/3/4/1342 for ebook 1342. */
 function gutenbergMirror(digits: string): string {
-	return `https://gutenberg.pglaf.org/${digits.length > 1 ? digits.slice(0, -1).split('').join('/') : '0'}/${digits}`;
+	return `${GUTENBERG_MIRROR}/${digits.length > 1 ? digits.slice(0, -1).split('').join('/') : '0'}/${digits}`;
 }
 
 /** Whether there is a file at `url`. */
