@@ -4,6 +4,7 @@ import * as rpc from 'vscode-jsonrpc/node'
 import { JuliaKernel } from '../notebook/notebookKernel'
 import { g_connection } from './repl'
 import { onEvent } from '../utils'
+import { browse } from '../pollisBrowse'
 
 const requestTypeGetTableData = new rpc.RequestType<
     {
@@ -129,6 +130,12 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
             : undefined,
     })
     onEvent(panel.onDidDispose, () => tableSources.delete(panel))
+    // POLLIS: a link of the table opens in Pollis' browser
+    onEvent(panel.webview.onDidReceiveMessage, (message) => {
+        if (message?.type === 'openLink' && typeof message.url === 'string' && /^https?:\/\//i.test(message.url)) {
+            browse(message.url).catch((error) => vscode.window.showErrorMessage(`Pollis could not open ${message.url}: ${error instanceof Error ? error.message : String(error)}`))
+        }
+    })
 
     const uriAgGrid = panel.webview.asWebviewUri(
         vscode.Uri.file(path.join(context.extensionPath, 'libs', 'ag-grid', 'ag-grid.js'))
@@ -165,6 +172,35 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
             \`
         }
 
+        // POLLIS: a cell written [text](https://...) shows text as a link, as does a cell that is a web address alone;
+        // sorting, filtering and copying read the text
+        const LINK = /^\\[([^\\]]*)\\]\\((https?:\\/\\/[^\\s)]+)\\)$/
+        function linkOf(value) {
+            if (typeof value !== 'string') { return undefined }
+            const link = LINK.exec(value)
+            if (link) { return { text: link[1], url: link[2] } }
+            return /^https?:\\/\\/\\S+$/.test(value) ? { text: value, url: value } : undefined
+        }
+        function cellText(value) {
+            const link = linkOf(value)
+            return link ? link.text : value
+        }
+        function linkCell(params) {
+            const link = linkOf(params.value)
+            if (!link) { return params.value === undefined || params.value === null ? '' : String(params.value) }
+            const anchor = document.createElement('a')
+            anchor.textContent = link.text
+            anchor.href = link.url
+            anchor.title = link.url
+            anchor.className = 'table-link'
+            anchor.addEventListener('click', event => {
+                event.preventDefault()
+                vscodeAPI.postMessage({ type: 'openLink', url: link.url })
+            })
+            return anchor
+        }
+        const lazyTable = ${isLazy}
+
         const coldefs = payload.schema.fields.map(f => {
             return {
                 field: f.name,
@@ -174,6 +210,16 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
                 filter: f.ag_filter,
                 sortable: true,
                 resizable: true,
+                // POLLIS: no column wider than 360 pixels; a longer text wraps onto more lines, where the rows are all at hand
+                maxWidth: 360,
+                wrapText: !lazyTable,
+                autoHeight: !lazyTable,
+                cellRenderer: linkCell,
+                comparator: (a, b) => {
+                    const x = cellText(a), y = cellText(b)
+                    return x === y ? 0 : x === undefined || x === null ? -1 : y === undefined || y === null ? 1 : x < y ? -1 : 1
+                },
+                filterValueGetter: params => cellText(params.data ? params.data[f.name] : undefined),
                 headerComponentParams: {
                     template: headerTemplateWithLabel(f.jl_label)
                 }
@@ -264,7 +310,7 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
                 } catch (err) {
                     console.debug('Error while processing message: ', err)
                 }
-            } else {
+            } else if (message?.type !== 'openLink') {
                 console.debug('invalid message received: ', message)
             }
         })
@@ -376,6 +422,20 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
                     .row-number-cell {
                         background-color: var(--ag-header-background-color);
                     }
+                    .table-link {
+                        color: var(--vscode-textLink-foreground);
+                        text-decoration: none;
+                        cursor: pointer;
+                    }
+                    .table-link:hover {
+                        color: var(--vscode-textLink-activeForeground);
+                        text-decoration: underline;
+                    }
+                    .ag-cell-wrap-text {
+                        line-height: 1.4;
+                        padding-top: 3px;
+                        padding-bottom: 3px;
+                    }
                     .row-number-cell .ag-cell-value {
                         flex-grow: 1;
                         text-align: right;
@@ -453,7 +513,7 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
             <script type="text/javascript">
                 eGridDiv.addEventListener('copy', ev => {
                     const nodes = gridOptions.api.getSelectedNodes()
-                    const text = nodes.map(n => Object.values(n.data).join('\\t')).join('\\n')
+                    const text = nodes.map(n => Object.values(n.data).map(cellText).join('\\t')).join('\\n')
                     ev.clipboardData.setData('text/plain', text);
                     ev.preventDefault();
                 })

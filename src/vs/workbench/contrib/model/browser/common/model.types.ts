@@ -330,7 +330,7 @@ export interface IModelColumn {
 
 /**
  * A row of the table of a Minimal panel (`[[rows]]`): its title, with a line under it and a description, its values in
- * the columns, and its code, which opens under the row in a code box as that of a step.
+ * the columns, and its code, which opens under the row in a code box as that of a step, or its numbered steps.
  */
 export interface IModelRow {
 	readonly id: string;
@@ -340,6 +340,11 @@ export interface IModelRow {
 	/** Its value in each of the panel's columns, in their order. */
 	readonly cells: string[];
 	readonly code: string;
+	/**
+	 * Its steps (`[[rows.steps]]`), in place of its code: numbered under the row as those of a Time Arrow panel, each
+	 * with its inputs, code and actions, a step's code running the row's steps before it first.
+	 */
+	readonly steps: readonly IModelStep[];
 }
 
 /** A step of a Time Arrow panel (`[[steps]]`): a numbered pane. */

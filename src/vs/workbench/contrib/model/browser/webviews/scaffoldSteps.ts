@@ -81,7 +81,8 @@ export const stepSetupJs = `before: stepsBefore(Infinity), box: 'panel', name: '
 
 /**
  * The script of the code boxes, inside that of the scaffold, whose functions it uses. It needs `STEP_CODE`, one entry a
- * box in the order of the page: `key`, `step` (its number), `own` (the step's own code, not an action), `name` (what
+ * box in the order of the page: `key`, `step` (its number), `own` (the step's own code, not an action), `group` (the
+ * row of a Minimal panel whose steps it is among, or empty for those of the panel), `name` (what
  * Julia calls it), `when` and `code`, a function that gives its lines as the scaffold's `codeLine` does.
  */
 export function stepCodeJs(): string {
@@ -110,9 +111,9 @@ export function stepCodeJs(): string {
 			var custom = customSteps[entry.key];
 			return typeof custom === 'string' ? custom : plainCode(entry.code());
 		}
-		// The code of the steps before step number step, in their order
-		function stepsBefore(step) {
-			return STEP_CODE.filter(function(entry) { return entry.own && entry.step < step; }).map(function(entry) {
+		// The code of the steps before step number step, in their order: those of the panel, or of a row of a Minimal panel
+		function stepsBefore(step, group) {
+			return STEP_CODE.filter(function(entry) { return entry.own && entry.step < step && (entry.group || '') === (group || ''); }).map(function(entry) {
 				return { step: entry.step, code: currentStepCode(entry) };
 			});
 		}
@@ -199,7 +200,7 @@ export function stepCodeJs(): string {
 					vscode.postMessage({
 						command: 'runCode', target: act, code: box.shown, box: box.entry.key, stepCode: box.entry.own,
 						// An action uses the code of its own step too
-						before: stepsBefore(box.entry.own ? box.entry.step : box.entry.step + 1), name: box.entry.name,
+						before: stepsBefore(box.entry.own ? box.entry.step : box.entry.step + 1, box.entry.group), name: box.entry.name,
 					});
 				}
 			});

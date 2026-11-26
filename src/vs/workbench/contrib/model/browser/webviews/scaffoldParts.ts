@@ -203,8 +203,8 @@ function buildMatrixHtml(matrix: IModelMatrix | undefined): string {
 	return `<table class="matrix"><thead><tr>${head}</tr></thead><tbody>\n${body}\n</tbody></table>`;
 }
 
-/** The body of step `number`: its text, its dataset, its sections, its inputs, and its code and actions. */
-function buildStepBodyHtml(step: IModelStep, number: number): string {
+/** The body of step `number`: its text, its dataset, its sections, its inputs, and its code (in the box `key`) and actions. */
+function buildStepBodyHtml(step: IModelStep, number: number, key = stepKey(step)): string {
 	const parts: string[] = [];
 	if (step.intro) {
 		parts.push(`<p class="hint">${htmlEsc(step.intro)}</p>`);
@@ -229,7 +229,7 @@ function buildStepBodyHtml(step: IModelStep, number: number): string {
 		parts.push(`<div class="scaffold-inputs">\n${buildInputsHtml(step.inputs)}\n</div>`);
 	}
 	if (step.code.trim()) {
-		parts.push(stepCodeBoxHtml(htmlEsc(stepKey(step)), htmlEsc(localize('scaffold.timeArrow.code', "Code of Step {0}", number)), ''));
+		parts.push(stepCodeBoxHtml(htmlEsc(key), htmlEsc(localize('scaffold.timeArrow.code', "Code of Step {0}", number)), ''));
 	}
 	for (const action of step.actions) {
 		parts.push(stepCodeBoxHtml(htmlEsc(action.id), htmlEsc(action.label), htmlEsc(action.desc)));
@@ -242,17 +242,24 @@ function stepKey(step: IModelStep): string {
 	return `step-${step.id}`;
 }
 
-/** `STEP_CODE`, the code boxes of the steps as `stepCodeJs` reads them. */
-function buildStepCodeJs(steps: readonly IModelStep[]): string {
-	const entries = steps.flatMap((step, index) => {
+/**
+ * The entries of `STEP_CODE` of the steps, as `stepCodeJs` reads them: those of a Time Arrow panel, or those of a row of
+ * a Minimal panel, whose `group` is the row's id and whose code boxes have `keyOf` their keys.
+ */
+function stepCodeEntries(steps: readonly IModelStep[], group = '', keyOf: (step: IModelStep) => string = stepKey): string[] {
+	return steps.flatMap((step, index) => {
 		const entry = (key: string, own: boolean, name: string, code: string, when = '') =>
-			`\t\t\t{ key: '${jsEscape(key)}', step: ${index + 1}, own: ${own}, name: '${jsEscape(name)}', when: '${jsEscape(when)}', code: function() { return ${codeLinesJs(code)}; } }`;
+			`\t\t\t{ key: '${jsEscape(key)}', step: ${index + 1}, own: ${own}, group: '${jsEscape(group)}', name: '${jsEscape(name)}', when: '${jsEscape(when)}', code: function() { return ${codeLinesJs(code)}; } }`;
 		return [
-			...(step.code.trim() ? [entry(stepKey(step), true, `Step ${index + 1}`, step.code)] : []),
+			...(step.code.trim() ? [entry(keyOf(step), true, `Step ${index + 1}`, step.code)] : []),
 			...step.actions.map(action => entry(action.id, false, action.label, action.code, action.when)),
 		];
 	});
-	return `\t\tvar STEP_CODE = [\n${entries.join(',\n')}\n\t\t];`;
+}
+
+/** `STEP_CODE`, the code boxes of the steps as `stepCodeJs` reads them. */
+function buildStepCodeJs(steps: readonly IModelStep[]): string {
+	return `\t\tvar STEP_CODE = [\n${stepCodeEntries(steps).join(',\n')}\n\t\t];`;
 }
 
 /**
@@ -292,6 +299,10 @@ const MINIMAL_CSS = `${compareCss}
 		.row-sub { color: var(--vscode-descriptionForeground); margin: 2px 0 0 0; }
 		.row-desc { color: var(--vscode-descriptionForeground); margin: 4px 0 0 0; line-height: 1.4; max-width: 720px; }
 		tr.row-details > td { padding: 0 0 12px 0; }
+		.row-step { margin: 10px 0 0 0; }
+		.row-step-head { display: flex; align-items: center; gap: 8px; margin: 0 0 4px 0; font-weight: 600; }
+		.row-step-number { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; border-radius: 10px; font-size: 11px; color: var(--vscode-badge-foreground); background: var(--vscode-badge-background); }
+		.row-step .scaffold-inputs { margin: 4px 0 6px 0; }
 		.see-also { margin: 8px 0 20px 0; }
 		.see-also-title { font-size: 15px; font-weight: 500; margin: 0 0 8px 0; }
 `;
@@ -337,6 +348,19 @@ function rowKey(row: IModelRow): string {
 	return `row-${row.id}`;
 }
 
+/** The key of the code box of a step of a row. */
+function rowStepKey(row: IModelRow, step: IModelStep): string {
+	return `row-${row.id}-step-${step.id}`;
+}
+
+/** The steps of a row, numbered, each with its title and body as a step of a Time Arrow panel. */
+function buildRowStepsHtml(row: IModelRow): string {
+	return row.steps.map((step, index) => `<div class="row-step">
+				<div class="row-step-head"><span class="row-step-number">${index + 1}</span><span class="row-step-title">${htmlEsc(step.title)}</span></div>
+				${buildStepBodyHtml(step, index + 1, rowStepKey(row, step))}
+			</div>`).join('\n');
+}
+
 /**
  * The table of a Minimal panel: a search box, then a row per `[[rows]]`, its title (which opens its code under it, in
  * a code box as that of a step), the line under it and its description, and its values in the columns.
@@ -351,13 +375,15 @@ function buildRowsHtml(data: IScaffoldPanelData): string {
 	const head = `<tr><th>${htmlEsc(data.rowTitle || localize('scaffold.minimal.name', "Name"))}</th>${columns.map(column => `<th>${htmlEsc(column.label)}</th>`).join('')}</tr>`;
 	const body = rows.map(row => {
 		const searched = [row.title, row.subtitle, row.description, ...row.cells].join(' ').toLowerCase();
-		const title = row.code
+		const opens = row.code || row.steps.length;
+		const title = opens
 			? `<button class="row-title" data-row="${htmlEsc(row.id)}" aria-expanded="false">${htmlEsc(row.title)}</button>`
 			: `<span class="row-title">${htmlEsc(row.title)}</span>`;
 		const name = `<td>${title}${row.subtitle ? `<div class="row-sub">${htmlEsc(row.subtitle)}</div>` : ''}${row.description ? `<p class="row-desc">${htmlEsc(row.description)}</p>` : ''}</td>`;
 		const cells = row.cells.map(cell => `<td>${htmlEsc(cell)}</td>`).join('');
-		const details = row.code
-			? `\n\t\t\t<tr class="row-details" data-details="${htmlEsc(row.id)}" hidden><td colspan="${columns.length + 1}">${stepCodeBoxHtml(htmlEsc(rowKey(row)), htmlEsc(localize('scaffold.minimal.code', "Code")), '')}</td></tr>`
+		const inside = row.steps.length ? buildRowStepsHtml(row) : stepCodeBoxHtml(htmlEsc(rowKey(row)), htmlEsc(localize('scaffold.minimal.code', "Code")), '');
+		const details = opens
+			? `\n\t\t\t<tr class="row-details" data-details="${htmlEsc(row.id)}" hidden><td colspan="${columns.length + 1}">${inside}</td></tr>`
 			: '';
 		return `\t\t\t<tr class="minimal-row" data-search="${htmlEsc(searched)}">${name}${cells}</tr>${details}`;
 	});
@@ -389,11 +415,14 @@ function buildSeeAlsoHtml(data: IScaffoldPanelData): string {
  * groups and Learn More when it has wikis, notebooks, references or questions. A row's code box sends its code alone.
  */
 function buildMinimalHtml(panelId: string, data: IScaffoldPanelData, title: string): string {
-	const rows = (data.rows ?? []).filter(row => row.code);
+	const rows = (data.rows ?? []).filter(row => row.code || row.steps.length);
 	const hasNextSteps = !!data.actionGroups?.length;
 	const hasLearnMore = !!(data.wikis.length || data.notebooks.length || data.references.length || data.faq?.length);
 	const hasCode = hasNextSteps || rows.length > 0;
-	const entries = rows.map(row => `\t\t\t{ key: '${jsEscape(rowKey(row))}', step: 0, own: false, name: '${jsEscape(row.title)}', when: '', code: function() { return ${codeLinesJs(row.code)}; } }`);
+	// A row's code, or its steps, which run the row's steps before them first
+	const entries = rows.flatMap(row => row.steps.length
+		? stepCodeEntries(row.steps, row.id, step => rowStepKey(row, step))
+		: [`\t\t\t{ key: '${jsEscape(rowKey(row))}', step: 0, own: false, group: '${jsEscape(row.id)}', name: '${jsEscape(row.title)}', when: '', code: function() { return ${codeLinesJs(row.code)}; } }`]);
 	return buildWebviewHtml({
 		title: htmlEsc(title),
 		omitPoweredBy: !data.packages.length,

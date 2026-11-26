@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // No runtime imports: the build (build/lib/toml-to-ts.ts) runs this file directly under Node.
-import type { IModelAction, IModelFaq, IModelFaqItem, IModelInput, IModelWiki, IScaffoldPanelData } from './model.types.js';
+import type { IModelAction, IModelFaq, IModelFaqItem, IModelInput, IModelStep, IModelWiki, IScaffoldPanelData } from './model.types.js';
 
 /** A table of a parsed TOML file. */
 export interface TomlValue {
@@ -549,25 +549,30 @@ function timeArrowData(data: TomlValue): Pick<IScaffoldPanelData, 'style' | 'int
 		style: 'timeArrow',
 		intro: asText(meta.intro),
 		matrix: { columns: asTexts(matrix.columns), rows: asTables(matrix.rows).map(row => asTexts(row.cells)) },
-		steps: asTables(data.steps).map((step, index) => ({
-			title: asText(step.title),
-			intro: asText(step.intro),
-			dataset: asText(step.dataset),
-			datasetText: asText(step.datasetText),
-			sections: asTables(step.sections).map(section => ({ heading: asText(section.heading), text: asText(section.text), items: asTexts(section.items) })),
-			id: asName(step.id) || String(index + 1),
-			inputs: stepInputs(step.inputs),
-			code: asText(step.code),
-			actions: stepActions(step.actions),
-		})),
+		steps: modelSteps(data.steps),
 	};
+}
+
+/** The `[[steps]]` of a Time Arrow panel, or the `[[rows.steps]]` of a row of a Minimal panel. */
+function modelSteps(value: unknown): IModelStep[] {
+	return asTables(value).map((step, index) => ({
+		title: asText(step.title),
+		intro: asText(step.intro),
+		dataset: asText(step.dataset),
+		datasetText: asText(step.datasetText),
+		sections: asTables(step.sections).map(section => ({ heading: asText(section.heading), text: asText(section.text), items: asTexts(section.items) })),
+		id: asName(step.id) || String(index + 1),
+		inputs: stepInputs(step.inputs),
+		code: asText(step.code),
+		actions: stepActions(step.actions),
+	}));
 }
 
 /**
  * What a panel has when its `[meta]` says style = "minimal": `intro`, and in place of Example Code a table, whose first
  * column (`rowTitle`) holds the rows' titles and the others are its `[[columns]]`. Each of its `[[rows]]` gives its
- * `title`, `subtitle`, `description`, its value in each column under the column's id, and its `code`. Rows and columns
- * without a name are left out.
+ * `title`, `subtitle`, `description`, its value in each column under the column's id, and its `code`, or its
+ * `[[rows.steps]]`, as those of a Time Arrow panel. Rows and columns without a name are left out.
  */
 function minimalData(data: TomlValue): Pick<IScaffoldPanelData, 'style' | 'intro' | 'rowTitle' | 'columns' | 'rows'> | undefined {
 	const meta = asTable(data.meta);
@@ -587,6 +592,7 @@ function minimalData(data: TomlValue): Pick<IScaffoldPanelData, 'style' | 'intro
 			description: asText(row.description),
 			cells: columns.map(column => asText(row[column.id])),
 			code: asText(row.code).replace(/^\n+|\s+$/g, ''),
+			steps: modelSteps(row.steps),
 		})),
 	};
 }
