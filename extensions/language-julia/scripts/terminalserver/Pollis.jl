@@ -389,12 +389,16 @@ if isdefined(Main, :PlutoRunner)
 end
 
 """
-    Pollis.layer(geojson; name = "", color = nothing, column = nothing, opacity = 0.6, years = nothing, side = nothing)
+    Pollis.layer(geojson; name = "", color = nothing, column = nothing, opacity = 0.6, years = nothing, side = nothing, visible = true)
 
 A layer of [`Pollis.webmap`](@ref): `geojson` is a GeoJSON text or the path of a GeoJSON file, in
 longitude and latitude on WGS 84. The features are drawn in `color` (a CSS colour such as `"#e15759"`;
 by default one of the map's palette), or coloured by the property `column`: a scale for numbers, a
-colour per value for text. `opacity` is that of polygons, from 0 to 1.
+colour per value for text: twelve values get a colour each, in the order of their text (Day 2 before Day 10), and
+of more, the twelve most common, the others one grey. `opacity` is that of polygons, from 0 to 1.
+
+A map of several layers has a box for each in its legend, which shows or hides the layer; `visible = false` hides
+it when the map opens, so the reader can choose between, say, two colourings of the same places.
 
 `years` names the two properties that give the first and last year of a feature, such as
 `("starts", "ends")`: the map then has a year slider with Play, and shows each feature in its years,
@@ -407,17 +411,19 @@ swipe); see [`Pollis.webmap`](@ref).
 """
 function layer(geojson::AbstractString; name::AbstractString = "", color::Union{AbstractString, Nothing} = nothing,
 		column::Union{AbstractString, Nothing} = nothing, opacity::Real = 0.6,
-		years::Union{Tuple{AbstractString, AbstractString}, Nothing} = nothing, side::Union{AbstractString, Nothing} = nothing)
+		years::Union{Tuple{AbstractString, AbstractString}, Nothing} = nothing, side::Union{AbstractString, Nothing} = nothing,
+		visible::Bool = true)
 	text = geojson_text(geojson)
 	# a name mistyped in years would otherwise give a map without its slider
 	for key in something(years, ())
 		occursin(json_text(key), text) || error("Pollis.layer: the GeoJSON has no property $(key), which years names.")
 	end
-	return (geojson = text, name = String(name), color = color, column = column, opacity = Float64(opacity), years = years, side = map_side(side))
+	return (geojson = text, name = String(name), color = color, column = column, opacity = Float64(opacity), years = years, side = map_side(side),
+		visible = visible)
 end
 
 """
-    Pollis.tiles(url; name = "", opacity = 1.0, attribution = "", legend = nothing, tilesize = 256, maxzoom = 22, side = nothing)
+    Pollis.tiles(url; name = "", opacity = 1.0, attribution = "", legend = nothing, tilesize = 256, maxzoom = 22, side = nothing, visible = true)
 
 A layer of raster tiles for [`Pollis.webmap`](@ref): imagery, or a map that a tile server draws. `url` is the
 address of one tile, with `{z}`, `{x}` and `{y}` in it (an XYZ service, or WMTS in its REST form), or a WMS
@@ -426,7 +432,8 @@ at `opacity` from 0 to 1, and `attribution` is shown in the corner of the map, a
 is the address of an image the legend shows under the layer's name, such as a WMS GetLegendGraphic request.
 `tilesize` is the width of a tile in pixels, and `maxzoom` the highest zoom the service has tiles for: the
 map enlarges those beyond it. `side = "left"` or `"right"` draws the layer only on that side of a line that the
-reader drags across the map (a swipe), as an old map beside today's; see [`Pollis.webmap`](@ref).
+reader drags across the map (a swipe), as an old map beside today's; see [`Pollis.webmap`](@ref). `visible = false`
+hides the layer when the map opens, until the reader ticks its box in the legend.
 
 ```julia
 Pollis.webmap(Pollis.tiles("https://tile.openstreetmap.org/{z}/{x}/{y}.png"; name = "OpenStreetMap",
@@ -434,11 +441,13 @@ Pollis.webmap(Pollis.tiles("https://tile.openstreetmap.org/{z}/{x}/{y}.png"; nam
 ```
 """
 function tiles(url::AbstractString; name::AbstractString = "", opacity::Real = 1.0, attribution::AbstractString = "",
-		legend::Union{AbstractString, Nothing} = nothing, tilesize::Integer = 256, maxzoom::Integer = 22, side::Union{AbstractString, Nothing} = nothing)
+		legend::Union{AbstractString, Nothing} = nothing, tilesize::Integer = 256, maxzoom::Integer = 22, side::Union{AbstractString, Nothing} = nothing,
+		visible::Bool = true)
 	occursin(r"\{bbox-epsg-3857\}|\{z\}.*\{[xy]\}"s, url) ||
 		error("Pollis.tiles: the address has neither {z}, {x} and {y} nor {bbox-epsg-3857} in it: $(first(url, 120))")
 	return (tiles = String(url), name = String(name), opacity = Float64(opacity), attribution = String(attribution),
-		legend = legend === nothing ? nothing : String(legend), tilesize = Int(tilesize), maxzoom = Int(maxzoom), side = map_side(side))
+		legend = legend === nothing ? nothing : String(legend), tilesize = Int(tilesize), maxzoom = Int(maxzoom), side = map_side(side),
+		visible = visible)
 end
 
 """The side of the swipe a layer is drawn on: `nothing` for both, else `"left"` or `"right"`."""
@@ -497,7 +506,8 @@ function webmap(layers::Union{AbstractString, NamedTuple}...; style::AbstractStr
 		title::AbstractString = "", year::Union{Real, Nothing} = nothing, labels::Bool = true, beside::Union{NamedTuple, Nothing} = nothing)
 	beside === nothing || haskey(beside, :picture) || error("Pollis.webmap: beside is a Pollis.picture")
 	parts = [layer isa NamedTuple ? layer : Pollis.layer(layer) for layer in layers]
-	side_json(part) = get(part, :side, nothing) === nothing ? "" : ",\"side\":" * json_text(part.side)
+	side_json(part) = (get(part, :side, nothing) === nothing ? "" : ",\"side\":" * json_text(part.side)) *
+		(get(part, :visible, true) ? "" : ",\"visible\":false")
 	layer_json(part, index) = haskey(part, :tiles) ?
 		string("{\"name\":", json_text(isempty(part.name) ? "Layer $(index)" : part.name), ",\"tiles\":", json_text(part.tiles),
 			",\"opacity\":", json_text(part.opacity), ",\"attribution\":", json_text(part.attribution),
