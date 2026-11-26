@@ -1375,7 +1375,7 @@ function pageHtml(): string {
 		translationsColumn: localize('ocrFiles.translationsColumn', "Translations"),
 		copy: localize('ocrFiles.copy', "Copy"),
 		copyCitation: localize('ocrFiles.copyCitation', "Copy Citation"),
-		sendToNotebook: localize('ocrFiles.sendToNotebook', "Send to Notebook"),
+		sendToNotebook: localize('ocrFiles.sendToNotebook', "Send to Jupyter"),
 		openFile: localize('ocrFiles.openFile', "Open"),
 		copied: localize('ocrFiles.copied', "Copied."),
 		error: localize('ocrFiles.error', "{0}"),
