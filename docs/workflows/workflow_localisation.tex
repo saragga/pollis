@@ -8,6 +8,7 @@
 \usepackage{titlesec}
 \usepackage{tabularx}
 \usepackage{booktabs}
+\usepackage{longtable}
 \usepackage{needspace}
 
 \fancyhf{}
@@ -99,25 +100,63 @@ The documents of \ui{Help > Documentation} & the Tour, the Guides and the drill-
 Microsoft publishes 13 packs on Open VSX, each with a version 1.110.0 that Pollis takes: French, German, Italian,
 Spanish, Portuguese (Brazil), Russian, Polish, Czech, Turkish, Chinese (Simplified and Traditional), Japanese and
 Korean. Other authors publish packs for other languages, on Open VSX or on the VS Code Marketplace, which Pollis's
-\ui{Extensions} view does not search; a pack from there installs from its \file{.vsix} file, and its translations can
-seed Pollis's own pack.
+\ui{Extensions} view does not search; a pack from there, marked \dag{} below, installs from its \file{.vsix} file, and
+its translations can seed Pollis's own pack.
 
-\begin{center}\small
-\renewcommand{\arraystretch}{1.2}
-\begin{tabularx}{\linewidth}{@{}p{0.2\linewidth}p{0.3\linewidth}p{0.17\linewidth}L@{}}
+{\small
+\renewcommand{\arraystretch}{1.15}
+\setlength{\LTleft}{0pt}
+\setlength{\LTpre}{6pt}
+\setlength{\LTpost}{6pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}p{0.37\linewidth}>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}p{0.21\linewidth}@{}}
 \toprule
-\textbf{Language} & \textbf{Pack} & \textbf{VS Code strings} & \textbf{Where}\\
+\textbf{Language} & \textbf{Pack} & \textbf{VS Code strings} & \textbf{Installs on Pollis (VS Code 1.117)}\\
 \midrule
-French (and the 12 others above) & Microsoft's, 1.110.0 & 15,559 & Open VSX\\
-Dutch & Nederlands Taalpakket, December 2024 & 11,678 & VS Code Marketplace\\
-Arabic & Arabic-language.vscode-ar, October 2026 & 25,001 & VS Code Marketplace\\
-Hindi & gdhillon.vscode-loc-hindi & 18,514 & Open VSX and the Marketplace\\
-European Portuguese, Greek & none & --- & ---\\
+\endhead
 \bottomrule
-\end{tabularx}
-\end{center}
-The strings are those of the pack's \code{vscode} part, counted on 26 November 2026. The packs were made for different
-versions of VS Code, so a pack made for a later version also has strings that Pollis's VS Code does not use.
+\endfoot
+Chinese (Simplified) & \file{MS-CEINTL.vscode-language-pack-zh-hans} & 15,559 & Yes (1.110.0)\\
+Chinese (Traditional) & \file{MS-CEINTL.vscode-language-pack-zh-hant} & 15,559 & Yes (1.110.0)\\
+Czech & \file{MS-CEINTL.vscode-language-pack-cs} & 15,559 & Yes (1.110.0)\\
+French & \file{MS-CEINTL.vscode-language-pack-fr} & 15,559 & Yes (1.110.0)\\
+German & \file{MS-CEINTL.vscode-language-pack-de} & 15,559 & Yes (1.110.0)\\
+Italian & \file{MS-CEINTL.vscode-language-pack-it} & 15,559 & Yes (1.110.0)\\
+Japanese & \file{MS-CEINTL.vscode-language-pack-ja} & 15,559 & Yes (1.110.0)\\
+Korean & \file{MS-CEINTL.vscode-language-pack-ko} & 15,559 & Yes (1.110.0)\\
+Polish & \file{MS-CEINTL.vscode-language-pack-pl} & 15,559 & Yes (1.110.0)\\
+Portuguese (Brazil) & \file{MS-CEINTL.vscode-language-pack-pt-BR} & 15,559 & Yes (1.110.0)\\
+Russian & \file{MS-CEINTL.vscode-language-pack-ru} & 15,559 & Yes (1.110.0)\\
+Spanish & \file{MS-CEINTL.vscode-language-pack-es} & 15,559 & Yes (1.110.0)\\
+Turkish & \file{MS-CEINTL.vscode-language-pack-tr} & 15,559 & Yes (1.110.0)\\
+\midrule
+Hindi & \file{gdhillon.vscode-loc-hindi} & 18,514, about 26 still in English & Yes (needs 1.85 or later)\\
+Marathi & \file{ameya-deshpande.vscode-marathi-langpack}\,\dag & 22,116, about 7 still in English & Yes (needs 1.80 or
+  later)\\
+Punjabi & \file{gdhillon.vscode-loc-punjabi} & 18,514, about 20 still in English & Yes (needs 1.85 or later)\\
+\midrule
+Arabic & \file{Arabic-language.vscode-ar}\,\dag & 25,001, about 11 still in English & Yes, though VS Code still lays the
+  workbench out left to right\\
+Armenian & \file{ColibriLab.vscode-language-pack-hy}\,\dag & 9,972, about 23 still in English & Yes (needs 1.74 or
+  later); last updated January 2023\\
+Catalan & \file{AitorGomila.vscode-language-pack-ca} & 10,707 & Yes (needs 1.80 or later); last updated 2023\\
+Dutch & \file{babbelaar.babbelaar-vscode-language-pack-nl}\,\dag & 11,678, about 470 still in English & Yes; last
+  updated December 2024\\
+Farsi & none & --- & ---\\
+Indonesian & \file{MarufMuchlisin.indonesian-language-pack}\,\dag & 34,159, about 130 still in English & Yes (needs 1.80
+  or later)\\
+Swedish & none & --- & ---\\
+Thai & \file{unipivot.vscode-language-pack-th-by-unipivot}\,\dag & 31,398, about 13 still in English & No: needs VS
+  Code 1.145\\
+Vietnamese & \file{buivantinh.dmctn-vscode-language-pack-vi}\,\dag & 16,557, about 270 still in English & Yes (needs
+  1.85 or later)\\
+Ukrainian & \file{ovcharovcoder.vscode-language-pack-uk-ovcharovcoder}\,\dag & 13,480, about 8 still in English & Yes
+  (needs 1.97 or later)\\
+\end{longtable}}
+The strings are those of the pack's \code{vscode} part, counted on 26 November 2026; those still in English are an
+estimate, the strings that read as English sentences. The packs were made for different versions of VS Code, so a pack
+made for a later version also has strings that Pollis's VS Code does not use. Catalan and Ukrainian have fuller packs
+that need a later VS Code: \file{unipivot.vscode-language-pack-ca-by-unipivot}\,\dag{} (32,055 strings, VS Code 1.146)
+and \file{MrKAKTUZ.vscode-language-pack-uk}\,\dag{} (33,891, VS Code 1.149).
 
 \section{The design}\label{sec:design}
 The code is written once; each language then costs its translation run and its review. Pollis follows VS Code's display
