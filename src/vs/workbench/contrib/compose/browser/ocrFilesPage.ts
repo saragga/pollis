@@ -5,7 +5,7 @@
 
 // OCR Files and Snippets, a page in the Time Arrow style of the scaffold (docs/workflows/workflow_ocr_files.tex): a
 // scanned work read page by page beside its text, passages cut out and corrected as snippets, translated by a local
-// model and read aloud, in seven steps. A work is a folder, ~/.pollis/works/<id>/ (../common/ocrFiles.ts): the page
+// model, in six steps, and read aloud, from Next Steps. A work is a folder, ~/.pollis/works/<id>/ (../common/ocrFiles.ts): the page
 // reads and writes its record and snippets, and the process of ../node/ocrFiles.ts downloads its source and checks its
 // words. A work added to the Pollis Workspace keeps its record and snippets in the workspace's works folder, and its
 // source in ~/.pollis/works. The menu items of Explore > OCR Files and Snippets open the page at a step.
@@ -35,7 +35,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { parseToml } from '../../model/browser/common/tomlPanelData.js';
 import { OCRFILES_METADATA } from '../../model/browser/webviews/ocrFiles.data.js';
-import { buildWebviewHtml, ONE_BLUE_BUTTON_JS, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, ONE_BLUE_BUTTON_JS, pageNextSteps, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { CellEditType, CellKind } from '../../notebook/common/notebookCommon.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
@@ -1252,6 +1252,7 @@ function pageHtml(): string {
 		addToWorkspace: localize('ocrFiles.addToWorkspace', "Add to Workspace"),
 		// Read
 		noWork: localize('ocrFiles.noWorkOpen', "Open a work first, in Open a Work."),
+		noRecord: localize('ocrFiles.noRecord', "Open a work first, above: its record is shown and corrected here."),
 		previous: localize('ocrFiles.previous', "Previous"),
 		next: localize('ocrFiles.next', "Next"),
 		pageOf: localize('ocrFiles.pageOf', "of {0}"),
@@ -1328,6 +1329,7 @@ function pageHtml(): string {
 		voice: localize('ocrFiles.voice', "Voice"),
 		anyVoice: localize('ocrFiles.anyVoice', "The computer's voice for the language"),
 		readAloud: localize('ocrFiles.readAloud', "Read Aloud"),
+		readAloudCard: localize('ocrFiles.readAloudCard', "The snippet open, or one of its translations, read with a voice of the computer for its language"),
 		pause: localize('ocrFiles.pause', "Pause"),
 		resume: localize('ocrFiles.resume', "Resume"),
 		noVoice: localize('ocrFiles.noVoice', "This computer has no voice for {0}: the text is read with its default voice."),
@@ -1412,15 +1414,20 @@ function pageHtml(): string {
 			step('step-parts', localize('ocrFiles.stepParts', "Choose Parts"), `<div class="ocr" id="parts"></div>`),
 			step('step-extract', localize('ocrFiles.stepExtract', "Extract and Correct"), `<div class="ocr" id="extract"></div>`, `<span class="small" id="head-extract"></span>`),
 			step('step-translate', localize('ocrFiles.stepTranslate', "Translate"), `<div class="ocr" id="translate"></div>`),
-			step('step-aloud', localize('ocrFiles.stepAloud', "Read Aloud"), `<div class="ocr" id="aloud"></div>`),
 			step('step-use', localize('ocrFiles.stepUse', "Use It"), `<div class="ocr" id="use"></div>`, `<span class="small" id="head-use"></span>`),
 		],
+		// Read Aloud, an optional action: a card of Interpret in Next Steps, whose panel the page's script fills
+		...pageNextSteps({
+			interpret: [
+				{ id: 'aloudStep', label: text.readAloud, desc: text.readAloudCard, event: 'pollis-aloud-step' },
+			],
+		}),
 		pageScriptJs: `
 	${ONE_BLUE_BUTTON_JS.trim()}
 	(() => {
 	const TEXT = ${JSON.stringify(text)};
 	const SPEAKER = ${JSON.stringify(voiceSpeakerSvg)};
-	const STEPS = { open: 'step-open', read: 'step-read', parts: 'step-parts', extract: 'step-extract', translate: 'step-translate', aloud: 'step-aloud', use: 'step-use' };
+	const STEPS = { open: 'step-open', read: 'step-read', parts: 'step-parts', extract: 'step-extract', translate: 'step-translate', use: 'step-use' };
 	let state = { works: [], snippets: [], models: [], units: [], printed: [], pages: 0 };
 	let page;
 	let chosenWord;
@@ -1467,7 +1474,25 @@ function pageHtml(): string {
 	function languageName(code) {
 		try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(code) || code; } catch { return code; }
 	}
+	// The controls of a step drawn before there is anything for them to work on: shown as they are, the blue button
+	// included, but a click or a change in them does nothing except say why, below the row clicked
+	function inactive(node, reason) {
+		const ignore = event => {
+			event.stopPropagation();
+			if (event.type !== 'click') { return; }
+			const control = event.target.closest('button, input, select, textarea, label.choice');
+			if (!control) { return; }
+			if (control.matches('button, input[type=radio], input[type=checkbox], label.choice')) { event.preventDefault(); }
+			node.querySelectorAll(':scope .why-inactive').forEach(note => note.remove());
+			const row = control.closest('.bar, .fields, label.choice, table') || control;
+			row.after(element('p', 'status why-inactive', reason));
+		};
+		for (const type of ['click', 'change', 'input', 'keydown']) { node.addEventListener(type, ignore, true); }
+		return node;
+	}
 	function openStep(id) {
+		// Read Aloud is a card of Next Steps, not a step
+		if (id === 'aloud') { window.dispatchEvent(new CustomEvent('pollis-open-page-step', { detail: 'aloudStep' })); return; }
 		const pane = document.getElementById(STEPS[id] || id);
 		if (pane) {
 			pane.classList.remove('collapsed');
@@ -1540,8 +1565,9 @@ function pageHtml(): string {
 			}
 			box.appendChild(table);
 		}
+		// The record of the work open, its fields shown empty and disabled before one is open
 		const work = state.current;
-		if (!work) { return; }
+		const record = work || {};
 		box.appendChild(element('div', 'label', TEXT.record));
 		const fields = element('div', 'fields');
 		const inputs = {};
@@ -1554,28 +1580,32 @@ function pageHtml(): string {
 			inputs[key] = field;
 			fields.appendChild(field);
 		};
-		add('title', TEXT.fieldTitle, work.title);
-		add('author', TEXT.fieldAuthor, work.author);
-		add('editor', TEXT.fieldEditor, work.editor);
-		add('translator', TEXT.fieldTranslator, work.translator);
-		add('year', TEXT.fieldYear, work.year ? String(work.year) : '');
-		add('languages', TEXT.fieldLanguages, (work.languages || []).join(', '), false, TEXT.fieldLanguagesHelp);
-		add('entryType', TEXT.fieldEntryType, work.entryType);
-		add('referenceKey', TEXT.fieldReferenceKey, work.referenceKey);
-		add('summary', TEXT.fieldSummary, work.summary, true);
-		add('summarySource', TEXT.fieldSummarySource, work.summarySource);
-		box.appendChild(fields);
-		box.appendChild(element('p', 'hint', TEXT.fieldLanguagesHelp));
+		add('title', TEXT.fieldTitle, record.title);
+		add('author', TEXT.fieldAuthor, record.author);
+		add('editor', TEXT.fieldEditor, record.editor);
+		add('translator', TEXT.fieldTranslator, record.translator);
+		add('year', TEXT.fieldYear, record.year ? String(record.year) : '');
+		add('languages', TEXT.fieldLanguages, (record.languages || []).join(', '), false, TEXT.fieldLanguagesHelp);
+		add('entryType', TEXT.fieldEntryType, record.entryType);
+		add('referenceKey', TEXT.fieldReferenceKey, record.referenceKey);
+		add('summary', TEXT.fieldSummary, record.summary, true);
+		add('summarySource', TEXT.fieldSummarySource, record.summarySource);
+		if (!work) { box.appendChild(element('p', 'hint', TEXT.noRecord)); }
+		const recordBox = box.appendChild(element('div'));
+		if (!work) { inactive(recordBox, TEXT.noRecord); }
+		recordBox.appendChild(fields);
+		recordBox.appendChild(element('p', 'hint', TEXT.fieldLanguagesHelp));
 		const saveBar = element('div', 'bar');
 		saveBar.appendChild(button(TEXT.saveRecord, () => {
 			const record = {};
 			for (const key of Object.keys(inputs)) { record[key] = inputs[key].value; }
 			vscode.postMessage({ command: 'saveRecord', record });
 		}));
-		if (work.scan.archive || work.scan.gutenberg) { saveBar.appendChild(button(TEXT.openOnline, () => vscode.postMessage({ command: 'openOnline' }))); }
+		if (!work || work.scan.archive || work.scan.gutenberg) { saveBar.appendChild(button(TEXT.openOnline, () => vscode.postMessage({ command: 'openOnline' }))); }
 		if (!state.inWorkspace) { saveBar.appendChild(button(TEXT.addToWorkspace, () => vscode.postMessage({ command: 'addToWorkspace' }))); }
-		box.appendChild(saveBar);
-		box.appendChild(element('span', 'small', '')).id = 'recordStatus';
+		recordBox.appendChild(saveBar);
+		recordBox.appendChild(element('span', 'small', '')).id = 'recordStatus';
+		if (!work) { return; }
 		if (work.scan.archive && scanSize) {
 			box.appendChild(element('div', 'label', TEXT.scan));
 			box.appendChild(element('p', 'hint', format(TEXT.scanSize, scanSize.pages, bytes(scanSize.bytes), bytes(scanSize.free))));
@@ -1603,7 +1633,9 @@ function pageHtml(): string {
 		const head = document.getElementById('head-read');
 		box.textContent = '';
 		head.textContent = '';
-		if (!state.current || !state.pages) { box.appendChild(element('p', 'hint', TEXT.noWork)); return; }
+		// Before a work is open: the page's controls, the legend and the contents, shown but disabled
+		const noWork = !state.current || !state.pages;
+		if (noWork) { box.appendChild(element('p', 'hint', TEXT.noWork)); }
 		const nav = element('div', 'bar');
 		const number = element('input');
 		number.type = 'number';
@@ -1614,11 +1646,22 @@ function pageHtml(): string {
 		number.addEventListener('change', () => vscode.postMessage({ command: 'page', page: Number(number.value) }));
 		nav.appendChild(button(TEXT.previous, () => page && vscode.postMessage({ command: 'page', page: page.page - 1 })));
 		nav.appendChild(number);
-		nav.appendChild(element('span', 'small', format(TEXT.pageOf, state.pages)));
+		nav.appendChild(element('span', 'small', format(TEXT.pageOf, state.pages || '\\u2013')));
 		nav.appendChild(button(TEXT.next, () => vscode.postMessage({ command: 'page', page: (page ? page.page : 0) + 1 })));
-		if (page) {
+		if (page && !noWork) {
 			nav.appendChild(element('span', 'small', page.printed ? format(TEXT.printedPage, page.printed) : TEXT.noPrinted));
 			head.textContent = (state.current.title || state.current.id) + ' · ' + page.page + '/' + state.pages;
+		}
+		if (noWork) {
+			const shown = inactive(box.appendChild(element('div')), TEXT.noWork);
+			shown.appendChild(nav);
+			const empty = element('div', 'reader noImage');
+			const legend = element('div');
+			legend.appendChild(element('p', 'hint', TEXT.legend));
+			empty.appendChild(legend);
+			empty.appendChild(contentsSide());
+			shown.appendChild(empty);
+			return;
 		}
 		box.appendChild(nav);
 		if (!page) { box.appendChild(element('p', 'status', TEXT.loadingPage)); return; }
@@ -1679,7 +1722,7 @@ function pageHtml(): string {
 	function contentsSide() {
 		const side = element('div', 'side');
 		side.appendChild(element('div', 'label', TEXT.contents));
-		const contents = state.current.contents || [];
+		const contents = (state.current && state.current.contents) || [];
 		if (!contents.length) { side.appendChild(element('p', 'hint', TEXT.noContents)); }
 		contents.forEach((entry, index) => {
 			const row = element('div', 'entry');
@@ -1701,9 +1744,9 @@ function pageHtml(): string {
 		input.style.width = '100%';
 		input.style.marginTop = '8px';
 		side.appendChild(input);
-		side.appendChild(buttonRow(button(TEXT.addEntry, () => { if (input.value.trim()) { vscode.postMessage({ command: 'addEntry', label: input.value.trim(), page: page.page }); } })));
+		side.appendChild(buttonRow(button(TEXT.addEntry, () => { if (page && input.value.trim()) { vscode.postMessage({ command: 'addEntry', label: input.value.trim(), page: page.page }); } })));
 		// A scan without printed numbers: the number printed on this page sets the difference for the whole work
-		if (!(state.printed || []).some(label => label)) {
+		if (page && state.current && !(state.printed || []).some(label => label)) {
 			side.appendChild(element('div', 'label', TEXT.setPrinted));
 			const bar = element('div', 'bar');
 			const printedInput = element('input');
@@ -1727,11 +1770,14 @@ function pageHtml(): string {
 
 	// ---- 3. Choose Parts
 	function drawParts() {
-		const box = document.getElementById('parts');
-		box.textContent = '';
-		if (!state.current) { box.appendChild(element('p', 'hint', TEXT.noWork)); return; }
+		const step = document.getElementById('parts');
+		step.textContent = '';
+		// Before a work is open, the step shown as it is, doing nothing
+		if (!state.current) { step.appendChild(element('p', 'hint', TEXT.noWork)); }
+		const box = step.appendChild(element('div'));
+		if (!state.current) { inactive(box, TEXT.noWork); }
 		box.appendChild(element('p', 'hint', TEXT.partsHelp));
-		const contents = state.current.contents || [];
+		const contents = (state.current && state.current.contents) || [];
 		if (contents.length) {
 			box.appendChild(element('div', 'label', TEXT.contents));
 			contents.forEach((entry, index) => {
@@ -1797,23 +1843,27 @@ function pageHtml(): string {
 		return node;
 	}
 	function drawExtract() {
-		const box = document.getElementById('extract');
+		const step = document.getElementById('extract');
 		const head = document.getElementById('head-extract');
-		box.textContent = '';
+		step.textContent = '';
 		head.textContent = '';
-		if (!extractState) { box.appendChild(element('p', 'hint', TEXT.noExtract)); return; }
-		head.textContent = format(TEXT.pagesOfExtract, extractState.pagesLabel);
+		// Before parts are extracted, the step shown as it is, empty and doing nothing
+		if (!extractState) { step.appendChild(element('p', 'hint', TEXT.noExtract)); }
+		const box = step.appendChild(element('div'));
+		if (!extractState) { inactive(box, TEXT.noExtract); }
+		const shown = extractState || { label: '', text: '', saved: '' };
+		if (extractState) { head.textContent = format(TEXT.pagesOfExtract, extractState.pagesLabel); }
 		const labelBar = element('div', 'bar');
 		labelBar.appendChild(element('span', 'small', TEXT.snippetLabel));
 		const labelInput = element('input', 'wide');
 		labelInput.type = 'text';
-		labelInput.value = extractState.label;
+		labelInput.value = shown.label;
 		labelInput.addEventListener('input', () => { extractState.label = labelInput.value; });
 		labelBar.appendChild(labelInput);
 		box.appendChild(labelBar);
 		box.appendChild(element('div', 'label', TEXT.snippetText));
 		textArea = element('textarea', 'snippetText');
-		textArea.value = extractState.text;
+		textArea.value = shown.text;
 		textArea.addEventListener('input', () => { extractState.text = textArea.value; });
 		textArea.addEventListener('change', () => drawChecks());
 		box.appendChild(textArea);
@@ -1821,7 +1871,7 @@ function pageHtml(): string {
 		const checks = element('div', 'checks');
 		checks.id = 'checks';
 		box.appendChild(checks);
-		drawChecks();
+		if (extractState) { drawChecks(); } else { checks.appendChild(element('p', 'hint', TEXT.noFlagged)); }
 		// The other checks: another copy of the same edition, and the language model
 		const tools = element('div', 'bar');
 		tools.appendChild(button(TEXT.recheck, () => vscode.postMessage({ command: 'recheck', text: extractState.text })));
@@ -1845,10 +1895,10 @@ function pageHtml(): string {
 			tools.appendChild(button(TEXT.checkWithModel, () => vscode.postMessage({ command: 'checkWithModel', text: extractState.text, model: select.value })));
 		}
 		box.appendChild(tools);
-		if (busy && extractState.busy) { box.appendChild(element('p', 'status', busy)); }
+		if (busy && shown.busy) { box.appendChild(element('p', 'status', busy)); }
 		const saveBar = element('div', 'bar');
 		saveBar.appendChild(button(TEXT.saveSnippet, () => vscode.postMessage({ command: 'saveSnippet', label: extractState.label, text: extractState.text })));
-		const status = element('span', 'small', extractState.saved ? format(TEXT.saved, extractState.saved) : '');
+		const status = element('span', 'small', shown.saved ? format(TEXT.saved, shown.saved) : '');
 		saveBar.appendChild(status);
 		box.appendChild(saveBar);
 		box.appendChild(element('p', 'hint', TEXT.correctionsKept));
@@ -1922,11 +1972,13 @@ function pageHtml(): string {
 	// ---- 5. Translate
 	let translateLanguage;
 	function drawTranslate() {
-		const box = document.getElementById('translate');
-		box.textContent = '';
+		const step = document.getElementById('translate');
+		step.textContent = '';
 		const snippet = state.snippet;
-		if (!snippet) { box.appendChild(element('p', 'hint', TEXT.noSnippet)); drawGlossary(box); return; }
-		box.appendChild(element('div', 'label', snippet.label));
+		// Before there is a snippet, its controls shown as they are, doing nothing; the glossary of a work open works
+		step.appendChild(element(snippet ? 'div' : 'p', snippet ? 'label' : 'hint', snippet ? snippet.label : TEXT.noSnippet));
+		const box = step.appendChild(element('div'));
+		if (!snippet) { inactive(box, TEXT.noSnippet); }
 		const bar = element('div', 'bar');
 		bar.appendChild(element('span', 'small', TEXT.into));
 		const language = element('input');
@@ -1966,16 +2018,17 @@ function pageHtml(): string {
 			});
 		}
 		showError(box);
-		drawGlossary(box);
+		drawGlossary(step);
 	}
 	function drawGlossary(box) {
-		if (!state.current) { return; }
 		const language = translateLanguage || state.language || 'en';
 		const section = element('div', 'glossary');
 		section.id = 'glossary';
+		// Before a work is open, the glossary shown empty, doing nothing
+		if (!state.current) { inactive(section, TEXT.noWork); }
 		section.appendChild(element('div', 'label', TEXT.glossary + ' · ' + languageName(language)));
 		section.appendChild(element('p', 'hint', TEXT.glossaryHelp));
-		glossaryRows = glossaryRows || (state.current.glossary || []).map(term => ({ term: term.term, translation: term.translations[language] || '' }));
+		glossaryRows = glossaryRows || ((state.current && state.current.glossary) || []).map(term => ({ term: term.term, translation: term.translations[language] || '' }));
 		const table = element('table', 'list');
 		const head = element('tr');
 		head.appendChild(element('th', '', TEXT.term));
@@ -2006,16 +2059,21 @@ function pageHtml(): string {
 		box.appendChild(section);
 	}
 
-	// ---- 6. Read Aloud
+	// ---- Read Aloud, a card of Interpret in Next Steps: drawn in its panel while the panel is open
 	let aloudChoice = 0;
 	function drawAloud() {
-		const box = document.getElementById('aloud');
-		box.textContent = '';
+		const panel = document.getElementById('aloudStep');
+		if (!panel) { return; }
+		panel.className = 'ocr';
+		panel.textContent = '';
 		const snippet = state.snippet;
-		if (!snippet) { box.appendChild(element('p', 'hint', TEXT.noSnippet)); return; }
-		box.appendChild(element('div', 'label', snippet.label));
-		const options = [{ text: snippet.text, language: snippet.language, label: format(TEXT.theSnippet, languageName(snippet.language || 'en')) }];
-		for (const translation of snippet.translations || []) {
+		// Before there is a snippet, its controls shown as they are, doing nothing
+		panel.appendChild(element(snippet ? 'div' : 'p', snippet ? 'label' : 'hint', snippet ? snippet.label : TEXT.noSnippet));
+		const box = panel.appendChild(element('div'));
+		if (!snippet) { inactive(box, TEXT.noSnippet); }
+		const shown = snippet || { text: '', language: 'en' };
+		const options = [{ text: shown.text, language: shown.language, label: format(TEXT.theSnippet, languageName(shown.language || 'en')) }];
+		for (const translation of shown.translations || []) {
 			options.push({ text: translation.text, language: translation.language, label: format(TEXT.itsTranslation, languageName(translation.language), translation.model) });
 		}
 		aloudChoice = Math.min(aloudChoice, options.length - 1);
@@ -2065,8 +2123,9 @@ function pageHtml(): string {
 		if (!voices.length) { box.appendChild(element('p', 'hint', format(TEXT.noVoice, languageName(chosen.language || 'en')))); }
 	}
 	if (window.speechSynthesis) { speechSynthesis.addEventListener('voiceschanged', () => drawAloud()); }
+	window.addEventListener('pollis-aloud-step', () => drawAloud());
 
-	// ---- 7. Use It
+	// ---- 6. Use It
 	function drawUse() {
 		const box = document.getElementById('use');
 		document.getElementById('head-use').textContent = state.snippets.length ? String(state.snippets.length) : '';

@@ -77,10 +77,11 @@ The work's record says what the work is and where its scan is; every step reads 
     scan, corrected by you. The result is a snippet.
   \item \textbf{Translate}: the snippet, with a local model you choose, into the language you pick. The translation
     is saved with the snippet, labelled with its model and date.
-  \item \textbf{Read aloud}: the snippet, or its translation.
   \item \textbf{Use it}: copy a snippet or its citation, send it to a notebook, or open its file.
 \end{enumerate}
-The page has these seven steps, numbered; each menu item opens it at one of them (\S\ref{sec:menu}).
+The page has these six steps, numbered; each menu item opens it at one of them (\S\ref{sec:menu}). Reading the snippet,
+or its translation, aloud is an optional action: the card Read Aloud of Interpret, in Next Steps. Until there is a work,
+or a snippet, each step shows its fields and buttons as they are, and a click on one says what to do first.
 
 \section{The work record}\label{sec:record}
 Each work is one TOML file, \file{work.toml}, in its own folder \file{~/.pollis/works/<id>/}, beside its snippets.
@@ -312,7 +313,7 @@ right in every sentence of the Dutch letter, so every translation is labelled as
 the date.
 
 \section{Reading aloud}\label{sec:aloud}
-\ui{Read Aloud} reads a snippet, or one of its translations, with a voice of the computer for the language of the
+\ui{Read Aloud}, a card of Interpret in Next Steps, reads a snippet, or one of its translations, with a voice of the computer for the language of the
 text, chosen under \ui{Voice}; \ui{Pause}, \ui{Resume} and \ui{Stop} control it. The voices are those of the operating
 system, so which languages can be read, and how well, depends on the computer.
 
@@ -366,7 +367,7 @@ The submenu \ui{Explore}\gt\ui{OCR Files and Snippets}, below \ui{PDF Files}. It
 \ui{Read} & The scan's pages beside their text, the flagged words highlighted, the contents at the side \\
 \ui{Extract Snippet} & The chosen contents entries or pages as a snippet, at the step of correcting it \\
 \ui{Translate Snippet} & The snippet translated, with the model and the language you choose \\
-\ui{Read Aloud} & Reads the snippet, or its translation, aloud \\
+\ui{Read Aloud} & Opens Read Aloud in Next Steps, which reads the snippet, or its translation, aloud \\
 \ui{Snippets} & Lists the snippets of every work, with their translations, to copy, cite, send to a notebook or open \\
 \ui{Glossary} & The work's agreed translations of names and terms, to edit \\
 \ui{Add to Workspace} & Copies the work's record and snippets into the Pollis Workspace (\S\ref{sec:where}) \\

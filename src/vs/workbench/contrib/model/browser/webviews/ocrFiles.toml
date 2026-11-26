@@ -14,7 +14,7 @@ pageCommand = "pollis.ocrFiles.works"
 name = "Overview"
 file = "ocrFiles/overview.md"
 bundled = true
-description = "The seven steps: opening a work, reading its pages, choosing parts, extracting and correcting a snippet, translating it, reading it aloud and using it"
+description = "The six steps: opening a work, reading its pages, choosing parts, extracting and correcting a snippet, translating it and using it; and reading it aloud, in Next Steps"
 
 [[wikis]]
 name = "Factsheet"
