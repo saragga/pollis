@@ -1565,7 +1565,7 @@ function pageHtml(): string {
 			}
 			box.appendChild(table);
 		}
-		// The record of the work open, its fields shown empty and disabled before one is open
+		// The record of the work open, its fields shown empty before one is open, a click saying to open one first
 		const work = state.current;
 		const record = work || {};
 		box.appendChild(element('div', 'label', TEXT.record));
@@ -1633,7 +1633,7 @@ function pageHtml(): string {
 		const head = document.getElementById('head-read');
 		box.textContent = '';
 		head.textContent = '';
-		// Before a work is open: the page's controls, the legend and the contents, shown but disabled
+		// Before a work is open: the page's controls, the legend and the contents, shown as they are, a click saying why it does nothing
 		const noWork = !state.current || !state.pages;
 		if (noWork) { box.appendChild(element('p', 'hint', TEXT.noWork)); }
 		const nav = element('div', 'bar');
