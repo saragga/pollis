@@ -325,10 +325,19 @@ const MINIMAL_JS = `
 		}
 		const title = event.target.closest('button[data-row]');
 		const details = title && document.querySelector('tr.row-details[data-details="' + CSS.escape(title.dataset.row) + '"]');
-		if (details) {
-			details.hidden = !details.hidden;
-			title.setAttribute('aria-expanded', String(!details.hidden));
+		if (!details) {
+			return;
 		}
+		// A row with steps, always shown under it, runs its first step and shows it; a row's code opens and closes
+		const first = details.querySelector('.row-step');
+		if (first) {
+			showRowStep(first, true);
+			const run = first.querySelector('.step-code [data-step-act="juliaRepl"]');
+			if (run) { run.click(); }
+			return;
+		}
+		details.hidden = !details.hidden;
+		title.setAttribute('aria-expanded', String(!details.hidden));
 	});
 	// A step of a row, folded under its title or shown
 	function showRowStep(step, shown) {
@@ -346,8 +355,6 @@ const MINIMAL_JS = `
 			return;
 		}
 		details.hidden = false;
-		const title = document.querySelector('button[data-row="' + CSS.escape(details.dataset.details) + '"]');
-		if (title) { title.setAttribute('aria-expanded', 'true'); }
 		showRowStep(step, true);
 	});
 	const minimalSearch = document.querySelector('.minimal-search');
@@ -360,7 +367,9 @@ const MINIMAL_JS = `
 				row.hidden = !match;
 				shown += match ? 1 : 0;
 				const details = row.nextElementSibling;
-				if (!match && details && details.classList.contains('row-details')) {
+				if (details && details.classList.contains('row-details') && details.querySelector('.row-step')) {
+					details.hidden = !match;
+				} else if (!match && details && details.classList.contains('row-details')) {
 					details.hidden = true;
 					const title = row.querySelector('button[data-row]');
 					if (title) { title.setAttribute('aria-expanded', 'false'); }
@@ -391,7 +400,8 @@ function buildRowStepsHtml(row: IModelRow): string {
 
 /**
  * The table of a Minimal panel: a search box, then a row per `[[rows]]`, its title (which opens its code under it, in
- * a code box as that of a step), the line under it and its description, and its values in the columns.
+ * a code box as that of a step, or runs the first of its steps, which are always shown under it), the line under it and
+ * its description, and its values in the columns.
  */
 function buildRowsHtml(data: IScaffoldPanelData): string {
 	const rows = data.rows ?? [];
@@ -405,13 +415,13 @@ function buildRowsHtml(data: IScaffoldPanelData): string {
 		const searched = [row.title, row.subtitle, row.description, ...row.cells].join(' ').toLowerCase();
 		const opens = row.code || row.steps.length;
 		const title = opens
-			? `<button class="row-title" data-row="${htmlEsc(row.id)}" aria-expanded="false">${htmlEsc(row.title)}</button>`
+			? `<button class="row-title" data-row="${htmlEsc(row.id)}"${row.steps.length ? '' : ' aria-expanded="false"'}>${htmlEsc(row.title)}</button>`
 			: `<span class="row-title">${htmlEsc(row.title)}</span>`;
 		const name = `<td>${title}${row.subtitle ? `<div class="row-sub">${htmlEsc(row.subtitle)}</div>` : ''}${row.description ? `<p class="row-desc">${htmlEsc(row.description)}</p>` : ''}</td>`;
 		const cells = row.cells.map(cell => `<td>${htmlEsc(cell)}</td>`).join('');
 		const inside = row.steps.length ? buildRowStepsHtml(row) : stepCodeBoxHtml(htmlEsc(rowKey(row)), htmlEsc(localize('scaffold.minimal.code', "Code")), '');
 		const details = opens
-			? `\n\t\t\t<tr class="row-details" data-details="${htmlEsc(row.id)}" hidden><td colspan="${columns.length + 1}">${inside}</td></tr>`
+			? `\n\t\t\t<tr class="row-details" data-details="${htmlEsc(row.id)}"${row.steps.length ? '' : ' hidden'}><td colspan="${columns.length + 1}">${inside}</td></tr>`
 			: '';
 		return `\t\t\t<tr class="minimal-row" data-search="${htmlEsc(searched)}">${name}${cells}</tr>${details}`;
 	});
