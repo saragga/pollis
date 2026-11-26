@@ -1,0 +1,263 @@
+% Pollis drill-down: Localisation, Pollis in other languages, a draft (26 November 2026): what there is to translate,
+% what VS Code already does, the language packs there are, the design of a Pollis language pack, of panels and wikis in
+% each language and of toolboxes, how the reader chooses the language, the order of the work, and the open questions.
+% Nothing in it is in Pollis yet. For whoever maintains Pollis, and for readers who would review a language.
+% Compile with: latexmk -pdf workflow_localisation.tex
+\input{workflow_style}
+
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{needspace}
+
+\fancyhf{}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: Localisation\enspace·\enspace Draft, 26 November 2026}
+\fancyfoot[R]{\footnotesize\color{soft}\thepage}
+
+\titleformat{\section}{\color{navy}\large\bfseries}{\color{deepamber}\thesection}{0.6em}{}
+\titleformat{\subsection}{\color{navy}\normalsize\bfseries}{\color{deepamber}\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+\setlength{\parskip}{4pt}
+
+\usepackage{xurl}
+\newcommand{\file}[1]{{\small\nolinkurl{#1}}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcommand{\ui}[1]{\textbf{#1}}
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+\begin{document}
+
+\workflowhead[Drill-Down]{Localisation}
+  {Pollis in other languages}
+  {What there is to translate, what VS Code already does, and how Pollis's own menus, panels, wikis and toolboxes
+   would follow the reader's language.}
+
+\begin{nbox}
+{\color{amber}\bfseries Drill-down, a draft.}\enspace
+This drill-down is a design, not a description: nothing in it is in Pollis yet, and its settings, files and menu
+items are proposals. Pollis today is in English, except VS Code's own menus, which follow a language pack.
+
+It describes what there is to translate (\S\ref{sec:what}), what VS Code already does (\S\ref{sec:vscode}), the
+language packs there are (\S\ref{sec:packs}), the design (\S\ref{sec:design}), how the reader chooses the language
+(\S\ref{sec:choose}), languages in other scripts (\S\ref{sec:scripts}), review (\S\ref{sec:review}), the order of the
+work (\S\ref{sec:order}) and the open questions (\S\ref{sec:questions}).
+\end{nbox}
+
+\tableofcontents
+
+\section{What it is for}\label{sec:why}
+\begin{itemize}
+  \item \textbf{Readers work in their own language.} A student in Lyon or São Paulo reads a panel's key points and
+    its wiki faster, and more surely, in French or Portuguese than in English.
+  \item \textbf{The menus are half translated already.} With Microsoft's French pack, VS Code's menus are in French,
+    while Pollis's own menus, pages and panels stay in English beside them.
+  \item \textbf{The code stays as it is.} The Julia code of a panel, its comments and what it prints are code, which
+    the reader edits and runs, and they stay in English, as the names of Julia's functions are.
+\end{itemize}
+
+\section{What there is to translate}\label{sec:what}
+About 2.3 million words of Pollis's own text, besides VS Code's interface, counted in the sources on 26 November 2026.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.3\linewidth}p{0.24\linewidth}L@{}}
+\toprule
+\textbf{Layer} & \textbf{Size} & \textbf{How it is written today}\\
+\midrule
+VS Code's interface: menus, Settings, the Command Palette & about 19,000 strings & through \code{localize}; translated by
+  Microsoft's language packs\\
+Pollis's own interface: its pages, the frames of its panels, its menus & about 6,600 \code{localize} calls in
+  Pollis's own files & through \code{localize}, as VS Code's; not translated\\
+The built-in panels & 241 TOML files, 520,000 words with their code & plain English in each file\\
+The built-in wikis & 1,762 pages, 960,000 words & plain English Markdown\\
+The menus of the toolboxes & 15 toolboxes & plain English in each \file{package.json}\\
+The toolboxes' panels and wikis & 121 panels, 420,000 words with their code; 686 wikis, 400,000 words & plain
+  English\\
+The documents of \ui{Help > Documentation} & the Tour, the Guides and the drill-downs & LaTeX; left out of this
+  design\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{What VS Code already does}\label{sec:vscode}
+\begin{itemize}
+  \item \textbf{Language packs.} A language pack is an extension with the translations of VS Code's strings, by their
+    keys. \ui{Configure Display Language}, in the Command Palette, lists the packs installed and the language of the
+    system, and sets the one chosen.
+  \item \textbf{A restart.} VS Code reads its strings once, when it starts, so a new display language asks to restart.
+  \item \textbf{An offer at the first start.} When the system's language has a pack, VS Code offers to install it and
+    restart in that language. Pollis looks for the pack on Open VSX, as for every extension.
+  \item \textbf{Extensions.} An extension's menus and settings take their titles from \file{package.nls.json}, and
+    from \file{package.nls.fr.json} beside it in French; its code takes its strings from
+    \file{l10n/bundle.l10n.fr.json}.
+  \item \textbf{A version.} A pack serves the VS Code version it was made for and the later ones. Pollis is built on
+    VS Code 1.117, so the newest pack it takes is 1.110.0, and the strings VS Code added after 1.110 show in English.
+\end{itemize}
+
+\section{The language packs there are}\label{sec:packs}
+Microsoft publishes 13 packs on Open VSX, each with a version 1.110.0 that Pollis takes: French, German, Italian,
+Spanish, Portuguese (Brazil), Russian, Polish, Czech, Turkish, Chinese (Simplified and Traditional), Japanese and
+Korean. Other authors publish packs for other languages, on Open VSX or on the VS Code Marketplace, which Pollis's
+\ui{Extensions} view does not search; a pack from there installs from its \file{.vsix} file, and its translations can
+seed Pollis's own pack.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.2\linewidth}p{0.3\linewidth}p{0.17\linewidth}L@{}}
+\toprule
+\textbf{Language} & \textbf{Pack} & \textbf{VS Code strings} & \textbf{Where}\\
+\midrule
+French (and the 12 others above) & Microsoft's, 1.110.0 & 15,559 & Open VSX\\
+Dutch & Nederlands Taalpakket, December 2024 & 11,678 & VS Code Marketplace\\
+Arabic & Arabic-language.vscode-ar, October 2026 & 25,001 & VS Code Marketplace\\
+Hindi & gdhillon.vscode-loc-hindi & 18,514 & Open VSX and the Marketplace\\
+European Portuguese, Greek & none & --- & ---\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The strings are those of the pack's \code{vscode} part, counted on 26 November 2026. The packs were made for different
+versions of VS Code, so a pack made for a later version also has strings that Pollis's VS Code does not use.
+
+\section{The design}\label{sec:design}
+The code is written once; each language then costs its translation run and its review. Pollis follows VS Code's display
+language, so a reader chooses French in one place.
+
+\subsection{A Pollis language pack for each language}
+The build already collects every \code{localize} string with its key. A script would merge Microsoft's pack for the
+language with Pollis's own strings, translated, into one pack, \emph{Pollis Language Pack: Français}, published on
+Open VSX with each Pollis release. One pack for each language, because VS Code uses one pack for a display language.
+It also fills the strings VS Code added between 1.110 and 1.117, and a string not yet translated shows in English.
+
+\subsection{One translation script for every layer}
+\begin{itemize}
+  \item \textbf{A model, with a glossary.} The script sends the texts in batches to a model the maintainer chooses,
+    with the glossary of the language: \emph{Pollis}, \emph{Time Arrow}, the names of packages, data sets and menus of
+    other programs stay as they are, and each language has fixed words for panel, step, wiki and toolbox. The
+    instructions sent with the texts are a file in the repository, which anyone can read.
+  \item \textbf{Checks on every answer.} The placeholders \code{\{0\}}, the \code{\&\&} of a menu's mnemonic, links,
+    code spans, formulas and the \code{\{\{input\}\}} of a panel's code the same as in English; numbers that go into
+    code, such as an input's default \code{1000}, left as they are. An answer that fails a check is asked for again.
+  \item \textbf{A memory.} Each translation is kept with the English it came from, so a release translates only what
+    changed, and a reviewer's correction is never translated over.
+\end{itemize}
+
+\subsection{Panels in each language}
+Beside each panel's TOML, an overlay \file{l10n/fr/<panel>.toml} would hold only its text fields (title, intro,
+labels, tooltips, key points, Next Steps), by the same ids, each with the English it translates. Code fields are never
+in an overlay.
+\begin{itemize}
+  \item \textbf{Built-in panels.} \code{compile-toml} turns each panel's TOML into its data when Pollis is built; it
+    would turn the overlays into the data of each language beside it, and the panel would take the language Pollis
+    runs in.
+  \item \textbf{Toolbox panels.} Pollis reads them from the toolbox when it opens them, and would read the overlay of
+    the language beside each.
+  \item \textbf{A stale translation.} When a panel's English changes, its overlay no longer matches: the field shows in
+    English, and \code{compile-toml} and the panel validator list it, until it is translated again.
+\end{itemize}
+
+\subsection{Wikis in each language}
+A copy \file{fr/<page>.md} beside each wiki page; the wiki view opens it when there is one, else the English page.
+Citations, reference lists, formulas and code blocks stay as in English, and a copy records the English it translates,
+as an overlay does.
+
+\subsection{Toolboxes}
+The titles in a toolbox's \file{package.json} become \code{\%keys\%}, with \file{package.nls.json} in English and
+\file{package.nls.fr.json} beside it, which VS Code already reads. Its panels and wikis get overlays and copies as the
+built-in ones. The Extension Agent and the packaging of a toolbox would write them when a toolbox is built.
+
+\subsection{Ask Pollis}
+The index and search of Ask Pollis stay in English in this design: its sources are the English texts, which a question
+in another language would be searched against. Indexing each language is a later step.
+
+\section{Choosing the language}\label{sec:choose}
+\subsection{The display language: once, with a restart}
+The display language is a choice for the whole of Pollis. It is made once, at the first start or in
+\ui{Configure Display Language}, and asks to restart, because VS Code reads its strings when it starts. It needs no
+place in the status bar: VS Code keeps the status bar for what belongs to the editor in front, which changes from one
+to the next, such as a file's encoding, its line endings and its language mode.
+
+\subsection{The language of a page: in the status bar}
+A page's language is that kind of thing. As a LaTeX file declares its own encoding and its own languages, and the
+status bar shows the encoding of the file in front, a status-bar item would show the language of the Pollis page or
+wiki in front, when that page has a translation: \ui{Français}, or \ui{English} when it is read in English.
+\begin{itemize}
+  \item \textbf{A click switches that page} between its translation and the English, at once and without a restart,
+    because a page's text comes from its TOML and its wiki, not from the strings read at the start. Its buttons and
+    frame stay in the display language.
+  \item \textbf{Why.} The translations are a model's until a reader reviews them; a reader who doubts a sentence reads
+    the English in a click, and a reviewer compares the two.
+  \item \textbf{A setting} would choose the default for every page: the display language, or English
+    (\file{pollis.localisation.pages}). The item hides, as any status-bar item does, from its context menu.
+  \item \textbf{A page in English only} shows no item: there is nothing to switch.
+\end{itemize}
+
+\section{Languages in other scripts}\label{sec:scripts}
+The scripts themselves are no harder: Pollis runs on Chromium, which draws them all with the system's fonts. A
+language is harder when VS Code has no pack for it, when it is written right to left, or when its plurals have more
+forms than English.
+\begin{itemize}
+  \item \textbf{The same as French}: Japanese, Korean, and Chinese, simplified and traditional, have Microsoft's
+    packs. Cantonese in Hong Kong is mostly written in standard written Chinese, so the traditional pack serves.
+  \item \textbf{Plurals.} A noun after a number takes one form in English after 1 and another after the rest; Russian has
+    three forms, for 1, for 2 to 4 and for 5 to 20, and Arabic six. VS Code's
+    \code{localize} has none, so the strings with a count would choose their form with the browser's
+    \code{Intl.PluralRules}, a string for each form.
+  \item \textbf{No pack}: Greek, European Portuguese and Hindi (whose pack is another author's). The script would also
+    translate VS Code's 19,000 strings, which are then Pollis's to keep up with each VS Code release.
+  \item \textbf{Right to left}: Arabic. VS Code lays its workbench out left to right in every language, so its menus,
+    sidebars and editors would stay as they are, with Arabic words in them. Pollis's own pages could be mirrored, page
+    by page, with \code{dir="rtl"} and CSS's logical properties, which say start and end rather than left and right.
+\end{itemize}
+
+\section{Review}\label{sec:review}
+\begin{itemize}
+  \item \textbf{The interface}: a native speaker reads a sample of the strings of each language before its pack is
+    published.
+  \item \textbf{The scholarly text}: panel intros, key points and wikis are read page by page. Until a page is read, it
+    says that it is a machine translation, with its model and date, and its status-bar item opens the English.
+  \item \textbf{Corrections} go into the memory of \S\ref{sec:design}, so the next release keeps them; a reader sends
+    one through \ui{Help > Report Issue}.
+\end{itemize}
+
+\section{The order of the work}\label{sec:order}
+\begin{enumerate}
+  \item \textbf{French, as a pilot}: the language pack, the \ui{Explore} menu and the Historical Geography and
+    Archaeology toolbox, with the status-bar item and the checks.
+  \item \textbf{German, Italian, Spanish and Portuguese}, with Microsoft's packs; then Dutch, from Nederlands
+    Taalpakket's translations and Pollis's own.
+  \item \textbf{The rest of Pollis's menus and the other toolboxes}, in the five languages.
+  \item \textbf{Japanese, Korean, Chinese and Russian}, with Microsoft's packs and the plural forms.
+  \item \textbf{Greek and Hindi}, with VS Code's strings translated by the script.
+  \item \textbf{Arabic}, with its pages mirrored.
+\end{enumerate}
+
+\section{Open questions}\label{sec:questions}
+\begin{enumerate}
+  \item \textbf{Portuguese.} VS Code's only Portuguese pack is Brazilian. Should Pollis's own strings be Brazilian too,
+    so that the menus read as one language, or European Portuguese, with VS Code's menus left in Brazilian?
+  \item \textbf{The pilot.} \ui{Explore} and one toolbox, or only the menus and the panels' labels, with no wikis?
+  \item \textbf{Review.} A reader for each language before it ships, or the scholarly text left as a machine
+    translation, marked as one, until a reader comes?
+  \item \textbf{Publishing.} The language packs on Open VSX under the \code{pollis} namespace, one for each language,
+    installed from the \ui{Extensions} view as VS Code's are?
+  \item \textbf{Ask Pollis.} An index for each language, or English sources found from a question translated first?
+\end{enumerate}
+
+\section{Where things would be}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.45\linewidth}L@{}}
+\toprule
+\textbf{File} & \textbf{What it holds}\\
+\midrule
+\file{build/pollis/l10n/} & The translation script, its instructions, the glossary and the memory of each language\\
+\file{l10n/<language>/<panel>.toml}, beside each panel & A panel's text fields in the language\\
+\file{<language>/<page>.md}, beside each wiki page & A wiki page in the language\\
+\file{package.nls.<language>.json}, in each toolbox & A toolbox's menus in the language\\
+\file{src/vs/workbench/contrib/localization/} & VS Code's \ui{Configure Display Language}, as it is\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\end{document}

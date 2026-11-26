@@ -19,6 +19,7 @@ The LaTeX sources of the documents in Help > Documentation. Pollis ships these s
 | `workflows/workflow_plotting.tex` | `pollis-drilldown-plotting.pdf` (Drill-down: Plotting) |
 | `workflows/workflow_customisation.tex` | `pollis-drilldown-customisation.pdf` (Drill-down: Customisation) |
 | `workflows/workflow_ocr_files.tex` | `pollis-drilldown-ocr-files.pdf` (Drill-down: OCR Files and Snippets, a draft) |
+| `workflows/workflow_localisation.tex` | `pollis-drilldown-localisation.pdf` (Drill-down: Localisation, a draft) |
 
 `workflows/replication_flowchart.pdf`, a figure of the Tour and the Guide, is not kept here either: it is built from `replication_flowchart.tex` before them.
 

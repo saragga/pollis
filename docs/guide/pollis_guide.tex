@@ -162,6 +162,13 @@ said to be not available.
 \subhead{Getting Pollis}
 Pollis is free and open source, for Windows, macOS and Linux:\\ \downloadlink.\\
 Questions and problems: \ui{Help > Report Issue}, or \contactemail.
+
+\subhead{Written for Pollis}
+About 2.3 million words of Pollis's own text, besides VS Code's interface, counted in the sources on
+26 November 2026: its menus, panels and wikis, and those of its toolboxes. And some 140,000 lines of
+TypeScript and JavaScript and 134,000 lines of Julia, blank lines left out: of the Julia, 53,000 lines are
+in its 32 Julia packages, 48,000 in the code of its panels, 22,000 in its notebooks and 10,000 in
+Pollis itself and its toolboxes.
 \end{minipage}\hfill
 \begin{minipage}[t]{0.40\linewidth}\vspace{0pt}
 \begin{tcolorbox}[enhanced, colback=white, colframe=amber, boxrule=0pt, leftrule=2pt, sharp corners,
@@ -2996,21 +3003,21 @@ The work on Pollis also goes back to Julia's open-source packages. What Pollis n
 written as a package of its own, public and with the MIT licence, which anyone can use without Pollis
 (Pollis Packages, \pg{Pollis Packages}). Bugs found in other authors' packages were fixed and the fixes sent to them as
 pull requests; until a fix is merged and released, Pollis installs a fork of the package with the fix.
-The lists are as of 28 October 2026.
+The packages are as of 26 November 2026, the pull requests as of 28 October 2026.
 
 \subhead{Packages created}
-Eighteen packages, each with the date its repository was created on GitHub. The methods and
-EventStudies are in the Pollis registry, created on 13 October 2026; the others are installed from GitHub.
+Thirty-two packages, each with the date its repository was created on GitHub. Twenty-two are in the
+Pollis registry, created on 13 October 2026; the others are installed from GitHub.
 
 \smallskip
 {\small\renewcommand{\arraystretch}{1.2}%
 \begin{tabularx}{\linewidth}{@{}>{\bfseries}l>{\raggedright\arraybackslash}p{0.15\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.1\linewidth}@{}}
 \textcolor{navy}{\bfseries Package} & \textcolor{navy}{\bfseries Created} & \textcolor{navy}{\bfseries What it does} & \textcolor{navy}{\bfseries Registry} \\
-HARE & 14 May 2026 & Heteroskedasticity and autocorrelation estimators & --- \\
+HARE & 14 May 2026 & Heteroskedasticity and autocorrelation estimators & Pollis \\
 RangeVol & 20 May 2026 & Range-based volatility estimators & --- \\
-EDGAR & 14 Jun 2026 & Fetches SEC EDGAR filings and financial data & --- \\
-PollisDatasets & 2 Oct 2026 & Small, well-known datasets for examples and teaching, as Tables.jl column tables & --- \\
-PollisTeX & 10 Oct 2026 & Typesets LaTeX from Julia with Tectonic, downloaded on first use & --- \\
+EDGAR & 14 Jun 2026 & Fetches SEC EDGAR filings and financial data & Pollis \\
+PollisDatasets & 2 Oct 2026 & Small, well-known datasets for examples and teaching, as Tables.jl column tables & Pollis \\
+PollisTeX & 10 Oct 2026 & Typesets LaTeX from Julia with Tectonic, downloaded on first use & Pollis \\
 ArcFS & 15 Oct 2026 & Breiman's arc-fs: adaptive resampling with pruned trees & Pollis \\
 BreslowCox & 15 Oct 2026 & The Cox model with Breslow's ties, and its predicted survival & Pollis \\
 ErrorComponents & 15 Oct 2026 & Random-effects panel regressions: Wallace-Hussain, Amemiya, Swamy-Arora and nested error components & Pollis \\
@@ -3022,8 +3029,28 @@ PropensityMatching & 15 Oct 2026 & Propensity score matching: Dehejia and Wahba,
 ThresholdAR & 15 Oct 2026 & Threshold autoregression: SETAR models and limit cycles & Pollis \\
 PollisJournals & 20 Oct 2026 & The journals of OpenAlex, for the PollisJournals database & --- \\
 EventStudies & 21 Oct 2026 & Intraday event studies of SEC filings & Pollis \\
+\end{tabularx}}
+
+\newpage
+{\small\renewcommand{\arraystretch}{1.2}%
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}l>{\raggedright\arraybackslash}p{0.15\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.1\linewidth}@{}}
+\textcolor{navy}{\bfseries Package} & \textcolor{navy}{\bfseries Created} & \textcolor{navy}{\bfseries What it does} & \textcolor{navy}{\bfseries Registry} \\
 PollisRSS & 25 Oct 2026 & The feeds of \ui{Explore > RSS > RSS Feeds}, by topic & --- \\
 PollisReferences & 25 Oct 2026 & The works Pollis cites, with their citation counts & --- \\
+StochasticVolatility & 2 Nov 2026 & Stochastic volatility: simulation and European and American pricing under Heston, Bates and SABR & Pollis \\
+HansenLRTest & 6 Nov 2026 & Hansen's standardized likelihood ratio test for Markov switching models of GNP & --- \\
+MarkovRegimeTest & 6 Nov 2026 & Tests of one regime against two, and the dating of the regimes, in Markov switching models of GNP & --- \\
+MarkovRegimes & 6 Nov 2026 & Markov switching models of any series of growth rates or returns: tests of one regime against two, estimation and the dating of the regimes & Pollis \\
+PollisBenchmarks & 7 Nov 2026 & The published benchmarks Pollis runs on the chat models of a computer, and their grading & --- \\
+TwoScalesVolatility & 11 Nov 2026 & Two-scales realized volatility from prices observed with market microstructure noise & Pollis \\
+PollisKnowledge & 12 Nov 2026 & Openly licensed texts that Pollis searches as its Knowledge Base, each with its licence & --- \\
+ForecastM4Benchmark & 14 Nov 2026 & The eight statistical benchmarks of the M4 forecasting competition, computed as its organisers did & --- \\
+PollisCompetitions & 14 Nov 2026 & The data of the M forecasting competitions, as their organisers gave them & Pollis \\
+ModelZoo & 21 Nov 2026 & Models of Pollis's competitions and benchmarks that no registered package has, and the measures that score them & Pollis \\
+ArchaeologicalDetection & 22 Nov 2026 & Trained neural networks that detect archaeological features in lidar terrain models & Pollis \\
+SmartRegions & 22 Nov 2026 & Open data of places for smart cities and regions: Overture Maps, the OpenSky Network and Google's maps & Pollis \\
+HistoricalGeography & 23 Nov 2026 & The borders of states over the centuries, historical texts and the places they name & Pollis \\
+PollisBritannica & 24 Nov 2026 & An index of the articles of the Encyclopaedia Britannica from 1771 to 1929 & --- \\
 \end{tabularx}}
 
 \subhead{Pull requests accepted}
