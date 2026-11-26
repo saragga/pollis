@@ -25,7 +25,15 @@ export enum BrowserActionGroup {
 	Tabs = '1_tabs',
 	Zoom = '2_zoom',
 	Page = '3_page',
-	Settings = '4_settings'
+	Settings = '4_settings',
+	// POLLIS: the groups shown on the bar beside the address, as a reader's toolbar shows them (groups starting with
+	// 'actions' are on the bar, the others in its ... menu): the pages of the tab, Find in Page, the zoom, New Tab,
+	// then the developer tools
+	BarPages = 'actions_1_pages',
+	BarFind = 'actions_2_find',
+	BarZoom = 'actions_3_zoom',
+	BarTabs = 'actions_4_tabs',
+	BarTools = 'actions_9_tools'
 }
 
 class GoBackAction extends Action2 {

@@ -217,6 +217,8 @@ export interface IBrowserViewModel extends IDisposable {
 	zoomIn(): Promise<void>;
 	zoomOut(): Promise<void>;
 	resetZoom(): Promise<void>;
+	/** POLLIS: zooms to one of the browser's steps, an index of `browserZoomFactors`, as the zoom list on the bar does. */
+	setZoomIndex(zoomIndex: number): Promise<void>;
 	getConsoleLogs(): Promise<string>;
 	getElementData(token: CancellationToken): Promise<IElementData | undefined>;
 	getFocusedElementData(): Promise<IElementData | undefined>;
@@ -554,6 +556,13 @@ export class BrowserViewModel extends Disposable implements IBrowserViewModel {
 			return;
 		}
 		await this.setBrowserZoomIndex(this._browserZoomIndex - 1);
+		if (this._zoomHost) {
+			this.zoomService.setHostZoomIndex(this._zoomHost, this._browserZoomIndex, this._isEphemeral);
+		}
+	}
+
+	async setZoomIndex(zoomIndex: number): Promise<void> {
+		await this.setBrowserZoomIndex(zoomIndex);
 		if (this._zoomHost) {
 			this.zoomService.setHostZoomIndex(this._zoomHost, this._browserZoomIndex, this._isEphemeral);
 		}

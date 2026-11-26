@@ -39,7 +39,7 @@ import { Registry } from '../../../../../platform/registry/common/platform.js';
 import { PolicyCategory } from '../../../../../base/common/policy.js';
 import { workbenchConfigurationNodeBase } from '../../../../common/configuration.js';
 import { safeSetInnerHtml } from '../../../../../base/browser/domSanitize.js';
-import { BrowserActionCategory } from '../browserViewActions.js';
+import { BrowserActionCategory, BrowserActionGroup } from '../browserViewActions.js';
 
 // Register tools
 import '../tools/browserTools.contribution.js';
@@ -546,7 +546,8 @@ class AddElementToChatAction extends Action2 {
 			toggled: CONTEXT_BROWSER_ELEMENT_SELECTION_ACTIVE,
 			menu: {
 				id: MenuId.BrowserActionsToolbar,
-				group: 'actions',
+				// POLLIS: after the pages, Find in Page, the zoom and New Tab
+				group: BrowserActionGroup.BarTools,
 				order: 1,
 				when: ChatContextKeys.enabled
 			},
@@ -581,7 +582,8 @@ class AddConsoleLogsToChatAction extends Action2 {
 			precondition: ContextKeyExpr.and(BROWSER_EDITOR_ACTIVE, CONTEXT_BROWSER_HAS_URL, CONTEXT_BROWSER_HAS_ERROR.negate(), ChatContextKeys.enabled),
 			menu: {
 				id: MenuId.BrowserActionsToolbar,
-				group: 'actions',
+				// POLLIS: after the pages, Find in Page, the zoom and New Tab
+				group: BrowserActionGroup.BarTools,
 				order: 2,
 				when: ChatContextKeys.enabled
 			}

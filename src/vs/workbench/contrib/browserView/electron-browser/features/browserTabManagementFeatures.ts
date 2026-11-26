@@ -18,7 +18,7 @@ import { Codicon } from '../../../../../base/common/codicons.js';
 import { ThemeIcon } from '../../../../../base/common/themables.js';
 import { BrowserViewUri } from '../../../../../platform/browserView/common/browserViewUri.js';
 import { generateUuid } from '../../../../../base/common/uuid.js';
-import { BrowserEditorInput } from '../../common/browserEditorInput.js';
+import { BrowserEditorInput, browserTabPageText, IBrowserTabPages } from '../../common/browserEditorInput.js';
 import { BROWSER_EDITOR_ACTIVE, BrowserActionCategory, BrowserActionGroup } from '../browserViewActions.js';
 import { logBrowserOpen } from '../../../../../platform/browserView/common/browserViewTelemetry.js';
 import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
@@ -264,6 +264,24 @@ interface IOpenBrowserOptions {
 	 * opened one after another keep their order (Pollis.browse).
 	 */
 	atEnd?: boolean;
+
+	/**
+	 * POLLIS: if set, the tab's title while it is at `url`, in place of the page's own, such as the volume and page of a
+	 * scan whose page has only the name of its file as its title.
+	 */
+	title?: string;
+
+	/**
+	 * POLLIS: if set, the tab opened with this key is reused for `url`, in place of a new tab, and a new tab opened with it
+	 * keeps it, so that an opener shows one page after another in one tab of its own.
+	 */
+	reuseKey?: string;
+
+	/**
+	 * POLLIS: if set, the tab's pages, such as those of a scan: it opens at `pages.page`, in place of `url`, titled with
+	 * `pages.title` in place of `title`, and Previous Page and Next Page on the bar go from one page to the next.
+	 */
+	pages?: IBrowserTabPages;
 }
 
 class OpenIntegratedBrowserAction extends Action2 {
@@ -293,7 +311,9 @@ class OpenIntegratedBrowserAction extends Action2 {
 		const telemetryService = accessor.get(ITelemetryService);
 
 		// Parse arguments
-		const options = typeof urlOrOptions === 'string' ? { url: urlOrOptions } : (urlOrOptions ?? {});
+		const given = typeof urlOrOptions === 'string' ? { url: urlOrOptions } : (urlOrOptions ?? {});
+		// POLLIS: a tab with pages opens at its page
+		const options: IOpenBrowserOptions = given.pages ? { ...given, url: browserTabPageText(given.pages.url, given.pages.page) } : given;
 		const resource = BrowserViewUri.forId(generateUuid());
 		const group = options.openToSide ? SIDE_GROUP : ACTIVE_GROUP;
 
@@ -334,10 +354,36 @@ class OpenIntegratedBrowserAction extends Action2 {
 			}
 		}
 
+		// POLLIS: the opener's own tab, when it has one open
+		if (options.reuseKey) {
+			const reused = editorService.editors.find((e): e is BrowserEditorInput => e instanceof BrowserEditorInput && e.reuseKey === options.reuseKey);
+			if (reused) {
+				reused.setPages(options.pages);
+				if (options.url) {
+					if (!options.pages) {
+						reused.setLabel(options.title, options.url);
+					}
+					reused.navigate(options.url);
+				}
+				await editorService.openEditor(reused);
+				return;
+			}
+		}
+
 		logBrowserOpen(telemetryService, options.url ? 'commandWithUrl' : 'commandWithoutUrl');
 
 		const index = options.atEnd && !options.openToSide ? editorGroupsService.activeGroup.count : undefined;
 		const editorPane = await editorService.openEditor({ resource, options: { viewState: { url: options.url, ephemeral: options.ephemeral }, index } }, group);
+
+		// POLLIS: the opener's title and key for the new tab
+		if (editorPane?.input instanceof BrowserEditorInput) {
+			editorPane.input.reuseKey = options.reuseKey;
+			if (options.pages) {
+				editorPane.input.setPages(options.pages);
+			} else if (options.url && options.title) {
+				editorPane.input.setLabel(options.title, options.url);
+			}
+		}
 
 		// Lock the group when opening to the side
 		if (options.openToSide && editorPane?.group) {
@@ -352,11 +398,13 @@ class NewTabAction extends Action2 {
 			id: BrowserViewCommandId.NewTab,
 			title: localize2('browser.newTabAction', "New Tab"),
 			category: BrowserActionCategory,
+			icon: Codicon.add,
 			f1: true,
 			precondition: BROWSER_EDITOR_ACTIVE,
 			menu: {
 				id: MenuId.BrowserActionsToolbar,
-				group: BrowserActionGroup.Tabs,
+				// POLLIS: on the bar
+				group: BrowserActionGroup.BarTabs,
 				order: 1,
 			},
 			// When already in a browser, Ctrl/Cmd + T opens a new tab

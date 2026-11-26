@@ -20,7 +20,7 @@ import { ServicesAccessor } from '../../../../platform/instantiation/common/inst
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { asJson, IRequestService } from '../../../../platform/request/common/request.js';
-import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
@@ -38,7 +38,18 @@ type BritannicaMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'headword'; readonly headword: string }
 	| { readonly command: 'text'; readonly id: number }
-	| ({ readonly command: 'openScan' | 'openArchive' } & IScanPage);
+	| { readonly command: 'scanTab'; readonly value: ScanTab }
+	| ({ readonly command: 'openScan'; readonly title: string } & IScanPage)
+	| ({ readonly command: 'openArchive' } & IScanPage);
+
+/** Where Open the Scan opens a page: in a new tab of Pollis's browser each time, or in the same tab, the one it opened last. */
+type ScanTab = 'new' | 'same';
+
+/** The user's choice of tab for the scans, kept from one session to the next. */
+const SCAN_TAB_STORAGE_KEY = 'pollis.britannica.scanTab';
+
+/** The key by which the browser reuses the tab of the scans, when the user chose the same tab. */
+const SCAN_TAB_REUSE_KEY = 'pollis.britannica.scan';
 
 /** A page of a scan: an item of the Internet Archive, the file of its volume when the item holds more than one, and the page's index in the scan. */
 interface IScanPage {
@@ -72,11 +83,12 @@ function archivePage(scan: IScanPage): string {
 }
 
 /**
- * The page as an image, at the size it was scanned, from the server that holds the item, which the item's metadata name.
- * The archive's shorter address of a page's image, /download/<item>/<file>/page/n<page>.jpg, encodes the name of the file
- * once more on its way to that server, and so finds no file whose name has a comma or a letter outside ASCII.
+ * The pages of the volume as images, at the size they were scanned, from the server that holds the item, which the item's
+ * metadata name: the address of a page with `{page}` where its number goes, as Pollis's browser takes it to go from page
+ * to page. The archive's shorter address of a page's image, /download/<item>/<file>/page/n<page>.jpg, encodes the name of
+ * the file once more on its way to that server, and so finds no file whose name has a comma or a letter outside ASCII.
  */
-async function pageImage(requestService: IRequestService, scan: IScanPage): Promise<string | undefined> {
+async function pageImages(requestService: IRequestService, scan: IScanPage): Promise<string | undefined> {
 	if (scan.page === null) {
 		return undefined;
 	}
@@ -89,7 +101,7 @@ async function pageImage(requestService: IRequestService, scan: IScanPage): Prom
 		if (typeof server !== 'string' || !/^[a-z0-9.-]+\.archive\.org$/.test(server) || typeof dir !== 'string') {
 			return undefined;
 		}
-		return `https://${server}/BookReader/BookReaderImages.php?id=${encodeURIComponent(scan.item)}&itemPath=${encodeURIComponent(dir)}&server=${server}` + (scan.file ? '&subPrefix=' + encodeURIComponent(scan.file) : '') + '&page=n' + scan.page;
+		return `https://${server}/BookReader/BookReaderImages.php?id=${encodeURIComponent(scan.item)}&itemPath=${encodeURIComponent(dir)}&server=${server}` + (scan.file ? '&subPrefix=' + encodeURIComponent(scan.file) : '') + '&page=n{page}';
 	} catch {
 		return undefined;
 	}
@@ -223,12 +235,14 @@ async function openBritannicaPage(accessor: ServicesAccessor): Promise<void> {
 		}
 	};
 
+	const scanTab = (): ScanTab => storageService.get(SCAN_TAB_STORAGE_KEY, StorageScope.PROFILE) === 'same' ? 'same' : 'new';
+
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: BritannicaMessage }) => {
 		const message = e.message;
 		switch (message.command) {
 			case 'ready':
 				try {
-					webviewInput.webview.postMessage({ command: 'state', state: await britannicaService.state() });
+					webviewInput.webview.postMessage({ command: 'state', state: await britannicaService.state(), scanTab: scanTab() });
 				} catch (error) {
 					webviewInput.webview.postMessage({ command: 'error', message: error instanceof Error ? error.message : String(error) });
 				}
@@ -243,10 +257,22 @@ async function openBritannicaPage(accessor: ServicesAccessor): Promise<void> {
 					await showText(message.id);
 				}
 				break;
+			case 'scanTab':
+				if (message.value === 'new' || message.value === 'same') {
+					storageService.store(SCAN_TAB_STORAGE_KEY, message.value, StorageScope.PROFILE, StorageTarget.USER);
+				}
+				break;
 			case 'openScan':
-				// The page of the scan opens as an image in Pollis's own browser, beside the page, or in the archive's reader when there is no image
+				// The page of the scan opens as an image in Pollis's own browser, beside the page, titled with its edition, volume
+				// and page, with Previous Page and Next Page on the browser's bar, in a new tab or in the tab of the scan opened
+				// last; or in the archive's reader when there is no image
 				if (isScanPage(message)) {
-					await commandService.executeCommand('workbench.action.browser.open', await pageImage(requestService, message) ?? archivePage(message));
+					const images = await pageImages(requestService, message);
+					const reuseKey = scanTab() === 'same' ? SCAN_TAB_REUSE_KEY : undefined;
+					const title = typeof message.title === 'string' && message.title.includes('{page}') ? message.title.slice(0, 200) : undefined;
+					await commandService.executeCommand('workbench.action.browser.open', images && message.page !== null
+						? { pages: { url: images, title, first: 0, page: message.page }, reuseKey }
+						: { url: archivePage(message), reuseKey });
 				}
 				break;
 			case 'openArchive':
@@ -283,6 +309,10 @@ function pageHtml(): string {
 		volume: localize('britannica.volume', "Volume {0}"),
 		openScan: localize('britannica.openScan', "Open the Scan"),
 		openArchive: localize('britannica.openArchive', "Open in the Internet Archive"),
+		scanTab: localize('britannica.scanTab', "Open the Scan In"),
+		newTab: localize('britannica.newTab', "A New Tab"),
+		sameTab: localize('britannica.sameTab', "The Same Tab"),
+		scanTitle: localize('britannica.scanTitle', "{0}, Volume {1}, Page {2} of the Scan"),
 		showText: localize('britannica.showText', "Show the Text"),
 		hideText: localize('britannica.hideText', "Hide the Text"),
 		readingText: localize('britannica.readingText', "Reading the text..."),
@@ -355,6 +385,7 @@ function pageHtml(): string {
 	const opened = new Set();
 	let shown = undefined;
 	let measure = 'share';
+	let scanTab = 'new';
 
 	function element(tag, className, content) {
 		const node = document.createElement(tag);
@@ -406,6 +437,21 @@ function pageHtml(): string {
 		lookup.appendChild(button);
 		main.appendChild(lookup);
 		main.appendChild(element('p', 'help', TEXT.lookUpHelp));
+		// Where Open the Scan opens a page: the choice is kept by Pollis
+		const tabRow = element('div', 'measureRow');
+		tabRow.appendChild(element('span', '', TEXT.scanTab));
+		for (const [value, label] of [['new', TEXT.newTab], ['same', TEXT.sameTab]]) {
+			const option = element('label');
+			const radio = element('input');
+			radio.type = 'radio';
+			radio.name = 'scanTab';
+			radio.checked = scanTab === value;
+			radio.addEventListener('change', () => { scanTab = value; vscode.postMessage({ command: 'scanTab', value }); });
+			option.appendChild(radio);
+			option.appendChild(document.createTextNode(label));
+			tabRow.appendChild(option);
+		}
+		main.appendChild(tabRow);
 		main.appendChild(element('div', '', undefined)).id = 'result';
 		main.appendChild(element('p', 'ocr', TEXT.ocr));
 		input.focus();
@@ -480,7 +526,9 @@ function pageHtml(): string {
 			const page = { item: first.item, file: first.file, page: first.page };
 			if (first.page !== null) {
 				const scan = element('button', 'link', TEXT.openScan);
-				scan.addEventListener('click', () => vscode.postMessage({ command: 'openScan', ...page }));
+				// The title of every page of the scan, with {page} where the browser puts the page's number
+				const scanTitle = format(TEXT.scanTitle, edition ? edition.label : entry.edition, volume, '{page}');
+				scan.addEventListener('click', () => vscode.postMessage({ command: 'openScan', title: scanTitle, ...page }));
 				facts.appendChild(scan);
 			}
 			const archive = element('button', 'link', TEXT.openArchive);
@@ -576,6 +624,7 @@ function pageHtml(): string {
 	window.addEventListener('message', event => {
 		const message = event.data;
 		if (message.command === 'state') {
+			scanTab = message.scanTab === 'same' ? 'same' : 'new';
 			showControls(message.state);
 		} else if (message.command === 'result') {
 			shown = { lookup: message.lookup, result: message.result };

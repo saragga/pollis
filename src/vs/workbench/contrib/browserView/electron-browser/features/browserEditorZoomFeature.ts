@@ -4,7 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { localize, localize2 } from '../../../../../nls.js';
-import { $ } from '../../../../../base/browser/dom.js';
+import { $, append, EventLike } from '../../../../../base/browser/dom.js';
+import { BaseActionViewItem, IBaseActionViewItemOptions } from '../../../../../base/browser/ui/actionbar/actionViewItems.js';
+import { IAction, toAction } from '../../../../../base/common/actions.js';
+import { IActionViewItemService } from '../../../../../platform/actions/browser/actionViewItemService.js';
+import { IContextMenuService } from '../../../../../platform/contextview/browser/contextView.js';
+import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { RawContextKey, IContextKey, IContextKeyService, ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
 import { Action2, registerAction2, MenuId } from '../../../../../platform/actions/common/actions.js';
 import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
@@ -153,12 +158,12 @@ class ZoomInAction extends Action2 {
 			category: BrowserActionCategory,
 			icon: Codicon.zoomIn,
 			f1: true,
-			precondition: ContextKeyExpr.and(BROWSER_EDITOR_ACTIVE, CONTEXT_BROWSER_HAS_URL, CONTEXT_BROWSER_HAS_ERROR.negate()),
+			// POLLIS: on the bar, after the level, and disabled at the last step in place of hidden, so that the bar keeps its place
+			precondition: ContextKeyExpr.and(BROWSER_EDITOR_ACTIVE, CONTEXT_BROWSER_HAS_URL, CONTEXT_BROWSER_HAS_ERROR.negate(), CONTEXT_BROWSER_CAN_ZOOM_IN),
 			menu: {
 				id: MenuId.BrowserActionsToolbar,
-				group: BrowserActionGroup.Zoom,
-				order: 1,
-				when: CONTEXT_BROWSER_CAN_ZOOM_IN,
+				group: BrowserActionGroup.BarZoom,
+				order: 3,
 			},
 			keybinding: {
 				when: CONTEXT_BROWSER_FOCUSED,
@@ -187,12 +192,12 @@ class ZoomOutAction extends Action2 {
 			category: BrowserActionCategory,
 			icon: Codicon.zoomOut,
 			f1: true,
-			precondition: ContextKeyExpr.and(BROWSER_EDITOR_ACTIVE, CONTEXT_BROWSER_HAS_URL, CONTEXT_BROWSER_HAS_ERROR.negate()),
+			// POLLIS: on the bar, before the level, and disabled at the first step in place of hidden
+			precondition: ContextKeyExpr.and(BROWSER_EDITOR_ACTIVE, CONTEXT_BROWSER_HAS_URL, CONTEXT_BROWSER_HAS_ERROR.negate(), CONTEXT_BROWSER_CAN_ZOOM_OUT),
 			menu: {
 				id: MenuId.BrowserActionsToolbar,
-				group: BrowserActionGroup.Zoom,
-				order: 2,
-				when: CONTEXT_BROWSER_CAN_ZOOM_OUT,
+				group: BrowserActionGroup.BarZoom,
+				order: 1,
 			},
 			keybinding: {
 				when: CONTEXT_BROWSER_FOCUSED,
@@ -228,8 +233,9 @@ class ResetZoomAction extends Action2 {
 			precondition: ContextKeyExpr.and(BROWSER_EDITOR_ACTIVE, CONTEXT_BROWSER_HAS_URL, CONTEXT_BROWSER_HAS_ERROR.negate()),
 			menu: {
 				id: MenuId.BrowserActionsToolbar,
-				group: BrowserActionGroup.Zoom,
-				order: 3,
+				// POLLIS: on the bar, after Zoom In
+				group: BrowserActionGroup.BarZoom,
+				order: 4,
 			},
 			keybinding: {
 				when: CONTEXT_BROWSER_FOCUSED,
@@ -248,9 +254,132 @@ class ResetZoomAction extends Action2 {
 	}
 }
 
+/**
+ * POLLIS: the zoom level of the tab, on the bar between Zoom Out and Zoom In as a reader shows it. On the bar it is the
+ * level itself, which lists the browser's steps when clicked (BrowserZoomLevelActionViewItem); from the Command Palette
+ * it picks a step.
+ */
+class ZoomLevelAction extends Action2 {
+	static readonly ID = 'workbench.action.browser.zoomLevel';
+
+	constructor() {
+		super({
+			id: ZoomLevelAction.ID,
+			title: localize2('browser.zoomLevelAction', 'Zoom Level'),
+			category: BrowserActionCategory,
+			icon: Codicon.zoomIn,
+			f1: true,
+			precondition: ContextKeyExpr.and(BROWSER_EDITOR_ACTIVE, CONTEXT_BROWSER_HAS_URL, CONTEXT_BROWSER_HAS_ERROR.negate()),
+			menu: {
+				id: MenuId.BrowserActionsToolbar,
+				group: BrowserActionGroup.BarZoom,
+				order: 2,
+			},
+		});
+	}
+
+	async run(accessor: ServicesAccessor, browserEditor = accessor.get(IEditorService).activeEditorPane): Promise<void> {
+		const quickInputService = accessor.get(IQuickInputService);
+		const model = browserEditor instanceof BrowserEditor ? browserEditor.model : undefined;
+		if (!model) {
+			return;
+		}
+		const picks = browserZoomFactors.map((factor, index) => ({ label: browserZoomLabel(factor), index, picked: factor === model.zoomFactor }));
+		const pick = await quickInputService.pick(picks, { placeHolder: localize('browser.zoomLevelPlaceholder', "Zoom level of the page") });
+		if (pick) {
+			await model.setZoomIndex(pick.index);
+		}
+	}
+}
+
 registerAction2(ZoomInAction);
 registerAction2(ZoomOutAction);
 registerAction2(ResetZoomAction);
+registerAction2(ZoomLevelAction);
+
+/**
+ * POLLIS: the zoom level on the bar: the level of the tab, kept up to date, and the browser's steps in a menu when clicked,
+ * the level of the tab checked. The bar gives it the browser editor as its context.
+ */
+class BrowserZoomLevelActionViewItem extends BaseActionViewItem {
+	private readonly _editorListener = this._register(new MutableDisposable());
+	private readonly _modelListener = this._register(new MutableDisposable());
+	private _editor: BrowserEditor | undefined;
+	private _label: HTMLElement | undefined;
+
+	constructor(action: IAction, options: IBaseActionViewItemOptions, private readonly contextMenuService: IContextMenuService) {
+		super(undefined, action, options);
+	}
+
+	override render(container: HTMLElement): void {
+		super.render(container);
+		container.classList.add('browser-zoom-level');
+		container.tabIndex = 0;
+		container.setAttribute('role', 'button');
+		this._label = append(container, $('span.browser-zoom-level-label'));
+		this._update();
+	}
+
+	override setActionContext(context: unknown): void {
+		super.setActionContext(context);
+		if (context instanceof BrowserEditor && context !== this._editor) {
+			this._editor = context;
+			this._editorListener.value = context.onDidChangeModel(() => this._watchModel());
+			this._watchModel();
+		}
+	}
+
+	override onClick(_event: EventLike): void {
+		const model = this._editor?.model;
+		const anchor = this.element;
+		if (!model || !anchor || !this.action.enabled) {
+			return;
+		}
+		const current = model.zoomFactor;
+		this.contextMenuService.showContextMenu({
+			getAnchor: () => anchor,
+			getActions: () => browserZoomFactors.map((factor, index) => toAction({
+				id: `workbench.action.browser.zoomLevel.${index}`,
+				label: browserZoomLabel(factor),
+				checked: factor === current,
+				run: () => model.setZoomIndex(index),
+			})),
+		});
+	}
+
+	protected override updateTooltip(): void {
+		if (this.element) {
+			this.element.setAttribute('aria-label', this._editor?.model ? browserZoomAccessibilityLabel(this._editor.model.zoomFactor) : this.action.label);
+		}
+	}
+
+	private _watchModel(): void {
+		this._modelListener.value = this._editor?.model?.onDidChangeZoom(() => this._update());
+		this._update();
+	}
+
+	private _update(): void {
+		if (this._label) {
+			this._label.textContent = browserZoomLabel(this._editor?.model?.zoomFactor ?? 1);
+		}
+		this.updateTooltip();
+	}
+}
+
+/** POLLIS: draws Zoom Level on the bar as the level itself. */
+class BrowserZoomLevelViewItemContribution extends Disposable implements IWorkbenchContribution {
+	static readonly ID = 'workbench.contrib.browserView.zoomLevelViewItem';
+
+	constructor(
+		@IActionViewItemService actionViewItemService: IActionViewItemService,
+		@IContextMenuService contextMenuService: IContextMenuService,
+	) {
+		super();
+		this._register(actionViewItemService.register(MenuId.BrowserActionsToolbar, ZoomLevelAction.ID, (action, options) => new BrowserZoomLevelActionViewItem(action, options, contextMenuService)));
+	}
+}
+
+registerWorkbenchContribution2(BrowserZoomLevelViewItemContribution.ID, BrowserZoomLevelViewItemContribution, WorkbenchPhase.BlockRestore);
 
 /**
  * Bridges the application's UI zoom level changes into IBrowserZoomService so that

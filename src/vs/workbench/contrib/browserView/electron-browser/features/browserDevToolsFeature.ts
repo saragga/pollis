@@ -15,7 +15,7 @@ import { BrowserViewCommandId } from '../../../../../platform/browserView/common
 import { IEditorService } from '../../../../services/editor/common/editorService.js';
 import { IBrowserViewModel } from '../../common/browserView.js';
 import { BrowserEditor, BrowserEditorContribution, CONTEXT_BROWSER_HAS_ERROR, CONTEXT_BROWSER_HAS_URL } from '../browserEditor.js';
-import { BROWSER_EDITOR_ACTIVE, BrowserActionCategory } from '../browserViewActions.js';
+import { BROWSER_EDITOR_ACTIVE, BrowserActionCategory, BrowserActionGroup } from '../browserViewActions.js';
 
 const CONTEXT_BROWSER_DEVTOOLS_OPEN = new RawContextKey<boolean>('browserDevToolsOpen', false, localize('browser.devToolsOpen', "Whether developer tools are open for the current browser view"));
 
@@ -58,7 +58,8 @@ class ToggleDevToolsAction extends Action2 {
 			toggled: ContextKeyExpr.equals(CONTEXT_BROWSER_DEVTOOLS_OPEN.key, true),
 			menu: {
 				id: MenuId.BrowserActionsToolbar,
-				group: 'actions',
+				// POLLIS: after the pages, Find in Page, the zoom and New Tab
+				group: BrowserActionGroup.BarTools,
 				order: 3,
 			},
 			keybinding: {

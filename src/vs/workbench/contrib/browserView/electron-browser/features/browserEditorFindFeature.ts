@@ -22,6 +22,7 @@ import { IHoverService } from '../../../../../platform/hover/browser/hover.js';
 import { IKeybindingService } from '../../../../../platform/keybinding/common/keybinding.js';
 import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
 import { IAccessibilityService } from '../../../../../platform/accessibility/common/accessibility.js';
+import { Codicon } from '../../../../../base/common/codicons.js';
 import { BrowserEditor, BrowserEditorContribution, CONTEXT_BROWSER_HAS_ERROR, CONTEXT_BROWSER_HAS_URL } from '../browserEditor.js';
 import { BROWSER_EDITOR_ACTIVE, BrowserActionCategory, BrowserActionGroup } from '../browserViewActions.js';
 
@@ -294,11 +295,13 @@ class ShowBrowserFindAction extends Action2 {
 			id: ShowBrowserFindAction.ID,
 			title: localize2('browser.showFindAction', 'Find in Page'),
 			category: BrowserActionCategory,
+			icon: Codicon.search,
 			f1: true,
 			precondition: ContextKeyExpr.and(BROWSER_EDITOR_ACTIVE, CONTEXT_BROWSER_HAS_URL, CONTEXT_BROWSER_HAS_ERROR.negate()),
 			menu: {
 				id: MenuId.BrowserActionsToolbar,
-				group: BrowserActionGroup.Page,
+				// POLLIS: on the bar
+				group: BrowserActionGroup.BarFind,
 				order: 1,
 			},
 			keybinding: {

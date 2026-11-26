@@ -52,6 +52,61 @@
 
 	.browser-actions-toolbar {
 		margin-right: 4px;
+
+		/* POLLIS: the zoom level between Zoom Out and Zoom In, which lists the browser's steps when clicked */
+		.browser-zoom-level {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 5ch;
+			height: 22px;
+			padding: 0 4px;
+			border-radius: var(--vscode-cornerRadius-small);
+			font-size: 12px;
+			font-variant-numeric: tabular-nums;
+			color: var(--vscode-foreground);
+			cursor: pointer;
+
+			&:hover {
+				background-color: var(--vscode-toolbar-hoverBackground);
+			}
+
+			&.disabled {
+				opacity: 0.4;
+				cursor: default;
+			}
+		}
+
+		/* POLLIS: the page between Previous Page and Next Page, in a field that takes another page */
+		.browser-page-number {
+			display: flex;
+			align-items: center;
+			gap: 4px;
+			font-size: 12px;
+			color: var(--vscode-foreground);
+			white-space: nowrap;
+
+			.browser-page-number-field {
+				height: 20px;
+				padding: 0 4px;
+				font-size: 12px;
+				font-variant-numeric: tabular-nums;
+				text-align: right;
+				color: var(--vscode-input-foreground);
+				background-color: var(--vscode-input-background);
+				border: 1px solid var(--vscode-input-border, transparent);
+				border-radius: var(--vscode-cornerRadius-small);
+				outline: none;
+
+				&:focus {
+					border-color: var(--vscode-focusBorder);
+				}
+			}
+
+			.browser-page-number-last:empty {
+				display: none;
+			}
+		}
 	}
 
 	.browser-url-container {

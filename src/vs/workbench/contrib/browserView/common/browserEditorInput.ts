@@ -42,6 +42,59 @@ const MAX_TITLE_LENGTH = 30;
  */
 export interface IBrowserEditorInputData extends IBrowserEditorViewState {
 	readonly id: string;
+	/** POLLIS: the title the tab's opener gave it, and the address it gave it for. */
+	readonly label?: IBrowserTabLabel;
+	/** POLLIS: the key by which the tab's opener reuses it. */
+	readonly reuseKey?: string;
+	/** POLLIS: the pages the tab's opener gave it. */
+	readonly pages?: IBrowserTabPages;
+}
+
+/**
+ * POLLIS: the pages of a tab, given by its opener, such as the pages of a scan: the address of a page and its title, each
+ * with `{page}` where the number of the page goes, the first page, the last when it is known, and the page to open at.
+ * Previous Page and Next Page on the bar go from one to the next while the tab is at one of them.
+ */
+export interface IBrowserTabPages {
+	readonly url: string;
+	readonly title?: string;
+	readonly first: number;
+	readonly last?: number;
+	readonly page: number;
+}
+
+/** POLLIS: an address or title of the pages of a tab, for one page. */
+export function browserTabPageText(template: string, page: number): string {
+	return template.replace(/\{page\}/g, String(page));
+}
+
+/**
+ * POLLIS: the number of the page of a tab's pages that an address is, or undefined when it is none of them. The address of
+ * the pages is written as the browser writes addresses, with a number in place of `{page}`, so that the two compare.
+ */
+function pageOfUrl(template: string, url: string): number | undefined {
+	const marker = 987654321;
+	const pattern = normalizeUrl(browserTabPageText(template, marker)).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(String(marker), '(?<page>\\d+)');
+	const page = new RegExp(`^${pattern}$`).exec(normalizeUrl(url))?.groups?.page;
+	return page === undefined ? undefined : Number(page);
+}
+
+/**
+ * POLLIS: a title an opener gives a tab, such as the volume and page of a scan whose page has only the name of its file
+ * as its title, shown in place of the page's own while the tab is at the address it was given for.
+ */
+interface IBrowserTabLabel {
+	readonly title: string;
+	readonly url: string;
+}
+
+/** POLLIS: an address as the browser writes it, so that an address given and the one the tab is at compare. */
+function normalizeUrl(url: string): string {
+	try {
+		return new URL(url).href;
+	} catch {
+		return url;
+	}
 }
 
 export class BrowserEditorInput extends EditorInput {
@@ -53,6 +106,11 @@ export class BrowserEditorInput extends EditorInput {
 	private _initialData: IBrowserEditorInputData;
 	private _model: IBrowserViewModel | undefined;
 	private _modelPromise: Promise<IBrowserViewModel> | undefined;
+	private _label: IBrowserTabLabel | undefined;
+	private _pages: IBrowserTabPages | undefined;
+
+	/** POLLIS: the key by which the tab's opener reuses it (workbench.action.browser.open, `reuseKey`). */
+	reuseKey: string | undefined;
 
 	constructor(
 		options: IBrowserEditorInputData,
@@ -65,6 +123,9 @@ export class BrowserEditorInput extends EditorInput {
 		super();
 		this._id = options.id;
 		this._initialData = options;
+		this._label = options.label;
+		this.reuseKey = options.reuseKey;
+		this._pages = options.pages;
 
 		this._register(this.lifecycleService.onWillShutdown((e) => {
 			if (this._model) {
@@ -96,6 +157,54 @@ export class BrowserEditorInput extends EditorInput {
 	get favicon(): string | undefined {
 		// Use model favicon if available, otherwise fall back to initial data
 		return this._model ? this._model.favicon : this._initialData.favicon;
+	}
+
+	/** POLLIS: gives the tab a title while it is at the address given, or takes the title away when there is none. */
+	setLabel(title: string | undefined, url: string): void {
+		this._label = title ? { title, url: normalizeUrl(url) } : undefined;
+		this._onDidChangeLabel.fire();
+	}
+
+	/**
+	 * POLLIS: the title the tab's opener gave it, while the tab is at the address it was given for, or at one of the pages
+	 * it was given.
+	 */
+	private get openerTitle(): string | undefined {
+		const page = this.page;
+		if (page !== undefined && this._pages?.title) {
+			return browserTabPageText(this._pages.title, page);
+		}
+		return this._label && this.url && normalizeUrl(this.url) === this._label.url ? this._label.title : undefined;
+	}
+
+	/** POLLIS: gives the tab its pages, or takes them away; the tab is at the page given, or goes there with goToPage. */
+	setPages(pages: IBrowserTabPages | undefined): void {
+		this._pages = pages;
+		if (pages) {
+			this._label = undefined;
+		}
+		this._onDidChangeLabel.fire();
+	}
+
+	/** POLLIS: the pages the tab's opener gave it, while the tab is at one of them. */
+	get pages(): IBrowserTabPages | undefined {
+		return this.page === undefined ? undefined : this._pages;
+	}
+
+	/** POLLIS: the number of the page the tab is at, of the pages its opener gave it, or undefined when it is at none. */
+	get page(): number | undefined {
+		return this._pages && this.url ? pageOfUrl(this._pages.url, this.url) : undefined;
+	}
+
+	/** POLLIS: goes to a page of the tab's pages, kept between the first and the last. */
+	goToPage(page: number): void {
+		if (!this._pages) {
+			return;
+		}
+		const last = this._pages.last ?? Number.MAX_SAFE_INTEGER;
+		const target = Math.max(this._pages.first, Math.min(page, last));
+		this._pages = { ...this._pages, page: target };
+		this.navigate(browserTabPageText(this._pages.url, target));
 	}
 
 	navigate(url: string): void {
@@ -184,6 +293,11 @@ export class BrowserEditorInput extends EditorInput {
 	}
 
 	override getName(): string {
+		// POLLIS: a title the opener gave is shown whole, as the opener wrote it
+		const label = this.openerTitle;
+		if (label) {
+			return label;
+		}
 		const hasTitle = this._model ? !!this._model.title : !!this._initialData.title;
 		const name = hasTitle ? this.title! : this.getDescription(Verbosity.SHORT) || BrowserEditorInput.DEFAULT_LABEL;
 		return truncate(name, MAX_TITLE_LENGTH);
@@ -192,6 +306,10 @@ export class BrowserEditorInput extends EditorInput {
 	override getTitle(verbosity = Verbosity.MEDIUM): string {
 		const hasTitle = this._model ? !!this._model.title : !!this._initialData.title;
 		const description = this.getDescription(verbosity);
+		const label = this.openerTitle;
+		if (label) {
+			return description ? `${label} (${description})` : label;
+		}
 		const title = hasTitle ? `${this.title} (${description})` : description;
 		return title || BrowserEditorInput.DEFAULT_LABEL;
 	}
@@ -311,7 +429,10 @@ export class BrowserEditorInput extends EditorInput {
 			url: this.url,
 			title: this.title,
 			favicon: this.favicon,
-			ephemeral: this._initialData.ephemeral
+			ephemeral: this._initialData.ephemeral,
+			label: this._label,
+			reuseKey: this.reuseKey,
+			pages: this._pages
 		};
 	}
 }
