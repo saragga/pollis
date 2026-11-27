@@ -108,8 +108,8 @@ PollisCompetitions.jl/
     measures.jl                sMAPE, MASE and OWA: score, step_errors
     dataset_benchmarks.jl      the benchmarks on the series of a dataset
   metadata/
-    datasets.toml              the Dataset Catalog: 132 datasets
-    models.toml                the Model Catalog: 301 models
+    datasets.toml              the Dataset Catalog: 169 datasets
+    models.toml                the Model Catalog: 317 models
     benchmarks.toml            the Benchmarks: 5,828 runs
   data/builtin/<dataset_id>/   the 60 built-in datasets: 10 of series, 50 tabular
   test/runtests.jl
@@ -209,9 +209,9 @@ dataset_name = "Tourism Forecasting Competition"
 competition_name = "Tourism Forecasting Competition"   # given with competition_year, or neither
 competition_year = 2011
 topic = "Tourism"
-data_structure = "Time-Series"              # Cross-section | Time-Series | Panel
+data_structure = "Time-Series"              # Cross-section | Time-Series | Panel | Images
 geometry = "None"                           # None | Spatial Weights Matrix | Coordinates | Polygons
-response_type = "Continuous"                # Binary | Multiclass | Ordered | Count | Survival | Continuous
+response_type = "Continuous"                # Binary | Multiclass | Ordered | Count | Survival | Continuous | Text
 rows = 164581
 features = 0
 size_mb = 0.45                              # Parquet files if built in; files downloaded if not
@@ -341,13 +341,13 @@ dataset is Ready when \file{info.toml} also gives \file{event}, and is scored by
 \section{The Model Zoo and ModelZoo.jl}
 \label{sec:modelzoo}
 
-The Model Catalog lists every model that a benchmark or a competition of the package scored: 301 in
-PollisCompetitions.jl 0.2.15. Its field \file{julia_package} says where each is in Julia, by the rules of
+The Model Catalog lists every model that a benchmark or a competition of the package scored: 317 in
+PollisCompetitions.jl 0.2.16. Its field \file{julia_package} says where each is in Julia, by the rules of
 \S\ref{sec:modelcatalog}, and \file{julia_checked} which of them have been run on the benchmark's splits and give its
 published scores. The Model Zoo page shows both, model by model; this section gives the totals, and the models that
 ModelZoo.jl writes in Julia because no registered package has them.
 
-\subsection{Where the 301 models are in Julia}
+\subsection{Where the 317 models are in Julia}
 
 \begin{center}\footnotesize
 \renewcommand{\arraystretch}{1.25}
@@ -361,10 +361,10 @@ A registered Julia package & 38 & 3 & XGBoost and Durbyn (6 each), StateSpaceMod
 PollisCompetitions.jl & 17 & 0 & The forecasting benchmarks of its module Benchmarks, where a competition ran the same
   method\\
 ModelZoo.jl & 9 & 5 & Cox GAM; ExtraTrees and APLR, 3 configurations each; Flex, tuned on 2 measures\\
-Not yet in Julia & 237 & \textendash & Neural Network (72), Foundation Model (48), Tree-based (31), Statistical (27),
-  Baseline (18), Hybrid (17), Fuzzy System (13), Kernel Methods (7), Other (4)\\
+Not yet in Julia & 253 & \textendash & Neural Network (81), Foundation Model (53), Tree-based (31), Statistical (27),
+  Baseline (18), Hybrid (18), Fuzzy System (13), Kernel Methods (7), Other (5)\\
 \midrule
-All & 301 & 8 & \\
+All & 317 & 8 & \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -477,9 +477,10 @@ CREATE TABLE dataset_catalog (
   dataset_id TEXT PRIMARY KEY, dataset_name TEXT NOT NULL,
   competition_name TEXT, competition_year INTEGER,
   topic TEXT NOT NULL,
-  data_structure TEXT CHECK (data_structure IN ('Cross-section', 'Time-Series', 'Panel')),
+  data_structure TEXT CHECK (data_structure IN ('Cross-section', 'Time-Series', 'Panel', 'Images')),
   geometry TEXT CHECK (geometry IN ('None', 'Spatial Weights Matrix', 'Coordinates', 'Polygons')),
-  response_type TEXT CHECK (response_type IN ('Binary', 'Multiclass', 'Ordered', 'Count', 'Survival', 'Continuous')),
+  response_type TEXT CHECK (response_type IN ('Binary', 'Multiclass', 'Ordered', 'Count', 'Survival', 'Continuous',
+    'Text')),
   rows BIGINT CHECK (rows > 0), features INTEGER CHECK (features >= 0), size_mb DOUBLE CHECK (size_mb >= 0),
   licence TEXT, delivery TEXT CHECK (delivery IN ('Built-in', 'Download')), source_url TEXT,
   CHECK ((competition_name IS NULL) = (competition_year IS NULL)));
