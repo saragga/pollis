@@ -32,6 +32,12 @@
         "path": "./themes/pollis-vs-dark.json"
       },
       {
+        "id": "Pollis Dark+",
+        "label": "%pollisVsDarkPlusThemeLabel%",
+        "uiTheme": "vs-dark",
+        "path": "./themes/pollis-vs-dark-plus.json"
+      },
+      {
         "id": "Pollis Light",
         "label": "%pollisVsLightThemeLabel%",
         "uiTheme": "vs",

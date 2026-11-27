@@ -14,10 +14,12 @@
 		"activityBar.background": "#173F63",
 		"activityBar.border": "#173F63",
 		"activityBar.foreground": "#FFFFFF",
-		"activityBar.inactiveForeground": "#FFFFFFB3",
+		"activityBar.inactiveForeground": "#CCCCCC",
 		"tab.activeBorderTop": "#F2B446",
 		"panelTitle.activeBorder": "#F2B446",
-		"statusBar.background": "#007ACC",
-		"statusBar.noFolderBackground": "#007ACC"
+		"statusBar.background": "#3C3C3C",
+		"statusBar.noFolderBackground": "#3C3C3C",
+		"statusBar.foreground": "#CCCCCC",
+		"statusBar.noFolderForeground": "#CCCCCC"
 	}
 }

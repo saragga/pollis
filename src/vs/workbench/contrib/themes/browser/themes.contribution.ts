@@ -706,10 +706,10 @@ function toEntry(theme: IWorkbenchTheme): ThemeItem {
 }
 
 /**
- * The themes listed first in their group of the theme picker, in this order: Pollis Dark and Pollis Light, then the
- * default themes, Pollis 2026 Dark and Pollis 2026 Light.
+ * The themes listed first in their group of the theme picker, in this order: Pollis Dark, Pollis Dark+ and Pollis
+ * Light, then the default themes, Pollis 2026 Dark and Pollis 2026 Light.
  */
-const pinnedThemeIds = ['Pollis Dark', 'Pollis Light', ThemeSettingDefaults.COLOR_THEME_DARK, ThemeSettingDefaults.COLOR_THEME_LIGHT];
+const pinnedThemeIds = ['Pollis Dark', 'Pollis Dark+', 'Pollis Light', ThemeSettingDefaults.COLOR_THEME_DARK, ThemeSettingDefaults.COLOR_THEME_LIGHT];
 
 function toEntries(themes: Array<IWorkbenchTheme>, label?: string): QuickPickInput<ThemeItem>[] {
 	const rank = (item: ThemeItem) => {

@@ -1,0 +1,23 @@
+{
+	"$schema": "vscode://schemas/color-theme",
+	"name": "Pollis Dark+",
+	"include": "./dark_vs.json",
+	"type": "dark",
+	"colors": {
+		"badge.background": "#F2B446",
+		"badge.foreground": "#1C3A5E",
+		"activityBarBadge.background": "#F2B446",
+		"activityBarBadge.foreground": "#1C3A5E",
+		"activityBar.activeBorder": "#F2B446",
+		"activityBar.activeFocusBorder": "#F2B446",
+		"activityBarTop.activeBorder": "#F2B446",
+		"activityBar.background": "#173F63",
+		"activityBar.border": "#173F63",
+		"activityBar.foreground": "#FFFFFF",
+		"activityBar.inactiveForeground": "#FFFFFFB3",
+		"tab.activeBorderTop": "#F2B446",
+		"panelTitle.activeBorder": "#F2B446",
+		"statusBar.background": "#007ACC",
+		"statusBar.noFolderBackground": "#007ACC"
+	}
+}
