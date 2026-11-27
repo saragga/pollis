@@ -86,7 +86,7 @@ the text read against it.
   % ---------- the phases ----------
   \node[phase] (p1) at (0,0) {\textbf{Digitisation}\\the page image};
   \node[phase, below=5mm of p1] (p2) {\textbf{Preprocessing}\\clean and straighten};
-  \node[phase, below=5mm of p2] (p3) {\textbf{Layout analysis}\\regions, lines, order};
+  \node[inpollis, below=5mm of p2] (p3) {\textbf{Layout analysis}\\regions, lines, order};
   \node[store, below=4mm of p3] (xml) {ALTO or PAGE XML};
   \node[inpollis, below=4mm of xml] (p4) {\textbf{Line extraction}\\one image a line};
   \node[inpollis, below=5mm of p4] (p5) {\textbf{Recognition}\\characters of each column};
@@ -115,7 +115,7 @@ the text read against it.
   \node[method] (m2) at ($(p2.east)+(6mm,0)$) {Cropping to the page, deskewing and dewarping; grey scale or binarisation
     (Kraken's \texttt{nlbin}); contrast normalisation.};
   \node[method] (m3) at ($(p3.east)+(6mm,0)$) {Pixel-wise neural networks that find baselines, line outlines and regions:
-    Kraken's segmenter (Kiessling 2020), ARU-Net (Grüning, Leifert, Strauß, Michael and Labahn 2019), dhSegment
+    Kraken's segmenter with its model blla, the one Pollis runs (Kiessling 2020), ARU-Net (Grüning, Leifert, Strauß, Michael and Labahn 2019), dhSegment
     (Ares Oliveira, Seguin and Kaplan 2018), PERO (Kodym and Hradiš 2021); then the reading order.};
   \node[method, fill=logocream] (mx) at ($(xml.east)+(6mm,0)$) {The page's layout, and later its text: ALTO, or PAGE
     (Pletschacher and Antonacopoulos 2010), written by eScriptorium, Transkribus and Kraken.};
@@ -202,7 +202,8 @@ Today's segmenters are neural networks that label each pixel of the page: on a b
 a given kind, or none of these. The baselines and polygons are then traced from the labels.
 \begin{itemize}
   \item \textbf{Kraken's segmenter}, \dcite{Kie2020a}{Kiessling (2020)}, predicts baselines and regions of the
-    kinds it is trained on, and can be retrained for a new layout.
+    kinds it is trained on, and can be retrained for a new layout. Its default model, blla, finds baselines and text
+    regions; the Transcription page runs it (\S\ref{sec:pollis}).
   \item \textbf{ARU-Net}, of \dcite{GLSML2019a}{Grüning, Leifert, Strauß, Michael and Labahn (2019)}, labels
     baselines and the ends of lines, then clusters them into baselines; it is trainable from fewer than 50 pages.
   \item \textbf{dhSegment}, of \dcite{ASK2018a}{Ares Oliveira, Seguin and Kaplan (2018)}, is one network for many
@@ -410,6 +411,11 @@ word error rates.}
 Among the entries made in time, the baseline, Kraken with CATMuS Medieval as it is, ranks in the middle: 7th of 13
 on Task 1, and 5th of 10 on Tasks 2 and 3.
 
+The three tasks are datasets of \ui{Compose}\gt\ui{Prediction Challenges}\gt\ui{Manage Challenge Datasets...}, under
+the topic History, and the entries of the table are models of \ui{Compose}\gt\ui{Prediction Challenges}\gt\ui{Model
+Zoo...}, each with its character and word error rates on the tasks it entered, in the Benchmarks of
+PollisCompetitions.jl.
+
 The entries carry out the phases of \S\ref{sec:glance} in different ways: language models in decoding (PRHLT-tS,
 FamilySearch \& GGateway), voting over models (TeamAnannya), fine-tuning of a Kraken model (FLAME University), and
 vision-language models (École nationale des chartes, Qianfan-OCR, Devansh Gupta).
@@ -450,14 +456,22 @@ trained model and needs only a few pages of the new manuscript, since what the f
 synthetic lines, add variety where the data are few.
 
 \section{Automatic transcription in Pollis}\label{sec:pollis}
-The Transcription page, in \ui{Explore}\gt\ui{Transcription}\gt\ui{Transcribe a Page...}, carries out phases 4 to 6 of the diagram on a page
-whose layout is already known. It reads each line with MedievalATR.jl, a Julia package that reads the recognition
-models of Kraken, in the Julia REPL, without Python.
+The Transcription page, in \ui{Explore}\gt\ui{Transcription}\gt\ui{Transcribe a Page...}, carries out phases 3 to 6 of
+the diagram. It takes the lines of a page from its ALTO or PAGE file, or finds them on the page image with blla,
+Kraken's segmentation model, and reads each line, with MedievalATR.jl, a Julia package that reads the segmentation and
+recognition models of Kraken, in the Julia REPL, without Python.
 
-\subsection{The four steps}
+\subsection{The five steps}
 \begin{enumerate}
-  \item \textbf{Page}: \ui{Choose a Page File...} chooses the ALTO or PAGE file of the page. The step shows the file,
-    the image it names and the number of its text lines.
+  \item \textbf{Page}: \ui{Choose a Page File...} chooses the ALTO or PAGE file of the page, and the step shows the
+    file, the image it names and the number of its text lines; \ui{Choose a Page Image...} chooses the page image
+    alone, a JPEG or PNG file.
+  \item \textbf{Lines}: for a page image, \ui{ALTO} or \ui{PAGE}, the format of the layout file, and the Julia code
+    that finds the lines with blla, which \ui{Find the Lines} sends to the Julia REPL. The REPL writes the lines to
+    \file{<image>.alto.xml} or \file{<image>.page.xml}, next to the image, which eScriptorium and Transkribus open
+    too; a file of that name already there is replaced only once confirmed. blla is downloaded from Kraken's
+    repository (5 MB) the first time it is used, then kept. The step draws the outline and baseline of each line on
+    the image, those of a chosen page file too.
   \item \textbf{Model}: \ui{CATMuS Medieval 1.6.2}, downloaded from Zenodo (16 MB) the first time it is used, then
     kept, or \ui{A Model File of Your Own}, a Kraken \file{.mlmodel}.
   \item \textbf{Transcribe}: the Julia code that reads every line, which \ui{Transcribe} sends to the Julia REPL. The
@@ -468,14 +482,24 @@ models of Kraken, in the Julia REPL, without Python.
     \ui{Open the Results File} opens the results.
 \end{enumerate}
 
-\subsection{The same text as Kraken}
-MedievalATR.jl reads a line as Kraken 7.2 reads it: the same lines from ALTO and PAGE files, the line images cut
+\subsection{The same lines and text as Kraken}
+MedievalATR.jl finds the lines of a page image as Kraken 7.2 finds them with blla, with the same baselines, outlines,
+regions and reading order, and writes them to ALTO and PAGE files laid out as Kraken writes them. It reads a line as
+Kraken 7.2 reads it: the same lines from ALTO and PAGE files, the line images cut
 pixel for pixel as Kraken cuts them, the same network and the same greedy decoding, so the text read on a line is the
 text Kraken reads with the same model. A line Kraken cannot read, one without a boundary or whose image is empty, is
 read as empty.
 
 \subsection{The Julia code}
-The code of step 3, for a page file \file{page.xml}:
+The code of step 2, for a page image \file{page.jpg}, in ALTO:
+\begin{lstlisting}
+using MedievalATR
+segmenter = load_segmenter(:blla)
+image = read_image("page.jpg")
+segmentation = segment(segmenter, image; path = "page.jpg")
+write_alto("page.alto.xml", segmentation)
+\end{lstlisting}
+The code of step 4, for a page file \file{page.xml}:
 \begin{lstlisting}
 using MedievalATR
 model = load_model(:catmus_medieval)
@@ -489,12 +513,17 @@ write_predictions("page.transcription.json", page, predictions)
 \toprule
 \textbf{Function} & \textbf{What it does} \\
 \midrule
+\texttt{load\_segmenter(:blla)} & The blla segmentation model, downloaded the first time and checked by its
+  SHA-256 checksum \\
+\texttt{segment(segmenter, image)} & The text lines and regions of a page image, in reading order \\
+\texttt{write\_alto(path, segmentation)} & The layout file of step 2, in ALTO \\
+\texttt{write\_page\_xml(path, segmentation)} & The layout file of step 2, in PAGE \\
 \texttt{load\_model(:catmus\_medieval)} & The CATMuS Medieval model, downloaded the first time and checked by its
   SHA-256 checksum \\
 \texttt{load\_model(path)} & A Kraken recognition model from its \file{.mlmodel} file \\
 \texttt{read\_page(path)} & The image and text lines of an ALTO or PAGE file \\
 \texttt{recognize(model, page)} & The text of each line, read on Julia's threads \\
-\texttt{write\_predictions(path, page, predictions)} & The results file of step 4 \\
+\texttt{write\_predictions(path, page, predictions)} & The results file of step 5 \\
 \texttt{cut\_line(image, baseline, boundary)} & The image of one line, straightened along its baseline \\
 \bottomrule
 \end{tabularx}
@@ -507,10 +536,13 @@ write_predictions("page.transcription.json", page, predictions)
 \textbf{File} & \textbf{What it is} \\
 \midrule
 The page file, \file{.xml} & ALTO or PAGE: the image's name and the text lines, read \\
-The page image & JPEG, PNG or TIFF, at the path the page file gives, or next to it, read \\
+The page image & JPEG, PNG or TIFF, at the path the page file gives, or next to it; JPEG or PNG when chosen alone;
+  read \\
+\file{<image>.alto.xml}, \file{<image>.page.xml} & Written next to a page image chosen alone, by step 2: its text
+  lines, each with its baseline and outline, and its text regions \\
 \file{<page>.transcription.json} & Written next to the page file: the image and, for each line, its id, baseline,
   polygon, the text read and the page file's own transcription \\
-\file{~/.julia/scratchspaces/.../models} & The CATMuS Medieval model, once downloaded \\
+\file{~/.julia/scratchspaces/.../models} & The models blla and CATMuS Medieval, once downloaded \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -521,7 +553,7 @@ The page image & JPEG, PNG or TIFF, at the path the page file gives, or next to 
 \toprule
 \textbf{Item} & \textbf{What it does} \\
 \midrule
-\ui{Explore}\gt\ui{Transcription}\gt\ui{Transcribe a Page...} & Opens the Transcription page, with its four steps
+\ui{Explore}\gt\ui{Transcription}\gt\ui{Transcribe a Page...} & Opens the Transcription page, with its five steps
   (\S\ref{sec:pollis}) \\
 \ui{Explore}\gt\ui{Transcription}\gt\ui{Browse Training Corpora...} & Opens the Training Corpora page: the corpora of
   \S\ref{sec:training}, each opening at its source \\

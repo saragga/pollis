@@ -1,14 +1,18 @@
 # Overview
 
-**Transcription** reads the text of a manuscript page with an automatic text recognition model. The page image comes with its layout, an ALTO or PAGE file that gives the baseline and outline of each line of text, and the model reads each line, in the Julia REPL, with MedievalATR.jl.
+**Transcription** reads the text of a manuscript page with an automatic text recognition model. The page image comes with its layout, an ALTO or PAGE file that gives the baseline and outline of each line of text, or alone, and then blla, the segmentation model of Kraken, finds its lines. The model reads each line, in the Julia REPL, with MedievalATR.jl.
 
 ## What the Transcription Page Does
 
-The Transcription page, in Explore > Transcription, reads a manuscript page in four steps. **Page** chooses the ALTO or PAGE file of the page, which names the page image and gives its text lines. **Model** chooses the recognition model: CATMuS Medieval 1.6.2, downloaded once, or a model file of the user's own. **Transcribe** shows the Julia code that reads every line and sends it to the Julia REPL, which writes the text read to a results file next to the page file. **Text** shows the page image with the outline of each line drawn on it, and the text read on each line beside it. A transcription already in the page file is shown under the text read, so the two can be compared line by line.
+The Transcription page, in Explore > Transcription, reads a manuscript page in five steps. **Page** chooses the ALTO or PAGE file of the page, which names the page image and gives its text lines, or the page image alone. **Lines** shows the Julia code that finds the lines of a page image with blla and sends it to the Julia REPL, which writes them to an ALTO or PAGE file next to the image; it draws the outline and baseline of every line on the image, those of a chosen page file too. **Model** chooses the recognition model: CATMuS Medieval 1.6.2, downloaded once, or a model file of the user's own. **Transcribe** shows the Julia code that reads every line and sends it to the Julia REPL, which writes the text read to a results file next to the page file. **Text** shows the page image with the outline of each line drawn on it, and the text read on each line beside it. A transcription already in the page file is shown under the text read, so the two can be compared line by line.
 
 ## Which Files the Transcription Page Needs
 
-The Transcription page needs two files for each page: the page image, as JPEG, PNG or TIFF, and its layout, as an ALTO or PAGE XML file. The layout file names the image and gives, for each text line, a baseline (the line the letters stand on, as points on the image) and a boundary polygon (the outline of the line). Such files come from transcription platforms such as eScriptorium and Transkribus, from the segmenter of Kraken, and from datasets of manuscripts with their ground truth. A line without a baseline is left out, as Kraken leaves it out, and a line without a boundary polygon is read as empty.
+The Transcription page reads a page image, as JPEG, PNG or TIFF, with its layout, as an ALTO or PAGE XML file, or a page image alone, as JPEG or PNG, whose layout file the Lines step writes, named after the image with the ending `.alto.xml` or `.page.xml`. The layout file names the image and gives, for each text line, a baseline (the line the letters stand on, as points on the image) and a boundary polygon (the outline of the line). Such files come from transcription platforms such as eScriptorium and Transkribus, from the segmenter of Kraken, and from datasets of manuscripts with their ground truth. A line without a baseline is left out, as Kraken leaves it out, and a line without a boundary polygon is read as empty.
+
+## How blla Finds the Lines of a Page
+
+blla is the default segmentation model of Kraken ([Kiessling (2020)](#ref-Kie2020a)). It scales the page image to 1,800 pixels high and gives four maps of it: for each pixel, the probability that it lies on a baseline, at the start of a line, at the end of a line, or in a text region. Each baseline is traced along the thinned ridge of the baseline map, given its direction by the start and end maps, and simplified to a few points. The outline of a line is the band around its baseline, bounded above and below by the paths of least change in the image between it and the lines beside it. The text regions are the areas where the region map is above one half. The lines are put in reading order within each region, and the regions in turn. The `segment` function of MedievalATR.jl takes each of these steps as Kraken 7.2 takes it, and finds the same lines, with the same baselines and outlines.
 
 ## How a Line Is Read from Its Image
 
@@ -31,6 +35,8 @@ The text that CATMuS Medieval reads is graphematic, close to a diplomatic transc
 <a id="ref-HS1997a"></a>Hochreiter, S. and Schmidhuber, J. (1997). Long Short-Term Memory. *Neural Computation* 9(8), 1735–1780. [doi:10.1162/neco.1997.9.8.1735](https://doi.org/10.1162/neco.1997.9.8.1735)
 
 <a id="ref-Kie2019a"></a>Kiessling, B. (2019). Kraken - a Universal Text Recognizer for the Humanities. In *Digital Humanities 2019 (DH2019)*, Utrecht. DataverseNL. [doi:10.34894/z9g2ex](https://doi.org/10.34894/z9g2ex)
+
+<a id="ref-Kie2020a"></a>Kiessling, B. (2020). A Modular Region and Text Line Layout Analysis System. In *2020 17th International Conference on Frontiers in Handwriting Recognition (ICFHR)*, 313–318. IEEE. [doi:10.1109/ICFHR2020.2020.00064](https://doi.org/10.1109/ICFHR2020.2020.00064)
 
 <a id="ref-Kie2025a"></a>Kiessling, B. (2025). Version 5 of the Kraken ATR Engine for the Humanities. In *Document Analysis and Recognition – ICDAR 2025*, Lecture Notes in Computer Science, 443–458. Springer Nature Switzerland. [doi:10.1007/978-3-032-04624-6_26](https://doi.org/10.1007/978-3-032-04624-6_26)
 
