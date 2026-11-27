@@ -62,6 +62,8 @@ import { SHOW_MEDIA_COVERAGE_COMMAND_ID } from '../../monitor/browser/mediaCover
 import { JOURNAL_METRICS_COMMAND_ID, NEW_CONNECTION_COMMAND_ID, SHOW_CONNECTIONS_COMMAND_ID, WRDS_PAGE_COMMAND_ID } from '../../databases/common/databaseDrivers.js';
 import { ASK_POLLIS_OPEN_PDF_COMMAND_ID } from '../../compose/common/askPollis.js';
 import { PDF_VIEWER_OPEN_COMMAND_ID } from '../../../common/pdfViewer.js';
+import { TRAINING_CORPORA_PAGE_COMMAND_ID } from './trainingCorporaPage.js';
+import { TRANSCRIPTION_PAGE_COMMAND_ID } from './transcriptionPage.js';
 
 export const EXPL_COMMAND_ID = 'workbench.action.showExplore';
 const DSTATS_ID = 'chiara.explore.dstats';
@@ -990,6 +992,30 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	submenu: CONNSubmenuId,
 	title: localize('showExplore.files', 'Access Files'),
 	order: 4,
+});
+
+// Explore > Transcription, below OCR Files and Snippets (compose.contribution.ts, order 6): a manuscript page read line by
+// line by automatic text recognition, with MedievalATR.jl in the Julia REPL (transcriptionPage.ts), and the corpora
+// models of automatic transcription are trained and tested on (trainingCorporaPage.ts)
+const TranscriptionSubmenuId = new MenuId('menubarTranscriptionSubmenu');
+
+MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+	group: '1_explore',
+	submenu: TranscriptionSubmenuId,
+	title: localize('showExplore.transcription', "Transcription"),
+	order: 7,
+});
+
+MenuRegistry.appendMenuItem(TranscriptionSubmenuId, {
+	group: '1_transcription',
+	command: { id: TRANSCRIPTION_PAGE_COMMAND_ID, title: localize('showExplore.transcribePage', "Transcribe a Page...") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(TranscriptionSubmenuId, {
+	group: '1_transcription',
+	command: { id: TRAINING_CORPORA_PAGE_COMMAND_ID, title: localize('showExplore.trainingCorpora', "Browse Training Corpora...") },
+	order: 2,
 });
 
 // Explore > Access Databases, below Access Files, in a place of its own, as Pollis keeps its own databases (the

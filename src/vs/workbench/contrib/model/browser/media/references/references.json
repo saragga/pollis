@@ -1759,6 +1759,40 @@
 			"open_access": true
 		},
 		{
+			"key": "ASK2018a",
+			"type": "inproceedings",
+			"title": "dhSegment: A Generic Deep-Learning Approach for Document Segmentation",
+			"authors": [
+				"Ares Oliveira, Sofia",
+				"Seguin, Benoit",
+				"Kaplan, Frederic"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"booktitle": "2018 16th International Conference on Frontiers in Handwriting Recognition (ICFHR)",
+			"publisher": "IEEE",
+			"pages": "7-12",
+			"doi": "10.1109/ICFHR-2018.2018.00011",
+			"openalex": "W2798826627",
+			"oa_url": "https://arxiv.org/pdf/1804.10371",
+			"abstract": "In recent years there have been multiple successful attempts tackling document processing problems separately by designing task specific hand-tuned strategies. We argue that the diversity of historical document processing tasks prohibits to solve them one at a time and shows a need for designing generic approaches in order to handle the variability of historical series. In this paper, we address multiple tasks simultaneously such as page extraction, baseline extraction, layout analysis or multiple typologies of illustrations and photograph extraction. We propose an open-source implementation of a CNN-based pixel-wise predictor coupled with task dependent post-processing blocks. We show that a single CNN-architecture can be used across tasks with competitive results. Moreover most of the task-specific post-precessing steps can be decomposed in a small number of simple and standard reusable operations, adding to the flexibility of our approach.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"document segmentation",
+				"historical documents",
+				"page extraction",
+				"layout analysis",
+				"post-processing",
+				"document image processing"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "ASPRS2025a",
 			"type": "misc",
 			"title": "LAS Specification 1.4, Revision 16",
@@ -6092,6 +6126,48 @@
 			"open_access": true
 		},
 		{
+			"key": "BOLCF...2021a",
+			"type": "article",
+			"title": "Hybrid MSRM-Based Deep Learning and Multitemporal Sentinel 2-Based Machine Learning Algorithm Detects Near 10k Archaeological Tumuli in North-Western Iberia",
+			"authors": [
+				"Berganzo-Besga, Iban",
+				"Orengo, Hector A.",
+				"Lumbreras, Felipe",
+				"Carrero-Pazos, Miguel",
+				"Fonte, João",
+				"Vilas-Estévez, Benito"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "Remote Sensing",
+			"volume": "13",
+			"number": "20",
+			"pages": "4181",
+			"issn": "2072-4292",
+			"doi": "10.3390/rs13204181",
+			"openalex": "W3210433242",
+			"oa_url": "https://www.mdpi.com/2072-4292/13/20/4181/pdf?version=1634869894",
+			"abstract": "This paper presents an algorithm for large-scale automatic detection of burial mounds, one of the most common types of archaeological sites globally, using LiDAR and multispectral satellite data. Although previous attempts were able to detect a good proportion of the known mounds in a given area, they still presented high numbers of false positives and low precision values. Our proposed approach combines random forest for soil classification using multitemporal multispectral Sentinel-2 data and a deep learning model using YOLOv3 on LiDAR data previously pre-processed using a multi–scale relief model. The resulting algorithm significantly improves previous attempts with a detection rate of 89.5%, an average precision of 66.75%, a recall value of 0.64 and a precision of 0.97, which allowed, with a small set of training data, the detection of 10,527 burial mounds over an area of near 30,000 km2, the largest in which such an approach has ever been applied. The open code and platforms employed to develop the algorithm allow this method to be applied anywhere LiDAR data or high-resolution digital terrain models are available.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"burial mounds",
+				"archaeological site detection",
+				"LiDAR",
+				"Sentinel-2",
+				"multispectral satellite imagery",
+				"YOLOv3",
+				"random forest",
+				"soil classification",
+				"digital terrain model"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-26",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "BP1979a",
 			"type": "article",
 			"title": "A Simple Test for Heteroscedasticity and Random Coefficient Variation",
@@ -9521,6 +9597,40 @@
 			"open_access": true
 		},
 		{
+			"key": "CCP2023a",
+			"type": "article",
+			"title": "DAN: A Segmentation-Free Document Attention Network for Handwritten Document Recognition",
+			"authors": [
+				"Coquenet, Denis",
+				"Chatelain, Clément",
+				"Paquet, Thierry"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+			"publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+			"volume": "45",
+			"number": "7",
+			"pages": "8227-8243",
+			"doi": "10.1109/TPAMI.2023.3235826",
+			"openalex": "W4283276297",
+			"oa_url": "http://arxiv.org/pdf/2203.12273",
+			"abstract": "Unconstrained handwritten text recognition is a challenging computer vision task. It is traditionally handled by a two-step approach, combining line segmentation followed by text line recognition. For the first time, we propose an end-to-end segmentation-free architecture for the task of handwritten document recognition: the Document Attention Network. In addition to text recognition, the model is trained to label text parts using begin and end tags in an XML-like fashion. This model is made up of an FCN encoder for feature extraction and a stack of transformer decoder layers for a recurrent token-by-token prediction process. It takes whole text documents as input and sequentially outputs characters, as well as logical layout tokens. Contrary to the existing segmentation-based approaches, the model is trained without using any segmentation label. We achieve competitive results on the READ 2016 dataset at page level, as well as double-page level with a CER of 3.43% and 3.70%, respectively. We also provide results for the RIMES 2009 dataset at page level, reaching 4.54% of CER. We provide all source code and pre-trained model weights at https://github.com/FactoDeepLearning/DAN.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"handwritten document recognition",
+				"segmentation-free recognition",
+				"transformer decoder",
+				"text line recognition"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "CCSSB...2021a",
 			"type": "inproceedings",
 			"title": "FinQA: A Dataset of Numerical Reasoning over Financial Data",
@@ -11185,6 +11295,38 @@
 			"open_access": false
 		},
 		{
+			"key": "CK2026a",
+			"type": "misc",
+			"title": "ICDAR 2026 Competition on Multilingual Medieval Handwriting Recognition",
+			"authors": [
+				"Clérice, Thibault",
+				"Kiessling, Benjamin"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"publisher": "Zenodo",
+			"doi": "10.5281/zenodo.19884972",
+			"url": "https://zenodo.org/records/19884972",
+			"abstract": "The ICDAR 2026 Competition on Multilingual Medieval Handwriting Recognition (CMMHWR26) seeks to evaluate the state of the art in multilingual historical handwritten text recognition. Each of the three increasingly difficult tasks is designed to assess model generalization and robustness under conditions that reflect real-world retrodigitization workflows. Task 1: Multilingual Recognition evaluates text recognition across medieval manuscripts written in different languages. For this task, contestants will receive a dataset containing manuscripts written in eight different Romance languages (Castilian, Catalan, French, Gallician, Italian, Latin, Navarrese, and Venitian). Evaluation will be performed on a test set containing material written in the same languages and similar in style to the furnished training set. Task 2: Intra-language family generalization extends Task 1 by evaluating recognition of manuscripts written in Occitan, a closely related Romance language that is not present in the training dataset. Task 3: Cross-language family generalization evaluates accuracy on historical material linguistically dissimilar to the languages present in the training dataset. The test set consists of manuscripts with similar handwriting styles to the training set, written in a Czech, non-Romance European language.",
+			"abstract_source": "zenodo",
+			"keywords": [
+				"handwritten text recognition",
+				"medieval manuscripts",
+				"competition",
+				"multilingual",
+				"Romance languages",
+				"Occitan",
+				"Czech"
+			],
+			"keywords_source": "manual",
+			"source": "zenodo",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true,
+			"note": "Test set of the competition with its transcriptions, CC BY 4.0; without them, doi:10.5281/zenodo.19134646"
+		},
+		{
 			"key": "CKBCJ...2021a",
 			"type": "misc",
 			"title": "Training Verifiers to Solve Math Word Problems",
@@ -12036,6 +12178,59 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "CPVCC...2024a",
+			"type": "incollection",
+			"title": "CATMuS Medieval: A Multilingual Large-Scale Cross-Century Dataset in Latin Script for Handwritten Text Recognition and Beyond",
+			"authors": [
+				"Clérice, Thibault",
+				"Pinche, Ariane",
+				"Vlachou-Efstathiou, Malamatenia",
+				"Chagué, Alix",
+				"Camps, Jean-Baptiste",
+				"Gille Levenson, Matthias",
+				"Brisville-Fertin, Olivier",
+				"Boschetti, Federico",
+				"Fischer, Franz",
+				"Gervers, Michael",
+				"Boutreux, Agnès",
+				"Manton, Avery",
+				"Gabay, Simon",
+				"O'Connor, Patricia",
+				"Haverals, Wouter",
+				"Kestemont, Mike",
+				"Vandyck, Caroline",
+				"Kiessling, Benjamin"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"booktitle": "Document Analysis and Recognition - ICDAR 2024",
+			"publisher": "Springer Nature Switzerland",
+			"pages": "174-194",
+			"isbn": "9783031705434",
+			"doi": "10.1007/978-3-031-70543-4_11",
+			"openalex": "W4391767333",
+			"oa_url": "https://inria.hal.science/hal-04453952v1/document",
+			"abstract": "The surge in digitisation initiatives by Cultural Heritage institutions has facilitated online accessibility to numerous historical manuscripts. However, a substantial portion of these documents exists solely as images, lacking machine-readable text. Handwritten Text Recognition (HTR) has emerged as a crucial tool for converting these images into machine-readable formats, enabling researchers and scholars to analyse vast collections efficiently. Despite significant technological progress, establishing consistent ground truth across projects for HTR tasks, particularly for complex and heterogeneous historical sources like medieval manuscripts in Latin scripts (8th-15th century CE), remains nonetheless challenging. We introduce the Consistent Approaches to Transcribing Manuscripts (CATMuS) dataset for medieval manuscripts, which offers (1) a uniform framework for annotation practices for medieval manuscripts, a benchmarking environment (2) for evaluating automatic text recognition models across multiple dimensions thanks to rich metadata (century of production, language, genre, script, etc.), (3) for other tasks (such as script classification or dating approaches), (4) and finally for exploratory work pertaining to computer vision and digital paleography around line-based tasks, such as generative approaches. Developed through collaboration among various institutions and projects, CATMuS provides an inter-compatible dataset spanning more than 200 manuscripts and incunabula in 10 different languages, comprising over 160,000 lines of text and 5 million characters spanning from the 8th century to the 16th. The dataset's consistency in transcription approaches aims to mitigate challenges arising from the diversity in standards for medieval manuscript transcriptions, providing a comprehensive benchmark for evaluating HTR models on historical sources.",
+			"abstract_source": "hal",
+			"keywords": [
+				"handwriting recognition",
+				"medieval manuscripts",
+				"Latin letters",
+				"historical manuscripts",
+				"incunabula",
+				"script classification",
+				"manuscript dating",
+				"cultural heritage digitization"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true,
+			"series": "Lecture Notes in Computer Science"
 		},
 		{
 			"key": "CR1982a",
@@ -15907,6 +16102,39 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "DS1979a",
+			"type": "article",
+			"title": "Maximum Likelihood Estimation of Observer Error-Rates Using the EM Algorithm",
+			"authors": [
+				"Dawid, A. P.",
+				"Skene, A. M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1979,
+			"journal": "Applied Statistics",
+			"publisher": "JSTOR",
+			"volume": "28",
+			"number": "1",
+			"pages": "20-28",
+			"doi": "10.2307/2346806",
+			"openalex": "W9014458",
+			"abstract": "In compiling a patient record many facets are subject to errors of measurement. A model is presented which allows individual error-rates to be estimated for polytomous facets even when the patient's \"true\" response is not available. The EM algorithm is shown to provide a slow but sure way of obtaining maximum likelihood estimates of the parameters of interest. Some preliminary experience is reported and the limitations of the method are described.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"measurement error",
+				"medical records",
+				"maximum likelihood estimation",
+				"expectation-maximization algorithm",
+				"missing data"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "DS1990a",
@@ -20280,6 +20508,35 @@
 			"open_access": false
 		},
 		{
+			"key": "Fis1997a",
+			"type": "inproceedings",
+			"title": "A post-processing system to yield reduced word error rates: Recognizer Output Voting Error Reduction (ROVER)",
+			"authors": [
+				"Fiscus, J. G."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1997,
+			"booktitle": "1997 IEEE Workshop on Automatic Speech Recognition and Understanding Proceedings",
+			"publisher": "IEEE",
+			"pages": "347-354",
+			"doi": "10.1109/ASRU.1997.659110",
+			"openalex": "W1904457459",
+			"abstract": "Describes a system developed at NIST to produce a composite automatic speech recognition (ASR) system output when the outputs of multiple ASR systems are available, and for which, in many cases, the composite ASR output has a lower error rate than any of the individual systems. The system implements a \"voting\" or rescoring process to reconcile differences in ASR system outputs. We refer to this system as the NIST Recognizer Output Voting Error Reduction (ROVER) system. As additional knowledge sources are added to an ASR system (e.g. acoustic and language models), error rates are typically decreased. This paper describes a post-recognition process which models the output generated by multiple ASR systems as independent knowledge sources that can be combined and used to generate an output with reduced error rate. To accomplish this, the outputs of multiple of ASR systems are combined into a single, minimal-cost word transition network (WTN) via iterative applications of dynamic programming (DP) alignments. The resulting network is searched by an automatic rescoring or \"voting\" process that selects the output sequence with the lowest score.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"speech recognition",
+				"post-processing",
+				"word error rate reduction",
+				"dynamic programming alignment"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Fle1970a",
 			"type": "article",
 			"title": "A New Approach to Variable Metric Algorithms",
@@ -21272,6 +21529,40 @@
 			"open_access": false
 		},
 		{
+			"key": "GFGS2006a",
+			"type": "inproceedings",
+			"title": "Connectionist Temporal Classification: Labelling Unsegmented Sequence Data with Recurrent Neural Networks",
+			"authors": [
+				"Graves, Alex",
+				"Fernández, Santiago",
+				"Gomez, Faustino",
+				"Schmidhuber, Jürgen"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2006,
+			"booktitle": "Proceedings of the 23rd International Conference on Machine Learning",
+			"publisher": "ACM Press",
+			"pages": "369-376",
+			"doi": "10.1145/1143844.1143891",
+			"openalex": "W2127141656",
+			"abstract": "Many real-world sequence learning tasks require the prediction of sequences of labels from noisy, unsegmented input data. In speech recognition, for example, an acoustic signal is transcribed into words or sub-word units. Recurrent neural networks (RNNs) are powerful sequence learners that would seem well suited to such tasks. However, because they require pre-segmented training data, and post-processing to transform their outputs into label sequences, their applicability has so far been limited. This paper presents a novel method for training RNNs to label unsegmented sequences directly, thereby solving both problems. An experiment on the TIMIT speech corpus demonstrates its advantages over both a baseline HMM and a hybrid HMM-RNN.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"connectionist temporal classification",
+				"recurrent neural networks",
+				"sequence labeling",
+				"speech recognition",
+				"TIMIT corpus",
+				"hidden Markov models"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "GFI2016a",
 			"type": "article",
 			"title": "What does research reproducibility mean?",
@@ -21887,6 +22178,47 @@
 			"open_access": true
 		},
 		{
+			"key": "GLFBB...2009a",
+			"type": "article",
+			"title": "A Novel Connectionist System for Unconstrained Handwriting Recognition",
+			"authors": [
+				"Graves, Alex",
+				"Liwicki, Marcus",
+				"Fernández, Santiago",
+				"Bertolami, Roman",
+				"Bunke, Horst",
+				"Schmidhuber, Jürgen"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+			"publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+			"volume": "31",
+			"number": "5",
+			"pages": "855-868",
+			"doi": "10.1109/TPAMI.2008.137",
+			"openalex": "W2122585011",
+			"abstract": "Recognizing lines of unconstrained handwritten text is a challenging task. The difficulty of segmenting cursive or overlapping characters, combined with the need to exploit surrounding context, has led to low recognition rates for even the best current recognizers. Most recent progress in the field has been made either through improved preprocessing or through advances in language modeling. Relatively little work has been done on the basic recognition algorithms. Indeed, most systems rely on the same hidden Markov models that have been used for decades in speech and handwriting recognition, despite their well-known shortcomings. This paper proposes an alternative approach based on a novel type of recurrent neural network, specifically designed for sequence labeling tasks where the data is hard to segment and contains long-range bidirectional interdependencies. In experiments on two large unconstrained handwriting databases, our approach achieves word recognition accuracies of 79.7 percent on online data and 74.1 percent on offline data, significantly outperforming a state-of-the-art HMM-based system. In addition, we demonstrate the network's robustness to lexicon size, measure the individual influence of its hidden layers, and analyze its use of context. Last, we provide an in-depth discussion of the differences between the network and HMMs, suggesting reasons for the network's superior performance.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"connectionist models",
+				"recurrent neural networks",
+				"sequence labeling",
+				"cursive script",
+				"character segmentation",
+				"hidden Markov models",
+				"online handwriting",
+				"offline handwriting",
+				"context modeling"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "GLLBT...2026a",
 			"type": "misc",
 			"title": "From Registry to Repository: How AI Agent Skills Are Written, Adapted, and Maintained",
@@ -21913,6 +22245,45 @@
 			"source": "manual",
 			"retrieved": "2026-10-31",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "GLSML2019a",
+			"type": "article",
+			"title": "A two-stage method for text line detection in historical documents",
+			"authors": [
+				"Grüning, Tobias",
+				"Leifert, Gundram",
+				"Strauß, Tobias",
+				"Michael, Johannes",
+				"Labahn, Roger"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "International Journal on Document Analysis and Recognition (IJDAR)",
+			"publisher": "Springer Science and Business Media LLC",
+			"volume": "22",
+			"number": "3",
+			"pages": "285-302",
+			"doi": "10.1007/s10032-019-00332-1",
+			"openalex": "W2787480186",
+			"oa_url": "https://arxiv.org/pdf/1802.03345",
+			"abstract": "This work presents a two-stage text line detection method for historical documents. Each detected text line is represented by its baseline. In a first stage, a deep neural network called ARU-Net labels pixels to belong to one of the three classes: baseline, separator and other. The separator class marks beginning and end of each text line. The ARU-Net is trainable from scratch with manageably few manually annotated example images (<50). This is achieved by utilizing data augmentation strategies. The network predictions are used as input for the second stage which performs a bottom-up clustering to build baselines. The developed method is capable of handling complex layouts as well as curved and arbitrarily oriented text lines. It substantially outperforms current state-of-the-art approaches. For example, for the complex track of the cBAD: ICDAR2017 Competition on Baseline Detection the F value is increased from 0.859 to 0.922. The framework to train and run the ARU-Net is open source.",
+			"abstract_source": "semanticscholar",
+			"keywords": [
+				"text line detection",
+				"historical documents",
+				"baseline detection",
+				"two-stage detection",
+				"bottom-up clustering",
+				"document layout analysis",
+				"data augmentation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -28894,6 +29265,36 @@
 			"open_access": true
 		},
 		{
+			"key": "IGN2026b",
+			"type": "misc",
+			"title": "PNOA-LiDAR",
+			"authors": [
+				"Instituto Geográfico Nacional"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"publisher": "Centro Nacional de Información Geográfica",
+			"url": "https://pnoa.ign.es/web/portal/pnoa-lidar/presentacion",
+			"abstract": "PNOA-LiDAR, the lidar project of Spain's National Plan of Aerial Orthophotography (PNOA), captures three-dimensional information over the whole of Spain with airborne lidar sensors and produces from it point clouds with coordinates, digital terrain models and other products. Its first coverage was flown between 2009 and 2015, its second between 2015 and 2021 and its third between 2022 and 2025. The density of the points rose from 0.5 points a square metre in the first coverage to 5 in the third, and the vertical accuracy from an RMSE of 40 cm to 10 cm. With the higher density of the third coverage and classification based on artificial intelligence, more than 20 kinds of geographic features can be told apart at the highest level of processing (NPC03), with a reliability above 90% in 13 basic classes. The point clouds and the products derived from them are distributed by the Centro Nacional de Información Geográfica (CNIG). The project is a collaboration of the Instituto Geográfico Nacional, the CNIG and ENAIRE, the Spanish Agricultural Guarantee Fund, the Directorate General for the Cadastre, the Directorates General for Water and for Biodiversity, Forests and Desertification, and the Autonomous Communities.",
+			"abstract_source": "manual",
+			"keywords": [
+				"PNOA",
+				"lidar",
+				"point cloud",
+				"Spain",
+				"digital terrain model",
+				"IGN",
+				"CNIG"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-26",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset"
+		},
+		{
 			"key": "IGR2024a",
 			"type": "inproceedings",
 			"title": "Hybrid Symbolic-Numeric and Numerically-Assisted Symbolic Integration",
@@ -30996,6 +31397,45 @@
 			"open_access": true
 		},
 		{
+			"key": "KCHM2017a",
+			"type": "inproceedings",
+			"title": "Transkribus - A Service Platform for Transcription, Recognition and Retrieval of Historical Documents",
+			"authors": [
+				"Kahle, Philip",
+				"Colutto, Sebastian",
+				"Hackl, Günter",
+				"Mühlberger, Günter"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"booktitle": "2017 14th IAPR International Conference on Document Analysis and Recognition (ICDAR)",
+			"publisher": "IEEE",
+			"pages": "19-24",
+			"doi": "10.1109/ICDAR.2017.307",
+			"openalex": "W2787677190",
+			"abstract": "Transkribus is a comprehensive platform for the computer-aided transcription, recognition and retrieval of digitized historical documents. The main user interface is provided via an open-source desktop application that incorporates means to segment document images, to add a transcription and to tag entities within. The desktop application is able to connect to the platform's backend, which implements a document management system as well as several tools for document image analysis, such as layout analysis or automatic/handwritten text recognition (ATR/HTR). Access to documents, uploaded to the platform, may be granted to other users in order to collaborate on the transcription and to share results.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"Transkribus",
+				"historical documents",
+				"digitized documents",
+				"optical character recognition",
+				"handwriting recognition",
+				"document image segmentation",
+				"layout analysis",
+				"entity tagging",
+				"document management systems",
+				"collaborative transcription",
+				"document retrieval"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "KCHN2018a",
 			"type": "inproceedings",
 			"title": "Juniper: An Open-Source Nonlinear Branch-and-Bound Solver in Julia",
@@ -31344,6 +31784,67 @@
 			"checked": false,
 			"open_access": true,
 			"series": "Prostor, kraj, čas"
+		},
+		{
+			"key": "KH2021a",
+			"type": "incollection",
+			"title": "Page Layout Analysis System for Unconstrained Historic Documents",
+			"authors": [
+				"Kodym, Oldřich",
+				"Hradiš, Michal"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"booktitle": "Document Analysis and Recognition – ICDAR 2021",
+			"publisher": "Springer International Publishing",
+			"pages": "492-506",
+			"doi": "10.1007/978-3-030-86331-9_32",
+			"openalex": "W3129498386",
+			"oa_url": "https://arxiv.org/pdf/2102.11838",
+			"abstract": "Extraction of text regions and individual text lines from historic documents is necessary for automatic transcription. We propose extending a CNN-based text baseline detection system by adding line height and text block boundary predictions to the model output, allowing the system to extract more comprehensive layout information. We also show that pixel-wise text orientation prediction can be used for processing documents with multiple text orientations. We demonstrate that the proposed method performs well on the cBAD baseline detection dataset. Additionally, we benchmark the method on newly introduced PERO layout dataset which we also make public.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"document layout analysis",
+				"historical documents",
+				"text line detection",
+				"text region extraction",
+				"CNN-based detection",
+				"automatic transcription"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true,
+			"series": "Lecture Notes in Computer Science"
+		},
+		{
+			"key": "KH2021b",
+			"type": "misc",
+			"title": "PERO layout dataset",
+			"authors": [
+				"Kodym, Oldřich",
+				"Hradiš, Michal"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"publisher": "Zenodo",
+			"doi": "10.5281/zenodo.19184850",
+			"url": "https://zenodo.org/records/19184850",
+			"keywords": [
+				"page layout analysis",
+				"text line detection",
+				"historical documents",
+				"dataset"
+			],
+			"keywords_source": "manual",
+			"source": "zenodo",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset of the article Page Layout Analysis System for Unconstrained Historic Documents, CC BY 4.0"
 		},
 		{
 			"key": "KHA2024a",
@@ -32850,6 +33351,43 @@
 			"open_access": true
 		},
 		{
+			"key": "KTSS2019a",
+			"type": "inproceedings",
+			"title": "eScriptorium: An Open Source Platform for Historical Document Analysis",
+			"authors": [
+				"Kiessling, Benjamin",
+				"Tissot, Robin",
+				"Stokes, Peter",
+				"Stökl Ben Ezra, Daniel"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"booktitle": "2019 International Conference on Document Analysis and Recognition Workshops (ICDARW)",
+			"publisher": "IEEE",
+			"pages": "19",
+			"doi": "10.1109/ICDARW.2019.10032",
+			"openalex": "W2984055017",
+			"oa_url": "https://hal.science/hal-04937198/document",
+			"abstract": "We describe the new open source document analysis and annotation platform eScriptorium. It allows to upload document collections, transcribe and segment them manually or automatically with the help of the kraken OCR engine.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"eScriptorium",
+				"historical document analysis",
+				"document annotation",
+				"open source software",
+				"optical character recognition",
+				"document transcription",
+				"text segmentation",
+				"document collections"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "KUMH2017a",
 			"type": "misc",
 			"title": "Self-Normalizing Neural Networks",
@@ -33444,6 +33982,105 @@
 			"retrieved": "2026-10-31",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "Kie2019a",
+			"type": "inproceedings",
+			"title": "Kraken - a Universal Text Recognizer for the Humanities",
+			"authors": [
+				"Kiessling, Benjamin"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"booktitle": "Digital Humanities 2019 (DH2019)",
+			"publisher": "DataverseNL",
+			"address": "Utrecht",
+			"doi": "10.34894/z9g2ex",
+			"openalex": "W4416180778",
+			"url": "https://hal.science/hal-04936936",
+			"keywords": [
+				"Kraken",
+				"text recognition",
+				"optical character recognition",
+				"historical documents",
+				"document image analysis",
+				"digital humanities tools"
+			],
+			"keywords_source": "openalex",
+			"source": "datacite",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true,
+			"note": "Abstract of paper 0673 presented at the Digital Humanities Conference 2019"
+		},
+		{
+			"key": "Kie2020a",
+			"type": "inproceedings",
+			"title": "A Modular Region and Text Line Layout Analysis System",
+			"authors": [
+				"Kiessling, Benjamin"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"booktitle": "2020 17th International Conference on Frontiers in Handwriting Recognition (ICFHR)",
+			"publisher": "IEEE",
+			"pages": "313-318",
+			"doi": "10.1109/ICFHR2020.2020.00064",
+			"openalex": "W3108950225",
+			"oa_url": "https://hal.science/hal-04442992",
+			"abstract": "High quality document layout analysis is fundamental to the accurate processing of handwritten textual material, on both the level of individual lines and higher order zones demarking textual and non-textual content. We present an artificial neural network based approach to prediction of either that is implemented as part of a libre optical character recognition package and highly reconfigurable for a variety of tasks. Experiments on different openly available datasets show competitive results to state-of-the-art methods.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"document layout analysis",
+				"text line detection",
+				"region detection",
+				"handwritten text",
+				"optical character recognition",
+				"artificial neural networks"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "Kie2025a",
+			"type": "incollection",
+			"title": "Version 5 of the Kraken ATR Engine for the Humanities",
+			"authors": [
+				"Kiessling, Benjamin"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"booktitle": "Document Analysis and Recognition – ICDAR 2025",
+			"publisher": "Springer Nature Switzerland",
+			"pages": "443-458",
+			"isbn": "9783032046246",
+			"doi": "10.1007/978-3-032-04624-6_26",
+			"openalex": "W4414254236",
+			"oa_url": "https://inria.hal.science/hal-05144723v1/file/021.pdf",
+			"abstract": "Automatic text recognition for contemporary and historical printed or handwritten works has become a crucial tool in the inventory of many humanities scholars employing digital methods, but few retrodigitization software packages are adapted to this environment with its unparalleled diversity, domain-specific conventions, and low-resource settings. We examine how the design principles behind kraken, a freely-licensed ATR engine optimized for use on historical and non-Latin script documents, pertain to specific use cases encountered in the humanities and allow it to be easily adapted to process even highly non-conventional material. In addition, we shine a light on the significant functional additions, performance enhancements, and quality of life improvements added in its recent version 5 stable releases. Among these are advanced reading order support including trainable reading order, unsupervised recognition pretraining, and a new public model repository with enhanced metadata. The latest release of the software can be found at https://kraken.re.",
+			"abstract_source": "hal",
+			"keywords": [
+				"automatic text recognition",
+				"retro-digitization",
+				"historical documents",
+				"handwritten documents",
+				"non-Latin scripts",
+				"reading order",
+				"unsupervised pre-training",
+				"model repository"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true,
+			"series": "Lecture Notes in Computer Science"
 		},
 		{
 			"key": "Kim1994a",
@@ -35191,6 +35828,50 @@
 			"keywords_source": "arxiv",
 			"legacy_key": "lundberg2017",
 			"source": "manual",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "LLCCL...2023a",
+			"type": "inproceedings",
+			"title": "TrOCR: Transformer-Based Optical Character Recognition with Pre-trained Models",
+			"authors": [
+				"Li, Minghao",
+				"Lv, Tengchao",
+				"Chen, Jingye",
+				"Cui, Lei",
+				"Lu, Yijuan",
+				"Florencio, Dinei",
+				"Zhang, Cha",
+				"Li, Zhoujun",
+				"Wei, Furu"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"booktitle": "Proceedings of the AAAI Conference on Artificial Intelligence",
+			"publisher": "Association for the Advancement of Artificial Intelligence (AAAI)",
+			"volume": "37",
+			"number": "11",
+			"pages": "13094-13102",
+			"doi": "10.1609/aaai.v37i11.26538",
+			"openalex": "W4382202677",
+			"oa_url": "https://ojs.aaai.org/index.php/AAAI/article/download/26538/26310",
+			"abstract": "Text recognition is a long-standing research problem for document digitalization. Existing approaches are usually built based on CNN for image understanding and RNN for char-level text generation. In addition, another language model is usually needed to improve the overall accuracy as a post-processing step. In this paper, we propose an end-to-end text recognition approach with pre-trained image Transformer and text Transformer models, namely TrOCR, which leverages the Transformer architecture for both image understanding and wordpiece-level text generation. The TrOCR model is simple but effective, and can be pre-trained with large-scale synthetic data and fine-tuned with human-labeled datasets. Experiments show that the TrOCR model outperforms the current state-of-the-art models on the printed, handwritten and scene text recognition tasks. The TrOCR models and code are publicly available at https://aka.ms/trocr.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"optical character recognition",
+				"transformer models",
+				"pre-trained models",
+				"synthetic training data",
+				"handwriting recognition",
+				"scene text recognition",
+				"document digitization",
+				"image understanding"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
 			"checked": false,
 			"open_access": true
 		},
@@ -37988,6 +38669,48 @@
 			"open_access": true
 		},
 		{
+			"key": "MCCCG...2026a",
+			"type": "techreport",
+			"title": "MEDUSA 0.1: Medieval European Documents Unified System for Automated text recognition. System Report for the ICDAR 2026 Competition on Multilingual Medieval Handwritten Text Recognition",
+			"authors": [
+				"Moins, Théo",
+				"Cafiero, Florian",
+				"Camps, Jean-Baptiste",
+				"Conte, Lilla",
+				"Guidi, Émilie",
+				"Hensley, Brenna",
+				"Kapitan, Katarzyna Anna",
+				"Macedo, Carolina",
+				"Peratello, Paola",
+				"Vermaas, Cecile",
+				"Vidal-Gorène, Chahan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"address": "Paris",
+			"institution": "École nationale des chartes – PSL",
+			"openalex": "W7160227153",
+			"url": "https://enc.hal.science/hal-05600991",
+			"oa_url": "https://hal.science/hal-05600991v3",
+			"abstract": "This document is a system report prepared for the ICDAR 2026 Competition on Multilingual Medieval Handwritten Text Recognition (CMMHWR) and reflects the state of a system called MEDUSA (Medieval European Documents Unified System for Automated text recognition). It is made available online as a reference snapshot of the work at that stage. A revised and extended version, with additional training iterations and improved results, is forthcoming. Our approach combines a carefully assembled multilingual training corpus spanning more than twenty repositories with a multi-stage fine-tuning strategy built on a Vision Language Model (VLM). We first describe our data collection and curation pipeline, then detail the model architecture and training procedure, before reporting and discussing results on both our internal test set and the three official competition tasks.",
+			"abstract_source": "hal",
+			"keywords": [
+				"handwritten text recognition",
+				"medieval manuscripts",
+				"vision-language models",
+				"multilingual",
+				"CATMuS",
+				"ICDAR 2026"
+			],
+			"keywords_source": "manual",
+			"source": "hal",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true,
+			"note": "HAL preprint hal-05600991, version 3; models Medusa0.1Line-4B and Medusa0.1Line-9B, and Medusa0.2Line-4B and Medusa0.2Line-9B, of ENC-PSL on Hugging Face, CC BY 4.0"
+		},
+		{
 			"key": "MCHLM...1993a",
 			"type": "article",
 			"title": "The M2-competition: A real-time judgmentally based forecasting study",
@@ -39043,6 +39766,47 @@
 			"keywords_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "MHCCC...2026a",
+			"type": "inproceedings",
+			"title": "MEDUSA: A Curriculum-Based Vision-Language Framework for Multilingual Medieval Handwritten Text Recognition",
+			"authors": [
+				"Moins, Théo",
+				"Hensley, Brenna",
+				"Cafiero, Florian",
+				"Camps, Jean-Baptiste",
+				"Conte, Lilla",
+				"Guidi, Émilie",
+				"Kapitan, Katarzyna Anna",
+				"Macedo, Carolina",
+				"Peratello, Paola",
+				"Vermaas, Cecile",
+				"Vidal-Gorène, Chahan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"booktitle": "8th International Workshop on Historical Document Imaging and Processing (HIP’26)",
+			"address": "Wien",
+			"openalex": "W7212459756",
+			"url": "https://enc.hal.science/hal-05744493",
+			"oa_url": "https://hal.science/hal-05744493v1",
+			"abstract": "Multilingual Handwritten Text Recognition (HTR) for medieval manuscripts remains difficult because of strong variation in scripts, languages, editorial conventions, abbreviation practices, and manuscript quality, as well as the uneven distribution of available annotated resources. Recent vision-language models offer a promising alternative to traditional task-specific recognizers, but their use in historical HTR raises two major challenges: robust generalization to unseen manuscript conditions and control of hallucinated transcriptions, that is, fluent outputs insufficiently grounded in the visual input. We present MEDUSA (Medieval European Documents Unified System for Automated text recognition), a curriculum-based framework for multilingual medieval HTR built around a vision-language model fine-tuned in successive stages on three tiers of resources: Silver text-only data, Gold image-text pairs following heterogeneous editorial conventions, and Platinum image-text pairs aligned with the target transcription guidelines. This design separates language adaptation, visual adaptation, and convention-specific specialization. Evaluated on the ICDAR 2026 CMMHWR competition, the different versions of MEDUSA outperform the strongest baseline on all tasks, using a single set of model weights across all evaluation conditions. A first controlled experiment further shows that the convention-parameterised prompting mechanism may steer toward alternative editorial outputs -including silent abbreviation expansion -without retraining, making the framework usable by practitioners whose annotation traditions diverge from each other. Model weights, synthetic training data, and the document analysis pipeline are released publicly.",
+			"abstract_source": "hal",
+			"keywords": [
+				"handwritten text recognition",
+				"medieval manuscripts",
+				"vision-language models",
+				"curriculum learning",
+				"synthetic data",
+				"CATMuS"
+			],
+			"keywords_source": "manual",
+			"source": "hal",
+			"retrieved": "2026-11-27",
 			"checked": false,
 			"open_access": true
 		},
@@ -44159,6 +44923,42 @@
 			"open_access": true
 		},
 		{
+			"key": "OP2018a",
+			"type": "article",
+			"title": "Multi-scale relief model (MSRM): a new algorithm for the visualization of subtle topographic change of variable size in digital elevation models",
+			"authors": [
+				"Orengo, Hector A.",
+				"Petrie, Cameron A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "Earth Surface Processes and Landforms",
+			"volume": "43",
+			"number": "6",
+			"pages": "1361-1369",
+			"issn": "0197-9337",
+			"doi": "10.1002/esp.4317",
+			"openalex": "W2794000773",
+			"oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/esp.4317",
+			"abstract": "Morphological analysis of landforms has traditionally relied on the interpretation of imagery. Although imagery provides a natural view of an area of interest (AOI) images are largely hindered by the environmental conditions at the time of image acquisition, the quality of the image and, mainly, the lack of topographical information, which is an essential factor for a correct understanding of the AOI's geomorphology. More recently digital surface models (DSMs) have been incorporated into the analytical toolbox of geomorphologists. These are usually high-resolution models derived from digital photogrammetric processes or LiDAR data. However, these are restricted to relatively small areas and are expensive or complex to acquire, which limits widespread implementation. In this paper, we present the multi-scale relief model (MSRM), which is a new algorithm for the visual interpretation of landforms using DSMs. The significance of this new method lies in its capacity to extract landform morphology from both high- and low-resolution DSMs independently of the shape or scale of the landform under study. This method thus provides important advantages compared to previous approaches as it: (1) allows the use of worldwide medium resolution models, such as SRTM, ASTER GDEM, ALOS, and TanDEM-X; (2) offers an alternative to traditional photograph interpretation that does not rely on the quality of the imagery employed nor on the environmental conditions and time of its acquisition; and (3) can be easily implemented for large areas using traditional GIS/RS software. The algorithm is tested in the Sutlej-Yamuna interfluve, which is a very large low-relief alluvial plain in northwest India where 10 000 km of palaeoriver channels have been mapped using MSRM. The code, written in Google Earth Engine's implementation of JavaScript, is provided as Supporting Information for its use in any other AOI without particular technical knowledge or access to topographical data.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"digital elevation model",
+				"landform morphology",
+				"SRTM",
+				"ASTER GDEM",
+				"TanDEM-X",
+				"alluvial plain",
+				"geomorphology"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-26",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "OSC2015a",
 			"type": "article",
 			"title": "Estimating the reproducibility of psychological science",
@@ -44828,6 +45628,40 @@
 			"open_access": true
 		},
 		{
+			"key": "PA2010a",
+			"type": "inproceedings",
+			"title": "The PAGE (Page Analysis and Ground-Truth Elements) Format Framework",
+			"authors": [
+				"Pletschacher, Stefan",
+				"Antonacopoulos, Apostolos"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"booktitle": "2010 20th International Conference on Pattern Recognition",
+			"publisher": "IEEE",
+			"pages": "257-260",
+			"doi": "10.1109/ICPR.2010.72",
+			"openalex": "W2149128132",
+			"oa_url": "http://usir.salford.ac.uk/id/eprint/17827/1/PAGE.pdf",
+			"abstract": "There is a plethora of established and proposed document representation formats but none that can adequately support individual stages within an entire sequence of document image analysis methods (from document image enhancement to layout analysis to OCR) and their evaluation. This paper describes PAGE, a new XML-based page image representation framework that records information on image characteristics (image borders, geometric distortions and corresponding corrections, binarisation etc.) in addition to layout structure and page content. The suitability of the framework to the evaluation of entire workflows as well as individual stages has been extensively validated by using it in high-profile applications such as in public contemporary and historical ground-truthed datasets and in the ICDAR Page Segmentation competition series.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"layout analysis",
+				"optical character recognition",
+				"document image enhancement",
+				"geometric distortion correction",
+				"page segmentation",
+				"ground truth dataset",
+				"workflow evaluation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "PB1995a",
 			"type": "article",
 			"title": "Approximations to the Log-Likelihood Function in the Nonlinear Mixed-Effects Model",
@@ -45023,6 +45857,51 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "PCVCC...2026a",
+			"type": "misc",
+			"title": "CATMuS Medieval 1.6.2",
+			"authors": [
+				"Pinche, Ariane",
+				"Clérice, Thibault",
+				"Vlachou-Efstathiou, Malamatenia",
+				"Chagué, Alix",
+				"Camps, Jean-Baptiste",
+				"Gille Levenson, Matthias",
+				"Brisville-Fertin, Olivier",
+				"Boschetti, Federico",
+				"Fischer, Franz",
+				"Gervers, Michael",
+				"Boutreux, Agnès",
+				"Manton, Avery",
+				"Gabay, Simon",
+				"Ferrante, Genaro"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"publisher": "Zenodo",
+			"doi": "10.5281/zenodo.21488839",
+			"url": "https://zenodo.org/records/21488839",
+			"abstract": "CATMuS (Consistent Approach to Transcribing ManuScript) Medieval is a Kraken HTR model trained on four different languages (in descending order of importance in the dataset: Old and Middle French, Latin, Spanish (and other languages of Spain), Italian) on strictly graphematic transcriptions. No abbreviations are resolved. This model is the result of the collaboration from researchers from CREMMA, GalliCorpora, HTRomance and DEEDS projects. It follows the CREMMA Guidelines (Supplemented by the CREMMA Medii Aevi) and will be consolidated under the CATMuS Medieval Guidelines in an upcoming paper. The model is trained with NFD Unicode normalization: each diacritic (including superscripts) are transcribed as their own characters, separately from the \"main\" character.",
+			"abstract_source": "zenodo",
+			"keywords": [
+				"handwritten text recognition",
+				"Kraken",
+				"medieval manuscripts",
+				"Old French",
+				"Middle French",
+				"Latin",
+				"Spanish",
+				"Italian"
+			],
+			"keywords_source": "manual",
+			"source": "zenodo",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true,
+			"note": "Kraken recognition model, CC BY 4.0"
 		},
 		{
 			"key": "PD1980a",
@@ -47288,6 +48167,38 @@
 			"open_access": true
 		},
 		{
+			"key": "Pui2017a",
+			"type": "inproceedings",
+			"title": "Are Multidimensional Recurrent Layers Really Necessary for Handwritten Text Recognition?",
+			"authors": [
+				"Puigcerver, Joan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"booktitle": "2017 14th IAPR International Conference on Document Analysis and Recognition (ICDAR)",
+			"publisher": "IEEE",
+			"pages": "67-72",
+			"doi": "10.1109/ICDAR.2017.20",
+			"openalex": "W2786974559",
+			"abstract": "Current state-of-the-art approaches to offline Handwritten Text Recognition extensively rely on Multidimensional Long Short-Term Memory networks. However, these architectures come with quite an expensive computational cost, and we observe that they extract features visually similar to those of convolutional layers, which are computationally cheaper. This suggests that the two-dimensional long-term dependencies, which are potentially modeled by multidimensional recurrent layers, may not be essential to achieve a good recognition accuracy, at least in the lower layers of the architecture. In this work, an alternative model is explored that relies only on convolutional and one-dimensional recurrent layers that achieves better or equivalent results than those of the current state-of-the-art architecture, and runs significantly faster. In addition, we observe that using random distortions during training as synthetic data augmentation dramatically improves the accuracy of our model. Thus, are multidimensional recurrent layers really necessary for Handwritten Text Recognition? Probably not.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"handwriting recognition",
+				"offline handwriting",
+				"long short-term memory networks",
+				"convolutional layers",
+				"computational efficiency",
+				"synthetic data augmentation",
+				"long-range dependencies"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Put1994a",
 			"type": "book",
 			"title": "Markov Decision Processes: Discrete Stochastic Dynamic Programming",
@@ -47814,6 +48725,37 @@
 			"checked": false,
 			"open_access": true,
 			"issue": "1-4"
+		},
+		{
+			"key": "RF2018a",
+			"type": "misc",
+			"title": "YOLOv3: An Incremental Improvement",
+			"authors": [
+				"Redmon, Joseph",
+				"Farhadi, Ali"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"arxiv": "1804.02767",
+			"openalex": "W2796347433",
+			"url": "https://arxiv.org/abs/1804.02767",
+			"oa_url": "https://arxiv.org/pdf/1804.02767",
+			"abstract": "We present some updates to YOLO! We made a bunch of little design changes to make it better. We also trained this new network that's pretty swell. It's a little bigger than last time but more accurate. It's still fast though, don't worry. At 320x320 YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster. When we look at the old .5 IOU mAP detection metric YOLOv3 is quite good. It achieves 57.9 mAP@50 in 51 ms on a Titan X, compared to 57.5 mAP@50 in 198 ms by RetinaNet, similar performance but 3.8x faster. As always, all the code is online at https://pjreddie.com/yolo/",
+			"abstract_source": "openalex",
+			"keywords": [
+				"YOLOv3",
+				"object detection",
+				"real-time detection",
+				"Single Shot MultiBox Detector",
+				"detection accuracy",
+				"inference speed"
+			],
+			"keywords_source": "openalex",
+			"source": "manual",
+			"retrieved": "2026-11-26",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "RG1978a",
@@ -49415,6 +50357,39 @@
 			"source": "datacite",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "RSWP2018a",
+			"type": "inproceedings",
+			"title": "Improving OCR Accuracy on Early Printed Books by Utilizing Cross Fold Training and Voting",
+			"authors": [
+				"Reul, Christian",
+				"Springmann, Uwe",
+				"Wick, Christoph",
+				"Puppe, Frank"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"booktitle": "2018 13th IAPR International Workshop on Document Analysis Systems (DAS)",
+			"publisher": "IEEE",
+			"pages": "423-428",
+			"doi": "10.1109/DAS.2018.30",
+			"openalex": "W2768817781",
+			"oa_url": "https://arxiv.org/pdf/1711.09670",
+			"abstract": "In this paper we introduce a method that significantly reduces the character error rates for OCR text obtained from OCRopus models trained on early printed books. The method uses a combination of cross fold training and confidence based voting. After allocating the available ground truth in different subsets several training processes are performed, each resulting in a specific OCR model. The OCR text generated by these models then gets voted to determine the final output by taking the recognized characters, their alternatives, and the confidence values assigned to each character into consideration. Experiments on seven early printed books show that the proposed method outperforms the standard approach considerably by reducing the amount of errors by up to 50% and more.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"optical character recognition",
+				"early printed books",
+				"historical text digitization",
+				"character error rate"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-27",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -57230,6 +58205,38 @@
 			"open_access": false
 		},
 		{
+			"key": "Tor2025a",
+			"type": "misc",
+			"title": "TRIDIS: A Comprehensive Medieval and Early Modern Corpus for HTR and NER",
+			"authors": [
+				"Torres Aguilar, Sergio"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.2503.22714",
+			"openalex": "W4417088761",
+			"url": "https://arxiv.org/abs/2503.22714",
+			"abstract": "This paper introduces TRIDIS (Tria Digita Scribunt), an open-source corpus of medieval and early modern manuscripts. TRIDIS aggregates multiple legacy collections (all published under open licenses) and incorporates large metadata descriptions. While prior publications referenced some portions of this corpus, here we provide a unified overview with a stronger focus on its constitution. We describe (i) the narrative, chronological, and editorial background of each major sub-corpus, (ii) its semi-diplomatic transcription rules (expansion, normalization, punctuation), (iii) a strategy for challenging out-of-domain test splits driven by outlier detection in a joint embedding space, and (iv) preliminary baseline experiments using TrOCR and MiniCPM2.5 comparing random and outlier-based test partitions. Overall, TRIDIS is designed to stimulate joint robust Handwritten Text Recognition (HTR) and Named Entity Recognition (NER) research across medieval and early modern textual heritage.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"medieval manuscripts",
+				"early modern manuscripts",
+				"handwriting recognition",
+				"named entity recognition",
+				"outlier detection",
+				"TrOCR",
+				"historical text digitization"
+			],
+			"keywords_source": "openalex",
+			"source": "arxiv",
+			"retrieved": "2026-11-27",
+			"checked": false,
+			"open_access": true,
+			"note": "arXiv:2503.22714; the dataset is magistermilitum/Tridis on Hugging Face, MIT licence"
+		},
+		{
 			"key": "Tsi2011a",
 			"type": "article",
 			"title": "Runge–Kutta pairs of order 5(4) satisfying only the first column simplifying assumption",
@@ -60707,6 +61714,35 @@
 			"open_access": false
 		},
 		{
+			"key": "XG2026a",
+			"type": "misc",
+			"title": "MDT_1m_h50: digital terrain model of Galicia at 1 m from lidar",
+			"authors": [
+				"Xunta de Galicia"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"publisher": "Instituto de Estudos do Territorio",
+			"url": "https://mapas.xunta.gal/es/mapas/productos-cartograficos/relieve",
+			"abstract": "The 1 m digital terrain model of Galicia, MDT_1m_h50, made by the Instituto de Estudos do Territorio of the Xunta de Galicia from the lidar flights of 2015, over the west of Galicia, and 2016, over the east. Each of the more than 15,000 million points taken was given its X, Y and Z coordinates, corrected, and classified by hand into ground, buildings and vegetation, from which digital terrain and surface models were made. The result is a considerable improvement on earlier digital models, and was used to digitise the new river network of Galicia and to make the models of the maps of the Planes Básicos Municipales. The terrain model is distributed by sheets of the 1:50,000 map, as files MDT_1m_h50_<sheet>.zip in ERDAS IMAGINE format, from the download centre of Información Xeográfica de Galicia.",
+			"abstract_source": "manual",
+			"keywords": [
+				"Galicia",
+				"lidar",
+				"digital terrain model",
+				"Xunta de Galicia",
+				"Información Xeográfica de Galicia",
+				"MDT"
+			],
+			"keywords_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-26",
+			"checked": false,
+			"open_access": true,
+			"note": "Dataset"
+		},
+		{
 			"key": "XGTTT...2020a",
 			"type": "inproceedings",
 			"title": "AdvancedHMC.jl: A Robust, Modular and Efficient Implementation of Advanced HMC Algorithms",
@@ -63038,6 +64074,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "ASK2018a",
+			"count": 142,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "ASK2018a",
+			"count": 271,
+			"source": "openalex",
+			"date": "2026-11-27"
+		},
+		{
 			"key": "AT2002a",
 			"count": 382,
 			"source": "crossref",
@@ -64130,6 +65178,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "BOLCF...2021a",
+			"count": 68,
+			"source": "crossref",
+			"date": "2026-11-26"
+		},
+		{
+			"key": "BOLCF...2021a",
+			"count": 88,
+			"source": "openalex",
+			"date": "2026-11-26"
+		},
+		{
 			"key": "BP1979a",
 			"count": 4303,
 			"source": "crossref",
@@ -64994,6 +66054,18 @@
 			"date": "2026-11-18"
 		},
 		{
+			"key": "CCP2023a",
+			"count": 124,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "CCP2023a",
+			"count": 200,
+			"source": "openalex",
+			"date": "2026-11-27"
+		},
+		{
 			"key": "CCSSB...2021a",
 			"count": 225,
 			"source": "crossref",
@@ -65508,6 +66580,18 @@
 			"count": 68,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "CPVCC...2024a",
+			"count": 17,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "CPVCC...2024a",
+			"count": 48,
+			"source": "openalex",
+			"date": "2026-11-27"
 		},
 		{
 			"key": "CR1982a",
@@ -66444,6 +67528,18 @@
 			"count": 688,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "DS1979a",
+			"count": 781,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "DS1979a",
+			"count": 2323,
+			"source": "openalex",
+			"date": "2026-11-27"
 		},
 		{
 			"key": "DS1990a",
@@ -67454,6 +68550,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Fis1997a",
+			"count": 444,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "Fis1997a",
+			"count": 1068,
+			"source": "openalex",
+			"date": "2026-11-27"
+		},
+		{
 			"key": "Fle1970a",
 			"count": 3488,
 			"source": "crossref",
@@ -67670,6 +68778,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "GFGS2006a",
+			"count": 4329,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "GFGS2006a",
+			"count": 7927,
+			"source": "openalex",
+			"date": "2026-11-27"
+		},
+		{
 			"key": "GFI2016a",
 			"count": 1012,
 			"source": "crossref",
@@ -67824,6 +68944,30 @@
 			"count": 714,
 			"source": "openalex",
 			"date": "2026-11-18"
+		},
+		{
+			"key": "GLFBB...2009a",
+			"count": 1623,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "GLFBB...2009a",
+			"count": 2364,
+			"source": "openalex",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "GLSML2019a",
+			"count": 122,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "GLSML2019a",
+			"count": 193,
+			"source": "openalex",
+			"date": "2026-11-27"
 		},
 		{
 			"key": "GMBAJ...2020a",
@@ -70250,6 +71394,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "KCHM2017a",
+			"count": 109,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "KCHM2017a",
+			"count": 341,
+			"source": "openalex",
+			"date": "2026-11-27"
+		},
+		{
 			"key": "KCHN2018a",
 			"count": 64,
 			"source": "crossref",
@@ -70344,6 +71500,18 @@
 			"count": 239,
 			"source": "openalex",
 			"date": "2026-11-22"
+		},
+		{
+			"key": "KH2021a",
+			"count": 32,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "KH2021a",
+			"count": 53,
+			"source": "openalex",
+			"date": "2026-11-27"
 		},
 		{
 			"key": "KHL2008a",
@@ -70820,6 +71988,18 @@
 			"date": "2026-11-18"
 		},
 		{
+			"key": "KTSS2019a",
+			"count": 78,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "KTSS2019a",
+			"count": 230,
+			"source": "openalex",
+			"date": "2026-11-27"
+		},
+		{
 			"key": "KUMH2017a",
 			"count": 2029,
 			"source": "openalex",
@@ -71016,6 +72196,36 @@
 			"count": 2880,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "Kie2019a",
+			"count": 133,
+			"source": "openalex",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "Kie2020a",
+			"count": 13,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "Kie2020a",
+			"count": 34,
+			"source": "openalex",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "Kie2025a",
+			"count": 5,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "Kie2025a",
+			"count": 15,
+			"source": "openalex",
+			"date": "2026-11-27"
 		},
 		{
 			"key": "Kim1994a",
@@ -71472,6 +72682,18 @@
 			"count": 314,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "LLCCL...2023a",
+			"count": 550,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "LLCCL...2023a",
+			"count": 1273,
+			"source": "openalex",
+			"date": "2026-11-27"
 		},
 		{
 			"key": "LLCZG2018a",
@@ -72230,6 +73452,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "MCCCG...2026a",
+			"count": 1,
+			"source": "openalex",
+			"date": "2026-11-27"
+		},
+		{
 			"key": "MCHLM...1993a",
 			"count": 269,
 			"source": "openalex",
@@ -72432,6 +73660,12 @@
 			"count": 308,
 			"source": "openalex",
 			"date": "2026-11-18"
+		},
+		{
+			"key": "MHCCC...2026a",
+			"count": 0,
+			"source": "openalex",
+			"date": "2026-11-27"
 		},
 		{
 			"key": "MHFDM...2018a",
@@ -73598,6 +74832,18 @@
 			"date": "2026-10-24"
 		},
 		{
+			"key": "OP2018a",
+			"count": 50,
+			"source": "crossref",
+			"date": "2026-11-26"
+		},
+		{
+			"key": "OP2018a",
+			"count": 64,
+			"source": "openalex",
+			"date": "2026-11-26"
+		},
+		{
 			"key": "OSC2015a",
 			"count": 8522,
 			"source": "openalex",
@@ -73686,6 +74932,18 @@
 			"count": 1538,
 			"source": "openalex",
 			"date": "2026-11-18"
+		},
+		{
+			"key": "PA2010a",
+			"count": 129,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "PA2010a",
+			"count": 188,
+			"source": "openalex",
+			"date": "2026-11-27"
 		},
 		{
 			"key": "PB1995a",
@@ -74366,6 +75624,18 @@
 			"date": "2026-10-24"
 		},
 		{
+			"key": "Pui2017a",
+			"count": 287,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "Pui2017a",
+			"count": 450,
+			"source": "openalex",
+			"date": "2026-11-27"
+		},
+		{
 			"key": "Put2005a",
 			"count": 4859,
 			"source": "crossref",
@@ -74472,6 +75742,12 @@
 			"count": 2216,
 			"source": "openalex",
 			"date": "2026-11-22"
+		},
+		{
+			"key": "RF2018a",
+			"count": 36799,
+			"source": "openalex",
+			"date": "2026-11-26"
 		},
 		{
 			"key": "RG1978a",
@@ -74886,6 +76162,18 @@
 			"count": 1019,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "RSWP2018a",
+			"count": 16,
+			"source": "crossref",
+			"date": "2026-11-27"
+		},
+		{
+			"key": "RSWP2018a",
+			"count": 34,
+			"source": "openalex",
+			"date": "2026-11-27"
 		},
 		{
 			"key": "RSZ2017a",
@@ -77016,6 +78304,12 @@
 			"count": 1206,
 			"source": "openalex",
 			"date": "2026-11-22"
+		},
+		{
+			"key": "Tor2025a",
+			"count": 8,
+			"source": "openalex",
+			"date": "2026-11-27"
 		},
 		{
 			"key": "Tsi2011a",
@@ -82107,6 +83401,25 @@
 				"TET2012a",
 				"Kel2017a",
 				"HJM2019a"
+			]
+		},
+		{
+			"id": "transcription",
+			"title": "Transcription",
+			"commands": [
+				"pollis.transcription"
+			],
+			"keys": [
+				"Kie2019a",
+				"Kie2025a",
+				"PCVCC...2026a",
+				"CPVCC...2024a",
+				"CK2026a",
+				"Tor2025a",
+				"KH2021b",
+				"GFGS2006a",
+				"HS1997a",
+				"MHCCC...2026a"
 			]
 		},
 		{

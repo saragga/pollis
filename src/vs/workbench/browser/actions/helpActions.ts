@@ -560,6 +560,7 @@ export const POLLIS_DOCUMENTS: Readonly<Record<string, string>> = {
 	'pollis-drilldown-customisation.pdf': localize('openDrillDownCustomisation', "Drill-down: Customisation"),
 	'pollis-drilldown-ocr-files.pdf': localize('openDrillDownOcrFiles', "Drill-down: OCR Files and Snippets"),
 	'pollis-drilldown-localisation.pdf': localize('openDrillDownLocalisation', "Drill-down: Localisation"),
+	'pollis-drilldown-transcription.pdf': localize('openDrillDownTranscription', "Drill-down: Automatic Transcription"),
 };
 
 /**
@@ -879,6 +880,25 @@ registerAction2(class extends Action2 {
 
 	run(accessor: ServicesAccessor): Promise<void> {
 		return openDocument(accessor, 'pollis-drilldown-localisation.pdf');
+	}
+});
+
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.action.openDrillDownTranscription',
+			title: {
+				...localize2('openDrillDownTranscription', "Drill-down: Automatic Transcription"),
+				mnemonicTitle: localize({ key: 'miDrillDownTranscription', comment: ['&& denotes a mnemonic'] }, "Automatic Transcr&&iption"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDrillDownsMenu, group: '1_drilldowns', order: 13 }
+		});
+	}
+
+	run(accessor: ServicesAccessor): Promise<void> {
+		return openDocument(accessor, 'pollis-drilldown-transcription.pdf');
 	}
 });
 

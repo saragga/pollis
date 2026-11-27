@@ -1,0 +1,75 @@
+# Transcription Webview Configuration
+# A page of Explore in the Time Arrow style of the scaffold, not a panel: only its Powered by, Learn More and references.
+# The Training Corpora page (trainingCorporaPage.ts) shares its Learn More.
+# `pageCommand` is the command that opens it. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/transcription.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Transcription"
+viewType = "pollis.transcription"
+pageCommand = "pollis.transcription"
+
+[[packages]]
+name = "MedievalATR.jl"
+github = "https://github.com/Trumpingtons/MedievalATR.jl"
+
+[[wikis]]
+name = "Overview"
+file = "transcription/overview.md"
+bundled = true
+description = "What the Transcription page does, the files it reads, and how a line is read from its image"
+
+[[wikis]]
+name = "Factsheet"
+file = "transcription/factsheet.md"
+bundled = true
+description = "The model, its training data and licence, the files the page reads and writes, and the Julia functions it runs"
+
+[[wikis]]
+name = "Training Corpora"
+file = "transcription/training-corpora.md"
+bundled = true
+description = "The corpora of manuscripts with their transcriptions that models of automatic transcription are trained and tested on"
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "Kie2019a"
+
+[[references]]
+key = "Kie2025a"
+
+[[references]]
+key = "PCVCC...2026a"
+
+[[references]]
+separator = true
+label = "Datasets"
+
+[[references]]
+key = "CPVCC...2024a"
+
+[[references]]
+key = "CK2026a"
+
+[[references]]
+key = "Tor2025a"
+
+[[references]]
+key = "KH2021b"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "GFGS2006a"
+
+[[references]]
+key = "HS1997a"
+
+[[references]]
+key = "MHCCC...2026a"

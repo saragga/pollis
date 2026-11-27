@@ -47,6 +47,7 @@ const GROUPS = [
 		("workflows/workflow_customisation.tex", "pollis-drilldown-customisation.pdf"),
 		("workflows/workflow_ocr_files.tex", "pollis-drilldown-ocr-files.pdf"),
 		("workflows/workflow_localisation.tex", "pollis-drilldown-localisation.pdf"),
+		("workflows/workflow_transcription.tex", "pollis-drilldown-transcription.pdf"),
 	],
 ]
 const DOCUMENTS = [name for group in GROUPS for (_, name) in group if !isempty(name)]
