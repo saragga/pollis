@@ -40,6 +40,7 @@ import { DatabaseConnectionsService } from './databaseConnectionsService.js';
 import { JournalMetricsReader, readCsv, readXlsx, yearOfFileName } from './journalMetrics.js';
 import './journalMetricsPage.js';
 import './britannicaPage.js';
+import './laroussePage.js';
 import { QueryHistoryView } from './queryHistoryView.js';
 import { ActivityDatabasesView, BuiltinDatabasesView, CONNECT_DATABASE_COMMAND_ID, DATABASES_VIEW_CONTAINER_ID, DatabaseConnectionContextMenu, DatabaseConnectionsView, DatabasesViewPaneContainer, databasesViewIdOf, UserDatabasesView, DatabaseItemConnected, DatabaseItemExpanded, DatabaseItemId, DatabaseItemInlineMenu, DatabaseItemBuiltin, DatabaseItemKind, DatabaseItemSaved, DatabaseItemWritable, DatabasesNewConnectionMenu, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, BROWSE_TABLE_COMMAND_ID, OPEN_SCHEMA_COMMAND_ID, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
 

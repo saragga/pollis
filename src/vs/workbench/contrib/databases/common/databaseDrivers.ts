@@ -57,6 +57,9 @@ export const JOURNALS_DATABASE_ID = 'pollisjournals';
 /** The id of the PollisBritannica database, the articles of the Encyclopaedia Britannica from 1771 to 1929, also built in. */
 export const BRITANNICA_DATABASE_ID = 'pollisbritannica';
 
+/** The id of the PollisLarousse database, the articles of the Larousses from 1866 to 1930, also built in. */
+export const LAROUSSE_DATABASE_ID = 'pollislarousse';
+
 /** The id of the PollisReferences database, the references of Pollis and those the user added, also built in. */
 export const REFERENCES_DATABASE_ID = 'pollisreferences';
 
@@ -361,7 +364,7 @@ export function generateConnectionCode(profile: IDatabaseConnectionProfile): str
  * first, so a database file is not opened twice. DuckDB is the default engine, so its code first
  * installs the DuckDB.jl package on the user's machine, the first time only (Pollis does not ship it),
  * and the built-in database first makes its file from the PollisDatasets, when they have changed (PollisRSS, its views
- * over the archive of the RSS feeds, when missing; PollisJournals, from the journals of PollisJournals.jl; PollisBritannica, from the index of PollisBritannica.jl; PollisReferences,
+ * over the archive of the RSS feeds, when missing; PollisJournals, from the journals of PollisJournals.jl; PollisBritannica, from the index of PollisBritannica.jl; PollisLarousse, from the index of PollisLarousse.jl; PollisReferences,
  * from the references of Pollis; PollisBenchmarks, from the benchmarks of PollisBenchmarks.jl; PollisCompetitions, from the catalogue of PollisCompetitions.jl, its built-in datasets and those downloaded). PollisDocuments is made when the Julia REPL starts, after the documents are compiled,
  * and needs nothing here; nor does ModelEvaluations, the copy of the runs of the Evaluate and Benchmark pages, which needs only to be there.
  */
@@ -371,7 +374,7 @@ export function generateSessionConnectCode(profile: IDatabaseConnectionProfile, 
 		...(connected ? [`PollisDB.disconnect(${id})`] : []),
 		...(profile.driver === 'duckdb' ? ['PollisDB.install()'] : []),
 		...(profile.builtin && profile.id === MODEL_EVALUATIONS_DATABASE_ID ? [`isfile(${juliaString(stringValue(profile, 'path'))}) || error(${juliaString(localize('modelEvaluations.noCopy', "ModelEvaluations has no runs yet: Pollis makes it when an Evaluate or Benchmark page first opens."))})`] : []),
-		...(profile.builtin && profile.id !== DOCUMENTS_DATABASE_ID && profile.id !== MODEL_EVALUATIONS_DATABASE_ID ? [profile.id === RSS_DATABASE_ID ? 'PollisDB.build_rss()' : profile.id === JOURNALS_DATABASE_ID ? 'PollisDB.build_journals()' : profile.id === BRITANNICA_DATABASE_ID ? 'PollisDB.build_britannica()' : profile.id === REFERENCES_DATABASE_ID ? 'PollisDB.build_references()' : profile.id === BENCHMARKS_DATABASE_ID ? 'PollisDB.build_benchmarks()' : profile.id === COMPETITIONS_DATABASE_ID ? 'PollisDB.build_competitions()' : 'PollisDB.build()'] : []),
+		...(profile.builtin && profile.id !== DOCUMENTS_DATABASE_ID && profile.id !== MODEL_EVALUATIONS_DATABASE_ID ? [profile.id === RSS_DATABASE_ID ? 'PollisDB.build_rss()' : profile.id === JOURNALS_DATABASE_ID ? 'PollisDB.build_journals()' : profile.id === BRITANNICA_DATABASE_ID ? 'PollisDB.build_britannica()' : profile.id === LAROUSSE_DATABASE_ID ? 'PollisDB.build_larousse()' : profile.id === REFERENCES_DATABASE_ID ? 'PollisDB.build_references()' : profile.id === BENCHMARKS_DATABASE_ID ? 'PollisDB.build_benchmarks()' : profile.id === COMPETITIONS_DATABASE_ID ? 'PollisDB.build_competitions()' : 'PollisDB.build()'] : []),
 		generateConnectionCode(profile),
 		`PollisDB.register(${id}, ${profile.variable}; name = ${juliaString(profile.name)})`,
 	].join('\n');

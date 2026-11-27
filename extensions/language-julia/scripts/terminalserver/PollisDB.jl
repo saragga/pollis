@@ -175,6 +175,15 @@ const BRITANNICA_COMMIT = joinpath(ENVIRONMENT, "PollisBritannica.commit")
 const BRITANNICA_DB = joinpath(homedir(), ".pollis", "databases", "PollisBritannica.duckdb")
 """The PollisBritannica.jl folder and the SQL that `BRITANNICA_DB` was made with."""
 const BRITANNICA_STAMP = BRITANNICA_DB * ".stamp"
+"""PollisLarousse.jl, whose artifact, an index of the articles of the Larousses from 1866 to 1930, `build_larousse` makes PollisLarousse from."""
+const LAROUSSE = Base.PkgId(UUID("fc9f601d-d1b6-4016-bab9-0946768533ff"), "PollisLarousse")
+const LAROUSSE_URL = "https://github.com/Trumpingtons/PollisLarousse.jl"
+"""The commit of PollisLarousse.jl installed, from GitHub."""
+const LAROUSSE_COMMIT = joinpath(ENVIRONMENT, "PollisLarousse.commit")
+"""The PollisLarousse database: the works and articles of PollisLarousse.jl as tables, made by `build_larousse`."""
+const LAROUSSE_DB = joinpath(homedir(), ".pollis", "databases", "PollisLarousse.duckdb")
+"""The PollisLarousse.jl folder and the SQL that `LAROUSSE_DB` was made with."""
+const LAROUSSE_STAMP = LAROUSSE_DB * ".stamp"
 """The PollisBenchmarks database: the catalogue of PollisBenchmarks.jl and the questions of the benchmarks built in, made by `build_benchmarks`."""
 const BENCHMARKS_DB = joinpath(homedir(), ".pollis", "databases", "PollisBenchmarks.duckdb")
 """The PollisBenchmarks.jl folder, its artifact and the SQL that `BENCHMARKS_DB` was made with."""
@@ -555,7 +564,7 @@ excel, which the Julia extension installs where DuckDB keeps its extensions, are
 const DUCKDB_CONFIG = ["autoinstall_known_extensions" => "false", "autoload_known_extensions" => "true"]
 
 """The databases of Pollis, built in and of its activity, that `connect` attaches, read-only, under their own names."""
-builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, BRITANNICA_DB, REFERENCES_DB, BENCHMARKS_DB, COMPETITIONS_DB, DOCUMENTS_DB, MODEL_EVALUATIONS_DB])
+builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, BRITANNICA_DB, LAROUSSE_DB, REFERENCES_DB, BENCHMARKS_DB, COMPETITIONS_DB, DOCUMENTS_DB, MODEL_EVALUATIONS_DB])
 
 """
     connect(path = ":memory:"; name = "DuckDB", builtins = true, fts = true, show = true)
@@ -1964,78 +1973,130 @@ function build_journals()
     return nothing
 end
 
-"""The artifact of the installed PollisBritannica.jl: its folder and the folder of its files; `nothing` when it is not installed or its artifact is missing."""
-function britannica_source()
-    path = Base.locate_package(BRITANNICA)
+"""
+The artifact `name` of the installed package `pkg`, an index of an encyclopedia's articles: the package's folder and the
+folder of the artifact's files; `nothing` when the package is not installed or its artifact is missing.
+"""
+function encyclopedia_source(pkg::Base.PkgId, name::AbstractString)
+    path = Base.locate_package(pkg)
     path === nothing && return nothing
     root = dirname(dirname(path))
     toml = joinpath(root, "Artifacts.toml")
     isfile(toml) || return nothing
     Artifacts = Base.require(Base.PkgId(UUID("56f22d72-fd6d-98f1-02f0-08ddc0907c33"), "Artifacts"))
-    hash = Base.invokelatest(Artifacts.artifact_hash, "britannica", toml)
+    hash = Base.invokelatest(Artifacts.artifact_hash, name, toml)
     hash === nothing && return nothing
     folder = Base.invokelatest(Artifacts.artifact_path, hash)
     return isfile(joinpath(folder, "articles.parquet")) ? (; root, folder) : nothing
 end
 
-"""The SQL statements that make the tables of `BRITANNICA_DB` from the files of the artifact in `folder`."""
-function britannica_sql(folder::AbstractString)
+"""
+The SQL statements that make the tables `editions` and `articles` of an encyclopedia's database from the files of its
+artifact in `folder`, with `comments`, the statements that describe them.
+"""
+function encyclopedia_sql(folder::AbstractString, comments::AbstractVector{<:AbstractString})
     file(name) = replace(joinpath(folder, name), "\\" => "/", "'" => "''")
     return [
         "CREATE TABLE editions AS SELECT * FROM read_parquet('$(file("editions.parquet"))')",
         "CREATE TABLE articles AS SELECT * FROM read_parquet('$(file("articles.parquet"))') ORDER BY key, edition",
-        "COMMENT ON TABLE editions IS 'The editions of the Encyclopaedia Britannica from 1771 to 1929: the volumes read, the articles found and their characters. Source: the scans of the Internet Archive'",
-        "COMMENT ON TABLE articles IS 'The articles of the Encyclopaedia Britannica from 1771 to 1929, a row per article of each edition, read from the scans of the Internet Archive; the scan of an article is https://archive.org/details/<item>/<file>/page/n<page>, without <file> in an item of one volume'",
-        "COMMENT ON COLUMN articles.key IS 'The headword in the capital letters A to Z only, to look an article up in every edition'",
-        "COMMENT ON COLUMN articles.chars IS 'The length of the article in characters of its text'",
-        "COMMENT ON COLUMN articles.signature IS 'The initials of the contributor, where the article is signed'",
+        comments...,
     ]
 end
 
-britannica_stamp(source) = source.root * "\n" * join(britannica_sql(source.folder), ";\n")
+"""
+An encyclopedia followed through its editions, whose database `db` is made from the artifact `artifact` of the package
+`pkg`: its `name`, the SQL of its tables (`sql`, of the artifact's folder) and the stamp of what it was made with.
+"""
+encyclopedia(name, pkg, artifact, db, stamp, sql) = (; name, pkg, artifact, db, stamp, sql)
 
-"""Whether `BRITANNICA_DB` is missing or older than the installed PollisBritannica.jl or its SQL; `false` when it is not installed."""
-function britannica_outdated()
-    source = britannica_source()
+encyclopedia_stamp(e, source) = source.root * "\n" * join(e.sql(source.folder), ";\n")
+
+"""Whether the database of the encyclopedia `e` is missing or older than its installed package or its SQL; `false` when the package is not installed."""
+function encyclopedia_outdated(e)
+    source = encyclopedia_source(e.pkg, e.artifact)
     source === nothing && return false
-    return !isfile(BRITANNICA_DB) || !isfile(BRITANNICA_STAMP) || read(BRITANNICA_STAMP, String) != britannica_stamp(source)
+    return !isfile(e.db) || !isfile(e.stamp) || read(e.stamp, String) != encyclopedia_stamp(e, source)
 end
 
 """
-    build_britannica()
-
-Make the PollisBritannica database `BRITANNICA_DB` when it is missing, or PollisBritannica.jl or the SQL of
-`britannica_sql` have changed since it was made: the editions and articles of the package's artifact, copied
-into tables. Nothing else writes to it. Written under a temporary name and moved into place, as `build` does.
+Make the database of the encyclopedia `e` when it is missing, or its package or SQL have changed since it was made:
+the editions and articles of the package's artifact, copied into tables. Nothing else writes to it. Written under a
+temporary name and moved into place, as `build` does.
 """
-function build_britannica()
-    britannica_outdated() || return nothing
-    source = britannica_source()
-    println("Pollis: building the PollisBritannica database. This happens only when PollisBritannica.jl changes.")
+function build_encyclopedia(e)
+    encyclopedia_outdated(e) || return nothing
+    source = encyclopedia_source(e.pkg, e.artifact)
+    println("Pollis: building the $(e.name) database. This happens only when $(e.pkg.name).jl changes.")
     DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
     get(() -> Base.require(DBINTERFACE), Base.loaded_modules, DBINTERFACE)
-    mkpath(dirname(BRITANNICA_DB))
-    tmp = "$BRITANNICA_DB.$(getpid()).tmp"
+    mkpath(dirname(e.db))
+    tmp = "$(e.db).$(getpid()).tmp"
     rm(tmp; force = true)
     try
         Base.invokelatest() do
             con = loaded(DBINTERFACE).connect(DuckDB.DB, tmp)
             try
-                foreach(statement -> loaded(DBINTERFACE).execute(con, statement), britannica_sql(source.folder))
+                foreach(statement -> loaded(DBINTERFACE).execute(con, statement), e.sql(source.folder))
                 loaded(DBINTERFACE).execute(con, "CHECKPOINT")
             finally
                 loaded(DBINTERFACE).close!(con)
             end
         end
-        mv(tmp, BRITANNICA_DB; force = true)
-        write(BRITANNICA_STAMP, britannica_stamp(source))
+        mv(tmp, e.db; force = true)
+        write(e.stamp, encyclopedia_stamp(e, source))
     catch err
         rm(tmp; force = true)
-        isfile(BRITANNICA_DB) || rethrow()
-        @warn "Pollis: could not rebuild the PollisBritannica database; the previous one is kept" exception = err
+        isfile(e.db) || rethrow()
+        @warn "Pollis: could not rebuild the $(e.name) database; the previous one is kept" exception = err
     end
     return nothing
 end
+
+"""The SQL statements that make the tables of `BRITANNICA_DB` from the files of the artifact in `folder`."""
+britannica_sql(folder::AbstractString) = encyclopedia_sql(folder, [
+    "COMMENT ON TABLE editions IS 'The editions of the Encyclopaedia Britannica from 1771 to 1929: the volumes read, the articles found and their characters. Source: the scans of the Internet Archive'",
+    "COMMENT ON TABLE articles IS 'The articles of the Encyclopaedia Britannica from 1771 to 1929, a row per article of each edition, read from the scans of the Internet Archive; the scan of an article is https://archive.org/details/<item>/<file>/page/n<page>, without <file> in an item of one volume'",
+    "COMMENT ON COLUMN articles.key IS 'The headword in the capital letters A to Z only, to look an article up in every edition'",
+    "COMMENT ON COLUMN articles.chars IS 'The length of the article in characters of its text'",
+    "COMMENT ON COLUMN articles.signature IS 'The initials of the contributor, where the article is signed'",
+])
+
+"""The SQL statements that make the tables of `LAROUSSE_DB` from the files of the artifact in `folder`."""
+larousse_sql(folder::AbstractString) = encyclopedia_sql(folder, [
+    "COMMENT ON TABLE editions IS 'The works of Larousse from 1866 to 1930, the Grand dictionnaire universel du XIXe siecle (GDU) and its supplements (GDU-S1, GDU-S2), the Nouveau Larousse illustre (NLI) and its supplement (NLI-S) and volumes 2 and 3 of the Larousse du XXe siecle (L20): the volumes read, the articles found and their characters. Source: the scans of the Internet Archive'",
+    "COMMENT ON TABLE articles IS 'The articles of the works of Larousse from 1866 to 1930, a row per article of each work, read from the scans of the Internet Archive; the scan of an article is https://archive.org/details/<item>/page/n<page>'",
+    "COMMENT ON COLUMN articles.edition IS 'The work: GDU, GDU-S1, GDU-S2, NLI, NLI-S or L20'",
+    "COMMENT ON COLUMN articles.key IS 'The headword in the capital letters A to Z only, accents left out, to look an article up in every work'",
+    "COMMENT ON COLUMN articles.title IS 'The headword with the first names or the qualifier in brackets that follow it'",
+    "COMMENT ON COLUMN articles.chars IS 'The length of the article in characters of its text'",
+])
+
+"""The Britannica: PollisBritannica, from the artifact of PollisBritannica.jl."""
+const BRITANNICA_ENCYCLOPEDIA = encyclopedia("PollisBritannica", BRITANNICA, "britannica", BRITANNICA_DB, BRITANNICA_STAMP, britannica_sql)
+"""The Larousses: PollisLarousse, from the artifact of PollisLarousse.jl."""
+const LAROUSSE_ENCYCLOPEDIA = encyclopedia("PollisLarousse", LAROUSSE, "larousse", LAROUSSE_DB, LAROUSSE_STAMP, larousse_sql)
+
+"""Whether `BRITANNICA_DB` is missing or older than the installed PollisBritannica.jl or its SQL; `false` when it is not installed."""
+britannica_outdated() = encyclopedia_outdated(BRITANNICA_ENCYCLOPEDIA)
+
+"""
+    build_britannica()
+
+Make the PollisBritannica database `BRITANNICA_DB` when it is missing, or PollisBritannica.jl or the SQL of
+`britannica_sql` have changed since it was made (`build_encyclopedia`).
+"""
+build_britannica() = build_encyclopedia(BRITANNICA_ENCYCLOPEDIA)
+
+"""Whether `LAROUSSE_DB` is missing or older than the installed PollisLarousse.jl or its SQL; `false` when it is not installed."""
+larousse_outdated() = encyclopedia_outdated(LAROUSSE_ENCYCLOPEDIA)
+
+"""
+    build_larousse()
+
+Make the PollisLarousse database `LAROUSSE_DB` when it is missing, or PollisLarousse.jl or the SQL of `larousse_sql`
+have changed since it was made (`build_encyclopedia`).
+"""
+build_larousse() = build_encyclopedia(LAROUSSE_ENCYCLOPEDIA)
 
 """The columns of a reference, of Pollis or of the user; `pollis_key`, `merged_into`, `saved` and `removed` are the user's only."""
 const REFERENCE_COLUMNS = """
@@ -2529,7 +2590,7 @@ end
 const DATA_PACKAGES = [(pkg = DATASETS, url = DATASETS_URL, commit = DATASETS_COMMIT), (pkg = JOURNALS, url = JOURNALS_URL, commit = JOURNALS_COMMIT),
     (pkg = REFERENCES, url = REFERENCES_URL, commit = REFERENCES_COMMIT), (pkg = RSS, url = RSS_URL, commit = RSS_COMMIT),
     (pkg = BENCHMARKS, url = BENCHMARKS_URL, commit = BENCHMARKS_COMMIT), (pkg = KNOWLEDGE, url = KNOWLEDGE_URL, commit = KNOWLEDGE_COMMIT),
-    (pkg = BRITANNICA, url = BRITANNICA_URL, commit = BRITANNICA_COMMIT)]
+    (pkg = BRITANNICA, url = BRITANNICA_URL, commit = BRITANNICA_COMMIT), (pkg = LAROUSSE, url = LAROUSSE_URL, commit = LAROUSSE_COMMIT)]
 
 """
     pending()
@@ -2574,7 +2635,7 @@ its own, as it installs Revise, so the REPL never waits for Pkg.
 function needs_install()
     todo = pending()
     return !isempty(todo.missing_packages) || any(d -> d.missing || d.outdated, todo.data) || todo.registry_duckdb ||
-        !isfile(DATASETS_DB) || !isfile(RSS_DB) || !isfile(JOURNALS_DB) || journals_outdated() || britannica_outdated() || package_data_uncopied() || references_outdated() ||
+        !isfile(DATASETS_DB) || !isfile(RSS_DB) || !isfile(JOURNALS_DB) || journals_outdated() || britannica_outdated() || larousse_outdated() || package_data_uncopied() || references_outdated() ||
         benchmarks_outdated() || competitions_outdated()
 end
 

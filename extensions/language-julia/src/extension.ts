@@ -18,7 +18,7 @@ import * as packagepath from './packagepath'
 import * as pollisAgentRecorder from './pollisAgentRecorder'
 import * as pollisCompareModels from './pollisCompareModels'
 import * as pollisModelBenchmarks from './pollisModelBenchmarks'
-import * as pollisBritannicaTexts from './pollisBritannicaTexts'
+import * as pollisEncyclopediaTexts from './pollisEncyclopediaTexts'
 import * as pollisKnowledgeBase from './pollisKnowledgeBase'
 import * as pollisDuckDB from './pollisDuckDB'
 import * as pollisDocuments from './pollisDocuments'
@@ -123,8 +123,9 @@ export async function activate(context: vscode.ExtensionContext) {
         pollisModelBenchmarks.activate(context, executableFeature)
         // POLLIS: the texts of the Knowledge Base page, with PollisKnowledge.jl.
         pollisKnowledgeBase.activate(context, executableFeature)
-        // POLLIS: the texts of Britannica Through the Editions, with PollisBritannica.jl.
-        pollisBritannicaTexts.activate(context, executableFeature)
+        // POLLIS: the texts of Britannica Through the Editions and Larousse Through the Editions, with PollisBritannica.jl
+        // and PollisLarousse.jl.
+        pollisEncyclopediaTexts.activate(context, executableFeature)
 
         t = performance.now()
         openpackagedirectory.activate(context)

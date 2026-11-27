@@ -14,7 +14,7 @@ import { ILogService } from '../../../../platform/log/common/log.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { IDatabaseConnectionsService, IDatabaseSession } from '../common/databaseConnections.js';
-import { BENCHMARKS_DATABASE_ID, BRITANNICA_DATABASE_ID, BUILTIN_DATABASE_ID, COMPETITIONS_DATABASE_ID, DatabaseConnectionTarget, DOCUMENTS_DATABASE_ID, IDatabaseConnectionProfile, JOURNALS_DATABASE_ID, MODEL_EVALUATIONS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { BENCHMARKS_DATABASE_ID, BRITANNICA_DATABASE_ID, BUILTIN_DATABASE_ID, COMPETITIONS_DATABASE_ID, DatabaseConnectionTarget, DOCUMENTS_DATABASE_ID, IDatabaseConnectionProfile, JOURNALS_DATABASE_ID, LAROUSSE_DATABASE_ID, MODEL_EVALUATIONS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 import { JULIA_POLLIS_WINDOW_KEY } from '../common/duckdbSql.js';
 
 const STORAGE_KEY = 'pollis.databases.connections';
@@ -61,6 +61,8 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		// over the journal metrics imported, which Pollis adds to.
 		// And PollisBritannica: the articles of the Encyclopaedia Britannica from 1771 to 1929, which
 		// PollisDB.build_britannica copies from PollisBritannica.jl.
+		// And PollisLarousse: the articles of the Larousses from 1866 to 1930, which PollisDB.build_larousse copies from
+		// PollisLarousse.jl.
 		// And PollisReferences: the references of Pollis, which PollisDB.build_references copies, and views over those the
 		// user added, which Pollis adds to.
 		// And PollisBenchmarks: the catalogue of the benchmarks and the questions of those built in, which
@@ -105,6 +107,14 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 			target: 'global',
 			variable: 'britannica',
 			options: { path: joinPath(pollisFolder, 'databases', 'PollisBritannica.duckdb').fsPath, readonly: true },
+			builtin: true,
+		}, {
+			id: LAROUSSE_DATABASE_ID,
+			name: 'PollisLarousse',
+			driver: 'duckdb',
+			target: 'global',
+			variable: 'larousse',
+			options: { path: joinPath(pollisFolder, 'databases', 'PollisLarousse.duckdb').fsPath, readonly: true },
 			builtin: true,
 		}, {
 			id: REFERENCES_DATABASE_ID,

@@ -1,0 +1,27 @@
+# Larousse Through the Editions Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: only its Powered by and Learn More. Its articles are those of
+# the built-in database PollisLarousse, which PollisDB.jl makes from the artifact of PollisLarousse.jl. `pageCommand` is
+# the command that opens it. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/larousse.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Larousse Through the Editions"
+viewType = "pollis.larousse"
+pageCommand = "pollis.larousse.open"
+
+[[packages]]
+name = "PollisLarousse.jl"
+github = "https://github.com/Trumpingtons/PollisLarousse.jl"
+
+[[wikis]]
+name = "Overview"
+file = "larousse/overview.md"
+bundled = true
+description = "What the page shows, looking up a headword, the bars, the works without the article, and the PollisLarousse database"
+
+[[wikis]]
+name = "Factsheet"
+file = "larousse/factsheet.md"
+bundled = true
+description = "The works from 1866 to 1930, what each article row holds, how the articles are found in the scans, and their limits"

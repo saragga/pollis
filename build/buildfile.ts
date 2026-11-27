@@ -33,6 +33,7 @@ export const workbenchDesktop = [
 	createModuleDescription('vs/workbench/contrib/compose/node/askPollisMain'), // Pollis: the search of Ask Pollis
 	createModuleDescription('vs/workbench/contrib/compose/node/forecastingDatasetsMain'), // Pollis: the datasets added in Manage Challenge Datasets
 	createModuleDescription('vs/workbench/contrib/databases/node/britannicaMain'), // Pollis: the queries of Britannica Through the Editions
+	createModuleDescription('vs/workbench/contrib/databases/node/larousseMain'), // Pollis: the queries of Larousse Through the Editions
 	createModuleDescription('vs/workbench/contrib/compose/node/ocrFilesMain'), // Pollis: the downloads and checks of OCR Files and Snippets
 	createModuleDescription('vs/workbench/workbench.desktop.main'),
 	// Pollis: 'vs/sessions/sessions.desktop.main' omitted; the Agents window is not shipped.

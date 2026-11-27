@@ -206,6 +206,7 @@ import './contrib/compose/electron-browser/askPollisService.js';
 import './contrib/compose/electron-browser/articleDownloadService.js';
 import './contrib/compose/electron-browser/forecastingDatasetsService.js';
 import './contrib/databases/electron-browser/britannicaService.js';
+import './contrib/databases/electron-browser/larousseService.js';
 import './contrib/compose/electron-browser/ocrFilesService.js';
 
 // Policy Export
