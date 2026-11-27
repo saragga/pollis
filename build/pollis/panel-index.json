@@ -68,6 +68,7 @@
 			"menubarNewPanelsMenu",
 			"menubarOCSubmenu",
 			"menubarODESubmenu",
+			"menubarOcrFilesMenu",
 			"menubarOrchestrationMenu",
 			"menubarPMSubmenu",
 			"menubarPPLSubmenu",
@@ -325,6 +326,28 @@
 			],
 			"portable": false,
 			"reason": "the panel alpv asks for an API key (apiKey in src/vs/workbench/contrib/model/browser/commands/alpv.command.ts), which a data-only extension cannot ask for"
+		},
+		{
+			"id": "americanstories",
+			"title": "American Stories",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.americanstories",
+					"menuTitles": [
+						"American Stories"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/americanstories.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
+			]
 		},
 		{
 			"id": "ande",
@@ -1026,6 +1049,28 @@
 			]
 		},
 		{
+			"id": "brockhausefron",
+			"title": "Brockhaus and Efron Encyclopedic Dictionary",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.brockhausefron",
+					"menuTitles": [
+						"Brockhaus and Efron Encyclopedic Dictionary"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/brockhausefron.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
+			]
+		},
+		{
 			"id": "cam",
 			"title": "Curvature-Aware Methods",
 			"source": "pollis",
@@ -1063,10 +1108,10 @@
 		{
 			"id": "candidates",
 			"title": "Candidate Features",
-			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"source": "toolbox:pollis-toolbox-archaeology",
 			"commands": [
 				{
-					"id": "pollis.historicalGeography.candidates",
+					"id": "pollis.archaeology.candidates",
 					"menuTitles": [
 						"Candidate Features"
 					]
@@ -1075,9 +1120,9 @@
 			"portable": true,
 			"defaultModel": "mounds",
 			"decisionFirstColumn": "Method",
-			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/candidates.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"toml": "toolboxes/pollis-toolbox-archaeology/panels/candidates.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-archaeology/notebooks",
 			"wikis": [
 				"candidates/decision-guide.md",
 				"candidates/depressions.md",
@@ -2305,6 +2350,28 @@
 			]
 		},
 		{
+			"id": "cyclopaedia",
+			"title": "Cyclopaedia by Ephraim Chambers",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.cyclopaedia",
+					"menuTitles": [
+						"Cyclopaedia by Ephraim Chambers"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/cyclopaedia.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
+			]
+		},
+		{
 			"id": "dcm",
 			"title": "Decomposition and Constrained Multi-Objective Optimisation",
 			"source": "pollis",
@@ -2415,6 +2482,28 @@
 				"KernelDensity.jl",
 				"Distributions.jl",
 				"Extremes.jl"
+			]
+		},
+		{
+			"id": "delpher",
+			"title": "Delpher",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.delpher",
+					"menuTitles": [
+						"Delpher"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/delpher.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
 			]
 		},
 		{
@@ -2563,6 +2652,28 @@
 				"FiniteDifferences.jl",
 				"Symbolics.jl",
 				"DifferentiationInterface.jl"
+			]
+		},
+		{
+			"id": "digi",
+			"title": "Digi",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.digi",
+					"menuTitles": [
+						"Digi"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/digi.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
 			]
 		},
 		{
@@ -2891,6 +3002,28 @@
 			]
 		},
 		{
+			"id": "dta",
+			"title": "Deutsches Textarchiv",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.dta",
+					"menuTitles": [
+						"Deutsches Textarchiv"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/dta.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
+			]
+		},
+		{
 			"id": "dtm",
 			"title": "Document-Term Matrix & TF-IDF",
 			"source": "pollis",
@@ -3073,6 +3206,28 @@
 			]
 		},
 		{
+			"id": "ecco",
+			"title": "ECCO-TCP",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.ecco",
+					"menuTitles": [
+						"ECCO-TCP"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/ecco.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
+			]
+		},
+		{
 			"id": "edgar",
 			"source": "pollis",
 			"commands": [
@@ -3085,6 +3240,28 @@
 			],
 			"portable": false,
 			"reason": "the panel edgar asks for an API key (apiKey in src/vs/workbench/contrib/model/browser/commands/edgar.command.ts), which a data-only extension cannot ask for"
+		},
+		{
+			"id": "eebo",
+			"title": "EEBO-TCP",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.eebo",
+					"menuTitles": [
+						"EEBO-TCP"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/eebo.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
+			]
 		},
 		{
 			"id": "embedding",
@@ -3121,12 +3298,34 @@
 			]
 		},
 		{
-			"id": "enkiheldout",
-			"title": "Enki on Held-Out Ground",
+			"id": "encyclopedie",
+			"title": "Encyclopédie",
 			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
 			"commands": [
 				{
-					"id": "pollis.historicalGeography.enkiheldout",
+					"id": "pollis.historicalGeography.encyclopedie",
+					"menuTitles": [
+						"Encyclopédie"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/encyclopedie.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
+			]
+		},
+		{
+			"id": "enkiheldout",
+			"title": "Enki on Held-Out Ground",
+			"source": "toolbox:pollis-toolbox-archaeology",
+			"commands": [
+				{
+					"id": "pollis.archaeology.enkiheldout",
 					"menuTitles": [
 						"Enki on Held-Out Ground"
 					]
@@ -3135,9 +3334,9 @@
 			"portable": true,
 			"defaultModel": "published",
 			"decisionFirstColumn": "Tab",
-			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/enkiheldout.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"toml": "toolboxes/pollis-toolbox-archaeology/panels/enkiheldout.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-archaeology/notebooks",
 			"wikis": [
 				"enkiheldout/decision-guide.md",
 				"enkiheldout/diagnostics.md",
@@ -3359,6 +3558,34 @@
 			]
 		},
 		{
+			"id": "epigraphy",
+			"title": "Epigraphy",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.epigraphy",
+					"menuTitles": [
+						"Epigraphy"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/epigraphy.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl",
+				"DuckDB.jl",
+				"EzXML.jl",
+				"Tables.jl",
+				"CodecZlib.jl",
+				"ZipArchives.jl",
+				"JSON.jl"
+			]
+		},
+		{
 			"id": "epiNetwork",
 			"title": "Epidemics on Networks",
 			"source": "toolbox:pollis-toolbox-epidemiology",
@@ -3436,6 +3663,72 @@
 			"packages": [
 				"Evolutionary.jl",
 				"NLopt.jl"
+			]
+		},
+		{
+			"id": "etymologiae",
+			"title": "Etymologiae by Isidore of Seville",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.etymologiae",
+					"menuTitles": [
+						"Etymologiae by Isidore of Seville"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/etymologiae.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
+			]
+		},
+		{
+			"id": "europeana",
+			"title": "Europeana Newspapers",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.europeana",
+					"menuTitles": [
+						"Europeana Newspapers"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/europeana.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
+			]
+		},
+		{
+			"id": "evans",
+			"title": "Evans-TCP",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.evans",
+					"menuTitles": [
+						"Evans-TCP"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/evans.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
 			]
 		},
 		{
@@ -4329,6 +4622,28 @@
 			"packages": [
 				"GameTheory.jl",
 				"BaryPlots.jl"
+			]
+		},
+		{
+			"id": "gutenberg",
+			"title": "Project Gutenberg",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.gutenberg",
+					"menuTitles": [
+						"Project Gutenberg"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/gutenberg.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
 			]
 		},
 		{
@@ -5338,25 +5653,26 @@
 		{
 			"id": "learnedlidar",
 			"title": "Learned Detection in Lidar",
-			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"source": "toolbox:pollis-toolbox-archaeology",
 			"commands": [
 				{
-					"id": "pollis.historicalGeography.learnedlidar",
+					"id": "pollis.archaeology.learnedlidar",
 					"menuTitles": [
 						"Learned Detection in Lidar"
 					]
 				}
 			],
 			"portable": true,
-			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/learnedlidar.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"toml": "toolboxes/pollis-toolbox-archaeology/panels/learnedlidar.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-archaeology/notebooks",
 			"wikis": [
 				"learnedlidar/adaf.md",
 				"learnedlidar/decision-guide.md",
 				"learnedlidar/diagnostics.md",
 				"learnedlidar/factsheet.md",
-				"learnedlidar/overview.md"
+				"learnedlidar/overview.md",
+				"learnedlidar/tumuli.md"
 			],
 			"notebooks": [],
 			"packages": [
@@ -5364,6 +5680,7 @@
 				"SmartRegions.jl",
 				"NNlib.jl",
 				"Pickle.jl",
+				"DecisionTree.jl",
 				"Rasters.jl",
 				"ArchGDAL.jl"
 			]
@@ -5371,19 +5688,19 @@
 		{
 			"id": "learnedsatellite",
 			"title": "Learned Detection in Satellite Images",
-			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"source": "toolbox:pollis-toolbox-archaeology",
 			"commands": [
 				{
-					"id": "pollis.historicalGeography.learnedsatellite",
+					"id": "pollis.archaeology.learnedsatellite",
 					"menuTitles": [
 						"Learned Detection in Satellite Images"
 					]
 				}
 			],
 			"portable": true,
-			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/learnedsatellite.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"toml": "toolboxes/pollis-toolbox-archaeology/panels/learnedsatellite.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-archaeology/notebooks",
 			"wikis": [
 				"learnedsatellite/decision-guide.md",
 				"learnedsatellite/diagnostics.md",
@@ -6343,6 +6660,28 @@
 			]
 		},
 		{
+			"id": "meyers",
+			"title": "Meyers Konversations-Lexikon",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.meyers",
+					"menuTitles": [
+						"Meyers Konversations-Lexikon"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/meyers.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
+			]
+		},
+		{
 			"id": "mixCompiled",
 			"title": "Mix Julia with Compiled Code",
 			"source": "pollis",
@@ -6952,6 +7291,28 @@
 				"Clarabel.jl",
 				"COSMO.jl",
 				"SCS.jl"
+			]
+		},
+		{
+			"id": "naturalishistoria",
+			"title": "Naturalis Historia by Pliny the Elder",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.naturalishistoria",
+					"menuTitles": [
+						"Naturalis Historia by Pliny the Elder"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/naturalishistoria.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
 			]
 		},
 		{
@@ -7980,6 +8341,83 @@
 			]
 		},
 		{
+			"id": "paleography",
+			"title": "Paleography",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.paleography",
+					"menuTitles": [
+						"Paleography"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/paleography.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl",
+				"DuckDB.jl",
+				"EzXML.jl",
+				"Tables.jl",
+				"CodecZlib.jl",
+				"ZipArchives.jl",
+				"JSON.jl"
+			]
+		},
+		{
+			"id": "paperspast",
+			"title": "Papers Past",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.paperspast",
+					"menuTitles": [
+						"Papers Past"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/paperspast.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
+			]
+		},
+		{
+			"id": "papyrology",
+			"title": "Papyrology",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.papyrology",
+					"menuTitles": [
+						"Papyrology"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/papyrology.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl",
+				"DuckDB.jl",
+				"EzXML.jl",
+				"Tables.jl",
+				"CodecZlib.jl",
+				"ZipArchives.jl"
+			]
+		},
+		{
 			"id": "parquet",
 			"title": "Parquet Files",
 			"source": "pollis",
@@ -8263,6 +8701,43 @@
 			"packages": [
 				"PortfolioOptimisers.jl",
 				"Clarabel.jl"
+			]
+		},
+		{
+			"id": "pointcloud",
+			"title": "Terrain Model from Point Cloud",
+			"source": "toolbox:pollis-toolbox-archaeology",
+			"commands": [
+				{
+					"id": "pollis.archaeology.pointcloud",
+					"menuTitles": [
+						"Terrain Model from Point Cloud"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-archaeology/panels/pointcloud.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-archaeology/notebooks",
+			"wikis": [
+				"pointcloud/decision-guide.md",
+				"pointcloud/diagnostics.md",
+				"pointcloud/factsheet.md",
+				"pointcloud/gap-filling.md",
+				"pointcloud/ground-filters.md",
+				"pointcloud/overview.md",
+				"pointcloud/point-cloud-files.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"ArchaeologicalDetection.jl",
+				"PDAL_jll.jl",
+				"LazIO.jl",
+				"Geomorphometry.jl",
+				"NearestNeighbors.jl",
+				"SmartRegions.jl",
+				"Rasters.jl",
+				"ArchGDAL.jl"
 			]
 		},
 		{
@@ -8764,10 +9239,10 @@
 		{
 			"id": "reliefvis",
 			"title": "Relief Visualisation",
-			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"source": "toolbox:pollis-toolbox-archaeology",
 			"commands": [
 				{
-					"id": "pollis.historicalGeography.reliefvis",
+					"id": "pollis.archaeology.reliefvis",
 					"menuTitles": [
 						"Relief Visualisation"
 					]
@@ -8776,9 +9251,9 @@
 			"portable": true,
 			"defaultModel": "lrm",
 			"decisionFirstColumn": "Visualisation",
-			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/reliefvis.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"toml": "toolboxes/pollis-toolbox-archaeology/panels/reliefvis.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-archaeology/notebooks",
 			"wikis": [
 				"reliefvis/decision-guide.md",
 				"reliefvis/diagnostics.md",
@@ -9718,10 +10193,10 @@
 		{
 			"id": "sitesmonuments",
 			"title": "Sites and Monuments",
-			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"source": "toolbox:pollis-toolbox-archaeology",
 			"commands": [
 				{
-					"id": "pollis.historicalGeography.sitesmonuments",
+					"id": "pollis.archaeology.sitesmonuments",
 					"menuTitles": [
 						"Sites and Monuments"
 					]
@@ -9730,9 +10205,9 @@
 			"portable": true,
 			"defaultModel": "pleiades",
 			"decisionFirstColumn": "Register",
-			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/sitesmonuments.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"toml": "toolboxes/pollis-toolbox-archaeology/panels/sitesmonuments.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-archaeology/notebooks",
 			"wikis": [
 				"sitesmonuments/ane-placemarks.md",
 				"sitesmonuments/decision-guide.md",
@@ -9868,6 +10343,28 @@
 			"packages": [
 				"Optim.jl",
 				"NLopt.jl"
+			]
+		},
+		{
+			"id": "sovietencyclopedia",
+			"title": "Great Soviet Encyclopedia, First Edition",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.sovietencyclopedia",
+					"menuTitles": [
+						"Great Soviet Encyclopedia, First Edition"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/sovietencyclopedia.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
 			]
 		},
 		{
@@ -11108,6 +11605,28 @@
 			]
 		},
 		{
+			"id": "wikisource",
+			"title": "Wikisource",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.wikisource",
+					"menuTitles": [
+						"Wikisource"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/wikisource.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
+			]
+		},
+		{
 			"id": "xlsx",
 			"title": "Excel Workbook",
 			"source": "pollis",
@@ -11181,6 +11700,28 @@
 				"YFinance.jl",
 				"Tables.jl",
 				"TimeSeries.jl"
+			]
+		},
+		{
+			"id": "yongle",
+			"title": "Yongle Encyclopedia",
+			"source": "toolbox:pollis-toolbox-historical-geography-and-archaeology",
+			"commands": [
+				{
+					"id": "pollis.historicalGeography.yongle",
+					"menuTitles": [
+						"Yongle Encyclopedia"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/panels/yongle.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-historical-geography-and-archaeology/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": [
+				"HistoricalGeography.jl"
 			]
 		}
 	]
